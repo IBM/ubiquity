@@ -4,8 +4,8 @@ package fakes
 import (
 	"sync"
 
-	"gitlabhost.rtp.raleigh.ibm.com/spectrum-common/core"
-	"gitlabhost.rtp.raleigh.ibm.com/spectrum-common/models"
+	"gitlabhost.rtp.raleigh.ibm.com/spectrum/spectrum-common/core"
+	"gitlabhost.rtp.raleigh.ibm.com/spectrum/spectrum-common/models"
 )
 
 type FakeSpectrumClient struct {

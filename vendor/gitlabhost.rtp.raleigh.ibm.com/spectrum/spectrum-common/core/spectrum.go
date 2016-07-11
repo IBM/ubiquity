@@ -12,7 +12,7 @@ import (
 	"strings"
 	"time"
 
-	"gitlabhost.rtp.raleigh.ibm.com/spectrum-common/models"
+	"gitlabhost.rtp.raleigh.ibm.com/spectrum/spectrum-common/models"
 )
 
 //go:generate counterfeiter -o ../fakes/fake_spectrum_client.go . SpectrumClient

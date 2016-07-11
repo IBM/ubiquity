@@ -73,6 +73,7 @@ type SpectrumConfig struct {
 	FilesetId  string `json:"fileset"`
 	Filesystem string `json:"filesystem"`
 }
+
 type GetResponse struct {
 	Volume VolumeMetadata
 	Err    string

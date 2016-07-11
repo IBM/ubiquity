@@ -1,6 +1,0 @@
-bin/*
-pkg/*
-src/github.com/maxbrunsfeld/*
-src/github.com/onsi/*
-src/golang.org/
-src/gitlabhost.rtp.raleigh.ibm.com/spectrum-plugin/core/core.coverprofile
