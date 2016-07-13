@@ -9,11 +9,11 @@ import (
 	"os"
 	"path"
 
-	"gitlabhost.rtp.raleigh.ibm.com/cf-storage/cf-storage/backends"
-	"gitlabhost.rtp.raleigh.ibm.com/cf-storage/cf-storage/core"
-	"gitlabhost.rtp.raleigh.ibm.com/cf-storage/cf-storage/model"
-	"gitlabhost.rtp.raleigh.ibm.com/cf-storage/cf-storage/utils"
-	"gitlabhost.rtp.raleigh.ibm.com/cf-storage/cf-storage/web_server"
+	"gitlabhost.rtp.raleigh.ibm.com/ibm-storage/ibm-storage-broker/backends"
+	"gitlabhost.rtp.raleigh.ibm.com/ibm-storage/ibm-storage-broker/core"
+	"gitlabhost.rtp.raleigh.ibm.com/ibm-storage/ibm-storage-broker/model"
+	"gitlabhost.rtp.raleigh.ibm.com/ibm-storage/ibm-storage-broker/utils"
+	"gitlabhost.rtp.raleigh.ibm.com/ibm-storage/ibm-storage-broker/web_server"
 )
 
 var port = flag.String(
@@ -23,7 +23,7 @@ var port = flag.String(
 )
 var configPath = flag.String(
 	"configPath",
-	"/tmp/cf-storage",
+	"/tmp/ibm-storage-broker",
 	"Config directory to store book-keeping info",
 )
 var defaultMountPath = flag.String(
@@ -110,13 +110,13 @@ func loadServiceBindings() (map[string]*model.ServiceBinding, error) {
 	return bindingMap, nil
 }
 func setupLogger(logPath string) (*log.Logger, *os.File) {
-	logFile, err := os.OpenFile(path.Join(logPath, "cf-storage.log"), os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0640)
+	logFile, err := os.OpenFile(path.Join(logPath, "ibm-storage-broker.log"), os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0640)
 	if err != nil {
 		fmt.Printf("Failed to setup logger: %s\n", err.Error())
 		return nil, nil
 	}
 	log.SetOutput(logFile)
-	logger := log.New(io.MultiWriter(logFile, os.Stdout), "cf-storage: ", log.Lshortfile|log.LstdFlags)
+	logger := log.New(io.MultiWriter(logFile, os.Stdout), "ibm-storage-broker: ", log.Lshortfile|log.LstdFlags)
 	return logger, logFile
 }
 

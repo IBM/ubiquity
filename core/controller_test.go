@@ -6,12 +6,12 @@ import (
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
-	"gitlabhost.rtp.raleigh.ibm.com/cf-storage/cf-storage/core"
-	"gitlabhost.rtp.raleigh.ibm.com/cf-storage/cf-storage/model"
-	"gitlabhost.rtp.raleigh.ibm.com/cf-storage/cf-storage/core/fakes"
+	"gitlabhost.rtp.raleigh.ibm.com/ibm-storage/ibm-storage-broker/core"
+	"gitlabhost.rtp.raleigh.ibm.com/ibm-storage/ibm-storage-broker/model"
+	"gitlabhost.rtp.raleigh.ibm.com/ibm-storage/ibm-storage-broker/core/fakes"
 )
 
-var _ = Describe("CF-Storage Broker", func() {
+var _ = Describe("ibm-storage-broker Broker", func() {
 	var (
 		controller      core.Controller
 		localMountPoint string
@@ -25,7 +25,7 @@ var _ = Describe("CF-Storage Broker", func() {
 	BeforeEach(func() {
 		serviceGuid = "some-service-guid"
 		localMountPoint = "/tmp/share"
-		configPath = "/tmp/cf-storage"
+		configPath = "/tmp/ibm-storage-broker"
 		instanceMap = make(map[string]*model.ServiceInstance)
 		bindingMap = make(map[string]*model.ServiceBinding)
 		fakeBackend = new(fakes.FakeStorageBackend)
@@ -38,7 +38,7 @@ var _ = Describe("CF-Storage Broker", func() {
 			Expect(catalog).ToNot(BeNil())
 			Expect(catalog.Services).ToNot(BeNil())
 			Expect(len(catalog.Services)).To(Equal(1))
-			Expect(catalog.Services[0].Name).To(Equal("cf-storage"))
+			Expect(catalog.Services[0].Name).To(Equal("ibm-storage-broker"))
 			Expect(catalog.Services[0].Requires).ToNot(BeNil())
 			Expect(len(catalog.Services[0].Requires)).To(Equal(1))
 			Expect(catalog.Services[0].Requires[0]).To(Equal("volume_mount"))

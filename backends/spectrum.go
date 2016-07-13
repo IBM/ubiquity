@@ -2,7 +2,7 @@ package backends
 
 import (
 	common "gitlabhost.rtp.raleigh.ibm.com/spectrum/spectrum-common/core"
-	"gitlabhost.rtp.raleigh.ibm.com/cf-storage/cf-storage/model"
+	"gitlabhost.rtp.raleigh.ibm.com/ibm-storage/ibm-storage-broker/model"
 	"log"
 )
 

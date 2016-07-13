@@ -12,7 +12,7 @@ import (
 
 func TestCFStorageBroker(t *testing.T) {
 	RegisterFailHandler(Fail)
-	RunSpecs(t, "CF-Storage Broker Local Test Suite")
+	RunSpecs(t, "ibm-storage-broker Broker Local Test Suite")
 }
 
 type errCloser struct{ io.Reader }

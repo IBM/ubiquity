@@ -4,8 +4,8 @@ package fakes
 import (
 	"sync"
 
-	"gitlabhost.rtp.raleigh.ibm.com/cf-storage/cf-storage/core"
-	"gitlabhost.rtp.raleigh.ibm.com/cf-storage/cf-storage/model"
+	"gitlabhost.rtp.raleigh.ibm.com/ibm-storage/ibm-storage-broker/core"
+	"gitlabhost.rtp.raleigh.ibm.com/ibm-storage/ibm-storage-broker/model"
 )
 
 type FakeStorageBackend struct {

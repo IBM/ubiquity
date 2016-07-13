@@ -9,15 +9,15 @@ import (
 	"net/http"
 	"net/http/httptest"
 
-	"gitlabhost.rtp.raleigh.ibm.com/cf-storage/cf-storage/core/fakes"
-	"gitlabhost.rtp.raleigh.ibm.com/cf-storage/cf-storage/model"
-	"gitlabhost.rtp.raleigh.ibm.com/cf-storage/cf-storage/web_server"
+	"gitlabhost.rtp.raleigh.ibm.com/ibm-storage/ibm-storage-broker/core/fakes"
+	"gitlabhost.rtp.raleigh.ibm.com/ibm-storage/ibm-storage-broker/model"
+	"gitlabhost.rtp.raleigh.ibm.com/ibm-storage/ibm-storage-broker/web_server"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 )
 
-var _ = Describe("CF-Storage Broker Handlers", func() {
+var _ = Describe("ibm-storage-broker Broker Handlers", func() {
 
 	Context("when generating handlers", func() {
 		var (
@@ -79,10 +79,10 @@ var _ = Describe("CF-Storage Broker Handlers", func() {
 				fakeCreateResponse := model.CreateServiceInstanceResponse{}
 				fakeController.CreateServiceInstanceReturns(fakeCreateResponse, nil)
 				serviceInstance := model.ServiceInstance{
-					Id:               "cf-storage-service-guid",
+					Id:               "ibm-storage-broker-service-guid",
 					DashboardUrl:     "http://dashboard_url",
-					InternalId:       "cf-storage-service-guid",
-					ServiceId:        "cf-storage-service-guid",
+					InternalId:       "ibm-storage-broker-service-guid",
+					ServiceId:        "ibm-storage-broker-service-guid",
 					PlanId:           "free-plan-guid",
 					OrganizationGuid: "organization-guid",
 					SpaceGuid:        "space-guid",
@@ -106,10 +106,10 @@ var _ = Describe("CF-Storage Broker Handlers", func() {
 			})
 			It("should return 409 if service creation fails", func() {
 				serviceInstance := model.ServiceInstance{
-					Id:               "cf-storage-service-guid",
+					Id:               "ibm-storage-broker-service-guid",
 					DashboardUrl:     "http://dashboard_url",
-					InternalId:       "cf-storage-service-guid",
-					ServiceId:        "cf-storage-service-guid",
+					InternalId:       "ibm-storage-broker-service-guid",
+					ServiceId:        "ibm-storage-broker-service-guid",
 					PlanId:           "free-plan-guid",
 					OrganizationGuid: "organization-guid",
 					SpaceGuid:        "space-guid",
@@ -134,10 +134,10 @@ var _ = Describe("CF-Storage Broker Handlers", func() {
 				fakeCreateResponse := model.CreateServiceInstanceResponse{}
 				fakeController.CreateServiceInstanceReturns(fakeCreateResponse, nil)
 				serviceInstance := model.ServiceInstance{
-					Id:               "cf-storage-service-guid",
+					Id:               "ibm-storage-broker-service-guid",
 					DashboardUrl:     "http://dashboard_url",
-					InternalId:       "cf-storage-service-guid",
-					ServiceId:        "cf-storage-service-guid",
+					InternalId:       "ibm-storage-broker-service-guid",
+					ServiceId:        "ibm-storage-broker-service-guid",
 					PlanId:           "free-plan-guid",
 					OrganizationGuid: "organization-guid",
 					SpaceGuid:        "space-guid",
@@ -161,10 +161,10 @@ var _ = Describe("CF-Storage Broker Handlers", func() {
 			})
 			It("should return 410 if service instance does not exist", func() {
 				serviceInstance := model.ServiceInstance{
-					Id:               "cf-storage-service-guid",
+					Id:               "ibm-storage-broker-service-guid",
 					DashboardUrl:     "http://dashboard_url",
-					InternalId:       "cf-storage-service-guid",
-					ServiceId:        "cf-storage-service-guid",
+					InternalId:       "ibm-storage-broker-service-guid",
+					ServiceId:        "ibm-storage-broker-service-guid",
 					PlanId:           "free-plan-guid",
 					OrganizationGuid: "organization-guid",
 					SpaceGuid:        "space-guid",
@@ -183,10 +183,10 @@ var _ = Describe("CF-Storage Broker Handlers", func() {
 				fakeController.ServiceInstanceExistsReturns(true)
 				fakeController.DeleteServiceInstanceReturns(fmt.Errorf("error deleting service instance"))
 				serviceInstance := model.ServiceInstance{
-					Id:               "cf-storage-service-guid",
+					Id:               "ibm-storage-broker-service-guid",
 					DashboardUrl:     "http://dashboard_url",
-					InternalId:       "cf-storage-service-guid",
-					ServiceId:        "cf-storage-service-guid",
+					InternalId:       "ibm-storage-broker-service-guid",
+					ServiceId:        "ibm-storage-broker-service-guid",
 					PlanId:           "free-plan-guid",
 					OrganizationGuid: "organization-guid",
 					SpaceGuid:        "space-guid",
@@ -216,7 +216,7 @@ var _ = Describe("CF-Storage Broker Handlers", func() {
 				fakeBindResponse := model.CreateServiceBindingResponse{}
 				fakeController.BindServiceInstanceReturns(fakeBindResponse, nil)
 				binding := model.ServiceBinding{
-					Id: "cf-storage-service-guid",
+					Id: "ibm-storage-broker-service-guid",
 				}
 				w := httptest.NewRecorder()
 				payload, err := json.Marshal(binding)
@@ -235,7 +235,7 @@ var _ = Describe("CF-Storage Broker Handlers", func() {
 			})
 			It("should return 409 if service binding fails", func() {
 				binding := model.ServiceBinding{
-					Id: "cf-storage-service-guid",
+					Id: "ibm-storage-broker-service-guid",
 				}
 				payload, err := json.Marshal(binding)
 				Expect(err).ToNot(HaveOccurred())
@@ -256,7 +256,7 @@ var _ = Describe("CF-Storage Broker Handlers", func() {
 				fakeBindingResponse := model.CreateServiceBindingResponse{}
 				fakeController.BindServiceInstanceReturns(fakeBindingResponse, nil)
 				binding := model.ServiceBinding{
-					Id: "cf-storage-service-guid",
+					Id: "ibm-storage-broker-service-guid",
 				}
 				w := httptest.NewRecorder()
 				payload, err := json.Marshal(binding)
@@ -274,10 +274,10 @@ func successfulCreateService(handler http.Handler, fakeController *fakes.FakeCon
 	fakeCreateResponse := model.CreateServiceInstanceResponse{}
 	fakeController.CreateServiceInstanceReturns(fakeCreateResponse, nil)
 	serviceInstance := model.ServiceInstance{
-		Id:               "cf-storage-service-guid",
+		Id:               "ibm-storage-broker-service-guid",
 		DashboardUrl:     "http://dashboard_url",
-		InternalId:       "cf-storage-service-guid",
-		ServiceId:        "cf-storage-service-guid",
+		InternalId:       "ibm-storage-broker-service-guid",
+		ServiceId:        "ibm-storage-broker-service-guid",
 		PlanId:           "free-plan-guid",
 		OrganizationGuid: "organization-guid",
 		SpaceGuid:        "space-guid",
@@ -300,10 +300,10 @@ func successfulCreateService(handler http.Handler, fakeController *fakes.FakeCon
 
 func successfulDeleteService(handler http.Handler, fakeController *fakes.FakeController) {
 	serviceInstance := model.ServiceInstance{
-		Id:               "cf-storage-service-guid",
+		Id:               "ibm-storage-broker-service-guid",
 		DashboardUrl:     "http://dashboard_url",
-		InternalId:       "cf-storage-service-guid",
-		ServiceId:        "cf-storage-service-guid",
+		InternalId:       "ibm-storage-broker-service-guid",
+		ServiceId:        "ibm-storage-broker-service-guid",
 		PlanId:           "free-plan-guid",
 		OrganizationGuid: "organization-guid",
 		SpaceGuid:        "space-guid",
@@ -324,7 +324,7 @@ func successfulBindService(handler http.Handler, fakeController *fakes.FakeContr
 	fakeBindResponse := model.CreateServiceBindingResponse{}
 	fakeController.BindServiceInstanceReturns(fakeBindResponse, nil)
 	binding := model.ServiceBinding{
-		Id: "cf-storage-service-guid",
+		Id: "ibm-storage-broker-service-guid",
 	}
 	w := httptest.NewRecorder()
 	payload, err := json.Marshal(binding)

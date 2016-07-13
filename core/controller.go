@@ -6,8 +6,8 @@ import (
 	"path"
 	"reflect"
 
-	"gitlabhost.rtp.raleigh.ibm.com/cf-storage/cf-storage/model"
-	"gitlabhost.rtp.raleigh.ibm.com/cf-storage/cf-storage/utils"
+	"gitlabhost.rtp.raleigh.ibm.com/ibm-storage/ibm-storage-broker/model"
+	"gitlabhost.rtp.raleigh.ibm.com/ibm-storage/ibm-storage-broker/utils"
 	"encoding/json"
 )
 
@@ -58,15 +58,15 @@ func (c *controller) GetCatalog(logger log.Logger) (model.Catalog, error) {
 	plan := model.ServicePlan{
 		Name:        "free",
 		Id:          "free-plan-guid",
-		Description: "free cf-storage filesystem",
+		Description: "free ibm-storage-broker filesystem",
 		Metadata:    nil,
 		Free:        true,
 	}
 
 	service := model.Service{
-		Name:            "cf-storage",
-		Id:              "cf-storage-guid",
-		Description:     "Provides the cf-storage volume service, including volume creation and volume mounts",
+		Name:            "ibm-storage-broker",
+		Id:              "ibm-storage-broker-guid",
+		Description:     "Provides the ibm-storage-broker volume service, including volume creation and volume mounts",
 		Bindable:        true,
 		PlanUpdateable:  false,
 		Tags:            []string{},
