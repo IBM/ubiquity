@@ -1,0 +1,25 @@
+{
+	"ImportPath": "gitlabhost.rtp.raleigh.ibm.com/ibm-storage/ibm-storage-broker",
+	"GoVersion": "go1.6",
+	"GodepVersion": "v74",
+	"Deps": [
+		{
+			"ImportPath": "github.com/gorilla/context",
+			"Comment": "v1.1-4-gaed02d1",
+			"Rev": "aed02d124ae4a0e94fea4541c8effd05bf0c8296"
+		},
+		{
+			"ImportPath": "github.com/gorilla/mux",
+			"Comment": "v1.1-13-g9fa818a",
+			"Rev": "9fa818a44c2bf1396a17f9d5a3c0f6dd39d2ff8e"
+		},
+		{
+			"ImportPath": "gitlabhost.rtp.raleigh.ibm.com/spectrum/spectrum-common/core",
+			"Rev": "05abc88c950bc0e2487591a8185873c6bf2ff41c"
+		},
+		{
+			"ImportPath": "gitlabhost.rtp.raleigh.ibm.com/spectrum/spectrum-common/models",
+			"Rev": "05abc88c950bc0e2487591a8185873c6bf2ff41c"
+		}
+	]
+}

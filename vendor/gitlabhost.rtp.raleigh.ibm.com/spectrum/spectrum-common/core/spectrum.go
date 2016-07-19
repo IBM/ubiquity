@@ -72,7 +72,7 @@ func (m *MMCliFilesetClient) updateMappingWithExistingFileset(name, userSpecifie
 	defer m.log.Println("MMCliFilesetClient: updateMappingWithExistingFileset end")
 	m.log.Printf("User specified fileset: %s\n", userSpecifiedFileset)
 
-	spectrumCommand := "mmlsfileset"
+	spectrumCommand := "/usr/lpp/mmfs/bin/mmlsfileset"
 	args := []string{m.Filesystem, userSpecifiedFileset, "-Y"}
 	cmd := exec.Command(spectrumCommand, args...)
 	_, err := cmd.Output()
@@ -96,7 +96,7 @@ func (m *MMCliFilesetClient) create(name string, opts map[string]interface{}, ma
 	filesetName := generateFilesetName()
 	m.log.Printf("creating a new fileset: %s\n", filesetName)
 	// create fileset
-	spectrumCommand := "mmcrfileset"
+	spectrumCommand := "/usr/lpp/mmfs/bin/mmcrfileset"
 	args := []string{m.Filesystem, filesetName}
 	cmd := exec.Command(spectrumCommand, args...)
 	output, err := cmd.Output()
@@ -123,7 +123,7 @@ func (m *MMCliFilesetClient) Remove(name string) error {
 	}
 	existingMapping, ok := mappingConfig.Mappings[name]
 	if ok == true {
-		spectrumCommand := "mmdelfileset"
+		spectrumCommand := "/usr/lpp/mmfs/bin/mmdelfileset"
 		args := []string{m.Filesystem, existingMapping.Name, "-f"}
 		cmd := exec.Command(spectrumCommand, args...)
 		output, err := cmd.Output()
@@ -154,7 +154,7 @@ func (m *MMCliFilesetClient) Attach(name string) (string, error) {
 		//return "", fmt.Errorf("fileset already linked")
 		return mapping.Mountpoint, nil
 	}
-	spectrumCommand := "mmlinkfileset"
+	spectrumCommand := "/usr/lpp/mmfs/bin/mmlinkfileset"
 	filesetPath := path.Join(m.Mountpoint, mapping.Name)
 	args := []string{m.Filesystem, mapping.Name, "-J", filesetPath}
 	cmd := exec.Command(spectrumCommand, args...)
@@ -164,12 +164,21 @@ func (m *MMCliFilesetClient) Attach(name string) (string, error) {
 	}
 	m.log.Printf("MMCliFilesetClient: Linkfileset output: %s\n", string(output))
 
+	//hack for now
+	args = []string{"-R", "777", filesetPath}
+	cmd = exec.Command("chmod", args...)
+	output, err = cmd.Output()
+	if err != nil {
+		return "", fmt.Errorf("Failed to set permissions for fileset")
+	}
+
 	mapping.Mountpoint = filesetPath
 	mappingConfig.Mappings[name] = mapping
 	err = m.persistMappingConfig(mappingConfig)
 	if err != nil {
 		return "", fmt.Errorf("internal error updating mapping")
 	}
+
 	return filesetPath, nil
 }
 
@@ -187,7 +196,7 @@ func (m *MMCliFilesetClient) Detach(name string) error {
 	if mapping.Mountpoint == "" {
 		return fmt.Errorf("fileset not linked")
 	}
-	spectrumCommand := "mmunlinkfileset"
+	spectrumCommand := "/usr/lpp/mmfs/bin/mmunlinkfileset"
 	args := []string{m.Filesystem, mapping.Name}
 	cmd := exec.Command(spectrumCommand, args...)
 	output, err := cmd.Output()
@@ -237,7 +246,7 @@ func (m *MMCliFilesetClient) Get(name string) (*models.VolumeMetadata, *models.S
 func (m *MMCliFilesetClient) IsMounted() (bool, error) {
 	m.log.Println("MMCliFilesetClient: isMounted start")
 	defer m.log.Println("MMCliFilesetClient: isMounted end")
-	spectrumCommand := "mmlsmount"
+	spectrumCommand := "/usr/lpp/mmfs/bin/mmlsmount"
 	args := []string{m.Filesystem, "-L", "-Y"}
 	cmd := exec.Command(spectrumCommand, args...)
 	outputBytes, err := cmd.Output()
@@ -265,7 +274,7 @@ func (m *MMCliFilesetClient) IsMounted() (bool, error) {
 func (m *MMCliFilesetClient) Mount() error {
 	m.log.Println("MMCliFilesetClient: mount start")
 	defer m.log.Println("MMCliFilesetClient: mount end")
-	spectrumCommand := "mmmount"
+	spectrumCommand := "/usr/lpp/mmfs/bin/mmmount"
 	args := []string{m.Filesystem, m.Mountpoint}
 	cmd := exec.Command(spectrumCommand, args...)
 	output, err := cmd.Output()
