@@ -1,7 +1,7 @@
 package backends
 
 import (
-	common "gitlabhost.rtp.raleigh.ibm.com/spectrum/spectrum-common/core"
+	common "github.ibm.com/almaden-containers/spectrum-common.git/core"
 	"github.ibm.com/almaden-containers/ibm-storage-broker.git/model"
 	"log"
 )

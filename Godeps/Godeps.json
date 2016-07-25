@@ -14,12 +14,12 @@
 			"Rev": "9fa818a44c2bf1396a17f9d5a3c0f6dd39d2ff8e"
 		},
 		{
-			"ImportPath": "gitlabhost.rtp.raleigh.ibm.com/spectrum/spectrum-common/core",
-			"Rev": "05abc88c950bc0e2487591a8185873c6bf2ff41c"
+			"ImportPath": "github.ibm.com/almaden-containers/spectrum-common.git/core",
+			"Rev": "6db9ca2e36e7d67ad91baa2592e137827a97401a"
 		},
 		{
-			"ImportPath": "gitlabhost.rtp.raleigh.ibm.com/spectrum/spectrum-common/models",
-			"Rev": "05abc88c950bc0e2487591a8185873c6bf2ff41c"
+			"ImportPath": "github.ibm.com/almaden-containers/spectrum-common.git/models",
+			"Rev": "6db9ca2e36e7d67ad91baa2592e137827a97401a"
 		}
 	]
 }
