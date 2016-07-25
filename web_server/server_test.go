@@ -9,9 +9,9 @@ import (
 	"net/http"
 	"net/http/httptest"
 
-	"gitlabhost.rtp.raleigh.ibm.com/ibm-storage/ibm-storage-broker/core/fakes"
-	"gitlabhost.rtp.raleigh.ibm.com/ibm-storage/ibm-storage-broker/model"
-	"gitlabhost.rtp.raleigh.ibm.com/ibm-storage/ibm-storage-broker/web_server"
+	"github.ibm.com/almaden-containers/ibm-storage-broker.git/core/fakes"
+	"github.ibm.com/almaden-containers/ibm-storage-broker.git/model"
+	"github.ibm.com/almaden-containers/ibm-storage-broker.git/web_server"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"

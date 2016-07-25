@@ -1,5 +1,5 @@
 {
-	"ImportPath": "gitlabhost.rtp.raleigh.ibm.com/ibm-storage/ibm-storage-broker",
+	"ImportPath": "github.ibm.com/almaden-containers/ibm-storage-broker.git",
 	"GoVersion": "go1.6",
 	"GodepVersion": "v74",
 	"Deps": [

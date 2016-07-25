@@ -6,8 +6,8 @@ import (
 	"path"
 	"reflect"
 
-	"gitlabhost.rtp.raleigh.ibm.com/ibm-storage/ibm-storage-broker/model"
-	"gitlabhost.rtp.raleigh.ibm.com/ibm-storage/ibm-storage-broker/utils"
+	"github.ibm.com/almaden-containers/ibm-storage-broker.git/model"
+	"github.ibm.com/almaden-containers/ibm-storage-broker.git/utils"
 	"encoding/json"
 )
 

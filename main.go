@@ -9,11 +9,11 @@ import (
 	"os"
 	"path"
 
-	"gitlabhost.rtp.raleigh.ibm.com/ibm-storage/ibm-storage-broker/backends"
-	"gitlabhost.rtp.raleigh.ibm.com/ibm-storage/ibm-storage-broker/core"
-	"gitlabhost.rtp.raleigh.ibm.com/ibm-storage/ibm-storage-broker/model"
-	"gitlabhost.rtp.raleigh.ibm.com/ibm-storage/ibm-storage-broker/utils"
-	"gitlabhost.rtp.raleigh.ibm.com/ibm-storage/ibm-storage-broker/web_server"
+	"github.ibm.com/almaden-containers/ibm-storage-broker.git/backends"
+	"github.ibm.com/almaden-containers/ibm-storage-broker.git/core"
+	"github.ibm.com/almaden-containers/ibm-storage-broker.git/model"
+	"github.ibm.com/almaden-containers/ibm-storage-broker.git/utils"
+	"github.ibm.com/almaden-containers/ibm-storage-broker.git/web_server"
 )
 
 var port = flag.String(

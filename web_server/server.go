@@ -5,9 +5,9 @@ import (
 	"log"
 	"net/http"
 
-	"gitlabhost.rtp.raleigh.ibm.com/ibm-storage/ibm-storage-broker/core"
-	"gitlabhost.rtp.raleigh.ibm.com/ibm-storage/ibm-storage-broker/model"
-	"gitlabhost.rtp.raleigh.ibm.com/ibm-storage/ibm-storage-broker/utils"
+	"github.ibm.com/almaden-containers/ibm-storage-broker.git/core"
+	"github.ibm.com/almaden-containers/ibm-storage-broker.git/model"
+	"github.ibm.com/almaden-containers/ibm-storage-broker.git/utils"
 
 	"github.com/gorilla/mux"
 	"encoding/json"

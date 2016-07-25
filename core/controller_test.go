@@ -6,9 +6,9 @@ import (
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
-	"gitlabhost.rtp.raleigh.ibm.com/ibm-storage/ibm-storage-broker/core"
-	"gitlabhost.rtp.raleigh.ibm.com/ibm-storage/ibm-storage-broker/model"
-	"gitlabhost.rtp.raleigh.ibm.com/ibm-storage/ibm-storage-broker/core/fakes"
+	"github.ibm.com/almaden-containers/ibm-storage-broker.git/core"
+	"github.ibm.com/almaden-containers/ibm-storage-broker.git/model"
+	"github.ibm.com/almaden-containers/ibm-storage-broker.git/core/fakes"
 )
 
 var _ = Describe("ibm-storage-broker Broker", func() {
