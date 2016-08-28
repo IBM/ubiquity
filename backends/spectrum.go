@@ -1,36 +1,64 @@
 package backends
 
 import (
+	"log"
+	"fmt"
+
 	common "github.ibm.com/almaden-containers/spectrum-common.git/core"
 	"github.ibm.com/almaden-containers/ibm-storage-broker.git/model"
-	"log"
 )
 
 type SpectrumBackend struct {
+	logger *log.Logger
 	client common.SpectrumClient
 }
 
 func NewSpectrumBackend(logger *log.Logger, servicePlan, mountpoint *string) *SpectrumBackend {
-	return &SpectrumBackend{common.NewSpectrumClient(logger, *servicePlan, *mountpoint)}
+	return &SpectrumBackend{logger: logger, client: common.NewSpectrumClient(logger, *servicePlan, *mountpoint)}
 }
 
-func (s *SpectrumBackend) Create(name string, opts map[string]interface{}) error {
+func (s *SpectrumBackend) GetServices() []model.Service {
+	plan1 := model.ServicePlan{
+		Name:        "gold",
+		Id:          "gold",
+		Description: "Gold Tier Performance and Resiliency",
+		Metadata:    nil,
+		Free:        true,
+	}
+
+	plan2 := model.ServicePlan{
+		Name:        "bronze",
+		Id:          "bronze",
+		Description: "Bronze Tier Performance and Resiliency",
+		Metadata:    nil,
+		Free:        true,
+	}
+
+	service := model.Service{
+		Name:            "spectrum-scale",
+		Id:              "spectrum-service-guid",
+		Description:     "Provides the Spectrum FS volume service, including volume creation and volume mounts",
+		Bindable:        true,
+		PlanUpdateable:  false,
+		Tags:            []string{"gpfs"},
+		Requires:        []string{"volume_mount"},
+		Metadata:        nil,
+		Plans:           []model.ServicePlan{plan1, plan2},
+		DashboardClient: nil,
+	}
+
+	return []model.Service{service}
+}
+
+func (s *SpectrumBackend) CreateVolume(name string, opts map[string]interface{}) error {
 	return s.client.Create(name, opts)
 }
 
-func (s *SpectrumBackend) Remove(name string) error {
+func (s *SpectrumBackend) RemoveVolume(name string) error {
 	return s.client.Remove(name)
 }
 
-func (s *SpectrumBackend) Attach(name string) (string, error){
-	return s.client.Attach(name)
-}
-
-func (s *SpectrumBackend) Detach(name string) error{
-	return s.client.Detach(name)
-}
-
-func (s *SpectrumBackend) List() ([]model.VolumeMetadata, error){
+func (s *SpectrumBackend) ListVolumes() ([]model.VolumeMetadata, error){
 	spectrumVolumeMetaData, err := s.client.List()
 
 	volumeMetaData := make([]model.VolumeMetadata, len(spectrumVolumeMetaData))
@@ -44,7 +72,7 @@ func (s *SpectrumBackend) List() ([]model.VolumeMetadata, error){
 	return volumeMetaData, err
 }
 
-func (s *SpectrumBackend) Get(name string) (volumeMetaData *model.VolumeMetadata, config *map[string]interface{}, err error) {
+func (s *SpectrumBackend) GetVolume(name string) (volumeMetaData *model.VolumeMetadata, clientDriverName string, config *map[string]interface{}, err error) {
 	spectrumVolumeMetaData, spectrumConfig, err := s.client.Get(name)
 
 	volumeMetaData = &model.VolumeMetadata {
@@ -55,14 +83,7 @@ func (s *SpectrumBackend) Get(name string) (volumeMetaData *model.VolumeMetadata
 	configMap := make(map[string]interface{})
 	configMap["fileset"] = spectrumConfig.FilesetId
 	configMap["filesystem"] = spectrumConfig.Filesystem
+	clientDriverName = fmt.Sprintf("spectrum-scale-%s", spectrumConfig.Filesystem)
 
-	return volumeMetaData, &configMap, err
-}
-
-func (s *SpectrumBackend) IsMounted() (bool, error){
-	return s.client.IsMounted()
-}
-
-func (s *SpectrumBackend) Mount() error{
-	return s.client.Mount()
+	return volumeMetaData, clientDriverName, &configMap, err
 }

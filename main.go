@@ -1,18 +1,17 @@
 package main
 
 import (
-	"errors"
 	"flag"
 	"fmt"
 	"io"
 	"log"
 	"os"
 	"path"
+	"strings"
 
 	"github.ibm.com/almaden-containers/ibm-storage-broker.git/backends"
 	"github.ibm.com/almaden-containers/ibm-storage-broker.git/core"
 	"github.ibm.com/almaden-containers/ibm-storage-broker.git/model"
-	"github.ibm.com/almaden-containers/ibm-storage-broker.git/utils"
 	"github.ibm.com/almaden-containers/ibm-storage-broker.git/web_server"
 )
 
@@ -41,9 +40,9 @@ var logPath = flag.String(
 	"/tmp",
 	"log path",
 )
-var backend = flag.String(
-	"backend",
-	"spectrum-scale",
+var enabledServices = flag.String(
+	"enabled-services",
+	"spectrum-scale", // "spectrum-scale,spectrum-scale-nfs",
 	"The storage backend to use",
 )
 
@@ -52,25 +51,25 @@ func main() {
 	logger, logFile := setupLogger(*logPath)
 	defer closeLogs(logFile)
 
-	var storageBackend core.StorageBackend
-	switch *backend {
-	case "manila":
-		panic("manila backend not yet implemented")
-	case "spectrum-scale":
-		fallthrough
-	default:
-		storageBackend = backends.NewSpectrumBackend(logger, servicePlan, defaultMountPath)
+	// TODO: Auto-initialize the allBackends array using golang reflection on the backends package
+	// TODO: Only instantiate StorageBackends needed for enabled services
+	allBackends := []core.StorageBackend{
+		backends.NewSpectrumBackend(logger, servicePlan, defaultMountPath),
+		//backends.NewSpectrumNfsBackend(logger, servicePlan, defaultMountPath),
 	}
 
-	existingServiceInstances, err := loadServiceInstances()
-	if err != nil {
-		log.Fatal("error reading existing service instances")
+	backendsMap := make(map[*model.Service]*core.StorageBackend)
+	for _, backend := range allBackends {
+		for _, service := range backend.GetServices() {
+			for _, enabledService := range strings.Split(*enabledServices, ",") {
+				if enabledService == service.Name {
+					backendsMap[&service] = &backend
+				}
+			}
+		}
 	}
-	existingServiceBindings, err := loadServiceBindings()
-	if err != nil {
-		log.Fatal("error reading existing service bindings")
-	}
-	controller := core.NewController(storageBackend, *configPath, existingServiceInstances, existingServiceBindings)
+
+	controller := core.NewController(backendsMap, *configPath)
 	server, err := web_server.NewServer(controller, *logger)
 	if err != nil {
 		log.Fatal(fmt.Sprintf("Error creating server [%s]...", err.Error))
@@ -79,36 +78,6 @@ func main() {
 	log.Fatal(server.Start(*port))
 }
 
-func loadServiceInstances() (map[string]*model.ServiceInstance, error) {
-	var serviceInstancesMap map[string]*model.ServiceInstance
-
-	err := utils.ReadAndUnmarshal(&serviceInstancesMap, *configPath, "service_instances.json")
-	if err != nil {
-		if os.IsNotExist(err) {
-			fmt.Printf("WARNING: service instance data file '%s' does not exist: \n", "service_instances.json")
-			serviceInstancesMap = make(map[string]*model.ServiceInstance)
-		} else {
-			return nil, errors.New(fmt.Sprintf("Could not load the service instances, message: %s", err.Error()))
-		}
-	}
-
-	return serviceInstancesMap, nil
-}
-
-func loadServiceBindings() (map[string]*model.ServiceBinding, error) {
-	var bindingMap map[string]*model.ServiceBinding
-	err := utils.ReadAndUnmarshal(&bindingMap, *configPath, "service_bindings.json")
-	if err != nil {
-		if os.IsNotExist(err) {
-			fmt.Printf("WARNING: key map data file '%s' does not exist: \n", "service_bindings.json")
-			bindingMap = make(map[string]*model.ServiceBinding)
-		} else {
-			return nil, errors.New(fmt.Sprintf("Could not load the service instances, message: %s", err.Error()))
-		}
-	}
-
-	return bindingMap, nil
-}
 func setupLogger(logPath string) (*log.Logger, *os.File) {
 	logFile, err := os.OpenFile(path.Join(logPath, "ibm-storage-broker.log"), os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0640)
 	if err != nil {
