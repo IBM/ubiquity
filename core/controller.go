@@ -34,21 +34,21 @@ type Controller interface {
 
 type StorageBackend interface {
 	GetServices() []model.Service
-	CreateVolume(name string, opts map[string]interface{}) error
-	RemoveVolume(name string) error
-	ListVolumes() ([]model.VolumeMetadata, error)
-	GetVolume(name string) (volumeMetadata *model.VolumeMetadata, clientDriverName string, config *map[string]interface{}, err error)
+	CreateVolume(serviceInstance model.ServiceInstance, name string, opts map[string]interface{}) error
+	RemoveVolume(serviceInstance model.ServiceInstance, name string) error
+	ListVolumes(serviceInstance model.ServiceInstance) ([]model.VolumeMetadata, error)
+	GetVolume(serviceInstance model.ServiceInstance, name string) (volumeMetadata *model.VolumeMetadata, clientDriverName string, config *map[string]interface{}, err error)
 }
 
 type controller struct {
-	backends    map[*model.Service]*StorageBackend
+	backends    map[*model.Service]StorageBackend
 	log         *log.Logger
 	instanceMap map[string]*model.ServiceInstance
 	bindingMap  map[string]*model.ServiceBinding
 	configPath  string
 }
 
-func NewController(backends map[*model.Service]*StorageBackend, configPath string) Controller {
+func NewController(backends map[*model.Service]StorageBackend, configPath string) Controller {
 
 	existingServiceInstances, err := loadServiceInstances(configPath)
 	if err != nil {
@@ -89,7 +89,7 @@ func (c *controller) CreateServiceInstance(logger log.Logger, serviceInstanceId 
 	if err != nil {
 		return model.CreateServiceInstanceResponse{}, err
 	}
-	if err := (*c.backends[service]).CreateVolume(serviceInstanceId, nil); err != nil {
+	if err := c.backends[service].CreateVolume(instance, serviceInstanceId, nil); err != nil {
 		return model.CreateServiceInstanceResponse{}, err
 	}
 
@@ -140,11 +140,11 @@ func (c *controller) ServiceInstancePropertiesMatch(logger log.Logger, serviceIn
 
 func (c *controller) DeleteServiceInstance(logger log.Logger, serviceInstanceId string) error {
 	serviceInstance := c.instanceMap[serviceInstanceId]
-	service, err := getServiceById(c.backends, serviceInstance.ServiceId)
+	service, err := getServiceById(c.backends, (*serviceInstance).ServiceId)
 	if err != nil {
 		return err
 	}
-	if err := (*c.backends[service]).RemoveVolume(serviceInstanceId); err != nil {
+	if err := c.backends[service].RemoveVolume(*serviceInstance, serviceInstanceId); err != nil {
 		return err
 	}
 
@@ -158,14 +158,13 @@ func (c *controller) DeleteServiceInstance(logger log.Logger, serviceInstanceId 
 
 func (c *controller) BindServiceInstance(logger log.Logger, serviceInstanceId string, bindingId string, bindingInfo model.ServiceBinding) (model.CreateServiceBindingResponse, error) {
 	serviceInstance := c.instanceMap[serviceInstanceId]
-	service, err := getServiceById(c.backends, serviceInstance.ServiceId)
+	service, err := getServiceById(c.backends, (*serviceInstance).ServiceId)
 	if err != nil {
 		return model.CreateServiceBindingResponse{}, err
 	}
-	backend := *c.backends[service]
 
 	c.bindingMap[bindingId] = &bindingInfo
-	_, clientDriverName, config, err := backend.GetVolume(serviceInstanceId)
+	_, clientDriverName, config, err := c.backends[service].GetVolume(*serviceInstance, serviceInstanceId)
 	if err != nil {
 		return model.CreateServiceBindingResponse{}, err
 	}
@@ -244,7 +243,7 @@ func determineContainerMountPath(parameters map[string]interface{}, volId string
 	return path.Join(DEFAULT_CONTAINER_PATH, volId)
 }
 
-func getServiceById(backendsMap map[*model.Service]*StorageBackend, serviceId string) (*model.Service, error) {
+func getServiceById(backendsMap map[*model.Service]StorageBackend, serviceId string) (*model.Service, error) {
 	for service := range backendsMap {
 		if (*service).Id == serviceId {
 			return service, nil

@@ -27,13 +27,8 @@ var configPath = flag.String(
 )
 var defaultMountPath = flag.String(
 	"defaultMountPath",
-	"/tmp/share",
+	"/gpfs",
 	"Local directory to mount within",
-)
-var servicePlan = flag.String(
-	"servicePlan",
-	"gold",
-	"The service plan to use",
 )
 var logPath = flag.String(
 	"logPath",
@@ -42,8 +37,18 @@ var logPath = flag.String(
 )
 var enabledServices = flag.String(
 	"enabled-services",
-	"spectrum-scale", // "spectrum-scale,spectrum-scale-nfs",
-	"The storage backend to use",
+	"spectrum-scale,spectrum-scale-nfs",
+	"The services/backends to enable",
+)
+var nfsServerAddr = flag.String(
+	"nfsServerAddr",
+	"192.168.1.138",
+	"The address of the NFS server (NFS services only)",
+)
+var nfsClientCIDR = flag.String(
+	"nfsClientCIDR",
+	"192.168.1.0/24",
+	"The CIDR for exported NFS shares (NFS services only)",
 )
 
 func main() {
@@ -54,16 +59,17 @@ func main() {
 	// TODO: Auto-initialize the allBackends array using golang reflection on the backends package
 	// TODO: Only instantiate StorageBackends needed for enabled services
 	allBackends := []core.StorageBackend{
-		backends.NewSpectrumBackend(logger, servicePlan, defaultMountPath),
-		//backends.NewSpectrumNfsBackend(logger, servicePlan, defaultMountPath),
+		backends.NewSpectrumBackend(logger, *defaultMountPath),
+		backends.NewSpectrumNfsBackend(logger, *defaultMountPath, *nfsServerAddr, *nfsClientCIDR),
 	}
 
-	backendsMap := make(map[*model.Service]*core.StorageBackend)
+	backendsMap := make(map[*model.Service]core.StorageBackend)
 	for _, backend := range allBackends {
 		for _, service := range backend.GetServices() {
 			for _, enabledService := range strings.Split(*enabledServices, ",") {
 				if enabledService == service.Name {
-					backendsMap[&service] = &backend
+					logger.Printf("Enabling `%s` service", service.Name)
+					backendsMap[&service] = backend
 				}
 			}
 		}

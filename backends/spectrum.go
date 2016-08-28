@@ -6,21 +6,22 @@ import (
 
 	common "github.ibm.com/almaden-containers/spectrum-common.git/core"
 	"github.ibm.com/almaden-containers/ibm-storage-broker.git/model"
+	"strings"
 )
 
 type SpectrumBackend struct {
 	logger *log.Logger
-	client common.SpectrumClient
+	mountpoint string
 }
 
-func NewSpectrumBackend(logger *log.Logger, servicePlan, mountpoint *string) *SpectrumBackend {
-	return &SpectrumBackend{logger: logger, client: common.NewSpectrumClient(logger, *servicePlan, *mountpoint)}
+func NewSpectrumBackend(logger *log.Logger, mountpoint string) *SpectrumBackend {
+	return &SpectrumBackend{logger: logger, mountpoint: mountpoint}
 }
 
 func (s *SpectrumBackend) GetServices() []model.Service {
 	plan1 := model.ServicePlan{
 		Name:        "gold",
-		Id:          "gold",
+		Id:          "spectrum-scale-gold",
 		Description: "Gold Tier Performance and Resiliency",
 		Metadata:    nil,
 		Free:        true,
@@ -28,7 +29,7 @@ func (s *SpectrumBackend) GetServices() []model.Service {
 
 	plan2 := model.ServicePlan{
 		Name:        "bronze",
-		Id:          "bronze",
+		Id:          "spectrum-scale-bronze",
 		Description: "Bronze Tier Performance and Resiliency",
 		Metadata:    nil,
 		Free:        true,
@@ -50,16 +51,19 @@ func (s *SpectrumBackend) GetServices() []model.Service {
 	return []model.Service{service}
 }
 
-func (s *SpectrumBackend) CreateVolume(name string, opts map[string]interface{}) error {
-	return s.client.Create(name, opts)
+func (s *SpectrumBackend) CreateVolume(serviceInstance model.ServiceInstance, name string, opts map[string]interface{}) error {
+	client := s.getSpectrumClient(serviceInstance)
+	return client.Create(name, opts)
 }
 
-func (s *SpectrumBackend) RemoveVolume(name string) error {
-	return s.client.Remove(name)
+func (s *SpectrumBackend) RemoveVolume(serviceInstance model.ServiceInstance, name string) error {
+	client := s.getSpectrumClient(serviceInstance)
+	return client.Remove(name)
 }
 
-func (s *SpectrumBackend) ListVolumes() ([]model.VolumeMetadata, error){
-	spectrumVolumeMetaData, err := s.client.List()
+func (s *SpectrumBackend) ListVolumes(serviceInstance model.ServiceInstance) ([]model.VolumeMetadata, error){
+	client := s.getSpectrumClient(serviceInstance)
+	spectrumVolumeMetaData, err := client.List()
 
 	volumeMetaData := make([]model.VolumeMetadata, len(spectrumVolumeMetaData))
 	for i, e := range spectrumVolumeMetaData {
@@ -72,10 +76,11 @@ func (s *SpectrumBackend) ListVolumes() ([]model.VolumeMetadata, error){
 	return volumeMetaData, err
 }
 
-func (s *SpectrumBackend) GetVolume(name string) (volumeMetaData *model.VolumeMetadata, clientDriverName string, config *map[string]interface{}, err error) {
-	spectrumVolumeMetaData, spectrumConfig, err := s.client.Get(name)
+func (s *SpectrumBackend) GetVolume(serviceInstance model.ServiceInstance, name string) (volumeMetadata *model.VolumeMetadata, clientDriverName string, config *map[string]interface{}, err error) {
+	client := s.getSpectrumClient(serviceInstance)
+	spectrumVolumeMetaData, spectrumConfig, err := client.Get(name)
 
-	volumeMetaData = &model.VolumeMetadata {
+	volumeMetadata = &model.VolumeMetadata {
 		Name: spectrumVolumeMetaData.Name,
 		Mountpoint: spectrumVolumeMetaData.Mountpoint,
 	}
@@ -85,5 +90,12 @@ func (s *SpectrumBackend) GetVolume(name string) (volumeMetaData *model.VolumeMe
 	configMap["filesystem"] = spectrumConfig.Filesystem
 	clientDriverName = fmt.Sprintf("spectrum-scale-%s", spectrumConfig.Filesystem)
 
-	return volumeMetaData, clientDriverName, &configMap, err
+	return volumeMetadata, clientDriverName, &configMap, err
+}
+
+func (s *SpectrumBackend) getSpectrumClient(serviceInstance model.ServiceInstance) common.SpectrumClient {
+	// TODO: clean up usage of planId for plan name
+	planIdSplit := strings.Split(serviceInstance.PlanId, "-")
+	planName := planIdSplit[len(planIdSplit)-1]
+	return common.NewSpectrumClient(s.logger, planName, fmt.Sprintf("%s/%s", s.mountpoint, planName))
 }
