@@ -108,3 +108,32 @@ func (r *ListResponse) WriteResponse(w http.ResponseWriter) {
 	}
 	fmt.Fprintf(w, string(data))
 }
+
+type FlexVolumeResponse struct {
+	Status  string `json:"status"`
+	Message string `json:"message"`
+	Device  string `json:"device"`
+}
+
+func (f *FlexVolumeResponse) PrintResponse() error {
+	responseBytes, err := json.Marshal(f)
+	if err != nil {
+		return err
+	}
+	fmt.Printf("%s", string(responseBytes[:]))
+	return nil
+}
+
+type FlexVolumeMountRequest struct {
+	MountPath   string                 `json:"mountPath"`
+	MountDevice string                 `json:"name"`
+	Opts        map[string]interface{} `json:"opts"`
+}
+
+type FlexVolumeAttachRequest struct {
+	VolumeId   string `json:"volumeID"`
+	Filesystem string `json:"filesystem"`
+	Size       string `json:"size"`
+	Path       string `json:"path"`
+	Fileset    string `json:"fileset"`
+}
