@@ -13,6 +13,8 @@ import (
 	"github.ibm.com/almaden-containers/ibm-storage-broker.git/core"
 	"github.ibm.com/almaden-containers/ibm-storage-broker.git/model"
 	"github.ibm.com/almaden-containers/ibm-storage-broker.git/web_server"
+	"encoding/json"
+	"bufio"
 )
 
 var port = flag.String(
@@ -37,18 +39,32 @@ var logPath = flag.String(
 )
 var enabledServices = flag.String(
 	"enabled-services",
-	"spectrum-scale,spectrum-scale-nfs",
+	"spectrum-scale,spectrum-scale-nfs,manila-nfs",
 	"The services/backends to enable",
 )
-var nfsServerAddr = flag.String(
-	"nfsServerAddr",
+var spectrumNfsServerAddr = flag.String(
+	"spectrumNfsServerAddr",
 	"192.168.1.138",
-	"The address of the NFS server (NFS services only)",
+	"The address of the NFS share server (spectrum-scale-nfs service only)",
 )
-var nfsClientCIDR = flag.String(
-	"nfsClientCIDR",
+var manilaNfsClientCIDR = flag.String(
+	"manilaNfsClientCIDR",
+	"0.0.0.0/0",
+	"The subnet CIDR to allow access from for exported NFS shares (manila-nfs service only)",
+)
+var spectrumNfsClientCIDR = flag.String(
+	"spectrumNfsClientCIDR",
 	"192.168.1.0/24",
-	"The CIDR for exported NFS shares (NFS services only)",
+	"The subnet CIDR to allow access from for exported NFS shares (manila-nfs service only)",
+)
+var openstackConfig = flag.String(
+	"openstackConfig",
+	"{\"AuthUrl\":\"http://9.1.74.243:5000/v3/auth\"," +
+		"\"ManilaUrl\":\"http://9.1.74.243:8786/v2/1a179c77db2d4789ba076be8d8e36e26\"," +
+		"\"ProjectId\":\"1a179c77db2d4789ba076be8d8e36e26\"," +
+		"\"UserId\":\"268e5fe9c4d24737b38fdb21910fa7d1\"," +
+		"\"Password\":\"\"}",
+	"For manila-nfs service only: JSON with OpenStack endpoints and credentials (AuthUrl, ManilaUrl, ProjectId, UserId, Password)",
 )
 
 func main() {
@@ -58,9 +74,27 @@ func main() {
 
 	// TODO: Auto-initialize the allBackends array using golang reflection on the backends package
 	// TODO: Only instantiate StorageBackends needed for enabled services
+	var osConfig backends.OpenstackConfig
+	if err := json.Unmarshal([]byte(*openstackConfig), &osConfig); err != nil {
+		log.Fatalf("Could not parse OpenStack config: %s", err.Error())
+	}
+	
+	// FIXME: Moving forward, do not ask for password; expect it to be provided in command line config
+	for _, enabledService := range strings.Split(*enabledServices, ",") {
+		if enabledService == "manila-nfs" {
+			if osConfig.Password == "" {
+				reader := bufio.NewReader(os.Stdin)
+				fmt.Print("Enter password for OpenStack instance: ")
+				input, _ := reader.ReadString('\n')
+				osConfig.Password = strings.TrimSpace(input)
+			}
+		}
+	}
+
 	allBackends := []core.StorageBackend{
 		backends.NewSpectrumBackend(logger, *defaultMountPath),
-		backends.NewSpectrumNfsBackend(logger, *defaultMountPath, *nfsServerAddr, *nfsClientCIDR),
+		backends.NewSpectrumNfsBackend(logger, *defaultMountPath, *spectrumNfsServerAddr, *spectrumNfsClientCIDR),
+		backends.NewManilaBackend(logger, osConfig, *configPath, *manilaNfsClientCIDR),
 	}
 
 	backendsMap := make(map[*model.Service]core.StorageBackend)
@@ -78,7 +112,7 @@ func main() {
 	controller := core.NewController(backendsMap, *configPath)
 	server, err := web_server.NewServer(controller, *logger)
 	if err != nil {
-		log.Fatal(fmt.Sprintf("Error creating server [%s]...", err.Error))
+		log.Fatal(fmt.Sprintf("Error creating server [%s]...", err.Error()))
 	}
 
 	log.Fatal(server.Start(*port))

@@ -3,10 +3,10 @@ package backends
 import (
 	"log"
 	"fmt"
+	"strings"
 
 	common "github.ibm.com/almaden-containers/spectrum-common.git/core"
 	"github.ibm.com/almaden-containers/ibm-storage-broker.git/model"
-	"strings"
 )
 
 type SpectrumBackend struct {
@@ -76,11 +76,14 @@ func (s *SpectrumBackend) ListVolumes(serviceInstance model.ServiceInstance) ([]
 	return volumeMetaData, err
 }
 
-func (s *SpectrumBackend) GetVolume(serviceInstance model.ServiceInstance, name string) (volumeMetadata *model.VolumeMetadata, clientDriverName string, config *map[string]interface{}, err error) {
+func (s *SpectrumBackend) GetVolume(serviceInstance model.ServiceInstance, name string) (volumeMetadata *model.VolumeMetadata, clientDriverName *string, config *map[string]interface{}, err error) {
 	client := s.getSpectrumClient(serviceInstance)
 	spectrumVolumeMetaData, spectrumConfig, err := client.Get(name)
+	if err != nil {
+		return nil, nil, nil, err
+	}
 
-	volumeMetadata = &model.VolumeMetadata {
+	volumeMetadata = &model.VolumeMetadata{
 		Name: spectrumVolumeMetaData.Name,
 		Mountpoint: spectrumVolumeMetaData.Mountpoint,
 	}
@@ -88,13 +91,13 @@ func (s *SpectrumBackend) GetVolume(serviceInstance model.ServiceInstance, name 
 	configMap := make(map[string]interface{})
 	configMap["fileset"] = spectrumConfig.FilesetId
 	configMap["filesystem"] = spectrumConfig.Filesystem
-	clientDriverName = fmt.Sprintf("spectrum-scale-%s", spectrumConfig.Filesystem)
+	clientDriver := fmt.Sprintf("spectrum-scale-%s", spectrumConfig.Filesystem)
 
-	return volumeMetadata, clientDriverName, &configMap, err
+	return volumeMetadata, &clientDriver, &configMap, nil
 }
 
 func (s *SpectrumBackend) getSpectrumClient(serviceInstance model.ServiceInstance) common.SpectrumClient {
-	// TODO: clean up usage of planId for plan name
+	// FIXME: clean up usage of planId for getting plan name
 	planIdSplit := strings.Split(serviceInstance.PlanId, "-")
 	planName := planIdSplit[len(planIdSplit)-1]
 	return common.NewSpectrumClient(s.logger, planName, fmt.Sprintf("%s/%s", s.mountpoint, planName))

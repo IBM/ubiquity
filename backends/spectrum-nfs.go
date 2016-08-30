@@ -67,11 +67,11 @@ func (s *SpectrumNfsBackend) RemoveVolume(serviceInstance model.ServiceInstance,
 	return s.SpectrumBackend.RemoveVolume(serviceInstance, name)
 }
 
-func (s *SpectrumNfsBackend) GetVolume(serviceInstance model.ServiceInstance, name string) (volumeMetadata *model.VolumeMetadata, clientDriverName string, config *map[string]interface{}, err error) {
-	clientDriverName = "nfs-plugin"
+func (s *SpectrumNfsBackend) GetVolume(serviceInstance model.ServiceInstance, name string) (volumeMetadata *model.VolumeMetadata, clientDriverName *string, config *map[string]interface{}, err error) {
+	clientDriver:= "nfs-plugin"
 	volumeMetadata, _, spectrumBackendConfig, err := s.SpectrumBackend.GetVolume(serviceInstance, name)
 	nfsShare := fmt.Sprintf("%s:%s", s.NfsServerAddr, (*volumeMetadata).Mountpoint)
 	(*spectrumBackendConfig)["nfs_share"] = nfsShare
 	s.logger.Printf("Adding nfs_share %s to bind config\n", nfsShare)
-	return volumeMetadata, clientDriverName, spectrumBackendConfig, err
+	return volumeMetadata, &clientDriver, spectrumBackendConfig, err
 }

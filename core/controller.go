@@ -37,7 +37,7 @@ type StorageBackend interface {
 	CreateVolume(serviceInstance model.ServiceInstance, name string, opts map[string]interface{}) error
 	RemoveVolume(serviceInstance model.ServiceInstance, name string) error
 	ListVolumes(serviceInstance model.ServiceInstance) ([]model.VolumeMetadata, error)
-	GetVolume(serviceInstance model.ServiceInstance, name string) (volumeMetadata *model.VolumeMetadata, clientDriverName string, config *map[string]interface{}, err error)
+	GetVolume(serviceInstance model.ServiceInstance, name string) (volumeMetadata *model.VolumeMetadata, clientDriverName *string, config *map[string]interface{}, err error)
 }
 
 type controller struct {
@@ -87,9 +87,11 @@ func (c *controller) GetCatalog(logger log.Logger) (model.Catalog, error) {
 func (c *controller) CreateServiceInstance(logger log.Logger, serviceInstanceId string, instance model.ServiceInstance) (model.CreateServiceInstanceResponse, error) {
 	service, err := getServiceById(c.backends, instance.ServiceId)
 	if err != nil {
+		logger.Printf("Error: %s", err.Error())
 		return model.CreateServiceInstanceResponse{}, err
 	}
 	if err := c.backends[service].CreateVolume(instance, serviceInstanceId, nil); err != nil {
+		logger.Printf("Error: %s", err.Error())
 		return model.CreateServiceInstanceResponse{}, err
 	}
 
@@ -104,6 +106,7 @@ func (c *controller) CreateServiceInstance(logger log.Logger, serviceInstanceId 
 	c.instanceMap[serviceInstanceId] = &instance
 
 	if err := persistServiceInstances(c.configPath, c.instanceMap); err != nil {
+		logger.Printf("Error: %s", err.Error())
 		return model.CreateServiceInstanceResponse{}, err
 	}
 
@@ -142,15 +145,18 @@ func (c *controller) DeleteServiceInstance(logger log.Logger, serviceInstanceId 
 	serviceInstance := c.instanceMap[serviceInstanceId]
 	service, err := getServiceById(c.backends, (*serviceInstance).ServiceId)
 	if err != nil {
+		logger.Printf("Error: %s", err.Error())
 		return err
 	}
 	if err := c.backends[service].RemoveVolume(*serviceInstance, serviceInstanceId); err != nil {
+		logger.Printf("Error: %s", err.Error())
 		return err
 	}
 
 	delete(c.instanceMap, serviceInstanceId)
 
 	if err := persistServiceInstances(c.configPath, c.instanceMap); err != nil {
+		logger.Printf("Error: %s", err.Error())
 		return err
 	}
 	return nil
@@ -166,20 +172,23 @@ func (c *controller) BindServiceInstance(logger log.Logger, serviceInstanceId st
 	c.bindingMap[bindingId] = &bindingInfo
 	_, clientDriverName, config, err := c.backends[service].GetVolume(*serviceInstance, serviceInstanceId)
 	if err != nil {
+		logger.Printf("Error: %s", err.Error())
 		return model.CreateServiceBindingResponse{}, err
 	}
 	containerMountPath := determineContainerMountPath(bindingInfo.Parameters, serviceInstanceId)
 
 	configJson, err := json.Marshal(*config)
 	if err != nil{
+		logger.Printf("Error: %s", err.Error())
 		return model.CreateServiceBindingResponse{}, err
 	}
 
-	privateDetails := model.VolumeMountPrivateDetails{Driver: clientDriverName, GroupId: serviceInstanceId, Config: string(configJson)}
+	privateDetails := model.VolumeMountPrivateDetails{Driver: *clientDriverName, GroupId: serviceInstanceId, Config: string(configJson)}
 	volumeMount := model.VolumeMount{ContainerPath: containerMountPath, Mode: "rw", Private: privateDetails}
 	volumeMounts := []model.VolumeMount{volumeMount}
 
 	if err = persistServiceBindings(c.configPath, c.bindingMap); err != nil {
+		logger.Printf("Error: %s", err.Error())
 		return model.CreateServiceBindingResponse{}, err
 	}
 
