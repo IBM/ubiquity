@@ -358,10 +358,6 @@ func (m *MMCliFilesetClient) UnexportNfs(name string) error {
 		m.log.Println("MMCliFilesetClient UnexportNfs: fileset not found")
 		return fmt.Errorf("fileset couldn't be located")
 	}
-	if mapping.Mountpoint == "" {
-		m.log.Println("MMCliFilesetClient UnexportNfs: fileset not linked")
-		return fmt.Errorf("fileset not linked")
-	}
 	spectrumCommand := "/usr/lpp/mmfs/bin/mmnfs"
 	filesetPath := path.Join(m.Mountpoint, mapping.Name)
 	args := []string{"export", "remove", filesetPath, "--force"}
