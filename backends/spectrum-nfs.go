@@ -2,6 +2,7 @@ package backends
 
 import (
 	"github.ibm.com/almaden-containers/ibm-storage-broker.git/model"
+	common "github.ibm.com/almaden-containers/spectrum-common.git/core"
 	"log"
 	"fmt"
 )
@@ -13,7 +14,8 @@ type SpectrumNfsBackend struct {
 }
 
 func NewSpectrumNfsBackend(logger *log.Logger, mountpoint, nfsServerAddr, nfsClientCIDR string) *SpectrumNfsBackend {
-	return &SpectrumNfsBackend{NfsServerAddr: nfsServerAddr, NfsClientCIDR: nfsClientCIDR, SpectrumBackend: SpectrumBackend{logger, mountpoint}}
+	return &SpectrumNfsBackend{NfsServerAddr: nfsServerAddr, NfsClientCIDR: nfsClientCIDR,
+		SpectrumBackend: SpectrumBackend{logger, mountpoint, make(map[string]common.SpectrumClient)}}
 }
 
 func (s *SpectrumNfsBackend) GetServices() []model.Service {

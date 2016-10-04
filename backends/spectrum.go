@@ -12,10 +12,11 @@ import (
 type SpectrumBackend struct {
 	logger *log.Logger
 	mountpoint string
+	spectrumClients map[string]common.SpectrumClient  // cached SpectrumClient instance (one per service plan)
 }
 
 func NewSpectrumBackend(logger *log.Logger, mountpoint string) *SpectrumBackend {
-	return &SpectrumBackend{logger: logger, mountpoint: mountpoint}
+	return &SpectrumBackend{logger: logger, mountpoint: mountpoint, spectrumClients: make(map[string]common.SpectrumClient)}
 }
 
 func (s *SpectrumBackend) GetServices() []model.Service {
@@ -100,5 +101,16 @@ func (s *SpectrumBackend) getSpectrumClient(serviceInstance model.ServiceInstanc
 	// FIXME: clean up usage of planId for getting plan name
 	planIdSplit := strings.Split(serviceInstance.PlanId, "-")
 	planName := planIdSplit[len(planIdSplit)-1]
-	return common.NewSpectrumClient(s.logger, planName, fmt.Sprintf("%s/%s", s.mountpoint, planName))
+
+	// cache SpectrumClients per plan
+	spectrumClient, ok := s.spectrumClients[planName]
+	if !ok {
+		mountPoint := fmt.Sprintf("%s/%s", s.mountpoint, planName)
+		dbclient := common.NewDatabaseClient(s.logger, planName, mountPoint)
+		dbclient.Init()
+		spectrumClient := common.NewSpectrumClient(s.logger, planName, mountPoint, dbclient)
+		spectrumClient.Activate()
+		s.spectrumClients[planName] = spectrumClient
+	}
+	return spectrumClient
 }
