@@ -90,17 +90,20 @@ func (c *controller) CreateServiceInstance(logger log.Logger, serviceInstanceId 
 		logger.Printf("Error: %s", err.Error())
 		return model.CreateServiceInstanceResponse{}, err
 	}
-	if err := c.backends[service].CreateVolume(instance, serviceInstanceId, nil); err != nil {
-		logger.Printf("Error: %s", err.Error())
-		return model.CreateServiceInstanceResponse{}, err
-	}
 
-	instance.DashboardUrl = "http://dashboard_url"
 	instance.Id = serviceInstanceId
+	instance.DashboardUrl = "http://dashboard_url"
 	instance.LastOperation = &model.LastOperation{
 		State:                    "in progress",
 		Description:              "creating service instance...",
 		AsyncPollIntervalSeconds: DEFAULT_POLLING_INTERVAL_SECONDS,
+	}
+
+	volumeName := getVolumeNameForServiceInstance(&instance)
+	fmt.Printf("CreateServiceInstance: Creating service instance %s with volume %s: \n", serviceInstanceId, volumeName)
+	if err := c.backends[service].CreateVolume(instance, volumeName, nil); err != nil {
+		logger.Printf("Error: %s", err.Error())
+		return model.CreateServiceInstanceResponse{}, err
 	}
 
 	c.instanceMap[serviceInstanceId] = &instance
@@ -148,7 +151,7 @@ func (c *controller) DeleteServiceInstance(logger log.Logger, serviceInstanceId 
 		logger.Printf("Error: %s", err.Error())
 		return err
 	}
-	if err := c.backends[service].RemoveVolume(*serviceInstance, serviceInstanceId); err != nil {
+	if err := c.backends[service].RemoveVolume(*serviceInstance, getVolumeNameForServiceInstance(serviceInstance)); err != nil {
 		logger.Printf("Error: %s", err.Error())
 		return err
 	}
@@ -170,7 +173,8 @@ func (c *controller) BindServiceInstance(logger log.Logger, serviceInstanceId st
 	}
 
 	c.bindingMap[bindingId] = &bindingInfo
-	_, clientDriverName, config, err := c.backends[service].GetVolume(*serviceInstance, serviceInstanceId)
+	volumeName := getVolumeNameForServiceInstance(serviceInstance)
+	_, clientDriverName, config, err := c.backends[service].GetVolume(*serviceInstance, volumeName)
 	if err != nil {
 		logger.Printf("Error: %s", err.Error())
 		return model.CreateServiceBindingResponse{}, err
@@ -183,7 +187,7 @@ func (c *controller) BindServiceInstance(logger log.Logger, serviceInstanceId st
 		return model.CreateServiceBindingResponse{}, err
 	}
 
-	privateDetails := model.VolumeMountPrivateDetails{Driver: *clientDriverName, GroupId: serviceInstanceId, Config: string(configJson)}
+	privateDetails := model.VolumeMountPrivateDetails{Driver: *clientDriverName, GroupId: volumeName, Config: string(configJson)}
 	volumeMount := model.VolumeMount{ContainerPath: containerMountPath, Mode: "rw", Private: privateDetails}
 	volumeMounts := []model.VolumeMount{volumeMount}
 
@@ -298,4 +302,15 @@ func loadServiceBindings(configPath string) (map[string]*model.ServiceBinding, e
 
 func persistServiceBindings(configPath string, bindingMap map[string]*model.ServiceBinding) error {
 	return utils.MarshalAndRecord(bindingMap, configPath, "service_bindings.json")
+}
+
+func getVolumeNameForServiceInstance(serviceInstance *model.ServiceInstance) string {
+	volumeName := (*serviceInstance).Id // default to Service Instance ID as volume name if not provided
+	if (*serviceInstance).Parameters != nil {
+		volumeNameParam, ok := (*serviceInstance).Parameters.(map[string]interface{})["volumeName"]
+		if ok {
+			volumeName = volumeNameParam.(string)
+		}
+	}
+	return volumeName
 }
