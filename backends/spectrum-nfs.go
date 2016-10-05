@@ -48,7 +48,8 @@ func (s *SpectrumNfsBackend) GetServices() []model.Service {
 
 func (s *SpectrumNfsBackend) CreateVolume(serviceInstance model.ServiceInstance, name string, opts map[string]interface{}) error {
 	client := s.getSpectrumClient(serviceInstance)
-	if err := s.SpectrumBackend.CreateVolume(serviceInstance, name, opts); err != nil {
+	//if err := s.SpectrumBackend.CreateVolume(serviceInstance, name, opts); err != nil {
+	if err := client.Create(name, opts); err != nil {
 		return err
 	}
 	if _, err := client.Attach(name); err != nil {

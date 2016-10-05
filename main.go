@@ -44,7 +44,7 @@ var enabledServices = flag.String(
 )
 var spectrumNfsServerAddr = flag.String(
 	"spectrumNfsServerAddr",
-	"192.168.1.138",
+	"192.168.1.147",
 	"The address of the NFS share server (spectrum-scale-nfs service only)",
 )
 var manilaNfsClientCIDR = flag.String(
