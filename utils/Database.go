@@ -1,4 +1,4 @@
-package core
+package utils
 
 import (
 	"database/sql"
@@ -6,8 +6,9 @@ import (
 	"log"
 	"path"
 
-	_ "github.com/mattn/go-sqlite3"
 	"strings"
+
+	_ "github.com/mattn/go-sqlite3"
 )
 
 type DatabaseClient struct {
@@ -169,7 +170,7 @@ func (d *DatabaseClient) InsertLightweightVolume(fileset, directory, volumeName 
 	defer d.log.Println("DatabaseClient: InsertLightweightVolume end")
 
 	volume := &Volume{VolumeName: volumeName, VolumeType: LIGHTWEIGHT, ClusterId: d.ClusterId, FileSystem: d.Filesystem,
-		Fileset: fileset, Directory:directory}
+		Fileset: fileset, Directory: directory}
 
 	return d.insertVolume(volume)
 }

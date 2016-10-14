@@ -1,12 +1,13 @@
-package core
+package utils
 
 import (
+	"fmt"
 	"log"
+	"os"
 	"path"
 	"time"
-	"fmt"
-	"os"
-	"syscall"
+
+	"github.com/djherbis/times"
 )
 
 type FileLock struct {
@@ -16,48 +17,45 @@ type FileLock struct {
 }
 
 const (
-	LOCK_STALE_TIMEOUT time.Duration = time.Second * 60
-	LOCK_RETRY_TIMEOUT time.Duration = time.Second * 60
+	LOCK_STALE_TIMEOUT  time.Duration = time.Second * 60
+	LOCK_RETRY_TIMEOUT  time.Duration = time.Second * 60
 	LOCK_RETRY_INTERVAL time.Duration = time.Second * 5
 )
 
 func NewFileLock(log *log.Logger, filesystem, mountpoint string) *FileLock {
-	return &FileLock{log:log, Filesystem:filesystem, Mountpoint:mountpoint}
+	return &FileLock{log: log, Filesystem: filesystem, Mountpoint: mountpoint}
 }
 
 func (l *FileLock) Lock() error {
 
-	var sleep_time time.Duration
+	var sleepTime time.Duration
 	var attempt int
 
 	lockFile := "spectrum-scale-" + l.Filesystem + ".lock"
 	lockPath := path.Join(l.Mountpoint, lockFile)
 
-	for sleep_time < LOCK_RETRY_TIMEOUT {
+	for sleepTime < LOCK_RETRY_TIMEOUT {
 
-		attempt++;
+		attempt++
 		str := fmt.Sprintf("Attempt %v to acquire lock using lockPath %s", attempt, lockPath)
 		l.log.Println(str)
 
-		fd, err := os.OpenFile(lockPath, os.O_CREATE | os.O_EXCL, 0700)
+		fd, err := os.OpenFile(lockPath, os.O_CREATE|os.O_EXCL, 0700)
 
 		if err != nil {
 			if os.IsExist(err) {
 				l.log.Printf("%v already exists", lockPath)
 
-				fi,err := os.Stat(lockPath)
+				fi, err := times.Stat(lockPath)
 
 				if err != nil {
 					if os.IsNotExist(err) {
 						continue
-					} else  {
+					} else {
 						return fmt.Errorf("Failed to stat %s : %s\n", lockPath, err.Error())
 					}
 				}
-
-				stat := fi.Sys().(*syscall.Stat_t)
-
-				ctime := time.Unix(stat.Ctim.Unix())
+				ctime := fi.ChangeTime()
 
 				if time.Since(ctime) >= LOCK_STALE_TIMEOUT {
 					l.log.Printf("Found stale lock file : %s\n", lockPath)
@@ -78,7 +76,7 @@ func (l *FileLock) Lock() error {
 
 				start := time.Now()
 				time.Sleep(LOCK_RETRY_INTERVAL)
-				sleep_time += time.Since(start)
+				sleepTime += time.Since(start)
 
 			} else {
 				return fmt.Errorf("Failed to create lock file %s : %s\n", lockPath, err.Error())

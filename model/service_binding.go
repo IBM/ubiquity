@@ -1,6 +1,5 @@
 package model
 
-
 type ServiceBinding struct {
 	Id                string                 `json:"id"`
 	ServiceId         string                 `json:"service_id"`
@@ -26,7 +25,7 @@ type VolumeMount struct {
 }
 
 type VolumeMountPrivateDetails struct {
-	Driver  string                `json:"driver"`
-	GroupId string                `json:"group_id"`
-	Config  string 		      `json:"config"`
+	Driver  string `json:"driver"`
+	GroupId string `json:"group_id"`
+	Config  string `json:"config"`
 }

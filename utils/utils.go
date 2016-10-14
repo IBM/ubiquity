@@ -7,8 +7,25 @@ import (
 	"net/http"
 	"os"
 
+	"github.ibm.com/almaden-containers/ubiquity.git/model"
+
+	"path"
+	"strings"
+
 	"github.com/gorilla/mux"
 )
+
+func FormatURL(url string, entries ...string) string {
+	base := url
+	if !strings.HasSuffix(url, "/") {
+		base = fmt.Sprintf("%s/", url)
+	}
+	suffix := ""
+	for _, entry := range entries {
+		suffix = path.Join(suffix, entry)
+	}
+	return fmt.Sprintf("%s%s", base, suffix)
+}
 
 func ReadAndUnmarshal(object interface{}, dir string, fileName string) error {
 	path := dir + string(os.PathSeparator) + fileName
@@ -50,6 +67,19 @@ func WriteResponse(w http.ResponseWriter, code int, object interface{}) {
 }
 
 func Unmarshal(r *http.Request, object interface{}) error {
+	body, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		return err
+	}
+
+	err = json.Unmarshal(body, object)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+func UnmarshalResponse(r *http.Response, object interface{}) error {
 	body, err := ioutil.ReadAll(r.Body)
 	if err != nil {
 		return err
@@ -139,4 +169,13 @@ func MkDir(path string) error {
 	}
 
 	return err
+}
+
+func PrintResponse(f model.FlexVolumeResponse) error {
+	responseBytes, err := json.Marshal(f)
+	if err != nil {
+		return err
+	}
+	fmt.Printf("%s", string(responseBytes[:]))
+	return nil
 }

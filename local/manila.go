@@ -1,4 +1,4 @@
-package backends
+package local
 
 import (
 	"encoding/json"
@@ -12,8 +12,9 @@ import (
 	"strings"
 	"time"
 
+	"github.ibm.com/almaden-containers/ubiquity.git/model"
+
 	"github.com/openstack/golang-client/openstack"
-	"github.ibm.com/almaden-containers/ibm-storage-broker.git/model"
 )
 
 type ShareIds map[string]string
@@ -476,4 +477,5 @@ func getKeystoneV3Auth(osConfig OpenstackConfig) authContainer {
 			},
 		},
 	}
+
 }
