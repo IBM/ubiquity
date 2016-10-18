@@ -3,10 +3,6 @@ package remote
 import (
 	"fmt"
 	"log"
-	"strings"
-
-	"os"
-	"os/exec"
 
 	"net/http"
 
@@ -20,16 +16,14 @@ import (
 
 type spectrumRemoteClient struct {
 	logger        *log.Logger
-	filesystem    string
-	mountpoint    string
 	isActivated   bool
 	isMounted     bool
 	httpClient    *http.Client
 	storageApiURL string
 }
 
-func NewSpectrumRemoteClient(logger *log.Logger, filesystem, mountpoint string, storageApiURL string) model.StorageClient {
-	return &spectrumRemoteClient{logger: logger, filesystem: filesystem, mountpoint: mountpoint, storageApiURL: storageApiURL, httpClient: &http.Client{}}
+func NewSpectrumRemoteClient(logger *log.Logger, storageApiURL string) model.StorageClient {
+	return &spectrumRemoteClient{logger: logger, storageApiURL: storageApiURL, httpClient: &http.Client{}}
 }
 func (s *spectrumRemoteClient) Activate() (err error) {
 	s.logger.Println("spectrumRemoteClient: Activate start")
@@ -37,23 +31,6 @@ func (s *spectrumRemoteClient) Activate() (err error) {
 
 	if s.isActivated {
 		return nil
-	}
-
-	//check if filesystem is mounted
-	mounted, err := s.isSpectrumScaleMounted()
-
-	if err != nil {
-		s.logger.Printf("Internal error on activate %#v", err)
-		return err
-	}
-
-	if mounted == false {
-		err = s.mount()
-
-		if err != nil {
-			s.logger.Printf("Internal error on activate %#v", err)
-			return err
-		}
 	}
 
 	// call remote activate
@@ -241,78 +218,4 @@ func (s *spectrumRemoteClient) ListVolumes() ([]model.VolumeMetadata, error) {
 
 	return listResponse.Volumes, nil
 
-}
-
-func (s *spectrumRemoteClient) mount() error {
-	s.logger.Println("spectrumRemoteClient: mount start")
-	defer s.logger.Println("spectrumRemoteClient: mount end")
-
-	if s.isMounted == true {
-		return nil
-	}
-
-	spectrumCommand := "/usr/lpp/mmfs/bin/mmmount"
-	args := []string{s.filesystem, s.mountpoint}
-	cmd := exec.Command(spectrumCommand, args...)
-	output, err := cmd.Output()
-	if err != nil {
-		return fmt.Errorf("Failed to mount filesystem")
-	}
-	s.logger.Println(output)
-	s.isMounted = true
-	return nil
-}
-
-func (s *spectrumRemoteClient) isSpectrumScaleMounted() (bool, error) {
-	s.logger.Println("spectrumRemoteClient: isMounted start")
-	defer s.logger.Println("spectrumRemoteClient: isMounted end")
-
-	if s.isMounted == true {
-		return s.isMounted, nil
-	}
-
-	spectrumCommand := "/usr/lpp/mmfs/bin/mmlsmount"
-	args := []string{s.filesystem, "-L", "-Y"}
-	cmd := exec.Command(spectrumCommand, args...)
-	outputBytes, err := cmd.Output()
-	if err != nil {
-		s.logger.Printf("Error running command\n")
-		s.logger.Println(err)
-		return false, err
-	}
-	mountedNodes := extractMountedNodes(string(outputBytes))
-	if len(mountedNodes) == 0 {
-		//not mounted anywhere
-		s.isMounted = false
-		return s.isMounted, nil
-	} else {
-		// checkif mounted on current node -- compare node name
-		currentNode, _ := os.Hostname()
-		s.logger.Printf("spectrumRemoteClient: node name: %s\n", currentNode)
-		for _, node := range mountedNodes {
-			if node == currentNode {
-				s.isMounted = true
-				return s.isMounted, nil
-			}
-		}
-	}
-	s.isMounted = false
-	return s.isMounted, nil
-}
-
-func extractMountedNodes(spectrumOutput string) []string {
-	var nodes []string
-	lines := strings.Split(spectrumOutput, "\n")
-	if len(lines) == 1 {
-		return nodes
-	}
-	for _, line := range lines[1:] {
-		tokens := strings.Split(line, ":")
-		if len(tokens) > 10 {
-			if tokens[11] != "" {
-				nodes = append(nodes, tokens[11])
-			}
-		}
-	}
-	return nodes
 }

@@ -541,7 +541,7 @@ func (s *spectrumLocalClient) mount(filesystem string) (err error) {
 	}
 
 	spectrumCommand := "/usr/lpp/mmfs/bin/mmmount"
-	args := []string{filesystem}
+	args := []string{filesystem, "-a"}
 	cmd := exec.Command(spectrumCommand, args...)
 	output, err := cmd.Output()
 	if err != nil {
