@@ -12,7 +12,7 @@ import (
 )
 
 type DatabaseClient struct {
-	Filesystem string
+	//Filesystem string
 	Mountpoint string
 	log        *log.Logger
 	Db         *sql.DB
@@ -37,8 +37,8 @@ type Volume struct {
 	AdditionalData map[string]string
 }
 
-func NewDatabaseClient(log *log.Logger, filesystem, mountpoint string) *DatabaseClient {
-	return &DatabaseClient{log: log, Filesystem: filesystem, Mountpoint: mountpoint}
+func NewDatabaseClient(log *log.Logger, mountpoint string) *DatabaseClient {
+	return &DatabaseClient{log: log, Mountpoint: mountpoint}
 }
 
 func (d *DatabaseClient) Init() error {
@@ -46,7 +46,7 @@ func (d *DatabaseClient) Init() error {
 	d.log.Println("DatabaseClient: DB Init start")
 	defer d.log.Println("DatabaseClient: DB Init end")
 
-	dbFile := "spectrum-scale-" + d.Filesystem + ".db"
+	dbFile := "spectrum-scale.db"
 	dbPath := path.Join(d.Mountpoint, dbFile)
 
 	Db, err := sql.Open("sqlite3", dbPath)
@@ -155,31 +155,31 @@ func (d *DatabaseClient) DeleteVolume(name string) error {
 	return nil
 }
 
-func (d *DatabaseClient) InsertFilesetVolume(fileset, volumeName string) error {
+func (d *DatabaseClient) InsertFilesetVolume(fileset, volumeName string, filesystem string) error {
 	d.log.Println("DatabaseClient: InsertFilesetVolume start")
 	defer d.log.Println("DatabaseClient: InsertFilesetVolume end")
 
-	volume := &Volume{VolumeName: volumeName, VolumeType: FILESET, ClusterId: d.ClusterId, FileSystem: d.Filesystem,
+	volume := &Volume{VolumeName: volumeName, VolumeType: FILESET, ClusterId: d.ClusterId, FileSystem: filesystem,
 		Fileset: fileset}
 
 	return d.insertVolume(volume)
 }
 
-func (d *DatabaseClient) InsertLightweightVolume(fileset, directory, volumeName string) error {
+func (d *DatabaseClient) InsertLightweightVolume(fileset, directory, volumeName string, filesystem string) error {
 	d.log.Println("DatabaseClient: InsertLightweightVolume start")
 	defer d.log.Println("DatabaseClient: InsertLightweightVolume end")
 
-	volume := &Volume{VolumeName: volumeName, VolumeType: LIGHTWEIGHT, ClusterId: d.ClusterId, FileSystem: d.Filesystem,
+	volume := &Volume{VolumeName: volumeName, VolumeType: LIGHTWEIGHT, ClusterId: d.ClusterId, FileSystem: filesystem,
 		Fileset: fileset, Directory: directory}
 
 	return d.insertVolume(volume)
 }
 
-func (d *DatabaseClient) InsertFilesetQuotaVolume(fileset, quota, volumeName string) error {
+func (d *DatabaseClient) InsertFilesetQuotaVolume(fileset, quota, volumeName string, filesystem string) error {
 	d.log.Println("DatabaseClient: InsertFilesetQuotaVolume start")
 	defer d.log.Println("DatabaseClient: InsertFilesetQuotaVolume end")
 
-	volume := &Volume{VolumeName: volumeName, VolumeType: FILESET_QUOTA, ClusterId: d.ClusterId, FileSystem: d.Filesystem,
+	volume := &Volume{VolumeName: volumeName, VolumeType: FILESET_QUOTA, ClusterId: d.ClusterId, FileSystem: filesystem,
 		Fileset: fileset}
 
 	volume.AdditionalData = make(map[string]string)

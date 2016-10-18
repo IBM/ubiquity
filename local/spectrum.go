@@ -19,7 +19,7 @@ import (
 
 type spectrumLocalClient struct {
 	logger                                   *log.Logger
-	filesystem                               string
+	defaultFilesystem                        string
 	mountpoint                               string
 	dbClient                                 *utils.DatabaseClient
 	filelock                                 *utils.FileLock
@@ -31,13 +31,13 @@ type spectrumLocalClient struct {
 }
 
 const (
-	//LIGHTWEIGHT_VOLUME_FILESET string = "LightweightVolumes"
+	USER_SPECIFIED_TYPE string = "type"
 
-	TYPE_OPT       string = "type"
-	DIR_OPT        string = "directory"
-	QUOTA_OPT      string = "quota"
-	FILESET_OPT    string = "fileset"
-	FILESYSTEM_OPT string = "filesystem"
+	USER_SPECIFIED_DIRECTORY string = "directory"
+	USER_SPECIFIED_QUOTA     string = "quota"
+
+	USER_SPECIFIED_FILESET    string = "fileset"
+	USER_SPECIFIED_FILESYSTEM string = "filesystem"
 
 	FILESET_TYPE  string = "fileset"
 	LTWT_VOL_TYPE string = "lightweight"
@@ -47,9 +47,9 @@ const (
 	FILESET_QUOTA
 )
 
-func NewSpectrumLocalClient(logger *log.Logger, filesystem, mountpoint, filesetForLightWeightVolumes string) (model.StorageClient, error) {
+func NewSpectrumLocalClient(logger *log.Logger, mountpoint, filesetForLightWeightVolumes, defaultFilesystem string) (model.StorageClient, error) {
 
-	dbClient := utils.NewDatabaseClient(logger, filesystem, mountpoint)
+	dbClient := utils.NewDatabaseClient(logger, mountpoint)
 	err := dbClient.Init()
 	if err != nil {
 		logger.Fatalln(err.Error())
@@ -66,8 +66,8 @@ func NewSpectrumLocalClient(logger *log.Logger, filesystem, mountpoint, filesetF
 		os.Exit(1)
 	}()
 
-	return &spectrumLocalClient{logger: logger, filesystem: filesystem, mountpoint: mountpoint, dbClient: dbClient,
-		filelock: utils.NewFileLock(logger, filesystem, mountpoint), filesetForLightWeightVolumes: filesetForLightWeightVolumes}, nil
+	return &spectrumLocalClient{logger: logger, mountpoint: mountpoint, dbClient: dbClient,
+		filelock: utils.NewFileLock(logger, mountpoint), filesetForLightWeightVolumes: filesetForLightWeightVolumes, defaultFilesystem: defaultFilesystem}, nil
 }
 func (s *spectrumLocalClient) Activate() (err error) {
 	s.logger.Println("spectrumLocalClient: Activate start")
@@ -86,7 +86,7 @@ func (s *spectrumLocalClient) Activate() (err error) {
 	}
 
 	//check if filesystem is mounted
-	mounted, err := s.isSpectrumScaleMounted()
+	mounted, err := s.isSpectrumScaleMounted(s.defaultFilesystem)
 
 	if err != nil {
 		s.logger.Println(err.Error())
@@ -94,7 +94,7 @@ func (s *spectrumLocalClient) Activate() (err error) {
 	}
 
 	if mounted == false {
-		err = s.mount()
+		err = s.mount(s.defaultFilesystem)
 
 		if err != nil {
 			s.logger.Println(err.Error())
@@ -123,8 +123,6 @@ func (s *spectrumLocalClient) Activate() (err error) {
 		s.logger.Println(err.Error())
 		return err
 	}
-
-	s.isFilesetForLightweightVolumeInitialized, _ = s.isLightweightVolumesInitialized()
 
 	s.isActivated = true
 	return nil
@@ -157,63 +155,45 @@ func (s *spectrumLocalClient) CreateVolume(name string, opts map[string]interfac
 		return fmt.Errorf("Volume already exists")
 	}
 
-	if len(opts) > 0 {
-
-		userSpecifiedType, typeExists := opts[TYPE_OPT]
-		userSpecifiedFileset, filesetExists := opts[FILESET_OPT]
-		userSpecifiedDirectory, dirExists := opts[DIR_OPT]
-		userSpecifiedQuota, quotaExists := opts[QUOTA_OPT]
-		_, filesystemExists := opts[FILESYSTEM_OPT]
-
-		if len(opts) == 1 {
-			if typeExists || quotaExists {
-				return s.create(name, opts)
-			} else if filesetExists {
-				return s.updateDBWithExistingFileset(name, userSpecifiedFileset.(string))
-			} else if dirExists {
-				return s.updateDBWithExistingDirectory(name, s.filesetForLightWeightVolumes, userSpecifiedDirectory.(string))
-			}
-			return fmt.Errorf("Invalid arguments")
-		} else if len(opts) == 2 {
-			if typeExists {
-				if userSpecifiedType.(string) == FILESET_TYPE {
-					if filesetExists {
-						return s.updateDBWithExistingFileset(name, userSpecifiedFileset.(string))
-					} else if quotaExists {
-						return s.create(name, opts)
-					}
-					return fmt.Errorf("Invalid arguments")
-				} else if userSpecifiedType.(string) == LTWT_VOL_TYPE {
-					if filesetExists {
-						return s.create(name, opts)
-					} else if dirExists {
-						return s.updateDBWithExistingDirectory(name, s.filesetForLightWeightVolumes, userSpecifiedDirectory.(string))
-					}
-				}
-				return fmt.Errorf("Invalid arguments")
-			} else if filesetExists {
-				if filesystemExists {
-					return s.checkIfVolumeExistsInDB(name, userSpecifiedFileset.(string))
-				} else if dirExists {
-					return s.updateDBWithExistingDirectory(name, userSpecifiedFileset.(string), userSpecifiedDirectory.(string))
-				} else if quotaExists {
-					return s.updateDBWithExistingFilesetQuota(name, userSpecifiedFileset.(string), userSpecifiedQuota.(string))
-				}
-			}
-			return fmt.Errorf("Invalid arguments")
-		} else if len(opts) == 3 {
-			if typeExists {
-				if userSpecifiedType.(string) == FILESET_TYPE && filesetExists && quotaExists {
-					return s.updateDBWithExistingFilesetQuota(name, userSpecifiedFileset.(string), userSpecifiedQuota.(string))
-				} else if userSpecifiedType.(string) == LTWT_VOL_TYPE && filesetExists && dirExists {
-					return s.updateDBWithExistingDirectory(name, userSpecifiedFileset.(string), userSpecifiedDirectory.(string))
-				}
-			}
-		}
-		return fmt.Errorf("Invalid number of arguments")
+	if len(opts) == 0 {
+		//fileset
+		return s.createFilesetVolume(s.defaultFilesystem, name)
+	}
+	userSpecifiedType, err := determineTypeFromRequest(opts)
+	if err != nil {
+		return err
 	}
 
-	return s.create(name, opts)
+	isExistingVolume, filesystem, existingFileset, existingLightWeightDir, err := s.validateAndParseParams(opts)
+	if err != nil {
+		return err
+	}
+
+	if isExistingVolume && userSpecifiedType == FILESET_TYPE {
+		quota, quotaSpecified := opts[USER_SPECIFIED_QUOTA]
+		if quotaSpecified {
+			return s.updateDBWithExistingFilesetQuota(filesystem, name, existingFileset, quota.(string))
+		}
+		return s.updateDBWithExistingFileset(filesystem, name, existingFileset)
+	}
+
+	if isExistingVolume && userSpecifiedType == LTWT_VOL_TYPE {
+		return s.updateDBWithExistingDirectory(filesystem, name, existingFileset, existingLightWeightDir)
+	}
+
+	if userSpecifiedType == FILESET_TYPE {
+		quota, quotaSpecified := opts[USER_SPECIFIED_QUOTA]
+		if quotaSpecified {
+			return s.createFilesetQuotaVolume(filesystem, name, quota)
+		}
+		return s.createFilesetVolume(filesystem, name)
+	}
+	if userSpecifiedType == LTWT_VOL_TYPE {
+		return s.createLightweightVolume(filesystem, name, existingFileset)
+	}
+
+	return fmt.Errorf("Internal error")
+
 }
 
 func (s *spectrumLocalClient) RemoveVolume(name string, forceDelete bool) (err error) {
@@ -247,7 +227,7 @@ func (s *spectrumLocalClient) RemoveVolume(name string, forceDelete bool) (err e
 		if existingVolume.VolumeType == FILESET ||
 			existingVolume.VolumeType == FILESET_QUOTA {
 
-			isFilesetLinked, err := s.isFilesetLinked(existingVolume.Fileset)
+			isFilesetLinked, err := s.isFilesetLinked(existingVolume.FileSystem, existingVolume.Fileset)
 
 			if err != nil {
 				s.logger.Println(err.Error())
@@ -255,32 +235,33 @@ func (s *spectrumLocalClient) RemoveVolume(name string, forceDelete bool) (err e
 			}
 
 			if isFilesetLinked {
-				err := s.unlinkFileset(existingVolume.Fileset)
+				err := s.unlinkFileset(existingVolume.FileSystem, existingVolume.Fileset)
 
 				if err != nil {
 					s.logger.Println(err.Error())
 					return err
 				}
 			}
-			if forceDelete {
-				err = s.deleteFileset(existingVolume.Fileset)
-
-				if err != nil {
-					s.logger.Println(err.Error())
-					return err
-				}
-			}
-		} else if existingVolume.VolumeType == LIGHTWEIGHT && forceDelete {
-
-			lightweightVolumePath := path.Join(s.mountpoint, existingVolume.Fileset, existingVolume.Directory)
-
-			err := os.RemoveAll(lightweightVolumePath)
-
-			if err != nil {
-				s.logger.Println(err.Error())
-				return err
-			}
+			//if forceDelete {
+			//	err = s.deleteFileset(existingVolume.FileSystem, existingVolume.Fileset)
+			//
+			//	if err != nil {
+			//		s.logger.Println(err.Error())
+			//		return err
+			//	}
+			//}
 		}
+		//else if existingVolume.VolumeType == LIGHTWEIGHT && forceDelete {
+		//
+		//		lightweightVolumePath := path.Join(s.mountpoint, existingVolume.Fileset, existingVolume.Directory)
+		//
+		//		err := os.RemoveAll(lightweightVolumePath)
+		//
+		//		if err != nil {
+		//			s.logger.Println(err.Error())
+		//			return err
+		//		}
+		//	}
 
 		err = s.dbClient.DeleteVolume(name)
 
@@ -323,7 +304,7 @@ func (s *spectrumLocalClient) GetVolume(name string) (volumeMetadata model.Volum
 		}
 
 		volumeMetadata = model.VolumeMetadata{Name: existingVolume.VolumeName, Mountpoint: existingVolume.Mountpoint}
-		volumeConfigDetails = model.SpectrumConfig{FilesetId: existingVolume.Fileset, Filesystem: s.filesystem}
+		volumeConfigDetails = model.SpectrumConfig{FilesetId: existingVolume.Fileset, Filesystem: existingVolume.FileSystem}
 		return volumeMetadata, volumeConfigDetails, nil
 	}
 	return model.VolumeMetadata{}, model.SpectrumConfig{}, fmt.Errorf("Volume not found")
@@ -363,10 +344,11 @@ func (s *spectrumLocalClient) Attach(name string) (mountPath string, err error) 
 		return existingVolume.Mountpoint, nil
 	}
 
-	if existingVolume.VolumeType == FILESET ||
-		existingVolume.VolumeType == FILESET_QUOTA {
+	if existingVolume.VolumeType == LIGHTWEIGHT {
+		mountPath = path.Join(s.mountpoint, existingVolume.Fileset, existingVolume.Directory)
+	} else {
 
-		isFilesetLinked, err := s.isFilesetLinked(existingVolume.Fileset)
+		isFilesetLinked, err := s.isFilesetLinked(existingVolume.FileSystem, existingVolume.Fileset)
 
 		if err != nil {
 			s.logger.Println(err.Error())
@@ -375,7 +357,7 @@ func (s *spectrumLocalClient) Attach(name string) (mountPath string, err error) 
 
 		if !isFilesetLinked {
 
-			err = s.linkFileset(existingVolume.Fileset)
+			err = s.linkFileset(existingVolume.FileSystem, existingVolume.Fileset)
 
 			if err != nil {
 				s.logger.Println(err.Error())
@@ -384,8 +366,6 @@ func (s *spectrumLocalClient) Attach(name string) (mountPath string, err error) 
 		}
 
 		mountPath = path.Join(s.mountpoint, existingVolume.Fileset)
-	} else if existingVolume.VolumeType == LIGHTWEIGHT {
-		mountPath = path.Join(s.mountpoint, existingVolume.Fileset, existingVolume.Directory)
 	}
 
 	err = s.dbClient.UpdateVolumeMountpoint(name, mountPath)
@@ -441,28 +421,28 @@ func (s *spectrumLocalClient) Detach(name string) (err error) {
 	return nil
 }
 
-func (s *spectrumLocalClient) isLightweightVolumesInitialized() (bool, error) {
-	s.logger.Println("spectrumLocalClient: isLightweightVolumesInitialized start")
-	defer s.logger.Println("spectrumLocalClient: isLightweightVolumesInitialized end")
+//func (s *spectrumLocalClient) isLightweightVolumesInitialized() (bool, error) {
+//	s.logger.Println("spectrumLocalClient: isLightweightVolumesInitialized start")
+//	defer s.logger.Println("spectrumLocalClient: isLightweightVolumesInitialized end")
+//
+//	isDirFilesetLinked, err := s.isFilesetLinked(s.filesetForLightWeightVolumes)
+//
+//	if err != nil {
+//		return false, fmt.Errorf("Lightweight volumes not initialized: %s", err)
+//	}
+//
+//	if !isDirFilesetLinked {
+//		return false, fmt.Errorf("Lightweight volumes not initialized: fileset %s not linked", s.filesetForLightWeightVolumes)
+//	}
+//	return true, nil
+//}
 
-	isDirFilesetLinked, err := s.isFilesetLinked(s.filesetForLightWeightVolumes)
-
-	if err != nil {
-		return false, fmt.Errorf("Lightweight volumes not initialized: %s", err)
-	}
-
-	if !isDirFilesetLinked {
-		return false, fmt.Errorf("Lightweight volumes not initialized: fileset %s not linked", s.filesetForLightWeightVolumes)
-	}
-	return true, nil
-}
-
-func (s *spectrumLocalClient) isFilesetLinked(filesetName string) (bool, error) {
+func (s *spectrumLocalClient) isFilesetLinked(filesystem, filesetName string) (bool, error) {
 	s.logger.Println("spectrumLocalClient: isFilesetLinked start")
 	defer s.logger.Println("spectrumLocalClient: isFilesetLinked end")
 
 	spectrumCommand := "/usr/lpp/mmfs/bin/mmlsfileset"
-	args := []string{s.filesystem, filesetName, "-Y"}
+	args := []string{filesystem, filesetName, "-Y"}
 	cmd := exec.Command(spectrumCommand, args...)
 	outputBytes, err := cmd.Output()
 	if err != nil {
@@ -512,7 +492,7 @@ func getClusterId() (string, error) {
 	return clusterId, nil
 }
 
-func (s *spectrumLocalClient) mount() (err error) {
+func (s *spectrumLocalClient) mount(filesystem string) (err error) {
 	s.logger.Println("spectrumLocalClient: mount start")
 	defer s.logger.Println("spectrumLocalClient: mount end")
 
@@ -521,7 +501,7 @@ func (s *spectrumLocalClient) mount() (err error) {
 	}
 
 	spectrumCommand := "/usr/lpp/mmfs/bin/mmmount"
-	args := []string{s.filesystem, s.mountpoint}
+	args := []string{filesystem}
 	cmd := exec.Command(spectrumCommand, args...)
 	output, err := cmd.Output()
 	if err != nil {
@@ -532,7 +512,7 @@ func (s *spectrumLocalClient) mount() (err error) {
 	return nil
 }
 
-func (s *spectrumLocalClient) isSpectrumScaleMounted() (isMounted bool, err error) {
+func (s *spectrumLocalClient) isSpectrumScaleMounted(filesystem string) (isMounted bool, err error) {
 	s.logger.Println("spectrumLocalClient: isMounted start")
 	defer s.logger.Println("spectrumLocalClient: isMounted end")
 
@@ -542,7 +522,7 @@ func (s *spectrumLocalClient) isSpectrumScaleMounted() (isMounted bool, err erro
 	}
 
 	spectrumCommand := "/usr/lpp/mmfs/bin/mmlsmount"
-	args := []string{s.filesystem, "-L", "-Y"}
+	args := []string{filesystem, "-L", "-Y"}
 	cmd := exec.Command(spectrumCommand, args...)
 	outputBytes, err := cmd.Output()
 	if err != nil {
@@ -588,55 +568,59 @@ func extractMountedNodes(spectrumOutput string) []string {
 	return nodes
 }
 
-func (s *spectrumLocalClient) create(name string, opts map[string]interface{}) error {
-	s.logger.Println("spectrumLocalClient: createNew start")
-	defer s.logger.Println("spectrumLocalClient: createNew end")
+//func (s *spectrumLocalClient) create(name string, opts map[string]interface{}) error {
+//	s.logger.Println("spectrumLocalClient: createNew start")
+//	defer s.logger.Println("spectrumLocalClient: createNew end")
+//
+//	var err error
+//	if len(opts) > 0 {
+//		userSpecifiedType, typeExists := opts[TYPE_OPT]
+//		userSpecifiedQuota, quotaExists := opts[QUOTA_OPT]
+//		userSpecifiedFilesystem, userSpecifiedFilesystemExists := opts[FILESYSTEM_OPT]
+//		if userSpecifiedFilesystemExists == false {
+//			userSpecifiedFilesystem = s.defaultFilesystem
+//		}
+//
+//		if typeExists {
+//			if userSpecifiedType.(string) == FILESET_TYPE {
+//				if quotaExists {
+//					err = s.createFilesetQuotaVolume(userSpecifiedFilesystem, name, userSpecifiedQuota.(string))
+//				} else {
+//					err = s.createFilesetVolume(userSpecifiedFilesystem, name)
+//				}
+//			} else if userSpecifiedType.(string) == LTWT_VOL_TYPE {
+//				err = s.createLightweightVolume(userSpecifiedFilesystem, name, opts)
+//			} else {
+//				return fmt.Errorf("Invalid type %s", userSpecifiedType.(string))
+//			}
+//		} else if quotaExists {
+//			err = s.createFilesetQuotaVolume(userSpecifiedFilesystem, name, userSpecifiedQuota.(string))
+//		}
+//	} else {
+//		err = s.createFilesetVolume(s.defaultFilesystem, name)
+//	}
+//
+//	if err != nil {
+//		s.logger.Println(err.Error())
+//		return err
+//	}
+//
+//	return nil
+//}
 
-	var err error
-	if len(opts) > 0 {
-		userSpecifiedType, typeExists := opts[TYPE_OPT]
-		userSpecifiedQuota, quotaExists := opts[QUOTA_OPT]
-
-		if typeExists {
-			if userSpecifiedType.(string) == FILESET_TYPE {
-				if quotaExists {
-					err = s.createFilesetQuotaVolume(name, userSpecifiedQuota.(string))
-				} else {
-					err = s.createFilesetVolume(name)
-				}
-			} else if userSpecifiedType.(string) == LTWT_VOL_TYPE {
-				err = s.createLightweightVolume(name, opts)
-			} else {
-				return fmt.Errorf("Invalid type %s", userSpecifiedType.(string))
-			}
-		} else if quotaExists {
-			err = s.createFilesetQuotaVolume(name, userSpecifiedQuota.(string))
-		}
-	} else {
-		err = s.createFilesetVolume(name)
-	}
-
-	if err != nil {
-		s.logger.Println(err.Error())
-		return err
-	}
-
-	return nil
-}
-
-func (s *spectrumLocalClient) createFilesetVolume(name string) error {
+func (s *spectrumLocalClient) createFilesetVolume(filesystem, name string) error {
 	s.logger.Println("spectrumLocalClient: createFilesetVolume start")
 	defer s.logger.Println("spectrumLocalClient: createFilesetVolume end")
 
 	filesetName := generateFilesetName()
 
-	err := s.createFileset(filesetName)
+	err := s.createFileset(filesystem, filesetName)
 
 	if err != nil {
 		return err
 	}
 
-	err = s.dbClient.InsertFilesetVolume(filesetName, name)
+	err = s.dbClient.InsertFilesetVolume(filesetName, name, filesystem)
 
 	if err != nil {
 		return err
@@ -646,25 +630,25 @@ func (s *spectrumLocalClient) createFilesetVolume(name string) error {
 	return nil
 }
 
-func (s *spectrumLocalClient) createFilesetQuotaVolume(name, quota string) error {
+func (s *spectrumLocalClient) createFilesetQuotaVolume(filesystem, name, quota string) error {
 	s.logger.Println("spectrumLocalClient: createFilesetQuotaVolume start")
 	defer s.logger.Println("spectrumLocalClient: createFilesetQuotaVolume end")
 
 	filesetName := generateFilesetName()
 
-	err := s.createFileset(filesetName)
+	err := s.createFileset(filesystem, filesetName)
 
 	if err != nil {
 		return err
 	}
 
-	err = s.setFilesetQuota(filesetName, quota)
+	err = s.setFilesetQuota(filesystem, filesetName, quota)
 
 	if err != nil {
 		return err
 	}
 
-	err = s.dbClient.InsertFilesetQuotaVolume(filesetName, quota, name)
+	err = s.dbClient.InsertFilesetQuotaVolume(filesetName, quota, name, filesystem)
 
 	if err != nil {
 		return err
@@ -674,14 +658,14 @@ func (s *spectrumLocalClient) createFilesetQuotaVolume(name, quota string) error
 	return nil
 }
 
-func (s *spectrumLocalClient) setFilesetQuota(filesetName, quota string) error {
+func (s *spectrumLocalClient) setFilesetQuota(filesystem, filesetName, quota string) error {
 	s.logger.Println("spectrumLocalClient: setFilesetQuota start")
 	defer s.logger.Println("spectrumLocalClient: setFilesetQuota end")
 
 	s.logger.Printf("setting quota to %s for fileset %s\n", quota, filesetName)
 
 	spectrumCommand := "/usr/lpp/mmfs/bin/mmsetquota"
-	args := []string{s.filesystem + ":" + filesetName, "--block", quota + ":" + quota}
+	args := []string{filesystem + ":" + filesetName, "--block", quota + ":" + quota}
 	cmd := exec.Command(spectrumCommand, args...)
 	output, err := cmd.Output()
 
@@ -693,56 +677,51 @@ func (s *spectrumLocalClient) setFilesetQuota(filesetName, quota string) error {
 	return nil
 }
 
-func (s *spectrumLocalClient) createLightweightVolume(name string, opts map[string]interface{}) error {
+func (s *spectrumLocalClient) createLightweightVolume(filesystem, name, fileset string) error {
 	s.logger.Println("spectrumLocalClient: createLightweightVolume start")
 	defer s.logger.Println("spectrumLocalClient: createLightweightVolume end")
 
-	var lightweightVolumeFileset string
-	userSpecifiedType, typeExists := opts[TYPE_OPT]
-	userSpecifiedFileset, filesetExists := opts[FILESET_OPT]
+	filesetLinked, err := s.isFilesetLinked(filesystem, fileset)
 
-	if len(opts) == 2 && typeExists && userSpecifiedType.(string) == LTWT_VOL_TYPE && filesetExists {
+	if err != nil {
+		s.logger.Println(err.Error())
+		return err
+	}
 
-		filesetLinked, err := s.isFilesetLinked(userSpecifiedFileset.(string))
+	if !filesetLinked {
+		err = s.linkFileset(filesystem, fileset)
 
 		if err != nil {
 			s.logger.Println(err.Error())
 			return err
 		}
-
-		if !filesetLinked {
-			err = s.linkFileset(userSpecifiedFileset.(string))
-
-			if err != nil {
-				s.logger.Println(err.Error())
-				return err
-			}
-		}
-		lightweightVolumeFileset = userSpecifiedFileset.(string)
-	} else {
-		if !s.isFilesetForLightweightVolumeInitialized {
-			err := s.initLightweightVolumes()
-
-			if err != nil {
-				s.logger.Println(err.Error())
-				return err
-			}
-			s.isFilesetForLightweightVolumeInitialized = true
-		}
-		lightweightVolumeFileset = s.filesetForLightWeightVolumes
 	}
+	//lightweightVolumeFileset = userSpecifiedFileset.(string)
+	//
+	//else {
+	//		if !s.isFilesetForLightweightVolumeInitialized {
+	//			err := s.initLightweightVolumes()
+	//
+	//			if err != nil {
+	//				s.logger.Println(err.Error())
+	//				return err
+	//			}
+	//			s.isFilesetForLightweightVolumeInitialized = true
+	//		}
+	//		lightweightVolumeFileset = s.filesetForLightWeightVolumes
+	//	}
 
 	lightweightVolumeName := generateLightweightVolumeName()
 
-	lightweightVolumePath := path.Join(s.mountpoint, lightweightVolumeFileset, lightweightVolumeName)
+	lightweightVolumePath := path.Join(s.mountpoint, fileset, lightweightVolumeName)
 
-	err := os.Mkdir(lightweightVolumePath, 0755)
+	err = os.Mkdir(lightweightVolumePath, 0755)
 
 	if err != nil {
 		return fmt.Errorf("Failed to create directory path %s : %s", lightweightVolumePath, err.Error())
 	}
 
-	err = s.dbClient.InsertLightweightVolume(lightweightVolumeFileset, lightweightVolumeName, name)
+	err = s.dbClient.InsertLightweightVolume(fileset, lightweightVolumeName, name, filesystem)
 
 	if err != nil {
 		return err
@@ -752,42 +731,13 @@ func (s *spectrumLocalClient) createLightweightVolume(name string, opts map[stri
 	return nil
 }
 
-func (s *spectrumLocalClient) initLightweightVolumes() error {
-	s.logger.Println("spectrumLocalClient: InitLightweightVolumes start")
-	defer s.logger.Println("spectrumLocalClient: InitLightweightVolumes end")
-
-	isDirFilesetLinked, err := s.isFilesetLinked(s.filesetForLightWeightVolumes)
-
-	if err != nil {
-		if err.Error() == "exit status 2" {
-
-			err := s.createFileset(s.filesetForLightWeightVolumes)
-
-			if err != nil {
-				return fmt.Errorf("Error Initializing Lightweight Volumes : %s", err.Error())
-			}
-		} else {
-			return fmt.Errorf("Error Initializing Lightweight Volumes : %s", err.Error())
-		}
-	}
-
-	if !isDirFilesetLinked {
-		err = s.linkFileset(s.filesetForLightWeightVolumes)
-
-		if err != nil {
-			return fmt.Errorf("Error Initializing Lightweight Volumes : %s", err.Error())
-		}
-	}
-
-	return nil
-}
-func (s *spectrumLocalClient) linkFileset(filesetName string) error {
+func (s *spectrumLocalClient) linkFileset(filesystem, filesetName string) error {
 	s.logger.Println("spectrumLocalClient: linkFileset start")
 	defer s.logger.Println("spectrumLocalClient: linkFileset end")
 
 	spectrumCommand := "/usr/lpp/mmfs/bin/mmlinkfileset"
 	filesetPath := path.Join(s.mountpoint, filesetName)
-	args := []string{s.filesystem, filesetName, "-J", filesetPath}
+	args := []string{filesystem, filesetName, "-J", filesetPath}
 	cmd := exec.Command(spectrumCommand, args...)
 	output, err := cmd.Output()
 	if err != nil {
@@ -805,12 +755,12 @@ func (s *spectrumLocalClient) linkFileset(filesetName string) error {
 	return nil
 }
 
-func (s *spectrumLocalClient) unlinkFileset(filesetName string) error {
+func (s *spectrumLocalClient) unlinkFileset(filesystem, filesetName string) error {
 	s.logger.Println("spectrumLocalClient: unlinkFileset start")
 	defer s.logger.Println("spectrumLocalClient: unlinkFileset end")
 
 	spectrumCommand := "/usr/lpp/mmfs/bin/mmunlinkfileset"
-	args := []string{s.filesystem, filesetName}
+	args := []string{filesystem, filesetName}
 	cmd := exec.Command(spectrumCommand, args...)
 	output, err := cmd.Output()
 	if err != nil {
@@ -820,7 +770,7 @@ func (s *spectrumLocalClient) unlinkFileset(filesetName string) error {
 	return nil
 }
 
-func (s *spectrumLocalClient) createFileset(filesetName string) error {
+func (s *spectrumLocalClient) createFileset(filesystem, filesetName string) error {
 	s.logger.Println("spectrumLocalClient: createFileset start")
 	defer s.logger.Println("spectrumLocalClient: createFileset end")
 
@@ -828,7 +778,7 @@ func (s *spectrumLocalClient) createFileset(filesetName string) error {
 
 	// create fileset
 	spectrumCommand := "/usr/lpp/mmfs/bin/mmcrfileset"
-	args := []string{s.filesystem, filesetName}
+	args := []string{filesystem, filesetName}
 	cmd := exec.Command(spectrumCommand, args...)
 	output, err := cmd.Output()
 
@@ -844,12 +794,12 @@ func generateLightweightVolumeName() string {
 	return "LtwtVol" + strconv.FormatInt(time.Now().UnixNano(), 10)
 }
 
-func (s *spectrumLocalClient) deleteFileset(filesetName string) error {
+func (s *spectrumLocalClient) deleteFileset(filesystem, filesetName string) error {
 	s.logger.Println("spectrumLocalClient: deleteFileset start")
 	defer s.logger.Println("spectrumLocalClient: deleteFileset end")
 
 	spectrumCommand := "/usr/lpp/mmfs/bin/mmdelfileset"
-	args := []string{s.filesystem, filesetName, "-f"}
+	args := []string{filesystem, filesetName, "-f"}
 	cmd := exec.Command(spectrumCommand, args...)
 	output, err := cmd.Output()
 	if err != nil {
@@ -858,21 +808,6 @@ func (s *spectrumLocalClient) deleteFileset(filesetName string) error {
 	s.logger.Printf("spectrumLocalClient: deleteFileset output: %s\n", string(output))
 	return nil
 }
-
-//func (s *spectrumBackend) ListVolumes() ([]model.VolumeMetadata, error){
-//
-//	spectrumVolumeMetaData, err := s.List()
-//
-//	volumeMetaData := make([]model.VolumeMetadata, len(spectrumVolumeMetaData))
-//	for i, e := range spectrumVolumeMetaData {
-//		volumeMetaData[i] = model.VolumeMetadata{
-//			Name: e.Name,
-//			Mountpoint: e.Mountpoint,
-//		}
-//	}
-//
-//	return volumeMetaData, err
-//}
 
 func (s *spectrumLocalClient) ListVolumes() ([]model.VolumeMetadata, error) {
 	s.logger.Println("spectrumLocalClient: list start")
@@ -908,13 +843,13 @@ func generateFilesetName() string {
 
 //TODO move updates to DB file
 
-func (s *spectrumLocalClient) updateDBWithExistingFileset(name, userSpecifiedFileset string) error {
+func (s *spectrumLocalClient) updateDBWithExistingFileset(filesystem, name, userSpecifiedFileset string) error {
 	s.logger.Println("spectrumLocalClient:  updateDBWithExistingFileset start")
 	defer s.logger.Println("spectrumLocalClient: updateDBWithExistingFileset end")
 	s.logger.Printf("User specified fileset: %s\n", userSpecifiedFileset)
 
 	spectrumCommand := "/usr/lpp/mmfs/bin/mmlsfileset"
-	args := []string{s.filesystem, userSpecifiedFileset, "-Y"}
+	args := []string{filesystem, userSpecifiedFileset, "-Y"}
 	cmd := exec.Command(spectrumCommand, args...)
 	_, err := cmd.Output()
 	if err != nil {
@@ -922,7 +857,7 @@ func (s *spectrumLocalClient) updateDBWithExistingFileset(name, userSpecifiedFil
 		return err
 	}
 
-	err = s.dbClient.InsertFilesetVolume(userSpecifiedFileset, name)
+	err = s.dbClient.InsertFilesetVolume(userSpecifiedFileset, name, filesystem)
 
 	if err != nil {
 		s.logger.Println(err.Error())
@@ -948,11 +883,11 @@ func (s *spectrumLocalClient) checkIfVolumeExistsInDB(name, userSpecifiedFileset
 	return nil
 }
 
-func (s *spectrumLocalClient) updateDBWithExistingFilesetQuota(name, userSpecifiedFileset, quota string) error {
+func (s *spectrumLocalClient) updateDBWithExistingFilesetQuota(filesystem, name, userSpecifiedFileset, quota string) error {
 	s.logger.Println("spectrumLocalClient:  updateDBWithExistingFilesetQuota start")
 	defer s.logger.Println("spectrumLocalClient: updateDBWithExistingFilesetQuota end")
 
-	err := s.verifyFilesetQuota(userSpecifiedFileset, quota)
+	err := s.verifyFilesetQuota(filesystem, userSpecifiedFileset, quota)
 
 	if err != nil {
 		s.logger.Println(err.Error())
@@ -968,40 +903,25 @@ func (s *spectrumLocalClient) updateDBWithExistingFilesetQuota(name, userSpecifi
 	return nil
 }
 
-func (s *spectrumLocalClient) updateDBWithExistingDirectory(name, userSpecifiedFileset, userSpecifiedDirectory string) error {
+func (s *spectrumLocalClient) updateDBWithExistingDirectory(filesystem, name, userSpecifiedFileset, userSpecifiedDirectory string) error {
 	s.logger.Println("spectrumLocalClient:  updateDBWithExistingDirectory start")
 	defer s.logger.Println("spectrumLocalClient: updateDBWithExistingDirectory end")
 	s.logger.Printf("User specified fileset: %s, User specified directory: %s\n", userSpecifiedFileset, userSpecifiedDirectory)
 
-	if userSpecifiedFileset != s.filesetForLightWeightVolumes {
-
-		filesetLinked, err := s.isFilesetLinked(userSpecifiedFileset)
-
+	linked, err := s.isFilesetLinked(filesystem, userSpecifiedFileset)
+	if err != nil {
+		return err
+	}
+	if linked == false {
+		err := s.linkFileset(filesystem, userSpecifiedFileset)
 		if err != nil {
-			s.logger.Println(err.Error())
 			return err
-		}
-
-		if !filesetLinked {
-			err = fmt.Errorf("fileset %s not linked", userSpecifiedFileset)
-			s.logger.Println(err.Error())
-			return err
-		}
-	} else {
-		if !s.isFilesetForLightweightVolumeInitialized {
-			err := s.initLightweightVolumes()
-
-			if err != nil {
-				s.logger.Println(err.Error())
-				return err
-			}
-			s.isFilesetForLightweightVolumeInitialized = true
 		}
 	}
 
 	directoryPath := path.Join(s.mountpoint, userSpecifiedFileset, userSpecifiedDirectory)
 
-	_, err := os.Stat(directoryPath)
+	_, err = os.Stat(directoryPath)
 
 	if err != nil {
 		if os.IsNotExist(err) {
@@ -1013,7 +933,7 @@ func (s *spectrumLocalClient) updateDBWithExistingDirectory(name, userSpecifiedF
 		return err
 	}
 
-	err = s.dbClient.InsertLightweightVolume(userSpecifiedFileset, userSpecifiedDirectory, name)
+	err = s.dbClient.InsertLightweightVolume(userSpecifiedFileset, userSpecifiedDirectory, name, filesystem)
 
 	if err != nil {
 		s.logger.Println(err.Error())
@@ -1022,12 +942,12 @@ func (s *spectrumLocalClient) updateDBWithExistingDirectory(name, userSpecifiedF
 	return nil
 }
 
-func (s *spectrumLocalClient) verifyFilesetQuota(filesetName, quota string) error {
+func (s *spectrumLocalClient) verifyFilesetQuota(filesystem, filesetName, quota string) error {
 	s.logger.Println("spectrumLocalClient: verifyFilesetQuota start")
 	defer s.logger.Println("spectrumLocalClient: verifyFilesetQuota end")
 
 	spectrumCommand := "/usr/lpp/mmfs/bin/mmlsquota"
-	args := []string{"-j", filesetName, s.filesystem, "--block-size", "auto"}
+	args := []string{"-j", filesetName, filesystem, "--block-size", "auto"}
 
 	cmd := exec.Command(spectrumCommand, args...)
 	outputBytes, err := cmd.Output()
@@ -1052,4 +972,41 @@ func (s *spectrumLocalClient) verifyFilesetQuota(filesetName, quota string) erro
 		}
 	}
 	return fmt.Errorf("Mismatch between user-specified and listed quota for fileset %s", filesetName)
+}
+
+func determineTypeFromRequest(opts map[string]interface{}) (string, error) {
+	userSpecifiedType, exists := opts[USER_SPECIFIED_TYPE]
+	if exists == nil {
+		_, exists := opts[USER_SPECIFIED_DIRECTORY]
+		if exists != nil {
+			return LTWT_VOL_TYPE, nil
+		}
+		return FILESET_TYPE, nil
+	}
+
+	if userSpecifiedType.(string) != FILESET_TYPE || userSpecifiedType.(string) != LTWT_VOL_TYPE {
+		return "", fmt.Errorf("Unknown 'type' = %s specified", userSpecifiedType.(string))
+	}
+
+	return userSpecifiedType.(string), nil
+}
+func (s *spectrumLocalClient) validateAndParseParams(opts map[string]interface{}) (bool, string, string, string, error) {
+	existingFileset, existingFilesetSpecified := opts[USER_SPECIFIED_FILESET]
+	existingLightWeightDir, existingLightWeightDirSpecified := opts[USER_SPECIFIED_DIRECTORY]
+	filesystem, filesystemSpecified := opts[USER_SPECIFIED_FILESYSTEM]
+
+	if existingFilesetSpecified || existingLightWeightDirSpecified {
+		if filesystemSpecified == false {
+			return true, filesystem, existingFileset, existingLightWeightDir, fmt.Errorf("'filesystem' is a required opt for using existing volumes")
+		}
+		if existingLightWeightDirSpecified && !existingFilesetSpecified {
+			return true, filesystem, existingFileset, existingLightWeightDir, fmt.Errorf("'fileset' is a required opt for using existing lightweight volumes")
+		}
+		return true, filesystem, existingFileset, existingLightWeightDir, nil
+	} else if filesystemSpecified == false {
+		return false, s.defaultFilesystem, "", "", nil
+
+	}
+
+	return false, filesystem, existingFileset, existingLightWeightDir, nil
 }

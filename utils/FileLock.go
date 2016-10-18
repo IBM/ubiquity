@@ -11,7 +11,7 @@ import (
 )
 
 type FileLock struct {
-	Filesystem string
+	//Filesystem string
 	Mountpoint string
 	log        *log.Logger
 }
@@ -22,8 +22,8 @@ const (
 	LOCK_RETRY_INTERVAL time.Duration = time.Second * 5
 )
 
-func NewFileLock(log *log.Logger, filesystem, mountpoint string) *FileLock {
-	return &FileLock{log: log, Filesystem: filesystem, Mountpoint: mountpoint}
+func NewFileLock(log *log.Logger, mountpoint string) *FileLock {
+	return &FileLock{log: log, Mountpoint: mountpoint}
 }
 
 func (l *FileLock) Lock() error {
@@ -31,7 +31,7 @@ func (l *FileLock) Lock() error {
 	var sleepTime time.Duration
 	var attempt int
 
-	lockFile := "spectrum-scale-" + l.Filesystem + ".lock"
+	lockFile := "spectrum-scale.lock"
 	lockPath := path.Join(l.Mountpoint, lockFile)
 
 	for sleepTime < LOCK_RETRY_TIMEOUT {
@@ -100,7 +100,7 @@ func (l *FileLock) Lock() error {
 
 func (l *FileLock) Unlock() error {
 
-	lockFile := "spectrum-scale-" + l.Filesystem + ".lock"
+	lockFile := "spectrum-scale.lock"
 	lockPath := path.Join(l.Mountpoint, lockFile)
 
 	l.log.Printf("Unlocking on lockPath %s\n", lockPath)

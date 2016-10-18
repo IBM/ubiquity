@@ -28,11 +28,17 @@ var configPath = flag.String(
 	"/tmp/ibm-storage-broker",
 	"Config directory to store book-keeping info",
 )
-var defaultMountPath = flag.String(
-	"defaultMountPath",
-	"/gpfs",
-	"Local directory to mount within",
+var spectrumConfigPath = flag.String(
+	"spectrumConfigPath",
+	"/gpfs/gold/",
+	"gpfs filesystem mount poin/dir where all db metadata will be stored",
 )
+var spectrumDefaultFilesystem = flag.String(
+	"spectrumDefaultFilesystem",
+	"gold",
+	"gpfs filesystem to use if not specified by user",
+)
+
 var logPath = flag.String(
 	"logPath",
 	"/tmp",
@@ -72,11 +78,7 @@ var filesetForLightWeightVolumes = flag.String(
 	"filesetForLightWeightVolumes",
 	"filesetForLightWeightVolumes",
 )
-var filesystemName = flag.String(
-	"filesystem",
-	"gold",
-	"gpfs filesystem name for this plugin",
-)
+
 var storageClients = flag.String(
 	"storage-clients",
 	"spectrum-scale",
@@ -112,7 +114,7 @@ func main() {
 	clients := make(map[string]model.StorageClient)
 	for _, userSpecifiedClient := range userSpecifiedClients {
 		if userSpecifiedClient == "spectrum-scale" {
-			spectrumBackend, err := local.NewSpectrumLocalClient(logger, *filesystemName, *defaultMountPath, *filesetForLightWeightVolumes)
+			spectrumBackend, err := local.NewSpectrumLocalClient(logger, *spectrumConfigPath, *filesetForLightWeightVolumes, *spectrumDefaultFilesystem)
 			if err != nil {
 				panic("spectrum-scale cannot be initialized....aborting")
 			}
