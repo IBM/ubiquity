@@ -1009,7 +1009,12 @@ func (s *spectrumLocalClient) validateAndParseParams(opts map[string]interface{}
 		if existingLightWeightDirSpecified && !existingFilesetSpecified {
 			return true, filesystem.(string), existingFileset.(string), existingLightWeightDir.(string), fmt.Errorf("'fileset' is a required opt for using existing lightweight volumes")
 		}
-		return true, filesystem.(string), existingFileset.(string), existingLightWeightDir.(string), nil
+		if existingLightWeightDir != nil{
+			return true, filesystem.(string), existingFileset.(string), existingLightWeightDir.(string), nil
+		}else{
+			return true, filesystem.(string), existingFileset.(string), "", nil
+		}
+
 	} else if filesystemSpecified == false {
 		return false, s.defaultFilesystem, "", "", nil
 
