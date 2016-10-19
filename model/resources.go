@@ -160,5 +160,5 @@ type FlexVolumeUnmountRequest struct {
 }
 
 type FlexVolumeDetachRequest struct {
-	MountPath string `json:"mountPath"`
+Name string `json:"name"`
 }
