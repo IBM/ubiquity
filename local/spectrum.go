@@ -436,17 +436,20 @@ func (s *spectrumLocalClient) isFilesetLinked(filesystem, filesetName string) (b
 
 	spectrumCommand := "/usr/lpp/mmfs/bin/mmlsfileset"
 	args := []string{filesystem, filesetName, "-Y"}
+	s.logger.Printf("%#v\n", args)
 	cmd := exec.Command(spectrumCommand, args...)
 	outputBytes, err := cmd.Output()
 	if err != nil {
+		s.logger.Printf("Error in mmlsfileset invocation\n")
 		return false, err
 	}
 
 	spectrumOutput := string(outputBytes)
-
+	s.logger.Printf("%#v\n", spectrumOutput)
 	lines := strings.Split(spectrumOutput, "\n")
 
 	if len(lines) == 1 {
+		s.logger.Printf("Error in listing fileset\n")
 		return false, fmt.Errorf("Error listing fileset %s", filesetName)
 	}
 
@@ -458,7 +461,7 @@ func (s *spectrumLocalClient) isFilesetLinked(filesystem, filesetName string) (b
 			return false, nil
 		}
 	}
-
+	s.logger.Printf("Error listing fileset %s after parsing", filesetName)
 	return false, fmt.Errorf("Error listing fileset %s after parsing", filesetName)
 }
 
