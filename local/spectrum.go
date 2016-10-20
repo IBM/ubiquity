@@ -785,7 +785,7 @@ func (s *spectrumLocalClient) createFileset(filesystem, filesetName string) erro
 
 	if err != nil {
 		s.logger.Printf("Error creating fileset: %#v, %#v\n", output, err)
-		return fmt.Errorf("Failed to create fileset %s", filesetName)
+		return fmt.Errorf("Failed to create fileset %s on filesystem %s. Please check that filesystem specified is correct and healthy", filesetName, filesystem)
 	}
 
 	s.logger.Printf("Createfileset output: %s\n", string(output))
@@ -1010,9 +1010,9 @@ func (s *spectrumLocalClient) validateAndParseParams(opts map[string]interface{}
 		if existingLightWeightDirSpecified && !existingFilesetSpecified {
 			return true, filesystem.(string), existingFileset.(string), existingLightWeightDir.(string), fmt.Errorf("'fileset' is a required opt for using existing lightweight volumes")
 		}
-		if existingLightWeightDir != nil{
+		if existingLightWeightDir != nil {
 			return true, filesystem.(string), existingFileset.(string), existingLightWeightDir.(string), nil
-		}else{
+		} else {
 			return true, filesystem.(string), existingFileset.(string), "", nil
 		}
 

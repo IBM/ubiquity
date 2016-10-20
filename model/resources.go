@@ -160,5 +160,5 @@ type FlexVolumeUnmountRequest struct {
 }
 
 type FlexVolumeDetachRequest struct {
-Name string `json:"name"`
+	Name string `json:"name"`
 }
