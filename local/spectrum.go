@@ -152,14 +152,15 @@ func (s *spectrumLocalClient) CreateVolume(name string, opts map[string]interfac
 		return s.createFilesetVolume(s.defaultFilesystem, name)
 	}
 	s.logger.Printf("Trying to determine type for request\n")
-	userSpecifiedType, err := determineTypeFromRequest(s.logger,opts)
+	userSpecifiedType, err := determineTypeFromRequest(s.logger, opts)
 	if err != nil {
-		s.logger.Printf("Error determining type: %s\n",err.Error())
+		s.logger.Printf("Error determining type: %s\n", err.Error())
 		return err
 	}
 	s.logger.Printf("Volume type requested: %s", userSpecifiedType)
-	isExistingVolume, filesystem, existingFileset, existingLightWeightDir, err := s.validateAndParseParams(s.logger,opts)
+	isExistingVolume, filesystem, existingFileset, existingLightWeightDir, err := s.validateAndParseParams(s.logger, opts)
 	if err != nil {
+		s.logger.Printf("Error invalidate params: %s\n", err.Error())
 		return err
 	}
 
@@ -972,7 +973,7 @@ func (s *spectrumLocalClient) verifyFilesetQuota(filesystem, filesetName, quota 
 	return fmt.Errorf("Mismatch between user-specified and listed quota for fileset %s", filesetName)
 }
 
-func determineTypeFromRequest(logger *log.Logger,opts map[string]interface{}) (string, error) {
+func determineTypeFromRequest(logger *log.Logger, opts map[string]interface{}) (string, error) {
 	logger.Print("determineTypeFromRequest start\n")
 	defer logger.Printf("determineTypeFromRequest end\n")
 	userSpecifiedType, exists := opts[USER_SPECIFIED_TYPE]
@@ -990,11 +991,11 @@ func determineTypeFromRequest(logger *log.Logger,opts map[string]interface{}) (s
 
 	return userSpecifiedType.(string), nil
 }
-func (s *spectrumLocalClient) validateAndParseParams(logger *log.Logger,opts map[string]interface{}) (bool, string, string, string, error) {
+func (s *spectrumLocalClient) validateAndParseParams(logger *log.Logger, opts map[string]interface{}) (bool, string, string, string, error) {
 	existingFileset, existingFilesetSpecified := opts[USER_SPECIFIED_FILESET]
 	existingLightWeightDir, existingLightWeightDirSpecified := opts[USER_SPECIFIED_DIRECTORY]
 	filesystem, filesystemSpecified := opts[USER_SPECIFIED_FILESYSTEM]
-	userSpecifiedType, err := determineTypeFromRequest(logger,opts)
+	userSpecifiedType, err := determineTypeFromRequest(logger, opts)
 	if err != nil {
 		return false, "", "", "", err
 	}
