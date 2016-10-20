@@ -1,29 +1,22 @@
-# Getting started
-- Install [go](https://golang.org)
-- Install [godep](https://www.github.com/tools/godep)
+#Ubiquity Storage service for Container Ecosystems
+Ubiquity provides access to persistent storage for Docker containers
+#### Prerequisites
+  * Provision a system running GPFS client and NSD server
+  * Install [golang](https://golang.org/)
+  * Install git  
+#### Getting started
+- Configure go
+- Configure ssh-keys for github.ibm.com
+- Build Ubiquity service from source
 ```
-go get github.com/tools/godep
-```
-- Get IBM Storage Broker
-```
-go get github.ibm.com/almaden-containers/ibm-storage-broker.git
+go get github.ibm.com/almaden-containers/ubiquity.git
+go build -o bin/ubiquity main.go
 
 ```
-*Note: Once this code is moved to one of the hosting sites in [this list](https://golang.org/cmd/go/#hdr-Remote_import_paths), or otherwise if `go get` metatags are configured, the `.git` suffix can be removed from the import path.*
-- Run Storage Broker
-```
-go run main.go
+- Run Ubiquity service
 ```
 
-## Running Unit Tests
+./bin/ubiquity -listenPort <> -logPath <> -spectrumConfigPath <> -spectrumDefaultFilesystem <> 
 ```
-# one time setup
-go get github.com/onsi/ginkgo/ginkgo
-go get github.com/onsi/gomega
-go get github.com/maxbrunsfeld/counterfeiter
-
-# generate fakes
-go generate ./...
-
-# run tests
-ginkgo -r -p
+#### Next steps
+- Install appropriate plugin
