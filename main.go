@@ -73,11 +73,6 @@ var openstackConfig = flag.String(
 		"\"Password\":\"\"}",
 	"For manila-nfs service only: JSON with OpenStack endpoints and credentials (AuthUrl, ManilaUrl, ProjectId, UserId, Password)",
 )
-var filesetForLightWeightVolumes = flag.String(
-	"filesetForLightWeightVolumes",
-	"filesetForLightWeightVolumes",
-	"filesetForLightWeightVolumes",
-)
 
 var storageClients = flag.String(
 	"storage-clients",
@@ -114,7 +109,7 @@ func main() {
 	clients := make(map[string]model.StorageClient)
 	for _, userSpecifiedClient := range userSpecifiedClients {
 		if userSpecifiedClient == "spectrum-scale" {
-			spectrumBackend, err := local.NewSpectrumLocalClient(logger, *spectrumConfigPath, *filesetForLightWeightVolumes, *spectrumDefaultFilesystem)
+			spectrumBackend, err := local.NewSpectrumLocalClient(logger, *spectrumConfigPath, *spectrumDefaultFilesystem)
 			if err != nil {
 				panic("spectrum-scale cannot be initialized....aborting")
 			}
