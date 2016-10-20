@@ -625,9 +625,9 @@ func (s *spectrumLocalClient) createFilesetQuotaVolume(filesystem, name, quota s
 	err = s.setFilesetQuota(filesystem, filesetName, quota)
 
 	if err != nil {
-		deleteErr := s.deleteFileset(filesystem,filesetName)
-		if deleteErr != nil{
-			return fmt.Errorf("Error setting quota (rollback error on delete fileset %s - manual cleanup needed)",filesetName)
+		deleteErr := s.deleteFileset(filesystem, filesetName)
+		if deleteErr != nil {
+			return fmt.Errorf("Error setting quota (rollback error on delete fileset %s - manual cleanup needed)", filesetName)
 		}
 		return err
 	}
@@ -1003,7 +1003,7 @@ func (s *spectrumLocalClient) validateAndParseParams(opts map[string]interface{}
 		if existingLightWeightDir != nil {
 			_, quotaSpecified := opts[USER_SPECIFIED_QUOTA]
 			if quotaSpecified {
-				false, "", "", "", fmt.Errorf("'quota' is not supported for lightweight volumes")
+				return false, "", "", "", fmt.Errorf("'quota' is not supported for lightweight volumes")
 			}
 
 			return true, filesystem.(string), existingFileset.(string), existingLightWeightDir.(string), nil
@@ -1017,7 +1017,7 @@ func (s *spectrumLocalClient) validateAndParseParams(opts map[string]interface{}
 
 			_, quotaSpecified := opts[USER_SPECIFIED_QUOTA]
 			if quotaSpecified {
-				false, "", "", "", fmt.Errorf("'quota' is not supported for lightweight volumes")
+				return false, "", "", "", fmt.Errorf("'quota' is not supported for lightweight volumes")
 			}
 
 			return false, filesystem.(string), existingFileset.(string), "", nil
