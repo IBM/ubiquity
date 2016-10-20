@@ -151,12 +151,14 @@ func (s *spectrumLocalClient) CreateVolume(name string, opts map[string]interfac
 		//fileset
 		return s.createFilesetVolume(s.defaultFilesystem, name)
 	}
-	userSpecifiedType, err := determineTypeFromRequest(opts)
+	s.logger.Printf("Trying to determine type for request\n")
+	userSpecifiedType, err := determineTypeFromRequest(s.logger,opts)
 	if err != nil {
+		s.logger.Printf("Error determining type: %s\n",err.Error())
 		return err
 	}
 	s.logger.Printf("Volume type requested: %s", userSpecifiedType)
-	isExistingVolume, filesystem, existingFileset, existingLightWeightDir, err := s.validateAndParseParams(opts)
+	isExistingVolume, filesystem, existingFileset, existingLightWeightDir, err := s.validateAndParseParams(s.logger,opts)
 	if err != nil {
 		return err
 	}
@@ -970,7 +972,9 @@ func (s *spectrumLocalClient) verifyFilesetQuota(filesystem, filesetName, quota 
 	return fmt.Errorf("Mismatch between user-specified and listed quota for fileset %s", filesetName)
 }
 
-func determineTypeFromRequest(opts map[string]interface{}) (string, error) {
+func determineTypeFromRequest(logger *log.Logger,opts map[string]interface{}) (string, error) {
+	logger.Print("determineTypeFromRequest start\n")
+	defer logger.Printf("determineTypeFromRequest end\n")
 	userSpecifiedType, exists := opts[USER_SPECIFIED_TYPE]
 	if exists == false {
 		_, exists := opts[USER_SPECIFIED_DIRECTORY]
@@ -980,17 +984,17 @@ func determineTypeFromRequest(opts map[string]interface{}) (string, error) {
 		return FILESET_TYPE, nil
 	}
 
-	if userSpecifiedType.(string) != FILESET_TYPE || userSpecifiedType.(string) != LTWT_VOL_TYPE {
+	if userSpecifiedType.(string) != FILESET_TYPE && userSpecifiedType.(string) != LTWT_VOL_TYPE {
 		return "", fmt.Errorf("Unknown 'type' = %s specified", userSpecifiedType.(string))
 	}
 
 	return userSpecifiedType.(string), nil
 }
-func (s *spectrumLocalClient) validateAndParseParams(opts map[string]interface{}) (bool, string, string, string, error) {
+func (s *spectrumLocalClient) validateAndParseParams(logger *log.Logger,opts map[string]interface{}) (bool, string, string, string, error) {
 	existingFileset, existingFilesetSpecified := opts[USER_SPECIFIED_FILESET]
 	existingLightWeightDir, existingLightWeightDirSpecified := opts[USER_SPECIFIED_DIRECTORY]
 	filesystem, filesystemSpecified := opts[USER_SPECIFIED_FILESYSTEM]
-	userSpecifiedType, err := determineTypeFromRequest(opts)
+	userSpecifiedType, err := determineTypeFromRequest(logger,opts)
 	if err != nil {
 		return false, "", "", "", err
 	}

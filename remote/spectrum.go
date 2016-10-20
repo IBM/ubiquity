@@ -72,7 +72,7 @@ func (s *spectrumRemoteClient) CreateVolume(name string, opts map[string]interfa
 
 	response, err := s.httpExecute("POST", createRemoteURL, createVolumeRequest)
 	if err != nil {
-		s.logger.Printf("Error in create volume remote call %#v", err)
+		s.logger.Printf("Error in create volume remote call %s", err.Error())
 		return fmt.Errorf("Error in create volume remote call")
 	}
 
