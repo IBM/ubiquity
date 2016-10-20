@@ -784,6 +784,7 @@ func (s *spectrumLocalClient) createFileset(filesystem, filesetName string) erro
 	output, err := cmd.Output()
 
 	if err != nil {
+		s.logger.Printf("Error creating fileset: %#v, %#v\n", output, err)
 		return fmt.Errorf("Failed to create fileset %s", filesetName)
 	}
 
