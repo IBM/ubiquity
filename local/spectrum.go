@@ -445,7 +445,6 @@ func (s *spectrumLocalClient) isFilesetLinked(filesystem, filesetName string) (b
 	}
 
 	spectrumOutput := string(outputBytes)
-	s.logger.Printf("%#v\n", spectrumOutput)
 	lines := strings.Split(spectrumOutput, "\n")
 
 	if len(lines) == 1 {
@@ -677,7 +676,7 @@ func (s *spectrumLocalClient) createLightweightVolume(filesystem, name, fileset 
 
 	if err != nil {
 		s.logger.Println(err.Error())
-		return err
+		return fmt.Errorf("Error finding fileset '%s' on filesystem '%s'", fileset, filesystem)
 	}
 
 	if !filesetLinked {
