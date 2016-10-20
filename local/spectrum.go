@@ -1003,21 +1003,25 @@ func (s *spectrumLocalClient) validateAndParseParams(logger *log.Logger, opts ma
 		return false, "", "", "", err
 	}
 
-	if existingFilesetSpecified || existingLightWeightDirSpecified {
+	if (userSpecifiedType == FILESET_TYPE && existingFilesetSpecified) || (userSpecifiedType == LTWT_VOL_TYPE && existingLightWeightDirSpecified) {
 		if filesystemSpecified == false {
+			logger.Println("'filesystem' is a required opt for using existing volumes")
 			return true, filesystem.(string), existingFileset.(string), existingLightWeightDir.(string), fmt.Errorf("'filesystem' is a required opt for using existing volumes")
 		}
 		if existingLightWeightDirSpecified && !existingFilesetSpecified {
+			logger.Println("'fileset' is a required opt for using existing lightweight volumes")
 			return true, filesystem.(string), existingFileset.(string), existingLightWeightDir.(string), fmt.Errorf("'fileset' is a required opt for using existing lightweight volumes")
 		}
-		if existingLightWeightDir != nil {
+		if userSpecifiedType == LTWT_VOL_TYPE && existingLightWeightDir != nil {
 			_, quotaSpecified := opts[USER_SPECIFIED_QUOTA]
 			if quotaSpecified {
-				return false, "", "", "", fmt.Errorf("'quota' is not supported for lightweight volumes")
+				logger.Println("'quota' is not supported for lightweight volumes")
+				return true, "", "", "", fmt.Errorf("'quota' is not supported for lightweight volumes")
 			}
-
+			logger.Println("Valid: existing LTWT")
 			return true, filesystem.(string), existingFileset.(string), existingLightWeightDir.(string), nil
 		} else {
+			logger.Println("Valid: existing FILESET")
 			return true, filesystem.(string), existingFileset.(string), "", nil
 		}
 
@@ -1027,6 +1031,7 @@ func (s *spectrumLocalClient) validateAndParseParams(logger *log.Logger, opts ma
 
 			_, quotaSpecified := opts[USER_SPECIFIED_QUOTA]
 			if quotaSpecified {
+				logger.Println("'quota' is not supported for lightweight volumes")
 				return false, "", "", "", fmt.Errorf("'quota' is not supported for lightweight volumes")
 			}
 
