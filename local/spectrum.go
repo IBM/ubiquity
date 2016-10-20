@@ -992,11 +992,14 @@ func determineTypeFromRequest(logger *log.Logger, opts map[string]interface{}) (
 	return userSpecifiedType.(string), nil
 }
 func (s *spectrumLocalClient) validateAndParseParams(logger *log.Logger, opts map[string]interface{}) (bool, string, string, string, error) {
+	logger.Println("validateAndParseParams start")
+	defer logger.Println("validateAndParseParams end")
 	existingFileset, existingFilesetSpecified := opts[USER_SPECIFIED_FILESET]
 	existingLightWeightDir, existingLightWeightDirSpecified := opts[USER_SPECIFIED_DIRECTORY]
 	filesystem, filesystemSpecified := opts[USER_SPECIFIED_FILESYSTEM]
 	userSpecifiedType, err := determineTypeFromRequest(logger, opts)
 	if err != nil {
+		logger.Printf("%s", err.Error())
 		return false, "", "", "", err
 	}
 
