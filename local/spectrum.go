@@ -146,7 +146,7 @@ func (s *spectrumLocalClient) CreateVolume(name string, opts map[string]interfac
 	if volExists {
 		return fmt.Errorf("Volume already exists")
 	}
-
+	s.logger.Printf("Opts for create: %#v\n", opts)
 	if len(opts) == 0 {
 		//fileset
 		return s.createFilesetVolume(s.defaultFilesystem, name)
@@ -155,11 +155,13 @@ func (s *spectrumLocalClient) CreateVolume(name string, opts map[string]interfac
 	if err != nil {
 		return err
 	}
-
+	s.logger.Printf("Volume type requested: %s", userSpecifiedType)
 	isExistingVolume, filesystem, existingFileset, existingLightWeightDir, err := s.validateAndParseParams(opts)
 	if err != nil {
 		return err
 	}
+
+	s.logger.Printf("Params for create: %s,%s,%s,%s\n", isExistingVolume, filesystem, existingFileset, existingLightWeightDir)
 
 	if isExistingVolume && userSpecifiedType == FILESET_TYPE {
 		quota, quotaSpecified := opts[USER_SPECIFIED_QUOTA]
