@@ -10,19 +10,19 @@ import (
 )
 
 type FakeBrokerController struct {
-	GetCatalogStub        func(logger log.Logger) (model.Catalog, error)
+	GetCatalogStub        func(logger *log.Logger) (model.Catalog, error)
 	getCatalogMutex       sync.RWMutex
 	getCatalogArgsForCall []struct {
-		logger log.Logger
+		logger *log.Logger
 	}
 	getCatalogReturns struct {
 		result1 model.Catalog
 		result2 error
 	}
-	CreateServiceInstanceStub        func(logger log.Logger, serverInstanceId string, instance model.ServiceInstance) (model.CreateServiceInstanceResponse, error)
+	CreateServiceInstanceStub        func(logger *log.Logger, serverInstanceId string, instance model.ServiceInstance) (model.CreateServiceInstanceResponse, error)
 	createServiceInstanceMutex       sync.RWMutex
 	createServiceInstanceArgsForCall []struct {
-		logger           log.Logger
+		logger           *log.Logger
 		serverInstanceId string
 		instance         model.ServiceInstance
 	}
@@ -30,38 +30,38 @@ type FakeBrokerController struct {
 		result1 model.CreateServiceInstanceResponse
 		result2 error
 	}
-	ServiceInstanceExistsStub        func(logger log.Logger, serviceInstanceId string) bool
+	ServiceInstanceExistsStub        func(logger *log.Logger, serviceInstanceId string) bool
 	serviceInstanceExistsMutex       sync.RWMutex
 	serviceInstanceExistsArgsForCall []struct {
-		logger            log.Logger
+		logger            *log.Logger
 		serviceInstanceId string
 	}
 	serviceInstanceExistsReturns struct {
 		result1 bool
 	}
-	ServiceInstancePropertiesMatchStub        func(logger log.Logger, serviceInstanceId string, instance model.ServiceInstance) bool
+	ServiceInstancePropertiesMatchStub        func(logger *log.Logger, serviceInstanceId string, instance model.ServiceInstance) bool
 	serviceInstancePropertiesMatchMutex       sync.RWMutex
 	serviceInstancePropertiesMatchArgsForCall []struct {
-		logger            log.Logger
+		logger            *log.Logger
 		serviceInstanceId string
 		instance          model.ServiceInstance
 	}
 	serviceInstancePropertiesMatchReturns struct {
 		result1 bool
 	}
-	DeleteServiceInstanceStub        func(logger log.Logger, serviceInstanceId string) error
+	DeleteServiceInstanceStub        func(logger *log.Logger, serviceInstanceId string) error
 	deleteServiceInstanceMutex       sync.RWMutex
 	deleteServiceInstanceArgsForCall []struct {
-		logger            log.Logger
+		logger            *log.Logger
 		serviceInstanceId string
 	}
 	deleteServiceInstanceReturns struct {
 		result1 error
 	}
-	BindServiceInstanceStub        func(logger log.Logger, serverInstanceId string, bindingId string, bindingInfo model.ServiceBinding) (model.CreateServiceBindingResponse, error)
+	BindServiceInstanceStub        func(logger *log.Logger, serverInstanceId string, bindingId string, bindingInfo model.ServiceBinding) (model.CreateServiceBindingResponse, error)
 	bindServiceInstanceMutex       sync.RWMutex
 	bindServiceInstanceArgsForCall []struct {
-		logger           log.Logger
+		logger           *log.Logger
 		serverInstanceId string
 		bindingId        string
 		bindingInfo      model.ServiceBinding
@@ -70,20 +70,20 @@ type FakeBrokerController struct {
 		result1 model.CreateServiceBindingResponse
 		result2 error
 	}
-	ServiceBindingExistsStub        func(logger log.Logger, serviceInstanceId string, bindingId string) bool
+	ServiceBindingExistsStub        func(logger *log.Logger, serviceInstanceId string, bindingId string) bool
 	serviceBindingExistsMutex       sync.RWMutex
 	serviceBindingExistsArgsForCall []struct {
-		logger            log.Logger
+		logger            *log.Logger
 		serviceInstanceId string
 		bindingId         string
 	}
 	serviceBindingExistsReturns struct {
 		result1 bool
 	}
-	ServiceBindingPropertiesMatchStub        func(logger log.Logger, serviceInstanceId string, bindingId string, binding model.ServiceBinding) bool
+	ServiceBindingPropertiesMatchStub        func(logger *log.Logger, serviceInstanceId string, bindingId string, binding model.ServiceBinding) bool
 	serviceBindingPropertiesMatchMutex       sync.RWMutex
 	serviceBindingPropertiesMatchArgsForCall []struct {
-		logger            log.Logger
+		logger            *log.Logger
 		serviceInstanceId string
 		bindingId         string
 		binding           model.ServiceBinding
@@ -91,10 +91,10 @@ type FakeBrokerController struct {
 	serviceBindingPropertiesMatchReturns struct {
 		result1 bool
 	}
-	GetBindingStub        func(logger log.Logger, instanceId, bindingId string) (model.ServiceBinding, error)
+	GetBindingStub        func(logger *log.Logger, instanceId, bindingId string) (model.ServiceBinding, error)
 	getBindingMutex       sync.RWMutex
 	getBindingArgsForCall []struct {
-		logger     log.Logger
+		logger     *log.Logger
 		instanceId string
 		bindingId  string
 	}
@@ -102,10 +102,10 @@ type FakeBrokerController struct {
 		result1 model.ServiceBinding
 		result2 error
 	}
-	UnbindServiceInstanceStub        func(logger log.Logger, serverInstanceId string, bindingId string) error
+	UnbindServiceInstanceStub        func(logger *log.Logger, serverInstanceId string, bindingId string) error
 	unbindServiceInstanceMutex       sync.RWMutex
 	unbindServiceInstanceArgsForCall []struct {
-		logger           log.Logger
+		logger           *log.Logger
 		serverInstanceId string
 		bindingId        string
 	}
@@ -116,10 +116,10 @@ type FakeBrokerController struct {
 	invocationsMutex sync.RWMutex
 }
 
-func (fake *FakeBrokerController) GetCatalog(logger log.Logger) (model.Catalog, error) {
+func (fake *FakeBrokerController) GetCatalog(logger *log.Logger) (model.Catalog, error) {
 	fake.getCatalogMutex.Lock()
 	fake.getCatalogArgsForCall = append(fake.getCatalogArgsForCall, struct {
-		logger log.Logger
+		logger *log.Logger
 	}{logger})
 	fake.recordInvocation("GetCatalog", []interface{}{logger})
 	fake.getCatalogMutex.Unlock()
@@ -136,7 +136,7 @@ func (fake *FakeBrokerController) GetCatalogCallCount() int {
 	return len(fake.getCatalogArgsForCall)
 }
 
-func (fake *FakeBrokerController) GetCatalogArgsForCall(i int) log.Logger {
+func (fake *FakeBrokerController) GetCatalogArgsForCall(i int) *log.Logger {
 	fake.getCatalogMutex.RLock()
 	defer fake.getCatalogMutex.RUnlock()
 	return fake.getCatalogArgsForCall[i].logger
@@ -150,10 +150,10 @@ func (fake *FakeBrokerController) GetCatalogReturns(result1 model.Catalog, resul
 	}{result1, result2}
 }
 
-func (fake *FakeBrokerController) CreateServiceInstance(logger log.Logger, serverInstanceId string, instance model.ServiceInstance) (model.CreateServiceInstanceResponse, error) {
+func (fake *FakeBrokerController) CreateServiceInstance(logger *log.Logger, serverInstanceId string, instance model.ServiceInstance) (model.CreateServiceInstanceResponse, error) {
 	fake.createServiceInstanceMutex.Lock()
 	fake.createServiceInstanceArgsForCall = append(fake.createServiceInstanceArgsForCall, struct {
-		logger           log.Logger
+		logger           *log.Logger
 		serverInstanceId string
 		instance         model.ServiceInstance
 	}{logger, serverInstanceId, instance})
@@ -172,7 +172,7 @@ func (fake *FakeBrokerController) CreateServiceInstanceCallCount() int {
 	return len(fake.createServiceInstanceArgsForCall)
 }
 
-func (fake *FakeBrokerController) CreateServiceInstanceArgsForCall(i int) (log.Logger, string, model.ServiceInstance) {
+func (fake *FakeBrokerController) CreateServiceInstanceArgsForCall(i int) (*log.Logger, string, model.ServiceInstance) {
 	fake.createServiceInstanceMutex.RLock()
 	defer fake.createServiceInstanceMutex.RUnlock()
 	return fake.createServiceInstanceArgsForCall[i].logger, fake.createServiceInstanceArgsForCall[i].serverInstanceId, fake.createServiceInstanceArgsForCall[i].instance
@@ -186,10 +186,10 @@ func (fake *FakeBrokerController) CreateServiceInstanceReturns(result1 model.Cre
 	}{result1, result2}
 }
 
-func (fake *FakeBrokerController) ServiceInstanceExists(logger log.Logger, serviceInstanceId string) bool {
+func (fake *FakeBrokerController) ServiceInstanceExists(logger *log.Logger, serviceInstanceId string) bool {
 	fake.serviceInstanceExistsMutex.Lock()
 	fake.serviceInstanceExistsArgsForCall = append(fake.serviceInstanceExistsArgsForCall, struct {
-		logger            log.Logger
+		logger            *log.Logger
 		serviceInstanceId string
 	}{logger, serviceInstanceId})
 	fake.recordInvocation("ServiceInstanceExists", []interface{}{logger, serviceInstanceId})
@@ -207,7 +207,7 @@ func (fake *FakeBrokerController) ServiceInstanceExistsCallCount() int {
 	return len(fake.serviceInstanceExistsArgsForCall)
 }
 
-func (fake *FakeBrokerController) ServiceInstanceExistsArgsForCall(i int) (log.Logger, string) {
+func (fake *FakeBrokerController) ServiceInstanceExistsArgsForCall(i int) (*log.Logger, string) {
 	fake.serviceInstanceExistsMutex.RLock()
 	defer fake.serviceInstanceExistsMutex.RUnlock()
 	return fake.serviceInstanceExistsArgsForCall[i].logger, fake.serviceInstanceExistsArgsForCall[i].serviceInstanceId
@@ -220,10 +220,10 @@ func (fake *FakeBrokerController) ServiceInstanceExistsReturns(result1 bool) {
 	}{result1}
 }
 
-func (fake *FakeBrokerController) ServiceInstancePropertiesMatch(logger log.Logger, serviceInstanceId string, instance model.ServiceInstance) bool {
+func (fake *FakeBrokerController) ServiceInstancePropertiesMatch(logger *log.Logger, serviceInstanceId string, instance model.ServiceInstance) bool {
 	fake.serviceInstancePropertiesMatchMutex.Lock()
 	fake.serviceInstancePropertiesMatchArgsForCall = append(fake.serviceInstancePropertiesMatchArgsForCall, struct {
-		logger            log.Logger
+		logger            *log.Logger
 		serviceInstanceId string
 		instance          model.ServiceInstance
 	}{logger, serviceInstanceId, instance})
@@ -242,7 +242,7 @@ func (fake *FakeBrokerController) ServiceInstancePropertiesMatchCallCount() int 
 	return len(fake.serviceInstancePropertiesMatchArgsForCall)
 }
 
-func (fake *FakeBrokerController) ServiceInstancePropertiesMatchArgsForCall(i int) (log.Logger, string, model.ServiceInstance) {
+func (fake *FakeBrokerController) ServiceInstancePropertiesMatchArgsForCall(i int) (*log.Logger, string, model.ServiceInstance) {
 	fake.serviceInstancePropertiesMatchMutex.RLock()
 	defer fake.serviceInstancePropertiesMatchMutex.RUnlock()
 	return fake.serviceInstancePropertiesMatchArgsForCall[i].logger, fake.serviceInstancePropertiesMatchArgsForCall[i].serviceInstanceId, fake.serviceInstancePropertiesMatchArgsForCall[i].instance
@@ -255,10 +255,10 @@ func (fake *FakeBrokerController) ServiceInstancePropertiesMatchReturns(result1 
 	}{result1}
 }
 
-func (fake *FakeBrokerController) DeleteServiceInstance(logger log.Logger, serviceInstanceId string) error {
+func (fake *FakeBrokerController) DeleteServiceInstance(logger *log.Logger, serviceInstanceId string) error {
 	fake.deleteServiceInstanceMutex.Lock()
 	fake.deleteServiceInstanceArgsForCall = append(fake.deleteServiceInstanceArgsForCall, struct {
-		logger            log.Logger
+		logger            *log.Logger
 		serviceInstanceId string
 	}{logger, serviceInstanceId})
 	fake.recordInvocation("DeleteServiceInstance", []interface{}{logger, serviceInstanceId})
@@ -276,7 +276,7 @@ func (fake *FakeBrokerController) DeleteServiceInstanceCallCount() int {
 	return len(fake.deleteServiceInstanceArgsForCall)
 }
 
-func (fake *FakeBrokerController) DeleteServiceInstanceArgsForCall(i int) (log.Logger, string) {
+func (fake *FakeBrokerController) DeleteServiceInstanceArgsForCall(i int) (*log.Logger, string) {
 	fake.deleteServiceInstanceMutex.RLock()
 	defer fake.deleteServiceInstanceMutex.RUnlock()
 	return fake.deleteServiceInstanceArgsForCall[i].logger, fake.deleteServiceInstanceArgsForCall[i].serviceInstanceId
@@ -289,10 +289,10 @@ func (fake *FakeBrokerController) DeleteServiceInstanceReturns(result1 error) {
 	}{result1}
 }
 
-func (fake *FakeBrokerController) BindServiceInstance(logger log.Logger, serverInstanceId string, bindingId string, bindingInfo model.ServiceBinding) (model.CreateServiceBindingResponse, error) {
+func (fake *FakeBrokerController) BindServiceInstance(logger *log.Logger, serverInstanceId string, bindingId string, bindingInfo model.ServiceBinding) (model.CreateServiceBindingResponse, error) {
 	fake.bindServiceInstanceMutex.Lock()
 	fake.bindServiceInstanceArgsForCall = append(fake.bindServiceInstanceArgsForCall, struct {
-		logger           log.Logger
+		logger           *log.Logger
 		serverInstanceId string
 		bindingId        string
 		bindingInfo      model.ServiceBinding
@@ -312,7 +312,7 @@ func (fake *FakeBrokerController) BindServiceInstanceCallCount() int {
 	return len(fake.bindServiceInstanceArgsForCall)
 }
 
-func (fake *FakeBrokerController) BindServiceInstanceArgsForCall(i int) (log.Logger, string, string, model.ServiceBinding) {
+func (fake *FakeBrokerController) BindServiceInstanceArgsForCall(i int) (*log.Logger, string, string, model.ServiceBinding) {
 	fake.bindServiceInstanceMutex.RLock()
 	defer fake.bindServiceInstanceMutex.RUnlock()
 	return fake.bindServiceInstanceArgsForCall[i].logger, fake.bindServiceInstanceArgsForCall[i].serverInstanceId, fake.bindServiceInstanceArgsForCall[i].bindingId, fake.bindServiceInstanceArgsForCall[i].bindingInfo
@@ -326,10 +326,10 @@ func (fake *FakeBrokerController) BindServiceInstanceReturns(result1 model.Creat
 	}{result1, result2}
 }
 
-func (fake *FakeBrokerController) ServiceBindingExists(logger log.Logger, serviceInstanceId string, bindingId string) bool {
+func (fake *FakeBrokerController) ServiceBindingExists(logger *log.Logger, serviceInstanceId string, bindingId string) bool {
 	fake.serviceBindingExistsMutex.Lock()
 	fake.serviceBindingExistsArgsForCall = append(fake.serviceBindingExistsArgsForCall, struct {
-		logger            log.Logger
+		logger            *log.Logger
 		serviceInstanceId string
 		bindingId         string
 	}{logger, serviceInstanceId, bindingId})
@@ -348,7 +348,7 @@ func (fake *FakeBrokerController) ServiceBindingExistsCallCount() int {
 	return len(fake.serviceBindingExistsArgsForCall)
 }
 
-func (fake *FakeBrokerController) ServiceBindingExistsArgsForCall(i int) (log.Logger, string, string) {
+func (fake *FakeBrokerController) ServiceBindingExistsArgsForCall(i int) (*log.Logger, string, string) {
 	fake.serviceBindingExistsMutex.RLock()
 	defer fake.serviceBindingExistsMutex.RUnlock()
 	return fake.serviceBindingExistsArgsForCall[i].logger, fake.serviceBindingExistsArgsForCall[i].serviceInstanceId, fake.serviceBindingExistsArgsForCall[i].bindingId
@@ -361,10 +361,10 @@ func (fake *FakeBrokerController) ServiceBindingExistsReturns(result1 bool) {
 	}{result1}
 }
 
-func (fake *FakeBrokerController) ServiceBindingPropertiesMatch(logger log.Logger, serviceInstanceId string, bindingId string, binding model.ServiceBinding) bool {
+func (fake *FakeBrokerController) ServiceBindingPropertiesMatch(logger *log.Logger, serviceInstanceId string, bindingId string, binding model.ServiceBinding) bool {
 	fake.serviceBindingPropertiesMatchMutex.Lock()
 	fake.serviceBindingPropertiesMatchArgsForCall = append(fake.serviceBindingPropertiesMatchArgsForCall, struct {
-		logger            log.Logger
+		logger            *log.Logger
 		serviceInstanceId string
 		bindingId         string
 		binding           model.ServiceBinding
@@ -384,7 +384,7 @@ func (fake *FakeBrokerController) ServiceBindingPropertiesMatchCallCount() int {
 	return len(fake.serviceBindingPropertiesMatchArgsForCall)
 }
 
-func (fake *FakeBrokerController) ServiceBindingPropertiesMatchArgsForCall(i int) (log.Logger, string, string, model.ServiceBinding) {
+func (fake *FakeBrokerController) ServiceBindingPropertiesMatchArgsForCall(i int) (*log.Logger, string, string, model.ServiceBinding) {
 	fake.serviceBindingPropertiesMatchMutex.RLock()
 	defer fake.serviceBindingPropertiesMatchMutex.RUnlock()
 	return fake.serviceBindingPropertiesMatchArgsForCall[i].logger, fake.serviceBindingPropertiesMatchArgsForCall[i].serviceInstanceId, fake.serviceBindingPropertiesMatchArgsForCall[i].bindingId, fake.serviceBindingPropertiesMatchArgsForCall[i].binding
@@ -397,10 +397,10 @@ func (fake *FakeBrokerController) ServiceBindingPropertiesMatchReturns(result1 b
 	}{result1}
 }
 
-func (fake *FakeBrokerController) GetBinding(logger log.Logger, instanceId string, bindingId string) (model.ServiceBinding, error) {
+func (fake *FakeBrokerController) GetBinding(logger *log.Logger, instanceId string, bindingId string) (model.ServiceBinding, error) {
 	fake.getBindingMutex.Lock()
 	fake.getBindingArgsForCall = append(fake.getBindingArgsForCall, struct {
-		logger     log.Logger
+		logger     *log.Logger
 		instanceId string
 		bindingId  string
 	}{logger, instanceId, bindingId})
@@ -419,7 +419,7 @@ func (fake *FakeBrokerController) GetBindingCallCount() int {
 	return len(fake.getBindingArgsForCall)
 }
 
-func (fake *FakeBrokerController) GetBindingArgsForCall(i int) (log.Logger, string, string) {
+func (fake *FakeBrokerController) GetBindingArgsForCall(i int) (*log.Logger, string, string) {
 	fake.getBindingMutex.RLock()
 	defer fake.getBindingMutex.RUnlock()
 	return fake.getBindingArgsForCall[i].logger, fake.getBindingArgsForCall[i].instanceId, fake.getBindingArgsForCall[i].bindingId
@@ -433,10 +433,10 @@ func (fake *FakeBrokerController) GetBindingReturns(result1 model.ServiceBinding
 	}{result1, result2}
 }
 
-func (fake *FakeBrokerController) UnbindServiceInstance(logger log.Logger, serverInstanceId string, bindingId string) error {
+func (fake *FakeBrokerController) UnbindServiceInstance(logger *log.Logger, serverInstanceId string, bindingId string) error {
 	fake.unbindServiceInstanceMutex.Lock()
 	fake.unbindServiceInstanceArgsForCall = append(fake.unbindServiceInstanceArgsForCall, struct {
-		logger           log.Logger
+		logger           *log.Logger
 		serverInstanceId string
 		bindingId        string
 	}{logger, serverInstanceId, bindingId})
@@ -455,7 +455,7 @@ func (fake *FakeBrokerController) UnbindServiceInstanceCallCount() int {
 	return len(fake.unbindServiceInstanceArgsForCall)
 }
 
-func (fake *FakeBrokerController) UnbindServiceInstanceArgsForCall(i int) (log.Logger, string, string) {
+func (fake *FakeBrokerController) UnbindServiceInstanceArgsForCall(i int) (*log.Logger, string, string) {
 	fake.unbindServiceInstanceMutex.RLock()
 	defer fake.unbindServiceInstanceMutex.RUnlock()
 	return fake.unbindServiceInstanceArgsForCall[i].logger, fake.unbindServiceInstanceArgsForCall[i].serverInstanceId, fake.unbindServiceInstanceArgsForCall[i].bindingId

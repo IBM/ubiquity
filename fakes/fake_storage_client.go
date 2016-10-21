@@ -7,7 +7,7 @@ import (
 	"github.ibm.com/almaden-containers/ubiquity.git/model"
 )
 
-type FakeStorageBackend struct {
+type FakeStorageClient struct {
 	ActivateStub        func() error
 	activateMutex       sync.RWMutex
 	activateArgsForCall []struct{}
@@ -39,14 +39,14 @@ type FakeStorageBackend struct {
 		result1 []model.VolumeMetadata
 		result2 error
 	}
-	GetVolumeStub        func(name string) (volumeMetadata *model.VolumeMetadata, volumeConfigDetails *model.SpectrumConfig, err error)
+	GetVolumeStub        func(name string) (volumeMetadata model.VolumeMetadata, volumeConfigDetails model.SpectrumConfig, err error)
 	getVolumeMutex       sync.RWMutex
 	getVolumeArgsForCall []struct {
 		name string
 	}
 	getVolumeReturns struct {
-		result1 *model.VolumeMetadata
-		result2 *model.SpectrumConfig
+		result1 model.VolumeMetadata
+		result2 model.SpectrumConfig
 		result3 error
 	}
 	AttachStub        func(name string) (string, error)
@@ -76,7 +76,7 @@ type FakeStorageBackend struct {
 	invocationsMutex sync.RWMutex
 }
 
-func (fake *FakeStorageBackend) Activate() error {
+func (fake *FakeStorageClient) Activate() error {
 	fake.activateMutex.Lock()
 	fake.activateArgsForCall = append(fake.activateArgsForCall, struct{}{})
 	fake.recordInvocation("Activate", []interface{}{})
@@ -88,20 +88,20 @@ func (fake *FakeStorageBackend) Activate() error {
 	}
 }
 
-func (fake *FakeStorageBackend) ActivateCallCount() int {
+func (fake *FakeStorageClient) ActivateCallCount() int {
 	fake.activateMutex.RLock()
 	defer fake.activateMutex.RUnlock()
 	return len(fake.activateArgsForCall)
 }
 
-func (fake *FakeStorageBackend) ActivateReturns(result1 error) {
+func (fake *FakeStorageClient) ActivateReturns(result1 error) {
 	fake.ActivateStub = nil
 	fake.activateReturns = struct {
 		result1 error
 	}{result1}
 }
 
-func (fake *FakeStorageBackend) CreateVolume(name string, opts map[string]interface{}) error {
+func (fake *FakeStorageClient) CreateVolume(name string, opts map[string]interface{}) error {
 	fake.createVolumeMutex.Lock()
 	fake.createVolumeArgsForCall = append(fake.createVolumeArgsForCall, struct {
 		name string
@@ -116,26 +116,26 @@ func (fake *FakeStorageBackend) CreateVolume(name string, opts map[string]interf
 	}
 }
 
-func (fake *FakeStorageBackend) CreateVolumeCallCount() int {
+func (fake *FakeStorageClient) CreateVolumeCallCount() int {
 	fake.createVolumeMutex.RLock()
 	defer fake.createVolumeMutex.RUnlock()
 	return len(fake.createVolumeArgsForCall)
 }
 
-func (fake *FakeStorageBackend) CreateVolumeArgsForCall(i int) (string, map[string]interface{}) {
+func (fake *FakeStorageClient) CreateVolumeArgsForCall(i int) (string, map[string]interface{}) {
 	fake.createVolumeMutex.RLock()
 	defer fake.createVolumeMutex.RUnlock()
 	return fake.createVolumeArgsForCall[i].name, fake.createVolumeArgsForCall[i].opts
 }
 
-func (fake *FakeStorageBackend) CreateVolumeReturns(result1 error) {
+func (fake *FakeStorageClient) CreateVolumeReturns(result1 error) {
 	fake.CreateVolumeStub = nil
 	fake.createVolumeReturns = struct {
 		result1 error
 	}{result1}
 }
 
-func (fake *FakeStorageBackend) RemoveVolume(name string, forceDelete bool) error {
+func (fake *FakeStorageClient) RemoveVolume(name string, forceDelete bool) error {
 	fake.removeVolumeMutex.Lock()
 	fake.removeVolumeArgsForCall = append(fake.removeVolumeArgsForCall, struct {
 		name        string
@@ -150,26 +150,26 @@ func (fake *FakeStorageBackend) RemoveVolume(name string, forceDelete bool) erro
 	}
 }
 
-func (fake *FakeStorageBackend) RemoveVolumeCallCount() int {
+func (fake *FakeStorageClient) RemoveVolumeCallCount() int {
 	fake.removeVolumeMutex.RLock()
 	defer fake.removeVolumeMutex.RUnlock()
 	return len(fake.removeVolumeArgsForCall)
 }
 
-func (fake *FakeStorageBackend) RemoveVolumeArgsForCall(i int) (string, bool) {
+func (fake *FakeStorageClient) RemoveVolumeArgsForCall(i int) (string, bool) {
 	fake.removeVolumeMutex.RLock()
 	defer fake.removeVolumeMutex.RUnlock()
 	return fake.removeVolumeArgsForCall[i].name, fake.removeVolumeArgsForCall[i].forceDelete
 }
 
-func (fake *FakeStorageBackend) RemoveVolumeReturns(result1 error) {
+func (fake *FakeStorageClient) RemoveVolumeReturns(result1 error) {
 	fake.RemoveVolumeStub = nil
 	fake.removeVolumeReturns = struct {
 		result1 error
 	}{result1}
 }
 
-func (fake *FakeStorageBackend) ListVolumes() ([]model.VolumeMetadata, error) {
+func (fake *FakeStorageClient) ListVolumes() ([]model.VolumeMetadata, error) {
 	fake.listVolumesMutex.Lock()
 	fake.listVolumesArgsForCall = append(fake.listVolumesArgsForCall, struct{}{})
 	fake.recordInvocation("ListVolumes", []interface{}{})
@@ -181,13 +181,13 @@ func (fake *FakeStorageBackend) ListVolumes() ([]model.VolumeMetadata, error) {
 	}
 }
 
-func (fake *FakeStorageBackend) ListVolumesCallCount() int {
+func (fake *FakeStorageClient) ListVolumesCallCount() int {
 	fake.listVolumesMutex.RLock()
 	defer fake.listVolumesMutex.RUnlock()
 	return len(fake.listVolumesArgsForCall)
 }
 
-func (fake *FakeStorageBackend) ListVolumesReturns(result1 []model.VolumeMetadata, result2 error) {
+func (fake *FakeStorageClient) ListVolumesReturns(result1 []model.VolumeMetadata, result2 error) {
 	fake.ListVolumesStub = nil
 	fake.listVolumesReturns = struct {
 		result1 []model.VolumeMetadata
@@ -195,7 +195,7 @@ func (fake *FakeStorageBackend) ListVolumesReturns(result1 []model.VolumeMetadat
 	}{result1, result2}
 }
 
-func (fake *FakeStorageBackend) GetVolume(name string) (volumeMetadata *model.VolumeMetadata, volumeConfigDetails *model.SpectrumConfig, err error) {
+func (fake *FakeStorageClient) GetVolume(name string) (volumeMetadata model.VolumeMetadata, volumeConfigDetails model.SpectrumConfig, err error) {
 	fake.getVolumeMutex.Lock()
 	fake.getVolumeArgsForCall = append(fake.getVolumeArgsForCall, struct {
 		name string
@@ -209,28 +209,28 @@ func (fake *FakeStorageBackend) GetVolume(name string) (volumeMetadata *model.Vo
 	}
 }
 
-func (fake *FakeStorageBackend) GetVolumeCallCount() int {
+func (fake *FakeStorageClient) GetVolumeCallCount() int {
 	fake.getVolumeMutex.RLock()
 	defer fake.getVolumeMutex.RUnlock()
 	return len(fake.getVolumeArgsForCall)
 }
 
-func (fake *FakeStorageBackend) GetVolumeArgsForCall(i int) string {
+func (fake *FakeStorageClient) GetVolumeArgsForCall(i int) string {
 	fake.getVolumeMutex.RLock()
 	defer fake.getVolumeMutex.RUnlock()
 	return fake.getVolumeArgsForCall[i].name
 }
 
-func (fake *FakeStorageBackend) GetVolumeReturns(result1 *model.VolumeMetadata, result2 *model.SpectrumConfig, result3 error) {
+func (fake *FakeStorageClient) GetVolumeReturns(result1 model.VolumeMetadata, result2 model.SpectrumConfig, result3 error) {
 	fake.GetVolumeStub = nil
 	fake.getVolumeReturns = struct {
-		result1 *model.VolumeMetadata
-		result2 *model.SpectrumConfig
+		result1 model.VolumeMetadata
+		result2 model.SpectrumConfig
 		result3 error
 	}{result1, result2, result3}
 }
 
-func (fake *FakeStorageBackend) Attach(name string) (string, error) {
+func (fake *FakeStorageClient) Attach(name string) (string, error) {
 	fake.attachMutex.Lock()
 	fake.attachArgsForCall = append(fake.attachArgsForCall, struct {
 		name string
@@ -244,19 +244,19 @@ func (fake *FakeStorageBackend) Attach(name string) (string, error) {
 	}
 }
 
-func (fake *FakeStorageBackend) AttachCallCount() int {
+func (fake *FakeStorageClient) AttachCallCount() int {
 	fake.attachMutex.RLock()
 	defer fake.attachMutex.RUnlock()
 	return len(fake.attachArgsForCall)
 }
 
-func (fake *FakeStorageBackend) AttachArgsForCall(i int) string {
+func (fake *FakeStorageClient) AttachArgsForCall(i int) string {
 	fake.attachMutex.RLock()
 	defer fake.attachMutex.RUnlock()
 	return fake.attachArgsForCall[i].name
 }
 
-func (fake *FakeStorageBackend) AttachReturns(result1 string, result2 error) {
+func (fake *FakeStorageClient) AttachReturns(result1 string, result2 error) {
 	fake.AttachStub = nil
 	fake.attachReturns = struct {
 		result1 string
@@ -264,7 +264,7 @@ func (fake *FakeStorageBackend) AttachReturns(result1 string, result2 error) {
 	}{result1, result2}
 }
 
-func (fake *FakeStorageBackend) Detach(name string) error {
+func (fake *FakeStorageClient) Detach(name string) error {
 	fake.detachMutex.Lock()
 	fake.detachArgsForCall = append(fake.detachArgsForCall, struct {
 		name string
@@ -278,26 +278,26 @@ func (fake *FakeStorageBackend) Detach(name string) error {
 	}
 }
 
-func (fake *FakeStorageBackend) DetachCallCount() int {
+func (fake *FakeStorageClient) DetachCallCount() int {
 	fake.detachMutex.RLock()
 	defer fake.detachMutex.RUnlock()
 	return len(fake.detachArgsForCall)
 }
 
-func (fake *FakeStorageBackend) DetachArgsForCall(i int) string {
+func (fake *FakeStorageClient) DetachArgsForCall(i int) string {
 	fake.detachMutex.RLock()
 	defer fake.detachMutex.RUnlock()
 	return fake.detachArgsForCall[i].name
 }
 
-func (fake *FakeStorageBackend) DetachReturns(result1 error) {
+func (fake *FakeStorageClient) DetachReturns(result1 error) {
 	fake.DetachStub = nil
 	fake.detachReturns = struct {
 		result1 error
 	}{result1}
 }
 
-func (fake *FakeStorageBackend) GetPluginName() string {
+func (fake *FakeStorageClient) GetPluginName() string {
 	fake.getPluginNameMutex.Lock()
 	fake.getPluginNameArgsForCall = append(fake.getPluginNameArgsForCall, struct{}{})
 	fake.recordInvocation("GetPluginName", []interface{}{})
@@ -309,20 +309,20 @@ func (fake *FakeStorageBackend) GetPluginName() string {
 	}
 }
 
-func (fake *FakeStorageBackend) GetPluginNameCallCount() int {
+func (fake *FakeStorageClient) GetPluginNameCallCount() int {
 	fake.getPluginNameMutex.RLock()
 	defer fake.getPluginNameMutex.RUnlock()
 	return len(fake.getPluginNameArgsForCall)
 }
 
-func (fake *FakeStorageBackend) GetPluginNameReturns(result1 string) {
+func (fake *FakeStorageClient) GetPluginNameReturns(result1 string) {
 	fake.GetPluginNameStub = nil
 	fake.getPluginNameReturns = struct {
 		result1 string
 	}{result1}
 }
 
-func (fake *FakeStorageBackend) Invocations() map[string][][]interface{} {
+func (fake *FakeStorageClient) Invocations() map[string][][]interface{} {
 	fake.invocationsMutex.RLock()
 	defer fake.invocationsMutex.RUnlock()
 	fake.activateMutex.RLock()
@@ -344,7 +344,7 @@ func (fake *FakeStorageBackend) Invocations() map[string][][]interface{} {
 	return fake.invocations
 }
 
-func (fake *FakeStorageBackend) recordInvocation(key string, args []interface{}) {
+func (fake *FakeStorageClient) recordInvocation(key string, args []interface{}) {
 	fake.invocationsMutex.Lock()
 	defer fake.invocationsMutex.Unlock()
 	if fake.invocations == nil {
@@ -356,4 +356,4 @@ func (fake *FakeStorageBackend) recordInvocation(key string, args []interface{})
 	fake.invocations[key] = append(fake.invocations[key], args)
 }
 
-var _ model.StorageClient = new(FakeStorageBackend)
+var _ model.StorageClient = new(FakeStorageClient)
