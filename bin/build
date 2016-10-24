@@ -1,7 +1,0 @@
-#!/bin/bash
-
-set -e
-
-bin=$(dirname $0)
-
-go build -o $bin/../out/ubiquity $bin/../main.go

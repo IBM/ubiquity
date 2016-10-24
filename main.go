@@ -12,16 +12,16 @@ import (
 
 	"strings"
 
-	"github.ibm.com/almaden-containers/ubiquity.git/core"
-	"github.ibm.com/almaden-containers/ubiquity.git/local"
-	"github.ibm.com/almaden-containers/ubiquity.git/model"
-	"github.ibm.com/almaden-containers/ubiquity.git/web_server"
+	"github.ibm.com/almaden-containers/ubiquity/core"
+	"github.ibm.com/almaden-containers/ubiquity/local"
+	"github.ibm.com/almaden-containers/ubiquity/model"
+	"github.ibm.com/almaden-containers/ubiquity/web_server"
 )
 
 var port = flag.String(
 	"listenPort",
 	"8999",
-	"Port to serve spectrum broker functions",
+	"Port to serve ubiquity functions",
 )
 var configPath = flag.String(
 	"configPath",
@@ -31,7 +31,7 @@ var configPath = flag.String(
 var spectrumConfigPath = flag.String(
 	"spectrumConfigPath",
 	"/gpfs/gold/",
-	"gpfs filesystem mount poin/dir where all db metadata will be stored",
+	"gpfs filesystem mount point/dir where all db metadata will be stored",
 )
 var spectrumDefaultFilesystem = flag.String(
 	"spectrumDefaultFilesystem",

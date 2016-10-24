@@ -12,7 +12,7 @@ import (
 	"strings"
 	"time"
 
-	"github.ibm.com/almaden-containers/ubiquity.git/model"
+	"github.ibm.com/almaden-containers/ubiquity/model"
 
 	"github.com/openstack/golang-client/openstack"
 )

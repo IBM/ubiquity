@@ -1,0 +1,7 @@
+#!/bin/bash
+
+set -e
+
+scripts=$(dirname $0)
+
+go build -o $scripts/../bin/ubiquity $scripts/../main.go

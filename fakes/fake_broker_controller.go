@@ -5,8 +5,8 @@ import (
 	"log"
 	"sync"
 
-	"github.ibm.com/almaden-containers/ubiquity.git/core"
-	"github.ibm.com/almaden-containers/ubiquity.git/model"
+	"github.ibm.com/almaden-containers/ubiquity/core"
+	"github.ibm.com/almaden-containers/ubiquity/model"
 )
 
 type FakeBrokerController struct {

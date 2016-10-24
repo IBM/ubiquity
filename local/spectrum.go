@@ -5,8 +5,8 @@ import (
 	"log"
 	"strings"
 
-	"github.ibm.com/almaden-containers/ubiquity.git/model"
-	"github.ibm.com/almaden-containers/ubiquity.git/utils"
+	"github.ibm.com/almaden-containers/ubiquity/model"
+	"github.ibm.com/almaden-containers/ubiquity/utils"
 
 	"os"
 	"os/exec"

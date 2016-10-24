@@ -4,7 +4,7 @@ package fakes
 import (
 	"sync"
 
-	"github.ibm.com/almaden-containers/ubiquity.git/model"
+	"github.ibm.com/almaden-containers/ubiquity/model"
 )
 
 type FakeStorageClient struct {

@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"log"
 
-	"github.ibm.com/almaden-containers/ubiquity.git/model"
+	"github.ibm.com/almaden-containers/ubiquity/model"
 )
 
 func NewRemoteClient(logger *log.Logger, storageApiURL string, backendName string) (model.StorageClient, error) {

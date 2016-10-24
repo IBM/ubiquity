@@ -7,7 +7,7 @@ import (
 	"net/http"
 	"os"
 
-	"github.ibm.com/almaden-containers/ubiquity.git/model"
+	"github.ibm.com/almaden-containers/ubiquity/model"
 
 	"path"
 	"strings"

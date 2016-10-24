@@ -5,8 +5,8 @@ import (
 	"log"
 	"net/http"
 
-	"github.ibm.com/almaden-containers/ubiquity.git/core"
-	"github.ibm.com/almaden-containers/ubiquity.git/model"
+	"github.ibm.com/almaden-containers/ubiquity/core"
+	"github.ibm.com/almaden-containers/ubiquity/model"
 
 	"github.com/gorilla/mux"
 )
