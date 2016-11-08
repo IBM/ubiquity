@@ -7,8 +7,9 @@ tmp/*
 
 .idea/*
 out/*
+bin/*
 gobin/*
-
+fakes/*
 # Folders
 _obj
 _test

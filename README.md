@@ -1,17 +1,37 @@
-#Ubiquity Storage service for Container Ecosystems
+#Ubiquity Storage Service for Container Ecosystems
 Ubiquity provides access to persistent storage for Docker containers
 ### Supported Deployment Options
-#### Single node (all in one)
+#### Single Node (All in One)
 ![Single node](images/singleNode.jpg)
 #### Multi-node
 ![Multi node](images/multiNode.jpg)
+#### Multi-node using NFS Protocol
+![Multi node](images/multiNode-nfs.jpg)
+
 ### Prerequisites
-  * Provision a system running Spectrum-Scale client and NSD server
+  * Provision a system running Spectrum-Scale client (optionally with CES/Ganesha for NFS transport) and NSD server
   * Install [golang](https://golang.org/) (>=1.6)
   * Install git
   * Install gcc
 
-### Getting started
+### Configuration
+
+* Create User and Group named 'ubiquity'
+
+```bash
+adduser ubiquity
+```
+
+* Modify the sudoers file so that user and group 'ubiquity' can execute Spectrum Scale commands as root
+
+```bash
+## Entries for Ubiquity
+ubiquity ALL= NOPASSWD: /usr/lpp/mmfs/bin/, /usr/bin/, /bin/
+Defaults:%ubiquity !requiretty
+Defaults:%ubiquity secure_path = /sbin:/bin:/usr/sbin:/usr/bin:/usr/lpp/mmfs/bin
+```
+
+### Getting Started
 * Configure go - GOPATH environment variable needs to be correctly set before starting the build process. Create a new directory and set it as GOPATH 
 ```bash
 mkdir -p $HOME/workspace
@@ -28,18 +48,34 @@ cd ubiquity
 ./scripts/build
 
 ```
-* Run Ubiquity service
+### Running the Ubiquity Service
 ```bash
-./bin/ubiquity -listenPort <> -logPath <> -spectrumConfigPath <> -spectrumDefaultFilesystem <>
+./bin/ubiquity [-configFile <configFile>]
 ```
 where:
-* listenPort: Port to serve ubiquity functions
-* logPath: Path to create ubiquity log file
-* spectrumConfigPath: Path in an existing spectrum-scale filesystem where ubiquity can create/store metadata DB
-* spectrumDefaultFilesystem: Default existing spectrum-scale filesystem to use if user does not specify one during creation of volumes
-Examples invocation of binary:
-```bash
-./bin/ubiquity -listenPort 8999 -logPath /tmp -spectrumConfigPath /gpfs/gold/ -spectrumDefaultFilesystem gold
+* configFile: Configuration file to use (defaults to `./ubiquity-server.conf`)
+
+### Configuring the Ubiquity Service
+
+Unless otherwise specified by the `configFile` command line parameter, the Ubiquity service will
+look for a file named `ubiquity-server.conf` for its configuration.
+
+The following snippet shows a sample configuration file:
+
+```toml
+port = 9999       # The TCP port to listen on
+logPath = "/tmp"  # The Ubiquity service will write logs to file "ubiquity.log" in this path.
+
+[SpectrumConfig]             # If this section is specified, the "spectrum-scale" backend will be enabled.
+defaultFilesystem = "gold"   # Default existing Spectrum Scale filesystem to use if user does not specify one during creation of volumes
+configPath = "/gpfs/gold"    # Path in an existing Spectrum Scale filesystem where Ubiquity can create/store metadata DB
+
+[SpectrumNfsConfig]            # If this section is specified, the "spectrum-scale-nfs" backend will be enabled. Requires CES/Ganesha.
+defaultFilesystem = "gold"     # Default existing Spectrum Scale filesystem to use if user does not specify one during creation of volumes
+configPath = "/gpfs/gold"      # Path in an existing Spectrum Scale filesystem where Ubiquity can create/store metadata DB
+NfsServerAddr = "192.168.1.2"  # IP/hostname under which CES/Ganesha NFS shares can be accessed (required)
+
 ```
-### Next steps
+
+### Next Steps
 - Install appropriate plugin ([docker](https://github.ibm.com/almaden-containers/ubiquity-docker-plugin), [kubernetes](https://github.ibm.com/almaden-containers/ubiquity-flexvolume))

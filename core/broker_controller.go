@@ -217,7 +217,7 @@ func (c *controller) BindServiceInstance(logger *log.Logger, serviceInstanceId s
 		return model.CreateServiceBindingResponse{}, err
 	}
 
-	privateDetails := model.VolumeMountPrivateDetails{Driver: backend.GetPluginName(), GroupId: volumeName, Config: string(configJson)}
+	privateDetails := model.VolumeMountPrivateDetails{Driver: "spctrum-scale", GroupId: volumeName, Config: string(configJson)} //TODO: fix hardcoding
 	volumeMount := model.VolumeMount{ContainerPath: containerMountPath, Mode: "rw", Private: privateDetails}
 	volumeMounts := []model.VolumeMount{volumeMount}
 

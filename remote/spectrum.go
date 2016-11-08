@@ -6,10 +6,6 @@ import (
 
 	"net/http"
 
-	"encoding/json"
-
-	"bytes"
-
 	"github.ibm.com/almaden-containers/ubiquity/model"
 	"github.ibm.com/almaden-containers/ubiquity/utils"
 )
@@ -20,11 +16,13 @@ type spectrumRemoteClient struct {
 	isMounted     bool
 	httpClient    *http.Client
 	storageApiURL string
+	backendName   string
 }
 
-func NewSpectrumRemoteClient(logger *log.Logger, storageApiURL string) model.StorageClient {
-	return &spectrumRemoteClient{logger: logger, storageApiURL: storageApiURL, httpClient: &http.Client{}}
+func NewSpectrumRemoteClient(logger *log.Logger, backendName, storageApiURL string) (model.StorageClient, error) {
+	return &spectrumRemoteClient{logger: logger, storageApiURL: storageApiURL, httpClient: &http.Client{}, backendName: backendName}, nil
 }
+
 func (s *spectrumRemoteClient) Activate() (err error) {
 	s.logger.Println("spectrumRemoteClient: Activate start")
 	defer s.logger.Println("spectrumRemoteClient: Activate end")
@@ -34,8 +32,8 @@ func (s *spectrumRemoteClient) Activate() (err error) {
 	}
 
 	// call remote activate
-	activateURL := utils.FormatURL(s.storageApiURL, s.GetPluginName(), "activate")
-	response, err := s.httpExecute("POST", activateURL, nil)
+	activateURL := utils.FormatURL(s.storageApiURL, s.backendName, "activate")
+	response, err := utils.HttpExecute(s.httpClient, s.logger, "POST", activateURL, nil)
 	if err != nil {
 		s.logger.Printf("Error in activate remote call %#v", err)
 		return fmt.Errorf("Error in activate remote call")
@@ -43,34 +41,21 @@ func (s *spectrumRemoteClient) Activate() (err error) {
 
 	if response.StatusCode != http.StatusOK {
 		s.logger.Printf("Error in activate remote call %#v\n", response)
-		return extractErrorResponse(response)
+		return utils.ExtractErrorResponse(response)
 	}
 	s.logger.Println("spectrumRemoteClient: Activate success")
 	s.isActivated = true
 	return nil
 }
 
-func (s *spectrumRemoteClient) GetPluginName() string {
-	return "spectrum-scale"
-}
-
-func extractErrorResponse(response *http.Response) error {
-	errorResponse := model.GenericResponse{}
-	err := utils.UnmarshalResponse(response, &errorResponse)
-	if err != nil {
-		return err
-	}
-	return fmt.Errorf("%s", errorResponse.Err)
-}
-
 func (s *spectrumRemoteClient) CreateVolume(name string, opts map[string]interface{}) (err error) {
 	s.logger.Println("spectrumRemoteClient: create start")
 	defer s.logger.Println("spectrumRemoteClient: create end")
 
-	createRemoteURL := utils.FormatURL(s.storageApiURL, s.GetPluginName(), "volumes")
+	createRemoteURL := utils.FormatURL(s.storageApiURL, s.backendName, "volumes")
 	createVolumeRequest := model.CreateRequest{Name: name, Opts: opts}
 
-	response, err := s.httpExecute("POST", createRemoteURL, createVolumeRequest)
+	response, err := utils.HttpExecute(s.httpClient, s.logger, "POST", createRemoteURL, createVolumeRequest)
 	if err != nil {
 		s.logger.Printf("Error in create volume remote call %s", err.Error())
 		return fmt.Errorf("Error in create volume remote call(http error)")
@@ -78,36 +63,20 @@ func (s *spectrumRemoteClient) CreateVolume(name string, opts map[string]interfa
 
 	if response.StatusCode != http.StatusOK {
 		s.logger.Printf("Error in create volume remote call %#v", response)
-		return extractErrorResponse(response)
+		return utils.ExtractErrorResponse(response)
 	}
 
 	return nil
-}
-
-func (s *spectrumRemoteClient) httpExecute(requestType string, requestURL string, rawPayload interface{}) (*http.Response, error) {
-	payload, err := json.MarshalIndent(rawPayload, "", " ")
-	if err != nil {
-		s.logger.Printf("Internal error marshalling params %#v", err)
-		return nil, fmt.Errorf("Internal error marshalling params")
-	}
-
-	request, err := http.NewRequest(requestType, requestURL, bytes.NewBuffer(payload))
-	if err != nil {
-		s.logger.Printf("Error in creating request %#v", err)
-		return nil, fmt.Errorf("Error in creating request")
-	}
-
-	return s.httpClient.Do(request)
 }
 
 func (s *spectrumRemoteClient) RemoveVolume(name string, forceDelete bool) (err error) {
 	s.logger.Println("spectrumRemoteClient: remove start")
 	defer s.logger.Println("spectrumRemoteClient: remove end")
 
-	removeRemoteURL := utils.FormatURL(s.storageApiURL, s.GetPluginName(), "volumes", name)
+	removeRemoteURL := utils.FormatURL(s.storageApiURL, s.backendName, "volumes", name)
 	removeRequest := model.RemoveRequest{Name: name, ForceDelete: forceDelete}
 
-	response, err := s.httpExecute("DELETE", removeRemoteURL, removeRequest)
+	response, err := utils.HttpExecute(s.httpClient, s.logger, "DELETE", removeRemoteURL, removeRequest)
 	if err != nil {
 		s.logger.Printf("Error in remove volume remote call %#v", err)
 		return fmt.Errorf("Error in remove volume remote call")
@@ -115,34 +84,33 @@ func (s *spectrumRemoteClient) RemoveVolume(name string, forceDelete bool) (err 
 
 	if response.StatusCode != http.StatusOK {
 		s.logger.Printf("Error in remove volume remote call %#v", response)
-		return extractErrorResponse(response)
+		return utils.ExtractErrorResponse(response)
 	}
 
 	return nil
 }
 
-//GetVolume(string) (*model.VolumeMetadata, *string, *map[string]interface {}, error)
-func (s *spectrumRemoteClient) GetVolume(name string) (model.VolumeMetadata, model.SpectrumConfig, error) {
+func (s *spectrumRemoteClient) GetVolume(name string) (model.VolumeMetadata, map[string]interface{}, error) {
 	s.logger.Println("spectrumRemoteClient: get start")
 	defer s.logger.Println("spectrumRemoteClient: get finish")
 
-	getRemoteURL := utils.FormatURL(s.storageApiURL, s.GetPluginName(), "volumes", name)
-	response, err := s.httpExecute("GET", getRemoteURL, nil)
+	getRemoteURL := utils.FormatURL(s.storageApiURL, s.backendName, "volumes", name)
+	response, err := utils.HttpExecute(s.httpClient, s.logger, "GET", getRemoteURL, nil)
 	if err != nil {
 		s.logger.Printf("Error in get volume remote call %#v", err)
-		return model.VolumeMetadata{}, model.SpectrumConfig{}, fmt.Errorf("Error in get volume remote call")
+		return model.VolumeMetadata{}, nil, fmt.Errorf("Error in get volume remote call")
 	}
 
 	if response.StatusCode != http.StatusOK {
 		s.logger.Printf("Error in get volume remote call %#v", response)
-		return model.VolumeMetadata{}, model.SpectrumConfig{}, extractErrorResponse(response)
+		return model.VolumeMetadata{}, nil, utils.ExtractErrorResponse(response)
 	}
 
 	getResponse := model.GetResponse{}
 	err = utils.UnmarshalResponse(response, &getResponse)
 	if err != nil {
 		s.logger.Printf("Error in unmarshalling response for get remote call %#v for response %#v", err, response)
-		return model.VolumeMetadata{}, model.SpectrumConfig{}, fmt.Errorf("Error in unmarshalling response for get remote call")
+		return model.VolumeMetadata{}, nil, fmt.Errorf("Error in unmarshalling response for get remote call")
 	}
 
 	return getResponse.Volume, getResponse.Config, nil
@@ -152,8 +120,8 @@ func (s *spectrumRemoteClient) Attach(name string) (string, error) {
 	s.logger.Println("spectrumRemoteClient: attach start")
 	defer s.logger.Println("spectrumRemoteClient: attach end")
 
-	attachRemoteURL := utils.FormatURL(s.storageApiURL, s.GetPluginName(), "volumes", name, "attach")
-	response, err := s.httpExecute("PUT", attachRemoteURL, nil)
+	attachRemoteURL := utils.FormatURL(s.storageApiURL, s.backendName, "volumes", name, "attach")
+	response, err := utils.HttpExecute(s.httpClient, s.logger, "PUT", attachRemoteURL, nil)
 	if err != nil {
 		s.logger.Printf("Error in attach volume remote call %#v", err)
 		return "", fmt.Errorf("Error in attach volume remote call")
@@ -162,7 +130,7 @@ func (s *spectrumRemoteClient) Attach(name string) (string, error) {
 	if response.StatusCode != http.StatusOK {
 		s.logger.Printf("Error in attach volume remote call %#v", response)
 
-		return "", extractErrorResponse(response)
+		return "", utils.ExtractErrorResponse(response)
 	}
 
 	mountResponse := model.MountResponse{}
@@ -177,8 +145,8 @@ func (s *spectrumRemoteClient) Detach(name string) error {
 	s.logger.Println("spectrumRemoteClient: detach start")
 	defer s.logger.Println("spectrumRemoteClient: detach end")
 
-	detachRemoteURL := utils.FormatURL(s.storageApiURL, s.GetPluginName(), "volumes", name, "detach")
-	response, err := s.httpExecute("PUT", detachRemoteURL, nil)
+	detachRemoteURL := utils.FormatURL(s.storageApiURL, s.backendName, "volumes", name, "detach")
+	response, err := utils.HttpExecute(s.httpClient, s.logger, "PUT", detachRemoteURL, nil)
 	if err != nil {
 		s.logger.Printf("Error in detach volume remote call %#v", err)
 		return fmt.Errorf("Error in detach volume remote call")
@@ -186,7 +154,7 @@ func (s *spectrumRemoteClient) Detach(name string) error {
 
 	if response.StatusCode != http.StatusOK {
 		s.logger.Printf("Error in detach volume remote call %#v", response)
-		return extractErrorResponse(response)
+		return utils.ExtractErrorResponse(response)
 	}
 
 	return nil
@@ -197,8 +165,8 @@ func (s *spectrumRemoteClient) ListVolumes() ([]model.VolumeMetadata, error) {
 	s.logger.Println("spectrumRemoteClient: list start")
 	defer s.logger.Println("spectrumRemoteClient: list end")
 
-	listRemoteURL := utils.FormatURL(s.storageApiURL, s.GetPluginName(), "volumes")
-	response, err := s.httpExecute("GET", listRemoteURL, nil)
+	listRemoteURL := utils.FormatURL(s.storageApiURL, s.backendName, "volumes")
+	response, err := utils.HttpExecute(s.httpClient, s.logger, "GET", listRemoteURL, nil)
 	if err != nil {
 		s.logger.Printf("Error in list volume remote call %#v", err)
 		return nil, fmt.Errorf("Error in list volume remote call")
@@ -206,7 +174,7 @@ func (s *spectrumRemoteClient) ListVolumes() ([]model.VolumeMetadata, error) {
 
 	if response.StatusCode != http.StatusOK {
 		s.logger.Printf("Error in list volume remote call %#v", err)
-		return nil, extractErrorResponse(response)
+		return nil, utils.ExtractErrorResponse(response)
 	}
 
 	listResponse := model.ListResponse{}

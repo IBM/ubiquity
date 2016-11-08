@@ -12,8 +12,20 @@ import (
 	"path"
 	"strings"
 
+	"bytes"
+	"log"
+
 	"github.com/gorilla/mux"
 )
+
+func ExtractErrorResponse(response *http.Response) error {
+	errorResponse := model.GenericResponse{}
+	err := UnmarshalResponse(response, &errorResponse)
+	if err != nil {
+		return err
+	}
+	return fmt.Errorf("%s", errorResponse.Err)
+}
 
 func FormatURL(url string, entries ...string) string {
 	base := url
@@ -25,6 +37,22 @@ func FormatURL(url string, entries ...string) string {
 		suffix = path.Join(suffix, entry)
 	}
 	return fmt.Sprintf("%s%s", base, suffix)
+}
+
+func HttpExecute(httpClient *http.Client, logger *log.Logger, requestType string, requestURL string, rawPayload interface{}) (*http.Response, error) {
+	payload, err := json.MarshalIndent(rawPayload, "", " ")
+	if err != nil {
+		logger.Printf("Internal error marshalling params %#v", err)
+		return nil, fmt.Errorf("Internal error marshalling params")
+	}
+
+	request, err := http.NewRequest(requestType, requestURL, bytes.NewBuffer(payload))
+	if err != nil {
+		logger.Printf("Error in creating request %#v", err)
+		return nil, fmt.Errorf("Error in creating request")
+	}
+
+	return httpClient.Do(request)
 }
 
 func ReadAndUnmarshal(object interface{}, dir string, fileName string) error {
@@ -79,6 +107,7 @@ func Unmarshal(r *http.Request, object interface{}) error {
 
 	return nil
 }
+
 func UnmarshalResponse(r *http.Response, object interface{}) error {
 	body, err := ioutil.ReadAll(r.Body)
 	if err != nil {

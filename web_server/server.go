@@ -17,7 +17,8 @@ type Server struct {
 	logger            *log.Logger
 }
 
-func NewServer(logger *log.Logger, brokerController core.BrokerController, backends map[string]model.StorageClient) (*Server, error) {
+func NewServer(logger *log.Logger, backends map[string]model.StorageClient, config model.UbiquityServerConfig) (*Server, error) {
+	brokerController := core.NewController(backends, config.BrokerConfig.ConfigPath)
 	return &Server{brokerApiHandler: NewBrokerApiHandler(logger, brokerController), storageApiHandler: NewStorageApiHandler(logger, backends), logger: logger}, nil
 }
 
@@ -41,11 +42,11 @@ func (s *Server) InitializeHandler() http.Handler {
 	return router
 }
 
-func (s *Server) Start(port string) error {
+func (s *Server) Start(port int) error {
 	router := s.InitializeHandler()
 	http.Handle("/", router)
 
-	fmt.Println("Starting server on port " + port + "...")
-	fmt.Println("CTL-C to break out of broker")
-	return http.ListenAndServe(":"+port, nil)
+	fmt.Println(fmt.Sprintf("Starting server on port %d ....", port))
+	fmt.Println("CTL-C to exit/stop ubiquity service")
+	return http.ListenAndServe(fmt.Sprintf(":%d", port), nil)
 }

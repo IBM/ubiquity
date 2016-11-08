@@ -3,19 +3,75 @@ package model
 import (
 	"encoding/json"
 	"fmt"
+	"log"
 	"net/http"
 )
 
 //go:generate counterfeiter -o ../fakes/fake_storage_client.go . StorageClient
+
+type StorageClientFactory func(logger *log.Logger, backendName string, storageApiURL string, params map[string]interface{}) (StorageClient, error)
+
+type UbiquityServerConfig struct {
+	Port              int
+	LogPath           string
+	SpectrumConfig    SpectrumConfig
+	SpectrumNfsConfig SpectrumNfsConfig
+	BrokerConfig      BrokerConfig
+}
+
+type SpectrumConfig struct {
+	DefaultFilesystem string
+	ConfigPath        string
+}
+
+type SpectrumNfsConfig struct {
+	DefaultFilesystem string
+	ConfigPath        string
+	NfsServerAddr     string
+}
+
+type SpectrumNfsRemoteConfig struct {
+	CIDR string
+}
+
+type BrokerConfig struct {
+	ConfigPath string
+}
+
+type UbiquityPluginConfig struct {
+	DockerPlugin            UbiquityDockerPluginConfig
+	LogPath                 string
+	Backend                 string
+	UbiquityServer          UbiquityServerConnectionInfo
+	SpectrumNfsRemoteConfig SpectrumNfsRemoteConfig
+}
+type UbiquityDockerPluginConfig struct {
+	Address          string
+	Port             int
+	PluginsDirectory string
+}
+
+type UbiquityServerConnectionInfo struct {
+	Address string
+	Port    int
+}
+
+//type Parameter struct {
+//	Name        string
+//	Default     string
+//	Description string
+//	Required    bool
+//}
+
 type StorageClient interface {
 	Activate() error
 	CreateVolume(name string, opts map[string]interface{}) error
 	RemoveVolume(name string, forceDelete bool) error
 	ListVolumes() ([]VolumeMetadata, error)
-	GetVolume(name string) (volumeMetadata VolumeMetadata, volumeConfigDetails SpectrumConfig, err error)
+	GetVolume(name string) (volumeMetadata VolumeMetadata, volumeConfigDetails map[string]interface{}, err error)
+	//TODO fixme: attach should return just an error
 	Attach(name string) (string, error)
 	Detach(name string) error
-	GetPluginName() string
 }
 
 type CreateRequest struct {
@@ -71,6 +127,10 @@ type GenericRequest struct {
 	Name string
 }
 
+//type InfoResponse struct {
+//	Info StorageInfo
+//}
+
 type MountResponse struct {
 	Mountpoint string
 	Err        string
@@ -94,14 +154,14 @@ type VolumeMetadata struct {
 	Mountpoint string
 }
 
-type SpectrumConfig struct {
-	FilesetId  string `json:"fileset"`
-	Filesystem string `json:"filesystem"`
-}
+// type VolumeConfig struct {
+// 	FilesetId  string `json:"fileset"`
+// 	Filesystem string `json:"filesystem"`
+// }
 type GetResponse struct {
 	Volume VolumeMetadata
 	Err    string
-	Config SpectrumConfig
+	Config map[string]interface{}
 }
 
 func (r *GetResponse) WriteResponse(w http.ResponseWriter) {

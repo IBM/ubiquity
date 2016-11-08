@@ -8,6 +8,11 @@
 			"Rev": "c8dab92a7cc1997d6dc8e6350d56dfa379381536"
 		},
 		{
+			"ImportPath": "github.com/BurntSushi/toml",
+			"Comment": "v0.2.0-21-g9906417",
+			"Rev": "99064174e013895bbd9b025c31100bd1d9b590ca"
+		},
+		{
 			"ImportPath": "github.com/djherbis/times",
 			"Comment": "v1.0.1",
 			"Rev": "95292e44976d1217cf3611dc7c8d9466877d3ed5"

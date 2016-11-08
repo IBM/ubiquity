@@ -24,13 +24,13 @@ func (h *StorageApiHandler) Activate() http.HandlerFunc {
 		h.logger.Println("start")
 		backend, err := h.getBackend(req)
 		if err != nil {
-			h.logger.Printf("Error listing volumes")
+			h.logger.Printf("Error activating %s", err.Error())
 			utils.WriteResponse(w, http.StatusInternalServerError, &model.GenericResponse{Err: err.Error()})
 			return
 		}
 		err = backend.Activate()
 		if err != nil {
-			h.logger.Printf("Error listing volumes")
+			h.logger.Printf("Error activating %s", err.Error())
 			utils.WriteResponse(w, http.StatusInternalServerError, &model.GenericResponse{Err: err.Error()})
 			return
 		}
@@ -43,7 +43,7 @@ func (h *StorageApiHandler) CreateVolume() http.HandlerFunc {
 	return func(w http.ResponseWriter, req *http.Request) {
 		backend, err := h.getBackend(req)
 		if err != nil {
-			h.logger.Printf("Error listing volumes")
+			h.logger.Printf("Error creating volume %s", err.Error())
 			utils.WriteResponse(w, http.StatusInternalServerError, &model.GenericResponse{Err: err.Error()})
 			return
 		}
@@ -68,7 +68,7 @@ func (h *StorageApiHandler) RemoveVolume() http.HandlerFunc {
 	return func(w http.ResponseWriter, req *http.Request) {
 		backend, err := h.getBackend(req)
 		if err != nil {
-			h.logger.Printf("Error listing volumes")
+			h.logger.Printf("Error removing volume %s", err.Error())
 			utils.WriteResponse(w, http.StatusInternalServerError, &model.GenericResponse{Err: err.Error()})
 			return
 		}
@@ -98,7 +98,7 @@ func (h *StorageApiHandler) AttachVolume() http.HandlerFunc {
 	return func(w http.ResponseWriter, req *http.Request) {
 		backend, err := h.getBackend(req)
 		if err != nil {
-			h.logger.Printf("Error listing volumes")
+			h.logger.Printf("Error attching volume %s", err.Error())
 			utils.WriteResponse(w, http.StatusInternalServerError, &model.GenericResponse{Err: err.Error()})
 			return
 		}
@@ -124,7 +124,7 @@ func (h *StorageApiHandler) DetachVolume() http.HandlerFunc {
 	return func(w http.ResponseWriter, req *http.Request) {
 		backend, err := h.getBackend(req)
 		if err != nil {
-			h.logger.Printf("Error listing volumes")
+			h.logger.Printf("Error detaching volume %s", err.Error())
 			utils.WriteResponse(w, http.StatusInternalServerError, &model.GenericResponse{Err: err.Error()})
 			return
 		}
@@ -148,7 +148,7 @@ func (h *StorageApiHandler) GetVolume() http.HandlerFunc {
 	return func(w http.ResponseWriter, req *http.Request) {
 		backend, err := h.getBackend(req)
 		if err != nil {
-			h.logger.Printf("Error getting volume")
+			h.logger.Printf("Error getting volume %s", err.Error())
 			utils.WriteResponse(w, http.StatusInternalServerError, &model.GenericResponse{Err: err.Error()})
 			return
 		}
@@ -175,7 +175,7 @@ func (h *StorageApiHandler) ListVolumes() http.HandlerFunc {
 	return func(w http.ResponseWriter, req *http.Request) {
 		backend, err := h.getBackend(req)
 		if err != nil {
-			h.logger.Printf("Error listing volumes")
+			h.logger.Printf("Error listing volumes %s", err.Error())
 			utils.WriteResponse(w, http.StatusInternalServerError, &model.GenericResponse{Err: err.Error()})
 			return
 		}
@@ -195,13 +195,14 @@ func (h *StorageApiHandler) getBackend(req *http.Request) (model.StorageClient, 
 
 	backendName := utils.ExtractVarsFromRequest(req, "backend")
 	if backendName == "" {
-		h.logger.Printf("Error listing volumes for %s" + backendName)
+		h.logger.Printf("Cannot find backend in url path")
 		return nil, fmt.Errorf("Cannot find backend in url path")
 	}
+
 	backend, exists := h.backends[backendName]
 	if !exists {
-		h.logger.Printf("Error listing volumes for %s, cant find backend" + backendName)
-		return nil, fmt.Errorf("Cannot find backend")
+		h.logger.Printf("Cannot find backend %s" + backendName)
+		return nil, fmt.Errorf("Cannot find backend %s", backend)
 	}
 	return backend, nil
 }
