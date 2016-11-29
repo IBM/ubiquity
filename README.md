@@ -77,5 +77,7 @@ NfsServerAddr = "192.168.1.2"  # IP/hostname under which CES/Ganesha NFS shares 
 
 ```
 
+Please make sure that the configPath is a valid directory under a gpfs mountpoint. The create volumes will be under this path.
+
 ### Next Steps
 - Install appropriate plugin ([docker](https://github.ibm.com/almaden-containers/ubiquity-docker-plugin), [kubernetes](https://github.ibm.com/almaden-containers/ubiquity-flexvolume))
