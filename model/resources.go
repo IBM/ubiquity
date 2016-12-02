@@ -22,6 +22,7 @@ type UbiquityServerConfig struct {
 type SpectrumConfig struct {
 	DefaultFilesystem string
 	ConfigPath        string
+	Connector         string
 }
 
 type SpectrumNfsConfig struct {

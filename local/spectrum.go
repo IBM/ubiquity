@@ -3,9 +3,9 @@ package local
 import (
 	"fmt"
 	"log"
-	"strings"
 
 	"github.ibm.com/almaden-containers/ubiquity/model"
+	"github.ibm.com/almaden-containers/ubiquity/spectrum"
 	"github.ibm.com/almaden-containers/ubiquity/utils"
 
 	"os"
@@ -18,6 +18,7 @@ import (
 
 type spectrumLocalClient struct {
 	logger      *log.Logger
+	client      spectrum.Spectrum
 	dbClient    *utils.DatabaseClient
 	filelock    *utils.FileLock
 	isActivated bool
@@ -77,7 +78,8 @@ func newSpectrumLocalClient(logger *log.Logger, config model.SpectrumConfig) (*s
 		os.Exit(1)
 	}()
 
-	return &spectrumLocalClient{logger: logger, dbClient: dbClient,
+	client, err := spectrum.GetSpectrumClient(logger, config.Connector, map[string]interface{}{})
+	return &spectrumLocalClient{logger: logger, client: client, dbClient: dbClient,
 		filelock: utils.NewFileLock(logger, ubiquityConfigPath), config: config}, nil
 }
 
@@ -130,7 +132,8 @@ func (s *spectrumLocalClient) Activate() (err error) {
 	}
 
 	//check if filesystem is mounted
-	mounted, err := s.isSpectrumScaleMounted(s.config.DefaultFilesystem)
+
+	mounted, err := s.client.IsFilesystemMounted(s.config.DefaultFilesystem)
 
 	if err != nil {
 		s.logger.Println(err.Error())
@@ -138,7 +141,7 @@ func (s *spectrumLocalClient) Activate() (err error) {
 	}
 
 	if mounted == false {
-		err = s.mount(s.config.DefaultFilesystem)
+		err = s.client.MountFileSystem(s.config.DefaultFilesystem)
 
 		if err != nil {
 			s.logger.Println(err.Error())
@@ -146,7 +149,7 @@ func (s *spectrumLocalClient) Activate() (err error) {
 		}
 	}
 
-	clusterId, err := getClusterId()
+	clusterId, err := s.client.GetClusterId()
 
 	if err != nil {
 		s.logger.Println(err.Error())
@@ -276,7 +279,7 @@ func (s *spectrumLocalClient) RemoveVolume(name string, forceDelete bool) (err e
 			return err
 		}
 		if forceDelete == true {
-			mountpoint, err := getMountpoint(s.logger, existingVolume.FileSystem)
+			mountpoint, err := s.client.GetFilesystemMountpoint(existingVolume.FileSystem)
 			if err != nil {
 				s.logger.Println(err.Error())
 				return err
@@ -293,7 +296,7 @@ func (s *spectrumLocalClient) RemoveVolume(name string, forceDelete bool) (err e
 		return nil
 	}
 
-	isFilesetLinked, err := s.isFilesetLinked(existingVolume.FileSystem, existingVolume.Fileset)
+	isFilesetLinked, err := s.client.IsFilesetLinked(existingVolume.FileSystem, existingVolume.Fileset)
 
 	if err != nil {
 		s.logger.Println(err.Error())
@@ -301,7 +304,7 @@ func (s *spectrumLocalClient) RemoveVolume(name string, forceDelete bool) (err e
 	}
 
 	if isFilesetLinked {
-		err := s.unlinkFileset(existingVolume.FileSystem, existingVolume.Fileset)
+		err := s.client.UnlinkFileset(existingVolume.FileSystem, existingVolume.Fileset)
 
 		if err != nil {
 			s.logger.Println(err.Error())
@@ -315,7 +318,7 @@ func (s *spectrumLocalClient) RemoveVolume(name string, forceDelete bool) (err e
 		return err
 	}
 	if forceDelete {
-		err = s.deleteFileset(existingVolume.FileSystem, existingVolume.Fileset)
+		err = s.client.DeleteFileset(existingVolume.FileSystem, existingVolume.Fileset)
 
 		if err != nil {
 			s.logger.Println(err.Error())
@@ -395,7 +398,7 @@ func (s *spectrumLocalClient) Attach(name string) (mountPath string, err error) 
 	if existingVolume.Mountpoint != "" {
 		return existingVolume.Mountpoint, nil
 	}
-	mountpoint, err := getMountpoint(s.logger, existingVolume.FileSystem)
+	mountpoint, err := s.client.GetFilesystemMountpoint(existingVolume.FileSystem)
 	if err != nil {
 		s.logger.Println(err.Error())
 		return "", err
@@ -405,7 +408,7 @@ func (s *spectrumLocalClient) Attach(name string) (mountPath string, err error) 
 		mountPath = path.Join(mountpoint, existingVolume.Fileset, existingVolume.Directory)
 	} else {
 
-		isFilesetLinked, err := s.isFilesetLinked(existingVolume.FileSystem, existingVolume.Fileset)
+		isFilesetLinked, err := s.client.IsFilesetLinked(existingVolume.FileSystem, existingVolume.Fileset)
 
 		if err != nil {
 			s.logger.Println(err.Error())
@@ -414,7 +417,7 @@ func (s *spectrumLocalClient) Attach(name string) (mountPath string, err error) 
 
 		if !isFilesetLinked {
 
-			err = s.linkFileset(existingVolume.FileSystem, existingVolume.Fileset)
+			err = s.client.LinkFileset(existingVolume.FileSystem, existingVolume.Fileset)
 
 			if err != nil {
 				s.logger.Println(err.Error())
@@ -431,7 +434,7 @@ func (s *spectrumLocalClient) Attach(name string) (mountPath string, err error) 
 		uid, uidSpecified := existingVolume.AdditionalData[USER_SPECIFIED_UID]
 		gid, gidSpecified := existingVolume.AdditionalData[USER_SPECIFIED_GID]
 
-		if(uidSpecified && gidSpecified) {
+		if uidSpecified && gidSpecified {
 			err := s.changePermissionsOfFileset(existingVolume.FileSystem, existingVolume.Fileset, uid, gid)
 
 			if err != nil {
@@ -494,179 +497,13 @@ func (s *spectrumLocalClient) Detach(name string) (err error) {
 	return nil
 }
 
-func (s *spectrumLocalClient) isFilesetLinked(filesystem, filesetName string) (bool, error) {
-	s.logger.Println("spectrumLocalClient: isFilesetLinked start")
-	defer s.logger.Println("spectrumLocalClient: isFilesetLinked end")
-
-	spectrumCommand := "/usr/lpp/mmfs/bin/mmlsfileset"
-	args := []string{spectrumCommand, filesystem, filesetName, "-Y"}
-	s.logger.Printf("%#v\n", args)
-	cmd := exec.Command("sudo", args...)
-	outputBytes, err := cmd.Output()
-	if err != nil {
-		s.logger.Printf("Error in mmlsfileset invocation\n")
-		return false, err
-	}
-
-	spectrumOutput := string(outputBytes)
-	lines := strings.Split(spectrumOutput, "\n")
-
-	if len(lines) == 1 {
-		s.logger.Printf("Error in listing fileset\n")
-		return false, fmt.Errorf("Error listing fileset %s", filesetName)
-	}
-
-	tokens := strings.Split(lines[1], ":")
-	if len(tokens) >= 11 {
-		if tokens[10] == "Linked" {
-			return true, nil
-		} else {
-			return false, nil
-		}
-	}
-	s.logger.Printf("Error listing fileset %s after parsing", filesetName)
-	return false, fmt.Errorf("Error listing fileset %s after parsing", filesetName)
-}
-
-func getMountpoint(logger *log.Logger, filesystem string) (string, error) {
-
-	spectrumCommand := "/usr/lpp/mmfs/bin/mmlsfs"
-	args := []string{spectrumCommand, filesystem, "-T", "-Y"}
-	cmd := exec.Command("sudo", args...)
-	outputBytes, err := cmd.Output()
-	if err != nil {
-		return "", fmt.Errorf("Error running command: %s", err.Error())
-	}
-	spectrumOutput := string(outputBytes)
-
-	lines := strings.Split(spectrumOutput, "\n")
-	if len(lines) < 2 {
-		return "", fmt.Errorf("Cannot determine filesystem mountpoint")
-	}
-	tokens := strings.Split(lines[1], ":")
-
-	if len(tokens) > 8 {
-		if strings.TrimSpace(tokens[6]) == filesystem {
-			mountpoint := strings.TrimSpace(tokens[8])
-			mountpoint = strings.Replace(mountpoint, "%2F", "/", 10)
-			logger.Printf("Returning mountpoint: %s\n", mountpoint)
-			return mountpoint, nil
-
-		}
-	}
-	return "", fmt.Errorf("Cannot determine filesystem mountpoint")
-}
-
-func getClusterId() (string, error) {
-
-	var clusterId string
-
-	spectrumCommand := "/usr/lpp/mmfs/bin/mmlscluster"
-	args := []string{spectrumCommand}
-	cmd := exec.Command("sudo", args...)
-	outputBytes, err := cmd.Output()
-	if err != nil {
-		return "", fmt.Errorf("Error running command: %s", err.Error())
-	}
-	spectrumOutput := string(outputBytes)
-
-	lines := strings.Split(spectrumOutput, "\n")
-	if len(lines) < 4 {
-		return "", fmt.Errorf("Error determining cluster id")
-	}
-	tokens := strings.Split(lines[4], ":")
-
-	if len(tokens) == 2 {
-		if strings.TrimSpace(tokens[0]) == "GPFS cluster id" {
-			clusterId = strings.TrimSpace(tokens[1])
-		}
-	}
-	return clusterId, nil
-}
-
-func (s *spectrumLocalClient) mount(filesystem string) (err error) {
-	s.logger.Println("spectrumLocalClient: mount start")
-	defer s.logger.Println("spectrumLocalClient: mount end")
-
-	if s.isMounted == true {
-		return nil
-	}
-
-	spectrumCommand := "/usr/lpp/mmfs/bin/mmmount"
-	args := []string{spectrumCommand, filesystem, "-a"}
-	cmd := exec.Command("sudo", args...)
-	output, err := cmd.Output()
-	if err != nil {
-		return fmt.Errorf("Failed to mount filesystem")
-	}
-	s.logger.Println(output)
-	s.isMounted = true
-	return nil
-}
-
-func (s *spectrumLocalClient) isSpectrumScaleMounted(filesystem string) (isMounted bool, err error) {
-	s.logger.Println("spectrumLocalClient: isMounted start")
-	defer s.logger.Println("spectrumLocalClient: isMounted end")
-
-	if s.isMounted == true {
-		isMounted = true
-		return isMounted, nil
-	}
-
-	spectrumCommand := "/usr/lpp/mmfs/bin/mmlsmount"
-	args := []string{spectrumCommand, filesystem, "-L", "-Y"}
-	cmd := exec.Command("sudo", args...)
-	outputBytes, err := cmd.Output()
-	if err != nil {
-		s.logger.Printf("Error running command\n")
-		s.logger.Println(err)
-		return false, err
-	}
-	mountedNodes := extractMountedNodes(string(outputBytes))
-	if len(mountedNodes) == 0 {
-		//not mounted anywhere
-		isMounted = false
-		return isMounted, nil
-	} else {
-		// checkif mounted on current node -- compare node name
-		currentNode, _ := os.Hostname()
-		s.logger.Printf("spectrumLocalClient: node name: %s\n", currentNode)
-		for _, node := range mountedNodes {
-			if node == currentNode {
-				s.isMounted = true
-				isMounted = true
-				return isMounted, nil
-			}
-		}
-	}
-	isMounted = false
-	return isMounted, nil
-}
-
-func extractMountedNodes(spectrumOutput string) []string {
-	var nodes []string
-	lines := strings.Split(spectrumOutput, "\n")
-	if len(lines) == 1 {
-		return nodes
-	}
-	for _, line := range lines[1:] {
-		tokens := strings.Split(line, ":")
-		if len(tokens) > 10 {
-			if tokens[11] != "" {
-				nodes = append(nodes, tokens[11])
-			}
-		}
-	}
-	return nodes
-}
-
 func (s *spectrumLocalClient) createFilesetVolume(filesystem, name string, opts map[string]interface{}) error {
 	s.logger.Println("spectrumLocalClient: createFilesetVolume start")
 	defer s.logger.Println("spectrumLocalClient: createFilesetVolume end")
 
 	filesetName := generateFilesetName(name)
 
-	err := s.createFileset(filesystem, filesetName)
+	err := s.client.CreateFileset(filesystem, filesetName, opts)
 
 	if err != nil {
 		return err
@@ -681,6 +518,26 @@ func (s *spectrumLocalClient) createFilesetVolume(filesystem, name string, opts 
 	s.logger.Printf("Created fileset volume with fileset %s\n", filesetName)
 	return nil
 }
+func (s *spectrumLocalClient) changePermissionsOfFileset(filesystem, filesetName, uid, gid string) error {
+	s.logger.Println("spectrumLocalClient: changeOwnerOfFileset start")
+	defer s.logger.Println("spectrumLocalClient: changeOwnerOfFileset end")
+
+	s.logger.Printf("Changing Owner of Fileset %s to uid %s , gid %s", filesetName, uid, gid)
+
+	mountpoint, err := s.client.GetFilesystemMountpoint(filesystem)
+	if err != nil {
+		return fmt.Errorf("Failed to change permissions of fileset %s : %s", filesetName, err.Error())
+	}
+
+	filesetPath := path.Join(mountpoint, filesetName)
+	args := []string{"chown", "-R", fmt.Sprintf("%s:%s", uid, gid), filesetPath}
+	cmd := exec.Command("sudo", args...)
+	_, err = cmd.Output()
+	if err != nil {
+		return fmt.Errorf("Failed to change permissions of fileset %s: %s", filesetName, err.Error())
+	}
+	return nil
+}
 
 func (s *spectrumLocalClient) createFilesetQuotaVolume(filesystem, name, quota string, opts map[string]interface{}) error {
 	s.logger.Println("spectrumLocalClient: createFilesetQuotaVolume start")
@@ -688,16 +545,16 @@ func (s *spectrumLocalClient) createFilesetQuotaVolume(filesystem, name, quota s
 
 	filesetName := generateFilesetName(name)
 
-	err := s.createFileset(filesystem, filesetName)
+	err := s.client.CreateFileset(filesystem, name, opts)
 
 	if err != nil {
 		return err
 	}
 
-	err = s.setFilesetQuota(filesystem, filesetName, quota)
+	err = s.client.SetFilesetQuota(filesystem, filesetName, quota)
 
 	if err != nil {
-		deleteErr := s.deleteFileset(filesystem, filesetName)
+		deleteErr := s.client.DeleteFileset(filesystem, filesetName)
 		if deleteErr != nil {
 			return fmt.Errorf("Error setting quota (rollback error on delete fileset %s - manual cleanup needed)", filesetName)
 		}
@@ -714,31 +571,11 @@ func (s *spectrumLocalClient) createFilesetQuotaVolume(filesystem, name, quota s
 	return nil
 }
 
-func (s *spectrumLocalClient) setFilesetQuota(filesystem, filesetName, quota string) error {
-	s.logger.Println("spectrumLocalClient: setFilesetQuota start")
-	defer s.logger.Println("spectrumLocalClient: setFilesetQuota end")
-
-	s.logger.Printf("setting quota to %s for fileset %s\n", quota, filesetName)
-
-	spectrumCommand := "/usr/lpp/mmfs/bin/mmsetquota"
-	args := []string{spectrumCommand, filesystem + ":" + filesetName, "--block", quota + ":" + quota}
-	cmd := exec.Command("sudo", args...)
-
-	output, err := cmd.Output()
-
-	if err != nil {
-		return fmt.Errorf("Failed to set quota '%s' for fileset '%s'", quota, filesetName)
-	}
-
-	s.logger.Printf("setFilesetQuota output: %s\n", string(output))
-	return nil
-}
-
 func (s *spectrumLocalClient) createLightweightVolume(filesystem, name, fileset string, opts map[string]interface{}) error {
 	s.logger.Println("spectrumLocalClient: createLightweightVolume start")
 	defer s.logger.Println("spectrumLocalClient: createLightweightVolume end")
 
-	filesetLinked, err := s.isFilesetLinked(filesystem, fileset)
+	filesetLinked, err := s.client.IsFilesetLinked(filesystem, fileset)
 
 	if err != nil {
 		s.logger.Println(err.Error())
@@ -746,7 +583,7 @@ func (s *spectrumLocalClient) createLightweightVolume(filesystem, name, fileset 
 	}
 
 	if !filesetLinked {
-		err = s.linkFileset(filesystem, fileset)
+		err = s.client.LinkFileset(filesystem, fileset)
 
 		if err != nil {
 			s.logger.Println(err.Error())
@@ -756,7 +593,7 @@ func (s *spectrumLocalClient) createLightweightVolume(filesystem, name, fileset 
 
 	lightweightVolumeName := generateLightweightVolumeName(name)
 
-	mountpoint, err := getMountpoint(s.logger, filesystem)
+	mountpoint, err := s.client.GetFilesystemMountpoint(filesystem)
 	if err != nil {
 		s.logger.Println(err.Error())
 		return err
@@ -780,113 +617,8 @@ func (s *spectrumLocalClient) createLightweightVolume(filesystem, name, fileset 
 	return nil
 }
 
-func (s *spectrumLocalClient) linkFileset(filesystem, filesetName string) error {
-	s.logger.Println("spectrumLocalClient: linkFileset start")
-	defer s.logger.Println("spectrumLocalClient: linkFileset end")
-
-	s.logger.Printf("Trying to link: %s,%s", filesystem, filesetName)
-
-	mountpoint, err := getMountpoint(s.logger, filesystem)
-	if err != nil {
-		s.logger.Println(err.Error())
-		return err
-	}
-
-	spectrumCommand := "/usr/lpp/mmfs/bin/mmlinkfileset"
-	filesetPath := path.Join(mountpoint, filesetName)
-	args := []string{spectrumCommand, filesystem, filesetName, "-J", filesetPath}
-	s.logger.Printf("Args for link fileset%#v", args)
-	cmd := exec.Command("sudo", args...)
-	output, err := cmd.Output()
-	if err != nil {
-		return fmt.Errorf("Failed to link fileset: %s", err.Error())
-	}
-	s.logger.Printf("spectrumLocalClient: Linkfileset output: %s\n", string(output))
-
-	//hack for now
-	args = []string{"chmod", "-R", "777", filesetPath}
-	cmd = exec.Command("sudo", args...)
-	output, err = cmd.Output()
-	if err != nil {
-		return fmt.Errorf("Failed to set permissions for fileset: %s", err.Error())
-	}
-	return nil
-}
-
-func (s *spectrumLocalClient) changePermissionsOfFileset(filesystem, filesetName, uid, gid string) error {
-	s.logger.Println("spectrumLocalClient: changeOwnerOfFileset start")
-	defer s.logger.Println("spectrumLocalClient: changeOwnerOfFileset end")
-
-	s.logger.Printf("Changing Owner of Fileset %s to uid %s , gid %s", filesetName, uid, gid)
-
-	mountpoint, err := getMountpoint(s.logger, filesystem)
-	if err != nil {
-		return fmt.Errorf("Failed to change permissions of fileset %s : %s", filesetName, err.Error())
-	}
-
-	filesetPath := path.Join(mountpoint, filesetName)
-	args := []string{"chown", "-R", fmt.Sprintf("%s:%s", uid, gid), filesetPath}
-	cmd := exec.Command("sudo", args...)
-	_ , err = cmd.Output()
-	if err != nil {
-		return fmt.Errorf("Failed to change permissions of fileset %s: %s",filesetName, err.Error())
-	}
-	return nil
-}
-
-func (s *spectrumLocalClient) unlinkFileset(filesystem, filesetName string) error {
-	s.logger.Println("spectrumLocalClient: unlinkFileset start")
-	defer s.logger.Println("spectrumLocalClient: unlinkFileset end")
-
-	spectrumCommand := "/usr/lpp/mmfs/bin/mmunlinkfileset"
-	args := []string{spectrumCommand, filesystem, filesetName}
-	cmd := exec.Command("sudo", args...)
-	output, err := cmd.Output()
-	if err != nil {
-		return fmt.Errorf("Failed to unlink fileset %s: %s", filesetName, err.Error())
-	}
-	s.logger.Printf("spectrumLocalClient: unLinkfileset output: %s\n", string(output))
-	return nil
-}
-
-func (s *spectrumLocalClient) createFileset(filesystem, filesetName string) error {
-	s.logger.Println("spectrumLocalClient: createFileset start")
-	defer s.logger.Println("spectrumLocalClient: createFileset end")
-
-	s.logger.Printf("creating a new fileset: %s\n", filesetName)
-
-	// create fileset
-	spectrumCommand := "/usr/lpp/mmfs/bin/mmcrfileset"
-	args := []string{spectrumCommand, filesystem, filesetName, "-t", "fileset for container volume"}
-	cmd := exec.Command("sudo", args...)
-	output, err := cmd.Output()
-
-	if err != nil {
-		s.logger.Printf("Error creating fileset: %#v, %#v\n", output, err)
-		return fmt.Errorf("Failed to create fileset %s on filesystem %s. Please check that filesystem specified is correct and healthy", filesetName, filesystem)
-	}
-
-	s.logger.Printf("Createfileset output: %s\n", string(output))
-	return nil
-}
-
 func generateLightweightVolumeName(name string) string {
 	return name //TODO: check for convension/valid names
-}
-
-func (s *spectrumLocalClient) deleteFileset(filesystem, filesetName string) error {
-	s.logger.Println("spectrumLocalClient: deleteFileset start")
-	defer s.logger.Println("spectrumLocalClient: deleteFileset end")
-
-	spectrumCommand := "/usr/lpp/mmfs/bin/mmdelfileset"
-	args := []string{spectrumCommand, filesystem, filesetName}
-	cmd := exec.Command("sudo", args...)
-	output, err := cmd.Output()
-	if err != nil {
-		return fmt.Errorf("Failed to remove fileset %s: %s ", filesetName, err.Error())
-	}
-	s.logger.Printf("spectrumLocalClient: deleteFileset output: %s\n", string(output))
-	return nil
 }
 
 func (s *spectrumLocalClient) ListVolumes() ([]model.VolumeMetadata, error) {
@@ -930,12 +662,9 @@ func (s *spectrumLocalClient) updateDBWithExistingFileset(filesystem, name, user
 	defer s.logger.Println("spectrumLocalClient: updateDBWithExistingFileset end")
 	s.logger.Printf("User specified fileset: %s\n", userSpecifiedFileset)
 
-	spectrumCommand := "/usr/lpp/mmfs/bin/mmlsfileset"
-	args := []string{spectrumCommand, filesystem, userSpecifiedFileset, "-Y"}
-	cmd := exec.Command("sudo", args...)
-	_, err := cmd.Output()
+	_, err := s.client.ListFileset(filesystem, userSpecifiedFileset)
 	if err != nil {
-		s.logger.Println(err)
+		s.logger.Printf("Fileset does not exist %v", err.Error())
 		return err
 	}
 
@@ -969,11 +698,16 @@ func (s *spectrumLocalClient) updateDBWithExistingFilesetQuota(filesystem, name,
 	s.logger.Println("spectrumLocalClient:  updateDBWithExistingFilesetQuota start")
 	defer s.logger.Println("spectrumLocalClient: updateDBWithExistingFilesetQuota end")
 
-	err := s.verifyFilesetQuota(filesystem, userSpecifiedFileset, quota)
+	filesetQuota, err := s.client.ListFilesetQuota(filesystem, userSpecifiedFileset)
 
 	if err != nil {
 		s.logger.Println(err.Error())
 		return err
+	}
+	if filesetQuota != quota {
+		s.logger.Printf("Mismatch between user-specified and listed quota for fileset %s", userSpecifiedFileset)
+		return fmt.Errorf("Mismatch between user-specified and listed quota for fileset %s", userSpecifiedFileset)
+
 	}
 
 	err = s.dbClient.InsertFilesetQuotaVolume(userSpecifiedFileset, quota, name, filesystem, opts)
@@ -990,18 +724,18 @@ func (s *spectrumLocalClient) updateDBWithExistingDirectory(filesystem, name, us
 	defer s.logger.Println("spectrumLocalClient: updateDBWithExistingDirectory end")
 	s.logger.Printf("User specified fileset: %s, User specified directory: %s\n", userSpecifiedFileset, userSpecifiedDirectory)
 
-	linked, err := s.isFilesetLinked(filesystem, userSpecifiedFileset)
+	linked, err := s.client.IsFilesetLinked(filesystem, userSpecifiedFileset)
 	if err != nil {
 		return err
 	}
 	if linked == false {
-		err := s.linkFileset(filesystem, userSpecifiedFileset)
+		err := s.client.LinkFileset(filesystem, userSpecifiedFileset)
 		if err != nil {
 			return err
 		}
 	}
 
-	mountpoint, err := getMountpoint(s.logger, filesystem)
+	mountpoint, err := s.client.GetFilesystemMountpoint(filesystem)
 	if err != nil {
 		s.logger.Println(err.Error())
 		return err
@@ -1028,38 +762,6 @@ func (s *spectrumLocalClient) updateDBWithExistingDirectory(filesystem, name, us
 		return err
 	}
 	return nil
-}
-
-func (s *spectrumLocalClient) verifyFilesetQuota(filesystem, filesetName, quota string) error {
-	s.logger.Println("spectrumLocalClient: verifyFilesetQuota start")
-	defer s.logger.Println("spectrumLocalClient: verifyFilesetQuota end")
-
-	spectrumCommand := "/usr/lpp/mmfs/bin/mmlsquota"
-	args := []string{spectrumCommand, "-j", filesetName, filesystem, "--block-size", "auto"}
-
-	cmd := exec.Command("sudo", args...)
-	outputBytes, err := cmd.Output()
-
-	if err != nil {
-		return fmt.Errorf("Failed to list quota for fileset %s: %s", filesetName, err.Error())
-	}
-
-	spectrumOutput := string(outputBytes)
-
-	lines := strings.Split(spectrumOutput, "\n")
-
-	if len(lines) > 2 {
-		tokens := strings.Fields(lines[2])
-
-		if len(tokens) > 3 {
-			if tokens[3] == quota {
-				return nil
-			}
-		} else {
-			fmt.Errorf("Error parsing tokens while listing quota for fileset %s", filesetName)
-		}
-	}
-	return fmt.Errorf("Mismatch between user-specified and listed quota for fileset %s", filesetName)
 }
 
 func determineTypeFromRequest(logger *log.Logger, opts map[string]interface{}) (string, error) {
