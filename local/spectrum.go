@@ -3,7 +3,6 @@ package local
 import (
 	"fmt"
 	"log"
-	"strings"
 
 	"github.ibm.com/almaden-containers/ubiquity/model"
 	"github.ibm.com/almaden-containers/ubiquity/spectrum"
@@ -435,7 +434,7 @@ func (s *spectrumLocalClient) Attach(name string) (mountPath string, err error) 
 		uid, uidSpecified := existingVolume.AdditionalData[USER_SPECIFIED_UID]
 		gid, gidSpecified := existingVolume.AdditionalData[USER_SPECIFIED_GID]
 
-		if(uidSpecified && gidSpecified) {
+		if uidSpecified && gidSpecified {
 			err := s.changePermissionsOfFileset(existingVolume.FileSystem, existingVolume.Fileset, uid, gid)
 
 			if err != nil {
@@ -517,6 +516,26 @@ func (s *spectrumLocalClient) createFilesetVolume(filesystem, name string, opts 
 	}
 
 	s.logger.Printf("Created fileset volume with fileset %s\n", filesetName)
+	return nil
+}
+func (s *spectrumLocalClient) changePermissionsOfFileset(filesystem, filesetName, uid, gid string) error {
+	s.logger.Println("spectrumLocalClient: changeOwnerOfFileset start")
+	defer s.logger.Println("spectrumLocalClient: changeOwnerOfFileset end")
+
+	s.logger.Printf("Changing Owner of Fileset %s to uid %s , gid %s", filesetName, uid, gid)
+
+	mountpoint, err := s.client.GetFilesystemMountpoint(filesystem)
+	if err != nil {
+		return fmt.Errorf("Failed to change permissions of fileset %s : %s", filesetName, err.Error())
+	}
+
+	filesetPath := path.Join(mountpoint, filesetName)
+	args := []string{"chown", "-R", fmt.Sprintf("%s:%s", uid, gid), filesetPath}
+	cmd := exec.Command("sudo", args...)
+	_, err = cmd.Output()
+	if err != nil {
+		return fmt.Errorf("Failed to change permissions of fileset %s: %s", filesetName, err.Error())
+	}
 	return nil
 }
 
