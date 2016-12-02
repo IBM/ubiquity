@@ -16,7 +16,8 @@ type spectrum_rest struct {
 }
 
 func NewSpectrumRest(logger *log.Logger, opts map[string]interface{}) Spectrum {
-	return &spectrum_rest{logger: logger, httpClient: &http.Client{}, endpoint: opts["endpoint"].(string)}
+	endpoint, _ := opts["endpoint"]
+	return &spectrum_rest{logger: logger, httpClient: &http.Client{}, endpoint: endpoint.(string)}
 }
 func (s *spectrum_rest) GetClusterId() (string, error) {
 	getClusterIDURL := utils.FormatURL(s.endpoint, "scalemgmt/v1/cluster")
