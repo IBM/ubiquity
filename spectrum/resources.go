@@ -16,7 +16,7 @@ type CesSummary struct {
 	EnabledServices string `json:enabledServices`
 	AddressPolicy   string `json:"addressPolicy"`
 	CesSharedRoot   string `json:"cesSharedRoot"`
-	LogLevel        uint16 `json:"logLevel"`
+	LogLevel        string `json:"logLevel"`
 }
 type ClusterSummary struct {
 	ClusterID       string `json:clusterId`
@@ -48,7 +48,7 @@ type Node struct {
 	Designation    string            `json:"designation"`
 	IPAddress      string            `json:"ipAddress"`
 	Links          map[string]string `json:"links"`
-	NodeNumber     uint64            `json:"nodeNumber"`
+	NodeNumber     string            `json:"nodeNumber"`
 	OtherNodeRoles string            `json:"otherNodeRoles"`
 }
 
@@ -75,54 +75,54 @@ type GetFileSystemResponse struct {
 
 type FileSystem struct {
 	ACLSemantics               string            `json:"ACLSemantics"`
-	DMAPIEnabled               bool              `json:"DMAPIEnabled"`
+	DMAPIEnabled               string            `json:"DMAPIEnabled"`
 	UID                        string            `json:"UID"`
 	AdditionalMountOptions     string            `json:"additionalMountOptions"`
-	AutomaticMountOption       bool              `json:"automaticMountOption"`
+	AutomaticMountOption       string            `json:"automaticMountOption"`
 	BlockAllocationType        string            `json:"blockAllocationType"`
 	BlockSize                  string            `json:"blockSize"`
 	CreateTime                 string            `json:"createTime"`
-	DefaultMetadataReplicas    uint16            `json:"defaultMetadataReplicas"`
+	DefaultMetadataReplicas    string            `json:"defaultMetadataReplicas"`
 	DefaultMountPoint          string            `json:"defaultMountPoint"`
 	DefaultQuotasEnabled       string            `json:"defaultQuotasEnabled"`
 	Disks                      string            `json:"disks"`
-	Encryption                 bool              `json:"encryption"`
-	ExactMTime                 bool              `json:"exactMTime"`
-	FastEAEnabled              bool              `json:"FastEAEnabled"`
+	Encryption                 string            `json:"encryption"`
+	ExactMTime                 string            `json:"exactMTime"`
+	FastEAEnabled              string            `json:"FastEAEnabled"`
 	FileLockingSemantics       string            `json:"fileLockingSemantics"`
-	FilesetdfEnabled           bool              `json:"filesetdfEnabled"`
+	FilesetdfEnabled           string            `json:"filesetdfEnabled"`
 	FilesystemHighestSupported string            `json:"filesystemHighestSupported"`
 	FilesystemName             string            `json:"filesystemName"`
 	FilesystemVersion          string            `json:"filesystemVersion"`
 	FilesystemVersionLocal     string            `json:"filesystemVersionLocal"`
 	FilesystemVersionManager   string            `json:"filesystemVersionManager"`
 	FilesystemVersionOriginal  string            `json:"filesystemVersionOriginal"`
-	IndirectBlockSize          uint64            `json:"indirectBlockSize"`
-	InodeSize                  uint64            `json:"inodeSize"`
-	Is4KAligned                bool              `json:"is4KAligned"`
+	IndirectBlockSize          string            `json:"indirectBlockSize"`
+	InodeSize                  string            `json:"inodeSize"`
+	Is4KAligned                string            `json:"is4KAligned"`
 	Links                      map[string]string `json:"links"`
-	LogReplicas                uint16            `json:"logReplicas"`
-	LogfileSize                uint64            `json:"logfileSize"`
-	MaxDataReplicas            uint16            `json:"maxDataReplicas"`
-	MaxMetadataReplicas        uint16            `json:"maxMetadataReplicas"`
-	MaxNumberOfInodes          uint16            `json:"maxNumberOfInodes"`
-	MaxSnapshotId              uint16            `json:"maxSnapshotId"`
-	MinFragmentSize            uint64            `json:"minFragmentSize"`
+	LogReplicas                string            `json:"logReplicas"`
+	LogfileSize                string            `json:"logfileSize"`
+	MaxDataReplicas            string            `json:"maxDataReplicas"`
+	MaxMetadataReplicas        string            `json:"maxMetadataReplicas"`
+	MaxNumberOfInodes          string            `json:"maxNumberOfInodes"`
+	MaxSnapshotId              string            `json:"maxSnapshotId"`
+	MinFragmentSize            string            `json:"minFragmentSize"`
 	MountPriority              string            `json:"mountPriority"`
-	NumNodes                   uint16            `json:"numNodes"`
+	NumNodes                   string            `json:"numNodes"`
 	OtherPools                 []Pool            `json:"otherPools"`
-	PerfilesetQuotas           bool              `json:"perfilesetQuotas"`
+	PerfilesetQuotas           string            `json:"perfilesetQuotas"`
 	QuotasAccountingEnable     string            `json:"quotasAccountingEnable"`
 	QuotasEnforced             string            `json:"quotasEnforced"`
-	RapidRepairEnabled         bool              `json:"rapidRepairEnabled"`
+	RapidRepairEnabled         string            `json:"rapidRepairEnabled"`
 	StoragePools               string            `json:"storagePools"`
 	StrictReplication          string            `json:"strictReplication"`
-	SuppressATime              bool              `json:"suppressATime"`
-	WriteCacheThreshold        uint64            `json:"writeCacheThreshold"`
+	SuppressATime              string            `json:"suppressATime"`
+	WriteCacheThreshold        string            `json:"writeCacheThreshold"`
 }
 type Pool struct {
-	BlockSize       uint64 `json:"blockSize"`
-	MinFragmentSize uint64 `json:"minFragmentSize"`
+	BlockSize       string `json:"blockSize"`
+	MinFragmentSize string `json:"minFragmentSize"`
 }
 
 type GetFileSetResponse struct {
@@ -138,22 +138,22 @@ type Fileset struct {
 }
 
 type AFM struct {
-	AFMAsyncDelay                uint64 `json:"afmAsyncDelay"`
-	AFMDirLookupRefreshInterval  uint64 `json:"afmDirLookupRefreshInterval"`
-	AFMDirOpenRefreshInterval    uint64 `json:"afmDirOpenRefreshInterval"`
-	AFMEnableAutoEviction        bool   `json:"afmEnableAutoEviction"`
-	AFMExpirationTimeout         uint64 `json:"afmExpirationTimeout"`
-	AFMFileLookupRefreshInterval uint64 `json:"afmFileLookupRefreshInterval"`
+	AFMAsyncDelay                string `json:"afmAsyncDelay"`
+	AFMDirLookupRefreshInterval  string `json:"afmDirLookupRefreshInterval"`
+	AFMDirOpenRefreshInterval    string `json:"afmDirOpenRefreshInterval"`
+	AFMEnableAutoEviction        string `json:"afmEnableAutoEviction"`
+	AFMExpirationTimeout         string `json:"afmExpirationTimeout"`
+	AFMFileLookupRefreshInterval string `json:"afmFileLookupRefreshInterval"`
 	AFMMode                      string `json:"afmMode"`
 	AFMNumFlushThreads           string `json:"afmNumFlushThreads"`
-	AFMParallelReadChunkSize     uint64 `json:"afmParallelReadChunkSize"`
-	AFMParallelReadThreshold     uint64 `json:"afmParallelReadThreshold"`
-	AFMParallelWriteChunkSize    uint64 `json:"afmParallelWriteChunkSize"`
-	AFMParallelWriteThreshold    uint64 `json:"afmParallelWriteThreshold"`
-	AFMPrefetchThreshold         uint16 `json:"afmPrefetchThreshold"`
+	AFMParallelReadChunkSize     string `json:"afmParallelReadChunkSize"`
+	AFMParallelReadThreshold     string `json:"afmParallelReadThreshold"`
+	AFMParallelWriteChunkSize    string `json:"afmParallelWriteChunkSize"`
+	AFMParallelWriteThreshold    string `json:"afmParallelWriteThreshold"`
+	AFMPrefetchThreshold         string `json:"afmPrefetchThreshold"`
 	AFMPrimaryID                 string `json:"afmPrimaryID"`
-	AFMRPO                       uint64 `json:"afmRPO"`
-	AFMShowHomeSnapshots         bool   `json:"afmShowHomeSnapshots"`
+	AFMRPO                       string `json:"afmRPO"`
+	AFMShowHomeSnapshots         string `json:"afmShowHomeSnapshots"`
 	AFMTarget                    string `json:"afmTarget"`
 }
 type FilesetConfig struct {
@@ -162,7 +162,7 @@ type FilesetConfig struct {
 	FilesystemName       string `json:"filesystemName"`
 	IAMMode              string `json:"iamMode"`
 	INodeSpace           string `json:"inodeSpace"`
-	MaxNumInodes         uint16 `json:"maxNumInodes"`
+	MaxNumInodes         string `json:"maxNumInodes"`
 	AllocInodes          string `json:"allocInodes"`
 	Owner                string `json:"owner"`
 	Path                 string `json:"path"`
@@ -172,12 +172,12 @@ type FilesetConfig struct {
 type FilesetState struct {
 	AFMState          string `json:"afmState"`
 	Created           string `json:"created"`
-	DataInKB          uint64 `json:"dataInKB"`
+	DataInKB          string `json:"dataInKB"`
 	FreeInodes        string `json:"freeInodes"`
 	ID                string `json:"id"`
 	InodeSpaceMAsk    string `json:"inodeSpaceMask"`
 	Inodes            string `json:"inodes"`
-	IsInodeSpaceOwner bool   `json:"isInodeSpaceOwner"`
+	IsInodeSpaceOwner string `json:"isInodeSpaceOwner"`
 	ParentID          string `json:"parentId"`
 	RootInode         string `json:"rootInode"`
 	SnapID            string `json:"snapID"`
@@ -194,4 +194,46 @@ type CreateFilesetResponse struct {
 
 type DeleteFilesetResponse struct {
 	Status Status `json:"status"`
+}
+
+type GetQuotaResponse struct {
+	Links  map[string]string `json:"links"`
+	Quotas []Quota           `json:"quotas"`
+	Status Status            `json:"status"`
+}
+type SetQuotaRequest struct {
+	BlockGracePeriod string `json:"blockGracePeriod"`
+	BlockHardLimit   string `json:"blockHardLimit"`
+	BlockSoftLimit   string `json:"blockSoftLimit"`
+	FilesGracePeriod string `json:"filesGracePeriod"`
+	FilesHardLimit   string `json:"filesHardLimit"`
+	FilesSoftLimit   string `json:"filesSoftLimit"`
+	FilesetName      string `json:"filesetName"`
+	FilesystemName   string `json:"filesystemName"`
+	ObjectName       string `json:"objectName"`
+	OperationType    string `json:"operationType"`
+	QuotaType        string `json:"quotaType"`
+}
+
+type SetQuotaResponse struct {
+	Status Status `json:"status"`
+}
+type Quota struct {
+	BlockGrace     string `json:"blockGrace"`
+	BlockInDoubt   string `json:"blockInDoubt"`
+	BlockLimit     string `json:"blockLimit"`
+	BlockQuota     string `json:"blockQuota"`
+	BlockUsage     string `json:"blockUsage"`
+	DefQuota       string `json:"defQuota"`
+	FilesGrace     string `json:"filesGrace"`
+	FilesInDoubt   string `json:"filesInDoubt"`
+	FilesLimit     string `json:"filesLimit"`
+	FilesQuota     string `json:"filesQuota"`
+	FilesUsage     string `json:"filesUsage"`
+	FilesetId      string `json:"filesetId"`
+	FilesetName    string `json:"filesetName"`
+	FilesystemName string `json:"filesystemName"`
+	ObjectID       string `json:"objectID"`
+	ObjectName     string `json:"objectName"`
+	QuotaType      string `json:"quotaType"`
 }
