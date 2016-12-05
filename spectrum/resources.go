@@ -9,7 +9,7 @@ type Cluster struct {
 	ClusterSummary ClusterSummary    `json:clusterSummary`
 	CnfsSummary    CnfsSummary       `json:"cnfsSummary"`
 	Links          map[string]string `json:"links"`
-	Nodes          []Node            `json:"nodes"`
+	Nodes          []ClusterNode     `json:"nodes"`
 }
 
 type CesSummary struct {
@@ -39,7 +39,7 @@ type CnfsSummary struct {
 	CNFSSharedReboot   string `json:"cnfsSharedReboot"`
 }
 
-type Node struct {
+type ClusterNode struct {
 	AdminLoginName string            `json:"adminLoginName"`
 	AdminNodeName  string            `json:"adminNodeName"`
 	CESNode        CESNode           `json:"cesNode"`
@@ -68,7 +68,7 @@ type Status struct {
 	Message string `json:"message"`
 }
 
-type GetFileSystemResponse struct {
+type GetFilesystemResponse struct {
 	FileSystems []FileSystem `json:"filesystems"`
 	Status      Status       `json:"status"`
 }
@@ -125,7 +125,7 @@ type Pool struct {
 	MinFragmentSize string `json:"minFragmentSize"`
 }
 
-type GetFileSetResponse struct {
+type GetFilesetResponse struct {
 	Filesets []Fileset `json:"filesets"`
 	Status   Status    `json:"status"`
 }
@@ -236,4 +236,29 @@ type Quota struct {
 	ObjectID       string `json:"objectID"`
 	ObjectName     string `json:"objectName"`
 	QuotaType      string `json:"quotaType"`
+}
+
+type GetNodesResponse struct {
+	Nodes  []Node `json:"nodes"`
+	Status Status `json:"status"`
+}
+type Node struct {
+	AdminLogin        string            `json:"adminLogin"`
+	CESNode           string            `json:"cesNode"`
+	ClientNode        string            `json:"clientNode"`
+	CNFSInterface     string            `json:"cnfsInterface"`
+	CNFSState         string            `json:"cnfsState"`
+	DaemonIPAddress   string            `json:"daemonIPAddress"`
+	DaemonInterface   string            `json:"daemonInterface"`
+	DesignatedLicence string            `json:"designatedLicense"`
+	GatewayNode       string            `json:"gatewayNode"`
+	GPFSState         string            `json:"gpfsState"`
+	Links             map[string]string `json:"links"`
+	ManagerNode       string            `json:"managerNode"`
+	NodeName          string            `json:"nodeName"`
+	NodeNumber        string            `json:"nodeNumber"`
+	OSName            string            `json:"osName"`
+	ProductVersion    string            `json:"productVersion"`
+	QuorumNode        string            `json:"quorumNode"`
+	SNMPNode          string            `json:"snmpNode"`
 }
