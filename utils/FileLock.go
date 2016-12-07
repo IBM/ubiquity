@@ -10,7 +10,13 @@ import (
 	"github.com/djherbis/times"
 )
 
-type FileLock struct {
+//go:generate counterfeiter -o ../fakes/fake_file_lock.go . FileLock
+type FileLock interface {
+	Lock() error
+	Unlock() error
+}
+
+type fLock struct {
 	//Filesystem string
 	Mountpoint string
 	log        *log.Logger
@@ -22,11 +28,11 @@ const (
 	LOCK_RETRY_INTERVAL time.Duration = time.Second * 5
 )
 
-func NewFileLock(log *log.Logger, mountpoint string) *FileLock {
-	return &FileLock{log: log, Mountpoint: mountpoint}
+func NewFileLock(log *log.Logger, mountpoint string) FileLock {
+	return &fLock{log: log, Mountpoint: mountpoint}
 }
 
-func (l *FileLock) Lock() error {
+func (l *fLock) Lock() error {
 
 	var sleepTime time.Duration
 	var attempt int
@@ -98,7 +104,7 @@ func (l *FileLock) Lock() error {
 	return fmt.Errorf("Timed out trying to acquire lock using lockpath %s", lockPath)
 }
 
-func (l *FileLock) Unlock() error {
+func (l *fLock) Unlock() error {
 
 	lockFile := "spectrum-scale.lock"
 	lockPath := path.Join(l.Mountpoint, lockFile)

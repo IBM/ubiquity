@@ -7,6 +7,7 @@ import (
 	"github.ibm.com/almaden-containers/ubiquity/model"
 )
 
+//go:generate counterfeiter -o ../fakes/fake_spectrum.go . Spectrum
 type Spectrum interface {
 	//Cluster operations
 	GetClusterId() (string, error)

@@ -11,8 +11,25 @@ import (
 	_ "github.com/mattn/go-sqlite3"
 )
 
-type DatabaseClient struct {
-	//Filesystem string
+//go:generate counterfeiter -o ../fakes/fake_database_client.go . DatabaseClient
+type DatabaseClient interface {
+	Init() error
+	Close() error
+	CreateVolumeTable() error
+	SetClusterId(string)
+	GetClusterId() string
+	VolumeExists(name string) (bool, error)
+	DeleteVolume(name string) error
+	InsertFilesetVolume(fileset, volumeName string, filesystem string, opts map[string]interface{}) error
+	InsertLightweightVolume(fileset, directory, volumeName string, filesystem string, opts map[string]interface{}) error
+	InsertFilesetQuotaVolume(fileset, quota, volumeName string, filesystem string, opts map[string]interface{}) error
+	UpdateVolumeMountpoint(name, mountpoint string) error
+	GetVolume(name string) (*Volume, error)
+	GetVolumeForMountPoint(mountpoint string) (string, error)
+	ListVolumes() ([]Volume, error)
+}
+
+type dbClient struct {
 	Mountpoint string
 	log        *log.Logger
 	Db         *sql.DB
@@ -32,7 +49,7 @@ const (
 	USER_SPECIFIED_GID string = "gid"
 )
 
-type volume struct {
+type Volume struct {
 	Id             int
 	Name           string
 	Type           VolumeType
@@ -44,11 +61,11 @@ type volume struct {
 	AdditionalData map[string]string
 }
 
-func NewDatabaseClient(log *log.Logger, mountpoint string) *DatabaseClient {
-	return &DatabaseClient{log: log, Mountpoint: mountpoint}
+func NewDatabaseClient(log *log.Logger, mountpoint string) DatabaseClient {
+	return &dbClient{log: log, Mountpoint: mountpoint}
 }
 
-func (d *DatabaseClient) Init() error {
+func (d *dbClient) Init() error {
 
 	d.log.Println("DatabaseClient: DB Init start")
 	defer d.log.Println("DatabaseClient: DB Init end")
@@ -66,7 +83,7 @@ func (d *DatabaseClient) Init() error {
 	return nil
 }
 
-func (d *DatabaseClient) Close() error {
+func (d *dbClient) Close() error {
 
 	d.log.Println("DatabaseClient: DB Close start")
 	defer d.log.Println("DatabaseClient: DB Close end")
@@ -79,8 +96,13 @@ func (d *DatabaseClient) Close() error {
 	}
 	return nil
 }
-
-func (d *DatabaseClient) CreateVolumeTable() error {
+func (d *dbClient) SetClusterId(id string) {
+	d.ClusterId = id
+}
+func (d *dbClient) GetClusterId() string {
+	return d.ClusterId
+}
+func (d *dbClient) CreateVolumeTable() error {
 	d.log.Println("DatabaseClient: Create Volumes Table start")
 	defer d.log.Println("DatabaseClient: Create Volumes Table end")
 
@@ -106,7 +128,7 @@ func (d *DatabaseClient) CreateVolumeTable() error {
 	return nil
 }
 
-func (d *DatabaseClient) VolumeExists(name string) (bool, error) {
+func (d *dbClient) VolumeExists(name string) (bool, error) {
 	d.log.Println("DatabaseClient: VolumeExists start")
 	defer d.log.Println("DatabaseClient: VolumeExists end")
 
@@ -136,7 +158,7 @@ func (d *DatabaseClient) VolumeExists(name string) (bool, error) {
 	return false, nil
 }
 
-func (d *DatabaseClient) DeleteVolume(name string) error {
+func (d *dbClient) DeleteVolume(name string) error {
 	d.log.Println("DatabaseClient: DeleteVolume start")
 	defer d.log.Println("DatabaseClient: DeleteVolume end")
 
@@ -162,11 +184,11 @@ func (d *DatabaseClient) DeleteVolume(name string) error {
 	return nil
 }
 
-func (d *DatabaseClient) InsertFilesetVolume(fileset, volumeName string, filesystem string, opts map[string]interface{}) error {
+func (d *dbClient) InsertFilesetVolume(fileset, volumeName string, filesystem string, opts map[string]interface{}) error {
 	d.log.Println("DatabaseClient: InsertFilesetVolume start")
 	defer d.log.Println("DatabaseClient: InsertFilesetVolume end")
 
-	volume := &volume{Name: volumeName, Type: FILESET, ClusterId: d.ClusterId, FileSystem: filesystem,
+	volume := &Volume{Name: volumeName, Type: FILESET, ClusterId: d.ClusterId, FileSystem: filesystem,
 		Fileset: fileset}
 
 	addPermissionsForVolume(volume, opts)
@@ -174,11 +196,11 @@ func (d *DatabaseClient) InsertFilesetVolume(fileset, volumeName string, filesys
 	return d.insertVolume(volume)
 }
 
-func (d *DatabaseClient) InsertLightweightVolume(fileset, directory, volumeName string, filesystem string, opts map[string]interface{}) error {
+func (d *dbClient) InsertLightweightVolume(fileset, directory, volumeName string, filesystem string, opts map[string]interface{}) error {
 	d.log.Println("DatabaseClient: InsertLightweightVolume start")
 	defer d.log.Println("DatabaseClient: InsertLightweightVolume end")
 
-	volume := &volume{Name: volumeName, Type: LIGHTWEIGHT, ClusterId: d.ClusterId, FileSystem: filesystem,
+	volume := &Volume{Name: volumeName, Type: LIGHTWEIGHT, ClusterId: d.ClusterId, FileSystem: filesystem,
 		Fileset: fileset, Directory: directory}
 
 	addPermissionsForVolume(volume, opts)
@@ -186,11 +208,11 @@ func (d *DatabaseClient) InsertLightweightVolume(fileset, directory, volumeName 
 	return d.insertVolume(volume)
 }
 
-func (d *DatabaseClient) InsertFilesetQuotaVolume(fileset, quota, volumeName string, filesystem string, opts map[string]interface{}) error {
+func (d *dbClient) InsertFilesetQuotaVolume(fileset, quota, volumeName string, filesystem string, opts map[string]interface{}) error {
 	d.log.Println("DatabaseClient: InsertFilesetQuotaVolume start")
 	defer d.log.Println("DatabaseClient: InsertFilesetQuotaVolume end")
 
-	volume := &volume{Name: volumeName, Type: FILESET_WITH_QUOTA, ClusterId: d.ClusterId, FileSystem: filesystem,
+	volume := &Volume{Name: volumeName, Type: FILESET_WITH_QUOTA, ClusterId: d.ClusterId, FileSystem: filesystem,
 		Fileset: fileset}
 
 	volume.AdditionalData = make(map[string]string)
@@ -201,7 +223,7 @@ func (d *DatabaseClient) InsertFilesetQuotaVolume(fileset, quota, volumeName str
 	return d.insertVolume(volume)
 }
 
-func (d *DatabaseClient) insertVolume(volume *volume) error {
+func (d *dbClient) insertVolume(volume *Volume) error {
 	d.log.Println("DatabaseClient: insertVolume start")
 	defer d.log.Println("DatabaseClient: insertVolume end")
 
@@ -230,7 +252,7 @@ func (d *DatabaseClient) insertVolume(volume *volume) error {
 	return nil
 }
 
-func (d *DatabaseClient) UpdateVolumeMountpoint(name, mountpoint string) error {
+func (d *dbClient) UpdateVolumeMountpoint(name, mountpoint string) error {
 	d.log.Println("DatabaseClient: UpdateVolumeMountpoint start")
 	defer d.log.Println("DatabaseClient: UpdateVolumeMountpoint end")
 
@@ -257,7 +279,7 @@ func (d *DatabaseClient) UpdateVolumeMountpoint(name, mountpoint string) error {
 	return nil
 }
 
-func (d *DatabaseClient) GetVolume(name string) (*volume, error) {
+func (d *dbClient) GetVolume(name string) (*Volume, error) {
 	d.log.Println("DatabaseClient: GetVolume start")
 	defer d.log.Println("DatabaseClient: GetVolume end")
 
@@ -282,7 +304,7 @@ func (d *DatabaseClient) GetVolume(name string) (*volume, error) {
 		return nil, fmt.Errorf("Failed to Get Volume for %s : %s", name, err.Error())
 	}
 
-	scannedVolume := &volume{Id: volId, Name: volName, Type: VolumeType(volType), ClusterId: clusterId, FileSystem: filesystem,
+	scannedVolume := &Volume{Id: volId, Name: volName, Type: VolumeType(volType), ClusterId: clusterId, FileSystem: filesystem,
 		Fileset: fileset, Directory: directory, Mountpoint: mountpoint}
 
 	setAdditionalData(addData, scannedVolume)
@@ -290,7 +312,7 @@ func (d *DatabaseClient) GetVolume(name string) (*volume, error) {
 	return scannedVolume, nil
 }
 
-func (d *DatabaseClient) GetVolumeForMountPoint(mountpoint string) (string, error) {
+func (d *dbClient) GetVolumeForMountPoint(mountpoint string) (string, error) {
 	d.log.Println("DatabaseClient: GetVolumeForMountPoint start")
 	defer d.log.Println("DatabaseClient: GetVolumeForMountPoint end")
 
@@ -317,7 +339,7 @@ func (d *DatabaseClient) GetVolumeForMountPoint(mountpoint string) (string, erro
 	return volName, nil
 }
 
-func (d *DatabaseClient) ListVolumes() ([]volume, error) {
+func (d *dbClient) ListVolumes() ([]Volume, error) {
 	d.log.Println("DatabaseClient: ListVolumes start")
 	defer d.log.Println("DatabaseClient: ListVolumes end")
 
@@ -333,7 +355,7 @@ func (d *DatabaseClient) ListVolumes() ([]volume, error) {
 		return nil, fmt.Errorf("Failed to List Volumes : %s", err.Error())
 	}
 
-	var volumes []volume
+	var volumes []Volume
 	var volName, clusterId, filesystem, fileset, directory, mountpoint, addData string
 	var volType, volId int
 
@@ -345,7 +367,7 @@ func (d *DatabaseClient) ListVolumes() ([]volume, error) {
 			return nil, fmt.Errorf("Failed to scan rows while listing volumes: %s", err.Error())
 		}
 
-		scannedVolume := volume{Id: volId, Name: volName, Type: VolumeType(volType), ClusterId: clusterId,
+		scannedVolume := Volume{Id: volId, Name: volName, Type: VolumeType(volType), ClusterId: clusterId,
 			FileSystem: filesystem, Fileset: fileset, Directory: directory, Mountpoint: mountpoint}
 
 		setAdditionalData(addData, &scannedVolume)
@@ -362,7 +384,7 @@ func (d *DatabaseClient) ListVolumes() ([]volume, error) {
 	return volumes, nil
 }
 
-func getAdditionalData(volume *volume) string {
+func getAdditionalData(volume *Volume) string {
 
 	var addData string
 
@@ -376,7 +398,7 @@ func getAdditionalData(volume *volume) string {
 	return addData
 }
 
-func setAdditionalData(addData string, volume *volume) {
+func setAdditionalData(addData string, volume *Volume) {
 
 	if len(addData) > 0 {
 		volume.AdditionalData = make(map[string]string)
@@ -390,15 +412,15 @@ func setAdditionalData(addData string, volume *volume) {
 	}
 }
 
-func addPermissionsForVolume(volume *volume, opts map[string]interface{}) {
+func addPermissionsForVolume(volume *Volume, opts map[string]interface{}) {
 
 	if len(opts) > 0 {
 		uid, uidSpecified := opts[USER_SPECIFIED_UID]
 		gid, gidSpecified := opts[USER_SPECIFIED_GID]
 
-		if (uidSpecified && gidSpecified) {
+		if uidSpecified && gidSpecified {
 
-			if(volume.AdditionalData == nil) {
+			if volume.AdditionalData == nil {
 				volume.AdditionalData = make(map[string]string)
 			}
 
