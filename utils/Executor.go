@@ -2,12 +2,15 @@ package utils
 
 import (
 	"log"
+	"os"
 	"os/exec"
 )
 
 //go:generate counterfeiter -o ../fakes/fake_executor.go . Executor
 type Executor interface {
 	Execute(command string, args []string) ([]byte, error)
+	Stat(string) (os.FileInfo, error)
+	Mkdir(string, os.FileMode) error
 }
 
 type executor struct {
@@ -26,4 +29,11 @@ func (e *executor) Execute(command string, args []string) ([]byte, error) {
 		return nil, err
 	}
 	return output, err
+}
+func (e *executor) Stat(path string) (os.FileInfo, error) {
+	return os.Stat(path)
+}
+
+func (e *executor) Mkdir(path string, mode os.FileMode) error {
+	return os.Mkdir(path, mode)
 }

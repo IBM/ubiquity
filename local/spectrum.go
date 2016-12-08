@@ -207,7 +207,9 @@ func (s *spectrumLocalClient) CreateVolume(name string, opts map[string]interfac
 	if volExists {
 		return fmt.Errorf("Volume already exists")
 	}
+
 	s.logger.Printf("Opts for create: %#v\n", opts)
+
 	if len(opts) == 0 {
 		//fileset
 		return s.createFilesetVolume(s.config.DefaultFilesystem, name, opts)
@@ -221,7 +223,7 @@ func (s *spectrumLocalClient) CreateVolume(name string, opts map[string]interfac
 	s.logger.Printf("Volume type requested: %s", userSpecifiedType)
 	isExistingVolume, filesystem, existingFileset, existingLightWeightDir, err := s.validateAndParseParams(s.logger, opts)
 	if err != nil {
-		s.logger.Printf("Error invalidate params: %s\n", err.Error())
+		s.logger.Printf("Error in validate params: %s\n", err.Error())
 		return err
 	}
 
@@ -516,12 +518,14 @@ func (s *spectrumLocalClient) createFilesetVolume(filesystem, name string, opts 
 	err := s.client.CreateFileset(filesystem, filesetName, opts)
 
 	if err != nil {
+		s.logger.Printf("Error creating fileset %v", err)
 		return err
 	}
 
 	err = s.dbClient.InsertFilesetVolume(filesetName, name, filesystem, opts)
 
 	if err != nil {
+		s.logger.Printf("Error inserting fileset %v", err)
 		return err
 	}
 
@@ -587,8 +591,8 @@ func (s *spectrumLocalClient) createLightweightVolume(filesystem, name, fileset 
 	filesetLinked, err := s.client.IsFilesetLinked(filesystem, fileset)
 
 	if err != nil {
-		s.logger.Println(err.Error())
-		return fmt.Errorf("Error finding fileset '%s' on filesystem '%s'", fileset, filesystem)
+		s.logger.Println("error finding fileset in the filesystem %s", err.Error())
+		return err
 	}
 
 	if !filesetLinked {
@@ -610,10 +614,11 @@ func (s *spectrumLocalClient) createLightweightVolume(filesystem, name, fileset 
 
 	lightweightVolumePath := path.Join(mountpoint, fileset, lightweightVolumeName)
 
-	err = os.Mkdir(lightweightVolumePath, 0755)
+	err = s.executor.Mkdir(lightweightVolumePath, 0755)
 
 	if err != nil {
-		return fmt.Errorf("Failed to create directory path %s : %s", lightweightVolumePath, err.Error())
+		s.logger.Printf("Failed to create directory path %s : %s", lightweightVolumePath, err.Error())
+		return err
 	}
 
 	err = s.dbClient.InsertLightweightVolume(fileset, lightweightVolumeName, name, filesystem, opts)
@@ -752,7 +757,7 @@ func (s *spectrumLocalClient) updateDBWithExistingDirectory(filesystem, name, us
 
 	directoryPath := path.Join(mountpoint, userSpecifiedFileset, userSpecifiedDirectory)
 
-	_, err = os.Stat(directoryPath)
+	_, err = s.executor.Stat(directoryPath)
 
 	if err != nil {
 		if os.IsNotExist(err) {

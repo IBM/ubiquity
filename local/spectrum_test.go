@@ -243,29 +243,162 @@ var _ = Describe("local-client", func() {
 				opts = make(map[string]interface{})
 				opts[""] = ""
 			})
-			It("", func() {
-				Expect(true).To(Equal(true))
+
+			It("should fail when spectrum client fails to create fileset", func() {
+				fakeSpectrumClient.CreateFilesetReturns(fmt.Errorf("error creating fileset"))
+				err = client.CreateVolume("fake-fileset", opts)
+				Expect(err).To(HaveOccurred())
+				Expect(err.Error()).To(Equal("error creating fileset"))
+				Expect(fakeSpectrumClient.CreateFilesetCallCount()).To(Equal(1))
+				Expect(fakeDbClient.InsertFilesetVolumeCallCount()).To(Equal(0))
 			})
+
+			It("should fail when dbClient fails to insert fileset record", func() {
+				fakeSpectrumClient.CreateFilesetReturns(nil)
+				fakeDbClient.InsertFilesetVolumeReturns(fmt.Errorf("error inserting fileset"))
+
+				err = client.CreateVolume("fake-fileset", opts)
+				Expect(err).To(HaveOccurred())
+				Expect(err.Error()).To(Equal("error inserting fileset"))
+				Expect(fakeSpectrumClient.CreateFilesetCallCount()).To(Equal(1))
+				Expect(fakeDbClient.InsertFilesetVolumeCallCount()).To(Equal(1))
+			})
+
+			It("should succeed to create fileset", func() {
+				fakeSpectrumClient.CreateFilesetReturns(nil)
+				fakeDbClient.InsertFilesetVolumeReturns(nil)
+
+				err = client.CreateVolume("fake-fileset", opts)
+				Expect(err).ToNot(HaveOccurred())
+				Expect(fakeSpectrumClient.CreateFilesetCallCount()).To(Equal(1))
+				Expect(fakeDbClient.InsertFilesetVolumeCallCount()).To(Equal(1))
+			})
+
 		})
 
 		Context(".FilesetQuotaVolume", func() {
 			BeforeEach(func() {
 				opts = make(map[string]interface{})
-				opts[""] = ""
+				opts["fileset"] = "fake-fileset"
+				opts["type"] = "fileset"
+				opts["filesystem"] = "fake-filesystem"
 			})
-			It("", func() {
-				Expect(true).To(Equal(true))
+			Context(".WithQuota", func() {
+				BeforeEach(func() {
+					opts["quota"] = "1Gi"
+				})
+				It("should fail when spectrum client fails to list fileset quota", func() {
+					fakeSpectrumClient.ListFilesetQuotaReturns("", fmt.Errorf("error in list quota"))
+					err = client.CreateVolume("fake-fileset", opts)
+					Expect(err).To(HaveOccurred())
+					Expect(err.Error()).To(Equal("error in list quota"))
+					Expect(fakeDbClient.InsertFilesetQuotaVolumeCallCount()).To(Equal(0))
+				})
+				It("should fail when spectrum client returns a missmatching fileset quota", func() {
+					fakeSpectrumClient.ListFilesetQuotaReturns("2Gi", nil)
+					err = client.CreateVolume("fake-fileset", opts)
+					Expect(err).To(HaveOccurred())
+					Expect(err.Error()).To(Equal("Mismatch between user-specified and listed quota for fileset fake-fileset"))
+					Expect(fakeDbClient.InsertFilesetQuotaVolumeCallCount()).To(Equal(0))
+				})
+				It("should fail when dbClient fails to insert Fileset quota volume", func() {
+					fakeSpectrumClient.ListFilesetQuotaReturns("1Gi", nil)
+					fakeDbClient.InsertFilesetQuotaVolumeReturns(fmt.Errorf("error inserting filesetquotavolume"))
+					err = client.CreateVolume("fake-fileset", opts)
+					Expect(err).To(HaveOccurred())
+					Expect(err.Error()).To(Equal("error inserting filesetquotavolume"))
+					Expect(fakeDbClient.InsertFilesetQuotaVolumeCallCount()).To(Equal(1))
+				})
+				It("should succeed when the options are well specified", func() {
+					fakeSpectrumClient.ListFilesetQuotaReturns("1Gi", nil)
+					fakeDbClient.InsertFilesetQuotaVolumeReturns(nil)
+					err = client.CreateVolume("fake-fileset", opts)
+					Expect(err).ToNot(HaveOccurred())
+					Expect(fakeSpectrumClient.ListFilesetQuotaCallCount()).To(Equal(1))
+					Expect(fakeDbClient.InsertFilesetQuotaVolumeCallCount()).To(Equal(1))
+				})
+
+			})
+			Context(".WithNoQuota", func() {
+
+				It("should fail when spectrum client fails to list fileset quota", func() {
+					fakeSpectrumClient.ListFilesetReturns(model.VolumeMetadata{}, fmt.Errorf("error in list fileset"))
+					err = client.CreateVolume("fake-fileset", opts)
+					Expect(err).To(HaveOccurred())
+					Expect(err.Error()).To(Equal("error in list fileset"))
+					Expect(fakeDbClient.InsertFilesetVolumeCallCount()).To(Equal(0))
+				})
+				It("should fail when dbClient fails to insert Fileset quota volume", func() {
+					fakeVolume := model.VolumeMetadata{Name: "fake-fileset", Mountpoint: "fake-mountpoint"}
+					fakeSpectrumClient.ListFilesetReturns(fakeVolume, nil)
+					fakeDbClient.InsertFilesetVolumeReturns(fmt.Errorf("error inserting filesetvolume"))
+					err = client.CreateVolume("fake-fileset", opts)
+					Expect(err).To(HaveOccurred())
+					Expect(err.Error()).To(Equal("error inserting filesetvolume"))
+					Expect(fakeDbClient.InsertFilesetVolumeCallCount()).To(Equal(1))
+				})
+				It("should succeed when parameters are well specified", func() {
+					fakeVolume := model.VolumeMetadata{Name: "fake-fileset", Mountpoint: "fake-mountpoint"}
+					fakeSpectrumClient.ListFilesetReturns(fakeVolume, nil)
+					fakeDbClient.InsertFilesetVolumeReturns(nil)
+					err = client.CreateVolume("fake-fileset", opts)
+					Expect(err).ToNot(HaveOccurred())
+					Expect(fakeDbClient.InsertFilesetVolumeCallCount()).To(Equal(1))
+				})
+
 			})
 		})
 
 		Context(".LightWeightVolume", func() {
 			BeforeEach(func() {
 				opts = make(map[string]interface{})
-				opts[""] = ""
+				opts["fileset"] = "fake-fileset"
+				opts["filesystem"] = "fake-filesystem"
+				opts["type"] = "lightweight"
 			})
-			It("", func() {
-				Expect(true).To(Equal(true))
+			It("should fail when spectrum client IsfilesetLinked errors", func() {
+				fakeSpectrumClient.IsFilesetLinkedReturns(false, fmt.Errorf("error in checking fileset linked"))
+				err = client.CreateVolume("fake-fileset", opts)
+				Expect(err).To(HaveOccurred())
+				Expect(err.Error()).To(Equal("error in checking fileset linked"))
+				Expect(fakeSpectrumClient.IsFilesetLinkedCallCount()).To(Equal(1))
+				Expect(fakeSpectrumClient.LinkFilesetCallCount()).To(Equal(0))
 			})
+			It("should fail when spectrum client LinkFileset errors", func() {
+				fakeSpectrumClient.IsFilesetLinkedReturns(false, nil)
+				fakeSpectrumClient.LinkFilesetReturns(fmt.Errorf("error linking fileset"))
+				err = client.CreateVolume("fake-fileset", opts)
+				Expect(err).To(HaveOccurred())
+				Expect(err.Error()).To(Equal("error linking fileset"))
+				Expect(fakeSpectrumClient.IsFilesetLinkedCallCount()).To(Equal(1))
+				Expect(fakeSpectrumClient.LinkFilesetCallCount()).To(Equal(1))
+			})
+
+			It("should fail when spectrum client GetFilesystemMountpoint errors", func() {
+				fakeSpectrumClient.IsFilesetLinkedReturns(true, nil)
+				fakeSpectrumClient.GetFilesystemMountpointReturns("", fmt.Errorf("error getting mountpoint"))
+				err = client.CreateVolume("fake-fileset", opts)
+				Expect(err).To(HaveOccurred())
+				Expect(err.Error()).To(Equal("error getting mountpoint"))
+				Expect(fakeSpectrumClient.IsFilesetLinkedCallCount()).To(Equal(1))
+				Expect(fakeSpectrumClient.LinkFilesetCallCount()).To(Equal(0))
+				Expect(fakeSpectrumClient.GetFilesystemMountpointCallCount()).To(Equal(1))
+			})
+
+			It("should fail when spectrum client GetFilesystemMountpoint errors", func() {
+				fakeSpectrumClient.IsFilesetLinkedReturns(true, nil)
+				fakeSpectrumClient.GetFilesystemMountpointReturns("fake-mountpoint", nil)
+				fakeExec.StatReturns(nil, fmt.Errorf("error in os.Stat"))
+				fakeExec.MkdirReturns(fmt.Errorf("error in mkdir"))
+				err = client.CreateVolume("fake-fileset", opts)
+				Expect(err).To(HaveOccurred())
+				Expect(err.Error()).To(Equal("error in mkdir"))
+				Expect(fakeSpectrumClient.IsFilesetLinkedCallCount()).To(Equal(1))
+				Expect(fakeSpectrumClient.LinkFilesetCallCount()).To(Equal(0))
+				Expect(fakeSpectrumClient.GetFilesystemMountpointCallCount()).To(Equal(1))
+				// Expect(fakeExec.StatCallCount()).To(Equal(1))
+			})
+
 		})
 
 	})

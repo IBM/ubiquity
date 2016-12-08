@@ -31,13 +31,13 @@ type Spectrum interface {
 
 func GetSpectrumClient(logger *log.Logger, connector string, opts map[string]interface{}) (Spectrum, error) {
 	if connector == "mmcli" {
-		return NewSpectrumMMCLI(logger, opts), nil
+		return NewSpectrumMMCLI(logger, opts)
 	}
 	if connector == "rest" {
-		return NewSpectrumRest(logger, opts), nil
+		return NewSpectrumRest(logger, opts)
 	}
 	if connector == "mmcli" {
-		return NewSpectrumSSH(logger, opts), nil
+		return NewSpectrumSSH(logger, opts)
 	} else {
 		return nil, fmt.Errorf("This protocol is not recognized")
 	}

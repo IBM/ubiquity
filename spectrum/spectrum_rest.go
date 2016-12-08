@@ -17,14 +17,14 @@ type spectrum_rest struct {
 	endpoint   string
 }
 
-func NewSpectrumRest(logger *log.Logger, opts map[string]interface{}) Spectrum {
+func NewSpectrumRest(logger *log.Logger, opts map[string]interface{}) (Spectrum, error) {
 	endpoint, _ := opts["endpoint"]
-	return &spectrum_rest{logger: logger, httpClient: &http.Client{}, endpoint: endpoint.(string)}
+	return &spectrum_rest{logger: logger, httpClient: &http.Client{}, endpoint: endpoint.(string)}, nil
 }
 
-func NewSpectrumRestWithClient(logger *log.Logger, opts map[string]interface{}, client *http.Client) Spectrum {
+func NewSpectrumRestWithClient(logger *log.Logger, opts map[string]interface{}, client *http.Client) (Spectrum, error) {
 	endpoint, _ := opts["endpoint"]
-	return &spectrum_rest{logger: logger, httpClient: client, endpoint: endpoint.(string)}
+	return &spectrum_rest{logger: logger, httpClient: client, endpoint: endpoint.(string)}, nil
 }
 
 func (s *spectrum_rest) GetClusterId() (string, error) {
