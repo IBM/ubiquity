@@ -93,7 +93,7 @@ func setupConfigDirectory(logger *log.Logger, executor utils.Executor, configPat
 	ubiquityConfigPath := path.Join(configPath, ".config")
 	log.Printf("User specified config path: %s", configPath)
 
-	if _, err := os.Stat(ubiquityConfigPath); os.IsNotExist(err) {
+	if _, err := executor.Stat(ubiquityConfigPath); os.IsNotExist(err) {
 		args := []string{"mkdir", ubiquityConfigPath}
 		_, err := executor.Execute("sudo", args)
 		if err != nil {
@@ -258,7 +258,11 @@ func (s *spectrumLocalClient) RemoveVolume(name string, forceDelete bool) (err e
 	s.logger.Println("spectrumLocalClient: remove start")
 	defer s.logger.Println("spectrumLocalClient: remove end")
 
-	s.fileLock.Lock()
+	err = s.fileLock.Lock()
+	if err != nil {
+		s.logger.Printf("failed to aquire lock %v", err)
+		return err
+	}
 	defer func() {
 		lockErr := s.fileLock.Unlock()
 		if lockErr != nil && err == nil {
@@ -298,7 +302,7 @@ func (s *spectrumLocalClient) RemoveVolume(name string, forceDelete bool) (err e
 			}
 			lightweightVolumePath := path.Join(mountpoint, existingVolume.Fileset, existingVolume.Directory)
 
-			err = os.RemoveAll(lightweightVolumePath)
+			err = s.executor.RemoveAll(lightweightVolumePath)
 
 			if err != nil {
 				s.logger.Println(err.Error())
@@ -346,7 +350,11 @@ func (s *spectrumLocalClient) GetVolume(name string) (volumeMetadata model.Volum
 	s.logger.Println("spectrumLocalClient: get start")
 	defer s.logger.Println("spectrumLocalClient: get finish")
 
-	s.fileLock.Lock()
+	err = s.fileLock.Lock()
+	if err != nil {
+		s.logger.Printf("error aquiring lock", err)
+		return model.VolumeMetadata{}, nil, err
+	}
 	defer func() {
 		lockErr := s.fileLock.Unlock()
 		if lockErr != nil && err == nil {
@@ -381,7 +389,11 @@ func (s *spectrumLocalClient) Attach(name string) (mountPath string, err error) 
 	s.logger.Println("spectrumLocalClient: attach start")
 	defer s.logger.Println("spectrumLocalClient: attach end")
 
-	s.fileLock.Lock()
+	err = s.fileLock.Lock()
+	if err != nil {
+		s.logger.Printf("failed to aquire lock %v", err)
+		return "", err
+	}
 	defer func() {
 		lockErr := s.fileLock.Unlock()
 		if lockErr != nil && err == nil {
@@ -459,8 +471,8 @@ func (s *spectrumLocalClient) Attach(name string) (mountPath string, err error) 
 	err = s.dbClient.UpdateVolumeMountpoint(name, mountPath)
 
 	if err != nil {
-		s.logger.Println(err.Error())
-		return "", fmt.Errorf("internal error updating database")
+		s.logger.Printf("internal error updating database %v", err)
+		return "", err
 	}
 
 	return mountPath, nil
@@ -470,7 +482,11 @@ func (s *spectrumLocalClient) Detach(name string) (err error) {
 	s.logger.Println("spectrumLocalClient: detach start")
 	defer s.logger.Println("spectrumLocalClient: detach end")
 
-	s.fileLock.Lock()
+	err = s.fileLock.Lock()
+	if err != nil {
+		s.logger.Printf("error aquiring the lock %v", err)
+		return err
+	}
 	defer func() {
 		lockErr := s.fileLock.Unlock()
 		if lockErr != nil && err == nil {
@@ -503,8 +519,8 @@ func (s *spectrumLocalClient) Detach(name string) (err error) {
 	err = s.dbClient.UpdateVolumeMountpoint(name, "")
 
 	if err != nil {
-		s.logger.Println(err.Error())
-		return fmt.Errorf("internal error updating database")
+		s.logger.Printf("error updating database %v", err.Error())
+		return err
 	}
 	return nil
 }
@@ -540,14 +556,16 @@ func (s *spectrumLocalClient) changePermissionsOfFileset(filesystem, filesetName
 
 	mountpoint, err := s.client.GetFilesystemMountpoint(filesystem)
 	if err != nil {
-		return fmt.Errorf("Failed to change permissions of fileset %s : %s", filesetName, err.Error())
+		s.logger.Printf("Failed to change permissions of fileset %s : %s", filesetName, err.Error())
+		return err
 	}
 
 	filesetPath := path.Join(mountpoint, filesetName)
 	args := []string{"chown", "-R", fmt.Sprintf("%s:%s", uid, gid), filesetPath}
 	_, err = s.executor.Execute("sudo", args)
 	if err != nil {
-		return fmt.Errorf("Failed to change permissions of fileset %s: %s", filesetName, err.Error())
+		s.logger.Printf("Failed to change permissions of fileset %s: %s", filesetName, err.Error())
+		return err
 	}
 	return nil
 }
@@ -639,7 +657,11 @@ func (s *spectrumLocalClient) ListVolumes() ([]model.VolumeMetadata, error) {
 	s.logger.Println("spectrumLocalClient: list start")
 	defer s.logger.Println("spectrumLocalClient: list end")
 	var err error
-	s.fileLock.Lock()
+	err = s.fileLock.Lock()
+	if err != nil {
+		s.logger.Printf("error aquiring lock", err)
+		return nil, err
+	}
 	defer func() {
 		lockErr := s.fileLock.Unlock()
 		if lockErr != nil && err == nil {

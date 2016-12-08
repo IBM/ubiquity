@@ -24,7 +24,7 @@ type DatabaseClient interface {
 	InsertLightweightVolume(fileset, directory, volumeName string, filesystem string, opts map[string]interface{}) error
 	InsertFilesetQuotaVolume(fileset, quota, volumeName string, filesystem string, opts map[string]interface{}) error
 	UpdateVolumeMountpoint(name, mountpoint string) error
-	GetVolume(name string) (*Volume, error)
+	GetVolume(name string) (Volume, error)
 	GetVolumeForMountPoint(mountpoint string) (string, error)
 	ListVolumes() ([]Volume, error)
 }
@@ -188,10 +188,10 @@ func (d *dbClient) InsertFilesetVolume(fileset, volumeName string, filesystem st
 	d.log.Println("DatabaseClient: InsertFilesetVolume start")
 	defer d.log.Println("DatabaseClient: InsertFilesetVolume end")
 
-	volume := &Volume{Name: volumeName, Type: FILESET, ClusterId: d.ClusterId, FileSystem: filesystem,
+	volume := Volume{Name: volumeName, Type: FILESET, ClusterId: d.ClusterId, FileSystem: filesystem,
 		Fileset: fileset}
 
-	addPermissionsForVolume(volume, opts)
+	addPermissionsForVolume(&volume, opts)
 
 	return d.insertVolume(volume)
 }
@@ -200,10 +200,10 @@ func (d *dbClient) InsertLightweightVolume(fileset, directory, volumeName string
 	d.log.Println("DatabaseClient: InsertLightweightVolume start")
 	defer d.log.Println("DatabaseClient: InsertLightweightVolume end")
 
-	volume := &Volume{Name: volumeName, Type: LIGHTWEIGHT, ClusterId: d.ClusterId, FileSystem: filesystem,
+	volume := Volume{Name: volumeName, Type: LIGHTWEIGHT, ClusterId: d.ClusterId, FileSystem: filesystem,
 		Fileset: fileset, Directory: directory}
 
-	addPermissionsForVolume(volume, opts)
+	addPermissionsForVolume(&volume, opts)
 
 	return d.insertVolume(volume)
 }
@@ -212,18 +212,18 @@ func (d *dbClient) InsertFilesetQuotaVolume(fileset, quota, volumeName string, f
 	d.log.Println("DatabaseClient: InsertFilesetQuotaVolume start")
 	defer d.log.Println("DatabaseClient: InsertFilesetQuotaVolume end")
 
-	volume := &Volume{Name: volumeName, Type: FILESET_WITH_QUOTA, ClusterId: d.ClusterId, FileSystem: filesystem,
+	volume := Volume{Name: volumeName, Type: FILESET_WITH_QUOTA, ClusterId: d.ClusterId, FileSystem: filesystem,
 		Fileset: fileset}
 
 	volume.AdditionalData = make(map[string]string)
 	volume.AdditionalData["quota"] = quota
 
-	addPermissionsForVolume(volume, opts)
+	addPermissionsForVolume(&volume, opts)
 
 	return d.insertVolume(volume)
 }
 
-func (d *dbClient) insertVolume(volume *Volume) error {
+func (d *dbClient) insertVolume(volume Volume) error {
 	d.log.Println("DatabaseClient: insertVolume start")
 	defer d.log.Println("DatabaseClient: insertVolume end")
 
@@ -240,7 +240,7 @@ func (d *dbClient) insertVolume(volume *Volume) error {
 
 	defer stmt.Close()
 
-	additionalData := getAdditionalData(volume)
+	additionalData := getAdditionalData(&volume)
 
 	_, err = stmt.Exec(volume.Name, volume.Type, volume.ClusterId, volume.FileSystem, volume.Fileset,
 		volume.Directory, volume.Mountpoint, additionalData)
@@ -279,7 +279,7 @@ func (d *dbClient) UpdateVolumeMountpoint(name, mountpoint string) error {
 	return nil
 }
 
-func (d *dbClient) GetVolume(name string) (*Volume, error) {
+func (d *dbClient) GetVolume(name string) (Volume, error) {
 	d.log.Println("DatabaseClient: GetVolume start")
 	defer d.log.Println("DatabaseClient: GetVolume end")
 
@@ -290,7 +290,7 @@ func (d *dbClient) GetVolume(name string) (*Volume, error) {
 	stmt, err := d.Db.Prepare(read_volume_stmt)
 
 	if err != nil {
-		return nil, fmt.Errorf("Failed to create GetVolume Stmt for %s : %s", name, err.Error())
+		return Volume{}, fmt.Errorf("Failed to create GetVolume Stmt for %s : %s", name, err.Error())
 	}
 
 	defer stmt.Close()
@@ -301,13 +301,13 @@ func (d *dbClient) GetVolume(name string) (*Volume, error) {
 	err = stmt.QueryRow(name).Scan(&volId, &volName, &volType, &clusterId, &filesystem, &fileset, &directory, &mountpoint, &addData)
 
 	if err != nil {
-		return nil, fmt.Errorf("Failed to Get Volume for %s : %s", name, err.Error())
+		return Volume{}, fmt.Errorf("Failed to Get Volume for %s : %s", name, err.Error())
 	}
 
-	scannedVolume := &Volume{Id: volId, Name: volName, Type: VolumeType(volType), ClusterId: clusterId, FileSystem: filesystem,
+	scannedVolume := Volume{Id: volId, Name: volName, Type: VolumeType(volType), ClusterId: clusterId, FileSystem: filesystem,
 		Fileset: fileset, Directory: directory, Mountpoint: mountpoint}
 
-	setAdditionalData(addData, scannedVolume)
+	setAdditionalData(addData, &scannedVolume)
 
 	return scannedVolume, nil
 }
