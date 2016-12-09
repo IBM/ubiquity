@@ -3,7 +3,6 @@ package spectrum
 import (
 	"fmt"
 	"log"
-	"os"
 	"path"
 	"strings"
 
@@ -82,7 +81,11 @@ func IsFilesystemMountedInternal(logger *log.Logger, executor utils.Executor, fi
 		return false, nil
 	} else {
 		// checkif mounted on current node -- compare node name
-		currentNode, _ := os.Hostname()
+		currentNode, err := executor.Hostname()
+		if err != nil {
+			logger.Printf("error in getting hostname %v", err)
+			return false, err
+		}
 		logger.Printf("spectrumLocalClient: node name: %s\n", currentNode)
 		for _, node := range mountedNodes {
 			if node == currentNode {
@@ -135,7 +138,8 @@ func MountFileSystemInternal(logger *log.Logger, executor utils.Executor, filesy
 
 	output, err := executor.Execute(command, args)
 	if err != nil {
-		return fmt.Errorf("Failed to mount filesystem")
+		logger.Printf("Failed to mount filesystem %v", err)
+		return err
 	}
 
 	logger.Println(output)
@@ -155,7 +159,8 @@ func (s *spectrum_mmcli) GetFilesystemMountpoint(filesystemName string) (string,
 func GetFilesystemMountpointInternal(logger *log.Logger, executor utils.Executor, filesystemName string, command string, args []string) (string, error) {
 	outputBytes, err := executor.Execute(command, args)
 	if err != nil {
-		return "", fmt.Errorf("Error running command: %s", err.Error())
+		logger.Printf("Error running command: %s", err.Error())
+		return "", err
 	}
 	spectrumOutput := string(outputBytes)
 
@@ -171,7 +176,6 @@ func GetFilesystemMountpointInternal(logger *log.Logger, executor utils.Executor
 			mountpoint = strings.Replace(mountpoint, "%2F", "/", 10)
 			logger.Printf("Returning mountpoint: %s\n", mountpoint)
 			return mountpoint, nil
-
 		}
 	}
 	return "", fmt.Errorf("Cannot determine filesystem mountpoint")
@@ -370,7 +374,7 @@ func ListFilesetQuotaInternal(logger *log.Logger, executor utils.Executor, files
 			return "", fmt.Errorf("Error parsing tokens while listing quota for fileset %s", filesetName)
 		}
 	}
-	return "", fmt.Errorf("Mismatch between user-specified and listed quota for fileset %s", filesetName)
+	return "", fmt.Errorf("Error listing quota for fileset %s", filesetName)
 }
 
 func (s *spectrum_mmcli) SetFilesetQuota(filesystemName string, filesetName string, quota string) error {
@@ -388,7 +392,8 @@ func SetFilesetQuotaInternal(logger *log.Logger, executor utils.Executor, filesy
 	output, err := executor.Execute(command, args)
 
 	if err != nil {
-		return fmt.Errorf("Failed to set quota '%s' for fileset '%s'", quota, filesetName)
+		logger.Printf("Failed to set quota '%s' for fileset '%s'", quota, filesetName)
+		return err
 	}
 
 	logger.Printf("setFilesetQuota output: %s\n", string(output))

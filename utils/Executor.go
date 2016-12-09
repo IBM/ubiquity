@@ -12,6 +12,7 @@ type Executor interface {
 	Stat(string) (os.FileInfo, error)
 	Mkdir(string, os.FileMode) error
 	RemoveAll(string) error
+	Hostname() (string, error)
 }
 
 type executor struct {
@@ -42,4 +43,8 @@ func (e *executor) Mkdir(path string, mode os.FileMode) error {
 func (e *executor) RemoveAll(path string) error {
 
 	return os.RemoveAll(path)
+}
+
+func (e *executor) Hostname() (string, error) {
+	return os.Hostname()
 }
