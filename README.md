@@ -1,6 +1,10 @@
 #Ubiquity Storage Service for Container Ecosystems
-Ubiquity provides access to persistent storage for Docker containers
-### Supported Deployment Options
+Ubiquity provides access to persistent storage for Docker containers in Docker or Kubernetes ecosystems. The REST service can be run on one or more nodes in the cluster to create, manage, and delete storage volumes.  
+
+### Sample Deployment Options
+The service can be deployed in a variety of ways.  In all options though, Ubiquity must be
+deployed on a system that has access (e.g., CLI, REST, ssh) to the supported storage system.
+
 #### Single Node (All in One)
 ![Single node](images/singleNode.jpg)
 #### Multi-node
@@ -9,7 +13,7 @@ Ubiquity provides access to persistent storage for Docker containers
 ![Multi node](images/multiNode-nfs.jpg)
 
 ### Prerequisites
-  * Provision a system running Spectrum-Scale client (optionally with CES/Ganesha for NFS transport) and NSD server
+  * A deployed storage service that will be used by the Docker containers. Currently Ubiquity supports Spectrum Scale (POSIX or CES NFS) and OpenStack Manila.
   * Install [golang](https://golang.org/) (>=1.6)
   * Install git
   * Install gcc
