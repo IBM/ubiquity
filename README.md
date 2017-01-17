@@ -12,10 +12,12 @@ This deployment is intended for development purposes or to evaluate Ubiquity.  S
 
 #### Multi-node using Native GPFS (POSIX)
 ![Multi node](images/multiNode.jpg)
+
 This deployment shows a Kubernetes pod or cluster as well as a Docker Swarm cluster using Ubiquity to manage a single set of container volumes in Spectrum Scale.  Note that showing both Kubernetes and Docker Swarm is just to demonstrate the capabilities of Ubiquity, and either one could be used in isolation.  In this deployment, Ubiquity is installed on a single Spectrum Scale server (typically a dedicated node for running management services such as the GUI or Zimon).  The actual Spectrum Scale storage cluster consists of a client running on each of the Kubernetes/Docker hosts as well as a set of NSD storage servers.  While not shown, Ubiquity could be run on multiple nodes for H/A or scalability purposes.  Note that actual failover in case of a failure from one Ubiquity server to another currently would need to handled manually through use of a HTTP load balancer or DNS server updates.
 
 #### Multi-node using NFS Protocol
 ![Multi node](images/multiNode-nfs.jpg)
+
 This is identical to the previous deployment example except that the Kubernetes or Docker Swarm hosts are using NFS to access their volumes.
 
 ### Prerequisites
@@ -23,6 +25,8 @@ This is identical to the previous deployment example except that the Kubernetes 
   * Install [golang](https://golang.org/) (>=1.6)
   * Install git
   * Install gcc
+
+Note that if Ubiquity is run on multiple nodes, then these steps must be completed on each node.
 
 ### Configuration
 
@@ -41,7 +45,7 @@ Defaults:%ubiquity !requiretty
 Defaults:%ubiquity secure_path = /sbin:/bin:/usr/sbin:/usr/bin:/usr/lpp/mmfs/bin
 ```
 
-### Getting Started
+### Download and Build Source Code
 * Configure go - GOPATH environment variable needs to be correctly set before starting the build process. Create a new directory and set it as GOPATH 
 ```bash
 mkdir -p $HOME/workspace
