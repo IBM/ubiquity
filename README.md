@@ -7,10 +7,16 @@ deployed on a system that has access (e.g., CLI, REST, ssh) to the supported sto
 
 #### Single Node (All in One)
 ![Single node](images/singleNode.jpg)
-#### Multi-node
+
+This deployment is intended for development purposes or to evaluate Ubiquity.  Spectrum Scale, Docker or Kubernetes, and Ubiquity are all installed on a single server
+
+#### Multi-node using Native GPFS (POSIX)
 ![Multi node](images/multiNode.jpg)
+This deployment shows a Kubernetes pod or cluster as well as a Docker Swarm cluster using Ubiquity to manage a single set of container volumes in Spectrum Scale.  Note that showing both Kubernetes and Docker Swarm is just to demonstrate the capabilities of Ubiquity, and either one could be used in isolation.  In this deployment, Ubiquity is installed on a single Spectrum Scale server (typically a dedicated node for running management services such as the GUI or Zimon).  The actual Spectrum Scale storage cluster consists of a client running on each of the Kubernetes/Docker hosts as well as a set of NSD storage servers.  While not shown, Ubiquity could be run on multiple nodes for H/A or scalability purposes.  Note that actual failover in case of a failure from one Ubiquity server to another currently would need to handled manually through use of a HTTP load balancer or DNS server updates.
+
 #### Multi-node using NFS Protocol
 ![Multi node](images/multiNode-nfs.jpg)
+This is identical to the previous deployment example except that the Kubernetes or Docker Swarm hosts are using NFS to access their volumes.
 
 ### Prerequisites
   * A deployed storage service that will be used by the Docker containers. Currently Ubiquity supports Spectrum Scale (POSIX or CES NFS) and OpenStack Manila.
