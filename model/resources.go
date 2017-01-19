@@ -12,22 +12,16 @@ import (
 type StorageClientFactory func(logger *log.Logger, backendName string, storageApiURL string, params map[string]interface{}) (StorageClient, error)
 
 type UbiquityServerConfig struct {
-	Port              int
-	LogPath           string
-	SpectrumConfig    SpectrumConfig
-	SpectrumNfsConfig SpectrumNfsConfig
-	BrokerConfig      BrokerConfig
+	Port           int
+	LogPath        string
+	SpectrumConfig SpectrumConfig
+	BrokerConfig   BrokerConfig
 }
 
 type SpectrumConfig struct {
 	DefaultFilesystem string
 	ConfigPath        string
 	Connector         string
-}
-
-type SpectrumNfsConfig struct {
-	DefaultFilesystem string
-	ConfigPath        string
 	NfsServerAddr     string
 }
 
@@ -56,13 +50,6 @@ type UbiquityServerConnectionInfo struct {
 	Address string
 	Port    int
 }
-
-//type Parameter struct {
-//	Name        string
-//	Default     string
-//	Description string
-//	Required    bool
-//}
 
 type StorageClient interface {
 	Activate() error
@@ -128,10 +115,6 @@ type GenericRequest struct {
 	Name string
 }
 
-//type InfoResponse struct {
-//	Info StorageInfo
-//}
-
 type MountResponse struct {
 	Mountpoint string
 	Err        string
@@ -155,10 +138,6 @@ type VolumeMetadata struct {
 	Mountpoint string
 }
 
-// type VolumeConfig struct {
-// 	FilesetId  string `json:"fileset"`
-// 	Filesystem string `json:"filesystem"`
-// }
 type GetResponse struct {
 	Volume VolumeMetadata
 	Err    string

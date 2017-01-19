@@ -83,11 +83,7 @@ logPath = "/tmp"  # The Ubiquity service will write logs to file "ubiquity.log" 
 [SpectrumConfig]             # If this section is specified, the "spectrum-scale" backend will be enabled.
 defaultFilesystem = "gold"   # Default existing Spectrum Scale filesystem to use if user does not specify one during creation of volumes
 configPath = "/gpfs/gold"    # Path in an existing Spectrum Scale filesystem where Ubiquity can create/store metadata DB
-
-[SpectrumNfsConfig]            # If this section is specified, the "spectrum-scale-nfs" backend will be enabled. Requires CES/Ganesha.
-defaultFilesystem = "gold"     # Default existing Spectrum Scale filesystem to use if user does not specify one during creation of volumes
-configPath = "/gpfs/gold"      # Path in an existing Spectrum Scale filesystem where Ubiquity can create/store metadata DB
-NfsServerAddr = "192.168.1.2"  # IP/hostname under which CES/Ganesha NFS shares can be accessed (required)
+nfsServerAddr = "192.168.1.2"  # IP/hostname under which CES/Ganesha NFS shares can be accessed (required if NFS access if needed)
 
 ```
 

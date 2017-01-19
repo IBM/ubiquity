@@ -19,7 +19,7 @@ func GetLocalClients(logger *log.Logger, config model.UbiquityServerConfig) (map
 		clients["spectrum-scale"] = spectrumClient
 	}
 
-	spectrumNfsClient, err := NewSpectrumNfsLocalClient(logger, config.SpectrumNfsConfig)
+	spectrumNfsClient, err := NewSpectrumNfsLocalClient(logger, config.SpectrumConfig)
 	if err != nil {
 		logger.Printf("Not enough params to initialize 'spectrum-scale-nfs' client")
 	} else {
