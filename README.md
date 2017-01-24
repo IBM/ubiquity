@@ -13,12 +13,12 @@ This deployment is intended for development purposes or to evaluate Ubiquity.  S
 #### Multi-node using Native GPFS (POSIX)
 ![Multi node](images/multiNode.jpg)
 
-This deployment shows a Kubernetes pod or cluster as well as a Docker Swarm cluster using Ubiquity to manage a single set of container volumes in Spectrum Scale.  Note that showing both Kubernetes and Docker Swarm is just to demonstrate the capabilities of Ubiquity, and either one could be used in isolation.  In this deployment, Ubiquity is installed on a single Spectrum Scale server (typically a dedicated node for running management services such as the GUI or Zimon).  The actual Spectrum Scale storage cluster consists of a client running on each of the Kubernetes/Docker hosts as well as a set of NSD storage servers.  While not shown, Ubiquity could be run on multiple nodes for H/A or scalability purposes.  To actually increase scalability, a load balancer or round-robin DNS service would have to be employed.  To achieve failover in case of a failure from one Ubiquity server to another, users currently need to  use  a HTTP load balancer or do a manual failover.
+This deployment shows a Kubernetes pod or cluster as well as a Docker Swarm cluster using Ubiquity to manage a single set of container volumes in Spectrum Scale.  Note that showing both Kubernetes and Docker Swarm is just to demonstrate the capabilities of Ubiquity, and either one could be used in isolation.  In this deployment, Ubiquity is installed on a single Spectrum Scale server (typically a dedicated node for running management services such as the GUI or Zimon).  The actual Spectrum Scale storage cluster consists of a client running on each of the Kubernetes/Docker hosts as well as a set of NSD storage servers.  
 
 #### Multi-node using NFS Protocol
 ![Multi node](images/multiNode-nfs.jpg)
 
-This is identical to the previous deployment example except that the Kubernetes or Docker Swarm hosts are using NFS to access their volumes.  Note that a typical Spectrum Scale deployment would have several CES NFS servers (protocol servers) and the Ubiquity service could be installed on those servers or on a separate management server.
+This is identical to the previous deployment example except that the Kubernetes or Docker Swarm hosts are using NFS to access their volumes.  Note that a typical Spectrum Scale deployment would have several CES NFS servers (protocol servers) and the Ubiquity service could be installed on one of those servers or on a separate management server (such as the node collecting Zimon stats or where the GUI service is installed).
 
 ### Prerequisites
   * A deployed storage service that will be used by the Docker containers. Currently Ubiquity supports Spectrum Scale (POSIX or CES NFS) and OpenStack Manila.
@@ -81,13 +81,18 @@ port = 9999       # The TCP port to listen on
 logPath = "/tmp"  # The Ubiquity service will write logs to file "ubiquity.log" in this path.
 
 [SpectrumConfig]             # If this section is specified, the "spectrum-scale" backend will be enabled.
-defaultFilesystem = "gold"   # Default existing Spectrum Scale filesystem to use if user does not specify one during creation of volumes
-configPath = "/gpfs/gold"    # Path in an existing Spectrum Scale filesystem where Ubiquity can create/store metadata DB
-nfsServerAddr = "192.168.1.2"  # IP/hostname under which CES/Ganesha NFS shares can be accessed (required if NFS access if needed)
+defaultFilesystem = "gold"   # Default name of Spectrum Scale file system to use if user does not specify one during creation of a volume.  This file system must already exist.
+configPath = "/gpfs/gold/config"    # Path in an existing Spectrum Scale filesystem where Ubiquity can create/store metadata DB.
+nfsServerAddr = "CESClusterHost"  # IP/hostname of Spectrum Scale CES NFS cluster.  This is the hostname that NFS clients will use to mount NFS volumes. (required for creation of NFS accessible volumes)
 
 ```
 
 Please make sure that the configPath is a valid directory under a gpfs and is mounted. Ubiquity stores its metadata DB in this location.
+
+### High-Availability
+Currently, high-availability can be achieved
+
+While not shown, Ubiquity could be run on multiple nodes for H/A or scalability purposes.  To actually increase scalability, a load balancer or round-robin DNS service would have to be employed.  To achieve failover in case of a failure from one Ubiquity server to another, users currently need to  use  a HTTP load balancer or do a manual failover.
 
 ### Next Steps
 - Install appropriate plugin ([docker](https://github.ibm.com/almaden-containers/ubiquity-docker-plugin), [kubernetes](https://github.ibm.com/almaden-containers/ubiquity-flexvolume))
