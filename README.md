@@ -90,9 +90,14 @@ nfsServerAddr = "CESClusterHost"  # IP/hostname of Spectrum Scale CES NFS cluste
 Please make sure that the configPath is a valid directory under a gpfs and is mounted. Ubiquity stores its metadata DB in this location.
 
 ### High-Availability
-Currently, high-availability can be achieved
+Currently, handling failures of the Ubiquity service must be done manually, although there are several possible options.
 
-While not shown, Ubiquity could be run on multiple nodes for H/A or scalability purposes.  To actually increase scalability, a load balancer or round-robin DNS service would have to be employed.  To achieve failover in case of a failure from one Ubiquity server to another, users currently need to  use  a HTTP load balancer or do a manual failover.
+The Ubiquity service can be safely run on multiple nodes, either in an active-active or active-passive manner.  Failover can then be manually achieved by switching the Ubiquity service hostname, or automatically through use of a HTTP load balancer.
+
+Moving forward, we will leverage Docker or K8s specific mechanisms to achieving high-availability by running the Ubiquity service in containers or a pod.
+
+### Scalability
+Running the Ubiquity service on a single server will most likely provide sufficient performance.  But if not, it can be run on multiple nodes and load balancing can be achieved through use of a HTTP load balancer or round-robin DNS service. 
 
 ### Next Steps
 - Install appropriate plugin ([docker](https://github.ibm.com/almaden-containers/ubiquity-docker-plugin), [kubernetes](https://github.ibm.com/almaden-containers/ubiquity-flexvolume))
