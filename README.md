@@ -100,4 +100,7 @@ Moving forward, we will leverage Docker or K8s specific mechanisms to achieving 
 Running the Ubiquity service on a single server will most likely provide sufficient performance.  But if not, it can be run on multiple nodes and load balancing can be achieved through use of a HTTP load balancer or round-robin DNS service. 
 
 ### Next Steps
-- Install appropriate plugin ([docker](https://github.ibm.com/almaden-containers/ubiquity-docker-plugin), [kubernetes](https://github.ibm.com/almaden-containers/ubiquity-flexvolume))
+Install appropriate storage-specific plugin ([docker](https://github.ibm.com/almaden-containers/ubiquity-docker-plugin), [kubernetes](https://github.ibm.com/almaden-containers/ubiquity-flexvolume))
+
+### Suggestions and Questions
+For any questions, suggestions, or issues, please ...(TBD)
