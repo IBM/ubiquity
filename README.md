@@ -1,7 +1,9 @@
 #Ubiquity Storage Service for Container Ecosystems
 Ubiquity provides access to persistent storage for Docker containers in Docker or Kubernetes ecosystems. The REST service can be run on one or more nodes in the cluster to create, manage, and delete storage volumes.  
 
-### Sample Deployment Options
+Ubiquity can support any number of storage backends.  See 'Available Storage Systems' for more details.
+
+## Sample Deployment Options
 The service can be deployed in a variety of ways.  In all options though, Ubiquity must be
 deployed on a system that has access (e.g., CLI, REST, ssh) to the supported storage system.
 
@@ -20,6 +22,7 @@ This deployment shows a Kubernetes pod or cluster as well as a Docker Swarm clus
 
 This is identical to the previous deployment example except that the Kubernetes or Docker Swarm hosts are using NFS to access their volumes.  Note that a typical Spectrum Scale deployment would have several CES NFS servers (protocol servers) and the Ubiquity service could be installed on one of those servers or on a separate management server (such as the node collecting Zimon stats or where the GUI service is installed).
 
+## Installation
 ### Prerequisites
   * A deployed storage service that will be used by the Docker containers. Currently Ubiquity supports Spectrum Scale (POSIX or CES NFS) and OpenStack Manila.
   * Install [golang](https://golang.org/) (>=1.6)
@@ -89,6 +92,10 @@ nfsServerAddr = "CESClusterHost"  # IP/hostname of Spectrum Scale CES NFS cluste
 
 Please make sure that the configPath is a valid directory under a gpfs and is mounted. Ubiquity stores its metadata DB in this location.
 
+### Next Steps
+Install appropriate storage-specific plugin ([docker](https://github.ibm.com/almaden-containers/ubiquity-docker-plugin), [kubernetes](https://github.ibm.com/almaden-containers/ubiquity-flexvolume))
+
+## Additional Considerations
 ### High-Availability
 Currently, handling failures of the Ubiquity service must be done manually, although there are several possible options.
 
@@ -99,8 +106,19 @@ Moving forward, we will leverage Docker or K8s specific mechanisms to achieving 
 ### Scalability
 Running the Ubiquity service on a single server will most likely provide sufficient performance.  But if not, it can be run on multiple nodes and load balancing can be achieved through use of a HTTP load balancer or round-robin DNS service. 
 
-### Next Steps
-Install appropriate storage-specific plugin ([docker](https://github.ibm.com/almaden-containers/ubiquity-docker-plugin), [kubernetes](https://github.ibm.com/almaden-containers/ubiquity-flexvolume))
+## Available Storage Systems
+### IBM Spectrum Scale
+With IBM Spectrum Scale, containers can have shared file system access to any number of containers from small clusters of a few hosts up to very large clusters with thousands of hosts.
 
-### Suggestions and Questions
+The current plugin supports the following protocols:
+ * Native POSIX Client
+ * CES NFS (Scalable and Clustered NFS Exports)
+
+POSIX and NFS Volumes are be created separately by choosing the 'spectrum-scale' volume driver or the 'spectrum-scale-nfs' volume driver.  Note that POSIX volumes are not accessible via NFS, but, NFS volumes are accessible via POSIX.  To make a POSIX volume accessible via NFS, simply create the volume using the 'spectrum-scale-nfs' driver using the same path or fileset name. 
+
+
+
+
+
+## Suggestions and Questions
 For any questions, suggestions, or issues, please ...(TBD)
