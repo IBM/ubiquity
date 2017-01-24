@@ -7,6 +7,8 @@ Ubiquity can support any number of storage backends.  See 'Available Storage Sys
 The service can be deployed in a variety of ways.  In all options though, Ubiquity must be
 deployed on a system that has access (e.g., CLI, REST, ssh) to the supported storage system.
 
+Note that in each diagram, this repository contains code for running only the Ubiquity service.  The Docker or Kubernetes plugins are available in the associated repositories.
+
 #### Single Node (All in One)
 ![Single node](images/singleNode.jpg)
 
