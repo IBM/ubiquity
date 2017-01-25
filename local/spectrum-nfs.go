@@ -29,8 +29,7 @@ func NewSpectrumNfsLocalClient(logger *log.Logger, config model.SpectrumConfig) 
 		return nil, fmt.Errorf("spectrumNfsLocalClient: init: missing required parameter 'spectrumNfsServerAddr'")
 	}
 
-	spectrumNativeConfig := model.SpectrumConfig{DefaultFilesystem: config.DefaultFilesystem, ConfigPath: config.ConfigPath}
-	spectrumClient, err := newSpectrumLocalClient(logger, spectrumNativeConfig)
+	spectrumClient, err := newSpectrumLocalClient(logger, config)
 	if err != nil {
 		return nil, err
 	}
