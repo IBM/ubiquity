@@ -1,4 +1,4 @@
-package spectrum
+package connectors
 
 import (
 	"fmt"
@@ -16,11 +16,11 @@ type spectrum_mmcli struct {
 	isMounted bool
 }
 
-func NewSpectrumMMCLI(logger *log.Logger, opts map[string]interface{}) (Spectrum, error) {
+func NewSpectrumMMCLI(logger *log.Logger, opts map[string]interface{}) (SpectrumScaleConnector, error) {
 	return &spectrum_mmcli{logger: logger, executor: utils.NewExecutor(logger)}, nil
 }
 
-func NewSpectrumMMCLIWithExecutor(logger *log.Logger, executor utils.Executor, opts map[string]interface{}) (Spectrum, error) {
+func NewSpectrumMMCLIWithExecutor(logger *log.Logger, executor utils.Executor, opts map[string]interface{}) (SpectrumScaleConnector, error) {
 	return &spectrum_mmcli{logger: logger, executor: executor}, nil
 }
 

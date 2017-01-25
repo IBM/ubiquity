@@ -1,4 +1,4 @@
-package spectrum_test
+package connectors_test
 
 import (
 	"fmt"

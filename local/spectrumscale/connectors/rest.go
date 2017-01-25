@@ -1,4 +1,4 @@
-package spectrum
+package connectors
 
 import (
 	"fmt"
@@ -17,12 +17,12 @@ type spectrum_rest struct {
 	endpoint   string
 }
 
-func NewSpectrumRest(logger *log.Logger, opts map[string]interface{}) (Spectrum, error) {
+func NewSpectrumRest(logger *log.Logger, opts map[string]interface{}) (SpectrumScaleConnector, error) {
 	endpoint, _ := opts["endpoint"]
 	return &spectrum_rest{logger: logger, httpClient: &http.Client{}, endpoint: endpoint.(string)}, nil
 }
 
-func NewSpectrumRestWithClient(logger *log.Logger, opts map[string]interface{}, client *http.Client) (Spectrum, error) {
+func NewSpectrumRestWithClient(logger *log.Logger, opts map[string]interface{}, client *http.Client) (SpectrumScaleConnector, error) {
 	endpoint, _ := opts["endpoint"]
 	return &spectrum_rest{logger: logger, httpClient: client, endpoint: endpoint.(string)}, nil
 }

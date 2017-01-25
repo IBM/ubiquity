@@ -1,4 +1,4 @@
-package spectrum
+package connectors
 
 import (
 	"fmt"
@@ -18,13 +18,13 @@ type spectrum_ssh struct {
 	isMounted bool
 }
 
-func NewSpectrumSSH(logger *log.Logger, opts map[string]interface{}) (Spectrum, error) {
+func NewSpectrumSSH(logger *log.Logger, opts map[string]interface{}) (SpectrumScaleConnector, error) {
 	user, _ := opts["user"]
 	host, _ := opts["host"]
 	port, _ := opts["port"]
 	return &spectrum_ssh{logger: logger, executor: utils.NewExecutor(logger), user: user.(string), host: host.(string), port: port.(int)}, nil
 }
-func NewSpectrumSSHWithExecutor(logger *log.Logger, executor utils.Executor, opts map[string]interface{}) (Spectrum, error) {
+func NewSpectrumSSHWithExecutor(logger *log.Logger, executor utils.Executor, opts map[string]interface{}) (SpectrumScaleConnector, error) {
 	user, _ := opts["user"]
 	host, _ := opts["host"]
 	port, _ := opts["port"]

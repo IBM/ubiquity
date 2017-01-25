@@ -1,4 +1,4 @@
-package spectrum
+package connectors
 
 import (
 	"fmt"
@@ -7,8 +7,8 @@ import (
 	"github.ibm.com/almaden-containers/ubiquity/model"
 )
 
-//go:generate counterfeiter -o ../fakes/fake_spectrum.go . Spectrum
-type Spectrum interface {
+//go:generate counterfeiter -o ../fakes/fake_spectrum.go . SpectrumScaleConnector
+type SpectrumScaleConnector interface {
 	//Cluster operations
 	GetClusterId() (string, error)
 	//Filesystem operations
@@ -29,7 +29,7 @@ type Spectrum interface {
 	SetFilesetQuota(filesystemName string, filesetName string, quota string) error
 }
 
-func GetSpectrumClient(logger *log.Logger, connector string, opts map[string]interface{}) (Spectrum, error) {
+func GetSpectrumScaleConnector(logger *log.Logger, connector string, opts map[string]interface{}) (SpectrumScaleConnector, error) {
 	if connector == "mmcli" {
 		return NewSpectrumMMCLI(logger, opts)
 	}

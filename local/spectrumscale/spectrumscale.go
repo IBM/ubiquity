@@ -1,11 +1,9 @@
-package local
+package spectrumscale
+
 
 import (
-	"fmt"
 	"log"
 
-	"github.ibm.com/almaden-containers/ubiquity/model"
-	"github.ibm.com/almaden-containers/ubiquity/spectrum"
 	"github.ibm.com/almaden-containers/ubiquity/utils"
 
 	"os"
@@ -13,11 +11,15 @@ import (
 	"os/user"
 	"path"
 	"syscall"
+
+	"github.ibm.com/almaden-containers/ubiquity/local/spectrumscale/connectors"
+	"github.ibm.com/almaden-containers/ubiquity/model"
+	"fmt"
 )
 
 type spectrumLocalClient struct {
 	logger      *log.Logger
-	client      spectrum.Spectrum
+	connector   connectors.SpectrumScaleConnector
 	dbClient    utils.DatabaseClient
 	fileLock    utils.FileLock
 	executor    utils.Executor
@@ -52,8 +54,8 @@ func NewSpectrumLocalClient(logger *log.Logger, config model.SpectrumConfig) (mo
 	return newSpectrumLocalClient(logger, config)
 }
 
-func NewSpectrumLocalClientWithClients(logger *log.Logger, spectrumClient spectrum.Spectrum, dbClient utils.DatabaseClient, fLock utils.FileLock, spectrumExecutor utils.Executor, config model.SpectrumConfig) (model.StorageClient, error) {
-	return &spectrumLocalClient{logger: logger, client: spectrumClient, dbClient: dbClient, fileLock: fLock, executor: spectrumExecutor, config: config}, nil
+func NewSpectrumLocalClientWithClients(logger *log.Logger, connector connectors.SpectrumScaleConnector, dbClient utils.DatabaseClient, fLock utils.FileLock, spectrumExecutor utils.Executor, config model.SpectrumConfig) (model.StorageClient, error) {
+	return &spectrumLocalClient{logger: logger, connector: connector, dbClient: dbClient, fileLock: fLock, executor: spectrumExecutor, config: config}, nil
 }
 
 func newSpectrumLocalClient(logger *log.Logger, config model.SpectrumConfig) (*spectrumLocalClient, error) {
@@ -82,8 +84,8 @@ func newSpectrumLocalClient(logger *log.Logger, config model.SpectrumConfig) (*s
 		os.Exit(1)
 	}()
 
-	client, err := spectrum.GetSpectrumClient(logger, config.Connector, map[string]interface{}{})
-	return &spectrumLocalClient{logger: logger, client: client, dbClient: dbClient,
+	client, err := connectors.GetSpectrumScaleConnector(logger, config.Connector, map[string]interface{}{})
+	return &spectrumLocalClient{logger: logger, connector: client, dbClient: dbClient,
 		fileLock: utils.NewFileLock(logger, ubiquityConfigPath), executor: spectrumExecutor, config: config}, nil
 }
 
@@ -139,7 +141,7 @@ func (s *spectrumLocalClient) Activate() (err error) {
 
 	//check if filesystem is mounted
 
-	mounted, err := s.client.IsFilesystemMounted(s.config.DefaultFilesystem)
+	mounted, err := s.connector.IsFilesystemMounted(s.config.DefaultFilesystem)
 
 	if err != nil {
 		s.logger.Println(err.Error())
@@ -147,7 +149,7 @@ func (s *spectrumLocalClient) Activate() (err error) {
 	}
 
 	if mounted == false {
-		err = s.client.MountFileSystem(s.config.DefaultFilesystem)
+		err = s.connector.MountFileSystem(s.config.DefaultFilesystem)
 
 		if err != nil {
 			s.logger.Println(err.Error())
@@ -155,7 +157,7 @@ func (s *spectrumLocalClient) Activate() (err error) {
 		}
 	}
 
-	clusterId, err := s.client.GetClusterId()
+	clusterId, err := s.connector.GetClusterId()
 
 	if err != nil {
 		s.logger.Println(err.Error())
@@ -295,7 +297,7 @@ func (s *spectrumLocalClient) RemoveVolume(name string, forceDelete bool) (err e
 			return err
 		}
 		if forceDelete == true {
-			mountpoint, err := s.client.GetFilesystemMountpoint(existingVolume.FileSystem)
+			mountpoint, err := s.connector.GetFilesystemMountpoint(existingVolume.FileSystem)
 			if err != nil {
 				s.logger.Println(err.Error())
 				return err
@@ -312,7 +314,7 @@ func (s *spectrumLocalClient) RemoveVolume(name string, forceDelete bool) (err e
 		return nil
 	}
 
-	isFilesetLinked, err := s.client.IsFilesetLinked(existingVolume.FileSystem, existingVolume.Fileset)
+	isFilesetLinked, err := s.connector.IsFilesetLinked(existingVolume.FileSystem, existingVolume.Fileset)
 
 	if err != nil {
 		s.logger.Println(err.Error())
@@ -320,7 +322,7 @@ func (s *spectrumLocalClient) RemoveVolume(name string, forceDelete bool) (err e
 	}
 
 	if isFilesetLinked {
-		err := s.client.UnlinkFileset(existingVolume.FileSystem, existingVolume.Fileset)
+		err := s.connector.UnlinkFileset(existingVolume.FileSystem, existingVolume.Fileset)
 
 		if err != nil {
 			s.logger.Println(err.Error())
@@ -334,7 +336,7 @@ func (s *spectrumLocalClient) RemoveVolume(name string, forceDelete bool) (err e
 		return err
 	}
 	if forceDelete {
-		err = s.client.DeleteFileset(existingVolume.FileSystem, existingVolume.Fileset)
+		err = s.connector.DeleteFileset(existingVolume.FileSystem, existingVolume.Fileset)
 
 		if err != nil {
 			s.logger.Println(err.Error())
@@ -422,7 +424,7 @@ func (s *spectrumLocalClient) Attach(name string) (mountPath string, err error) 
 	if existingVolume.Mountpoint != "" {
 		return existingVolume.Mountpoint, nil
 	}
-	mountpoint, err := s.client.GetFilesystemMountpoint(existingVolume.FileSystem)
+	mountpoint, err := s.connector.GetFilesystemMountpoint(existingVolume.FileSystem)
 	if err != nil {
 		s.logger.Println(err.Error())
 		return "", err
@@ -432,7 +434,7 @@ func (s *spectrumLocalClient) Attach(name string) (mountPath string, err error) 
 		mountPath = path.Join(mountpoint, existingVolume.Fileset, existingVolume.Directory)
 	} else {
 
-		isFilesetLinked, err := s.client.IsFilesetLinked(existingVolume.FileSystem, existingVolume.Fileset)
+		isFilesetLinked, err := s.connector.IsFilesetLinked(existingVolume.FileSystem, existingVolume.Fileset)
 
 		if err != nil {
 			s.logger.Println(err.Error())
@@ -441,7 +443,7 @@ func (s *spectrumLocalClient) Attach(name string) (mountPath string, err error) 
 
 		if !isFilesetLinked {
 
-			err = s.client.LinkFileset(existingVolume.FileSystem, existingVolume.Fileset)
+			err = s.connector.LinkFileset(existingVolume.FileSystem, existingVolume.Fileset)
 
 			if err != nil {
 				s.logger.Println(err.Error())
@@ -531,7 +533,7 @@ func (s *spectrumLocalClient) createFilesetVolume(filesystem, name string, opts 
 
 	filesetName := generateFilesetName(name)
 
-	err := s.client.CreateFileset(filesystem, filesetName, opts)
+	err := s.connector.CreateFileset(filesystem, filesetName, opts)
 
 	if err != nil {
 		s.logger.Printf("Error creating fileset %v", err)
@@ -554,7 +556,7 @@ func (s *spectrumLocalClient) changePermissionsOfFileset(filesystem, filesetName
 
 	s.logger.Printf("Changing Owner of Fileset %s to uid %s , gid %s", filesetName, uid, gid)
 
-	mountpoint, err := s.client.GetFilesystemMountpoint(filesystem)
+	mountpoint, err := s.connector.GetFilesystemMountpoint(filesystem)
 	if err != nil {
 		s.logger.Printf("Failed to change permissions of fileset %s : %s", filesetName, err.Error())
 		return err
@@ -576,16 +578,16 @@ func (s *spectrumLocalClient) createFilesetQuotaVolume(filesystem, name, quota s
 
 	filesetName := generateFilesetName(name)
 
-	err := s.client.CreateFileset(filesystem, name, opts)
+	err := s.connector.CreateFileset(filesystem, name, opts)
 
 	if err != nil {
 		return err
 	}
 
-	err = s.client.SetFilesetQuota(filesystem, filesetName, quota)
+	err = s.connector.SetFilesetQuota(filesystem, filesetName, quota)
 
 	if err != nil {
-		deleteErr := s.client.DeleteFileset(filesystem, filesetName)
+		deleteErr := s.connector.DeleteFileset(filesystem, filesetName)
 		if deleteErr != nil {
 			return fmt.Errorf("Error setting quota (rollback error on delete fileset %s - manual cleanup needed)", filesetName)
 		}
@@ -606,7 +608,7 @@ func (s *spectrumLocalClient) createLightweightVolume(filesystem, name, fileset 
 	s.logger.Println("spectrumLocalClient: createLightweightVolume start")
 	defer s.logger.Println("spectrumLocalClient: createLightweightVolume end")
 
-	filesetLinked, err := s.client.IsFilesetLinked(filesystem, fileset)
+	filesetLinked, err := s.connector.IsFilesetLinked(filesystem, fileset)
 
 	if err != nil {
 		s.logger.Println("error finding fileset in the filesystem %s", err.Error())
@@ -614,7 +616,7 @@ func (s *spectrumLocalClient) createLightweightVolume(filesystem, name, fileset 
 	}
 
 	if !filesetLinked {
-		err = s.client.LinkFileset(filesystem, fileset)
+		err = s.connector.LinkFileset(filesystem, fileset)
 
 		if err != nil {
 			s.logger.Println(err.Error())
@@ -624,7 +626,7 @@ func (s *spectrumLocalClient) createLightweightVolume(filesystem, name, fileset 
 
 	lightweightVolumeName := generateLightweightVolumeName(name)
 
-	mountpoint, err := s.client.GetFilesystemMountpoint(filesystem)
+	mountpoint, err := s.connector.GetFilesystemMountpoint(filesystem)
 	if err != nil {
 		s.logger.Println(err.Error())
 		return err
@@ -698,7 +700,7 @@ func (s *spectrumLocalClient) updateDBWithExistingFileset(filesystem, name, user
 	defer s.logger.Println("spectrumLocalClient: updateDBWithExistingFileset end")
 	s.logger.Printf("User specified fileset: %s\n", userSpecifiedFileset)
 
-	_, err := s.client.ListFileset(filesystem, userSpecifiedFileset)
+	_, err := s.connector.ListFileset(filesystem, userSpecifiedFileset)
 	if err != nil {
 		s.logger.Printf("Fileset does not exist %v", err.Error())
 		return err
@@ -734,7 +736,7 @@ func (s *spectrumLocalClient) updateDBWithExistingFilesetQuota(filesystem, name,
 	s.logger.Println("spectrumLocalClient:  updateDBWithExistingFilesetQuota start")
 	defer s.logger.Println("spectrumLocalClient: updateDBWithExistingFilesetQuota end")
 
-	filesetQuota, err := s.client.ListFilesetQuota(filesystem, userSpecifiedFileset)
+	filesetQuota, err := s.connector.ListFilesetQuota(filesystem, userSpecifiedFileset)
 
 	if err != nil {
 		s.logger.Println(err.Error())
@@ -760,18 +762,18 @@ func (s *spectrumLocalClient) updateDBWithExistingDirectory(filesystem, name, us
 	defer s.logger.Println("spectrumLocalClient: updateDBWithExistingDirectory end")
 	s.logger.Printf("User specified fileset: %s, User specified directory: %s\n", userSpecifiedFileset, userSpecifiedDirectory)
 
-	linked, err := s.client.IsFilesetLinked(filesystem, userSpecifiedFileset)
+	linked, err := s.connector.IsFilesetLinked(filesystem, userSpecifiedFileset)
 	if err != nil {
 		return err
 	}
 	if linked == false {
-		err := s.client.LinkFileset(filesystem, userSpecifiedFileset)
+		err := s.connector.LinkFileset(filesystem, userSpecifiedFileset)
 		if err != nil {
 			return err
 		}
 	}
 
-	mountpoint, err := s.client.GetFilesystemMountpoint(filesystem)
+	mountpoint, err := s.connector.GetFilesystemMountpoint(filesystem)
 	if err != nil {
 		s.logger.Println(err.Error())
 		return err

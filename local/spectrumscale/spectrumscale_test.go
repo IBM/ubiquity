@@ -1,4 +1,4 @@
-package local_test
+package spectrumscale_test
 
 import (
 	"fmt"

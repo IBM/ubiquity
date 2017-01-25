@@ -1,4 +1,4 @@
-package spectrum
+package connectors
 
 type GetClusterResponse struct {
 	Cluster Cluster `json:"cluster"`

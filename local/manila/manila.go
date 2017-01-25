@@ -1,4 +1,4 @@
-package local
+package manila
 
 import (
 	"encoding/json"

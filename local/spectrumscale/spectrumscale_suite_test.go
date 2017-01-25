@@ -1,4 +1,4 @@
-package spectrum_test
+package spectrumscale_test
 
 import (
 	. "github.com/onsi/ginkgo"

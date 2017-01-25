@@ -5,6 +5,7 @@ import (
 
 	"fmt"
 
+	"github.ibm.com/almaden-containers/ubiquity/local/spectrumscale"
 	"github.ibm.com/almaden-containers/ubiquity/model"
 )
 
@@ -12,14 +13,14 @@ func GetLocalClients(logger *log.Logger, config model.UbiquityServerConfig) (map
 
 	var clients map[string]model.StorageClient
 	clients = make(map[string]model.StorageClient)
-	spectrumClient, err := NewSpectrumLocalClient(logger, config.SpectrumConfig)
+	spectrumClient, err := spectrumscale.NewSpectrumLocalClient(logger, config.SpectrumConfig)
 	if err != nil {
 		logger.Printf("Not enough params to initialize 'spectrum-scale' client")
 	} else {
 		clients["spectrum-scale"] = spectrumClient
 	}
 
-	spectrumNfsClient, err := NewSpectrumNfsLocalClient(logger, config.SpectrumConfig)
+	spectrumNfsClient, err := spectrumscale.NewSpectrumNfsLocalClient(logger, config.SpectrumConfig)
 	if err != nil {
 		logger.Printf("Not enough params to initialize 'spectrum-scale-nfs' client")
 	} else {
