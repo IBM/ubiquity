@@ -6,9 +6,9 @@ import (
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
-	"github.ibm.com/almaden-containers/ibm-storage-broker.git/core"
-	"github.ibm.com/almaden-containers/ibm-storage-broker.git/fakes"
-	"github.ibm.com/almaden-containers/ibm-storage-broker.git/model"
+	"github.ibm.com/almaden-containers/ubiquity/core"
+	"github.ibm.com/almaden-containers/ubiquity/fakes"
+	"github.ibm.com/almaden-containers/ubiquity/model"
 )
 
 var _ = Describe("ibm-storage-broker Broker", func() {
@@ -19,9 +19,9 @@ var _ = Describe("ibm-storage-broker Broker", func() {
 		instanceMap     map[string]*model.ServiceInstance
 		bindingMap      map[string]*model.ServiceBinding
 		testLogger      log.Logger
-		fakeBackend     *fakes.FakeStorageBackend
+		fakeBackend     *fakes.FakeStorageClient
 		configPath      string
-		storageBackends map[string]local.StorageBackend
+		storageBackends map[string]model.StorageClient
 	)
 	BeforeEach(func() {
 		serviceGuid = "some-service-guid"
@@ -29,9 +29,9 @@ var _ = Describe("ibm-storage-broker Broker", func() {
 		configPath = "/tmp/ibm-storage-broker"
 		instanceMap = make(map[string]*model.ServiceInstance)
 		bindingMap = make(map[string]*model.ServiceBinding)
-		fakeBackend = new(fakes.FakeStorageBackend)
+		fakeBackend = new(fakes.FakeStorageClient)
 
-		storageBackends = make(map[string]local.StorageBackend)
+		storageBackends = make(map[string]model.StorageClient)
 		storageBackends["fake-backend"] = fakeBackend
 		controller = core.NewController(storageBackends, configPath)
 		//controller = core.NewController(fakeBackend, configPath, instanceMap, bindingMap)
@@ -268,14 +268,14 @@ var _ = Describe("ibm-storage-broker Broker", func() {
 	})
 })
 
-func successfulServiceInstanceCreate(testLogger log.Logger, fakeBackend *fakes.FakeStorageBackend, instance model.ServiceInstance, controller core.BrokerController, serviceGuid string) {
+func successfulServiceInstanceCreate(testLogger log.Logger, fakeBackend *fakes.FakeStorageClient, instance model.ServiceInstance, controller core.BrokerController, serviceGuid string) {
 	fakeBackend.CreateVolumeReturns(nil)
 	createResponse, err := controller.CreateServiceInstance(testLogger, serviceGuid, instance)
 	Expect(err).ToNot(HaveOccurred())
 	Expect(createResponse.DashboardUrl).ToNot(Equal(""))
 }
 
-func successfulServiceBindingCreate(testLogger log.Logger, fakeBackend *fakes.FakeStorageBackend, binding model.ServiceBinding, controller core.BrokerController, serviceGuid string, bindingId string) {
+func successfulServiceBindingCreate(testLogger log.Logger, fakeBackend *fakes.FakeStorageClient, binding model.ServiceBinding, controller core.BrokerController, serviceGuid string, bindingId string) {
 	bindResponse, err := controller.BindServiceInstance(testLogger, serviceGuid, bindingId, binding)
 	Expect(err).ToNot(HaveOccurred())
 	Expect(bindResponse.VolumeMounts).ToNot(BeNil())

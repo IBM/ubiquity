@@ -7,8 +7,6 @@ import (
 	"net/http"
 )
 
-//go:generate counterfeiter -o ../fakes/fake_storage_client.go . StorageClient
-
 type StorageClientFactory func(logger *log.Logger, backendName string, storageApiURL string, params map[string]interface{}) (StorageClient, error)
 
 type UbiquityServerConfig struct {
@@ -50,6 +48,8 @@ type UbiquityServerConnectionInfo struct {
 	Address string
 	Port    int
 }
+
+//go:generate counterfeiter -o ../fakes/fake_storage_client.go . StorageClient
 
 type StorageClient interface {
 	Activate() error

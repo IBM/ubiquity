@@ -8,13 +8,13 @@ import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"github.ibm.com/almaden-containers/ubiquity/fakes"
+	"github.ibm.com/almaden-containers/ubiquity/local/spectrumscale/connectors"
 	"github.ibm.com/almaden-containers/ubiquity/model"
-	"github.ibm.com/almaden-containers/ubiquity/spectrum"
 )
 
 var _ = Describe("spectrum_mmcli", func() {
 	var (
-		spectrumMMCLI spectrum.Spectrum
+		spectrumMMCLI connectors.SpectrumScaleConnector
 		logger        *log.Logger
 		fakeExec      *fakes.FakeExecutor
 		opts          map[string]interface{}
@@ -27,7 +27,7 @@ var _ = Describe("spectrum_mmcli", func() {
 		logger = log.New(os.Stdout, "spectrum: ", log.Lshortfile|log.LstdFlags)
 		fakeExec = new(fakes.FakeExecutor)
 		opts = make(map[string]interface{})
-		spectrumMMCLI, err = spectrum.NewSpectrumMMCLIWithExecutor(logger, fakeExec, opts)
+		spectrumMMCLI, err = connectors.NewSpectrumMMCLIWithExecutor(logger, fakeExec, opts)
 		Expect(err).ToNot(HaveOccurred())
 		fileset = "fake-fileset"
 		filesystem = "fake-filesystem"

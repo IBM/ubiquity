@@ -9,12 +9,12 @@ import (
 	"net/http"
 	"net/http/httptest"
 
-	"github.ibm.com/almaden-containers/ibm-storage-broker.git/core/fakes"
-	"github.ibm.com/almaden-containers/ibm-storage-broker.git/model"
-	"github.ibm.com/almaden-containers/ibm-storage-broker.git/web_server"
+	"github.ibm.com/almaden-containers/ubiquity/model"
+	"github.ibm.com/almaden-containers/ubiquity/web_server"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
+	"github.ibm.com/almaden-containers/ubiquity/fakes"
 )
 
 var _ = Describe("ibm-storage-broker Broker Handlers", func() {
@@ -22,14 +22,18 @@ var _ = Describe("ibm-storage-broker Broker Handlers", func() {
 	Context("when generating handlers", func() {
 		var (
 			handler        http.Handler
-			fakeController *fakes.FakeController
+			fakeController *fakes.FakeBrokerController
 			logger         *log.Logger
 		)
 		BeforeEach(func() {
 			var buf bytes.Buffer
 			logger = log.New(&buf, "logger: ", log.Lshortfile)
-			fakeController = new(fakes.FakeController)
-			server, err := web_server.NewServer(fakeController, *logger)
+			fakeController = new(fakes.FakeBrokerController)
+			//logger *log.Logger, backends map[string]model.StorageClient, config model.UbiquityServerConfig
+			backends := make(map[string]model.StorageClient)
+			backends["dummy"] = fakeController
+			config := &model.UbiquityServerConfig{}
+			server, err := web_server.NewServer(*logger, backends, config)
 			Expect(err).ToNot(HaveOccurred())
 			handler = server.InitializeHandler()
 		})
@@ -270,7 +274,7 @@ var _ = Describe("ibm-storage-broker Broker Handlers", func() {
 	})
 })
 
-func successfulCreateService(handler http.Handler, fakeController *fakes.FakeController) {
+func successfulCreateService(handler http.Handler, fakeController *fakes.FakeBrokerController) {
 	fakeCreateResponse := model.CreateServiceInstanceResponse{}
 	fakeController.CreateServiceInstanceReturns(fakeCreateResponse, nil)
 	serviceInstance := model.ServiceInstance{
@@ -298,7 +302,7 @@ func successfulCreateService(handler http.Handler, fakeController *fakes.FakeCon
 	Expect(err).ToNot(HaveOccurred())
 }
 
-func successfulDeleteService(handler http.Handler, fakeController *fakes.FakeController) {
+func successfulDeleteService(handler http.Handler, fakeController *fakes.FakeBrokerController) {
 	serviceInstance := model.ServiceInstance{
 		Id:               "ibm-storage-broker-service-guid",
 		DashboardUrl:     "http://dashboard_url",
@@ -320,7 +324,7 @@ func successfulDeleteService(handler http.Handler, fakeController *fakes.FakeCon
 	Expect(w.Code).Should(Equal(200))
 }
 
-func successfulBindService(handler http.Handler, fakeController *fakes.FakeController) {
+func successfulBindService(handler http.Handler, fakeController *fakes.FakeBrokerController) {
 	fakeBindResponse := model.CreateServiceBindingResponse{}
 	fakeController.BindServiceInstanceReturns(fakeBindResponse, nil)
 	binding := model.ServiceBinding{

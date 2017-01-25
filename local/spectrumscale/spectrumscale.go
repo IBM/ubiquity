@@ -1,6 +1,5 @@
 package spectrumscale
 
-
 import (
 	"log"
 
@@ -12,9 +11,9 @@ import (
 	"path"
 	"syscall"
 
+	"fmt"
 	"github.ibm.com/almaden-containers/ubiquity/local/spectrumscale/connectors"
 	"github.ibm.com/almaden-containers/ubiquity/model"
-	"fmt"
 )
 
 type spectrumLocalClient struct {

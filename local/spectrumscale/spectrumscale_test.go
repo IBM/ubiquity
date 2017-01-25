@@ -7,17 +7,21 @@ import (
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
-	"github.ibm.com/almaden-containers/ubiquity/fakes"
-	"github.ibm.com/almaden-containers/ubiquity/local"
+
+
 	"github.ibm.com/almaden-containers/ubiquity/model"
 	"github.ibm.com/almaden-containers/ubiquity/utils"
+	"github.ibm.com/almaden-containers/ubiquity/local/spectrumscale"
+
+	"github.ibm.com/almaden-containers/ubiquity/fakes"
+
 )
 
 var _ = Describe("local-client", func() {
 	var (
 		client             model.StorageClient
 		logger             *log.Logger
-		fakeSpectrumClient *fakes.FakeSpectrum
+		fakeSpectrumClient *fakes.FakeSpectrumScaleConnector
 		fakeDbClient       *fakes.FakeDatabaseClient
 		fakeLock           *fakes.FakeFileLock
 		fakeExec           *fakes.FakeExecutor
@@ -26,12 +30,12 @@ var _ = Describe("local-client", func() {
 	)
 	BeforeEach(func() {
 		logger = log.New(os.Stdout, "ubiquity: ", log.Lshortfile|log.LstdFlags)
-		fakeSpectrumClient = new(fakes.FakeSpectrum)
+		fakeSpectrumClient = new(fakes.FakeStorageClient)
 		fakeDbClient = new(fakes.FakeDatabaseClient)
 		fakeLock = new(fakes.FakeFileLock)
 		fakeExec = new(fakes.FakeExecutor)
 		fakeConfig = model.SpectrumConfig{}
-		client, err = local.NewSpectrumLocalClientWithClients(logger, fakeSpectrumClient, fakeDbClient, fakeLock, fakeExec, fakeConfig)
+		client, err = spectrumscale.NewSpectrumLocalClientWithClients(logger, fakeSpectrumClient, fakeDbClient, fakeLock, fakeExec, fakeConfig)
 		Expect(err).ToNot(HaveOccurred())
 
 	})
@@ -174,7 +178,7 @@ var _ = Describe("local-client", func() {
 			opts map[string]interface{}
 		)
 		BeforeEach(func() {
-			client, err = local.NewSpectrumLocalClientWithClients(logger, fakeSpectrumClient, fakeDbClient, fakeLock, fakeExec, fakeConfig)
+			client, err = spectrumscale.NewSpectrumLocalClientWithClients(logger, fakeSpectrumClient, fakeDbClient, fakeLock, fakeExec, fakeConfig)
 			Expect(err).ToNot(HaveOccurred())
 			fakeLock.LockReturns(nil)
 			fakeLock.UnlockReturns(nil)

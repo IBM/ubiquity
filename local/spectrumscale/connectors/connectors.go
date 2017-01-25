@@ -7,7 +7,7 @@ import (
 	"github.ibm.com/almaden-containers/ubiquity/model"
 )
 
-//go:generate counterfeiter -o ../fakes/fake_spectrum.go . SpectrumScaleConnector
+//go:generate counterfeiter -o ../../../fakes/fake_spectrum.go . SpectrumScaleConnector
 type SpectrumScaleConnector interface {
 	//Cluster operations
 	GetClusterId() (string, error)
