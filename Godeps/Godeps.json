@@ -14,27 +14,22 @@
 		},
 		{
 			"ImportPath": "github.com/djherbis/times",
-			"Comment": "v1.0.1",
-			"Rev": "95292e44976d1217cf3611dc7c8d9466877d3ed5"
+			"Comment": "v1.0.1-3-ge00ff80",
+			"Rev": "e00ff80b205836b5748cfbcc51a2c8154269b5ae"
 		},
 		{
 			"ImportPath": "github.com/gorilla/context",
-			"Comment": "v1.1-4-gaed02d1",
-			"Rev": "aed02d124ae4a0e94fea4541c8effd05bf0c8296"
+			"Comment": "v1.1-7-g08b5f42",
+			"Rev": "08b5f424b9271eedf6f9f0ce86cb9396ed337a42"
 		},
 		{
 			"ImportPath": "github.com/gorilla/mux",
-			"Comment": "v1.1-13-g9fa818a",
-			"Rev": "9fa818a44c2bf1396a17f9d5a3c0f6dd39d2ff8e"
-		},
-		{
-			"ImportPath": "github.com/mattn/go-sqlite3",
-			"Comment": "v1.1.0-96-ge5a3c16",
-			"Rev": "e5a3c16c5c1d80b24f633e68aecd6b0702786d3d"
+			"Comment": "v1.3.0",
+			"Rev": "392c28fe23e1c45ddba891b0320b3b5df220beea"
 		},
 		{
 			"ImportPath": "github.com/openstack/golang-client/openstack",
-			"Rev": "c8dab92a7cc1997d6dc8e6350d56dfa379381536"
+			"Rev": "753e96dd4a3983c05c665bc6f7a2abb25ceabd04"
 		}
 	]
 }
