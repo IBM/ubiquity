@@ -118,13 +118,22 @@ The current plugin supports the following protocols:
 
 POSIX and NFS Volumes are be created separately by choosing the 'spectrum-scale' volume driver or the 'spectrum-scale-nfs' volume driver.  Note that POSIX volumes are not accessible via NFS, but, NFS volumes are accessible via POSIX.  To make a POSIX volume accessible via NFS, simply create the volume using the 'spectrum-scale-nfs' driver using the same path or fileset name. 
 
+## Roadmap
 
+ * Support OpenStack Manila storage back-end
+ * Add explicit instrucitons on use of certificates to secure communication between plugins and Ubiquity service
+ * API for updating volumes
+ * Additional options to expore more features of Spectrum Scale
+ * Containerization of Ubiquity for Docker and Kubernetes
+ * Kubernetes dynamic provisioning support
+ * Support for additional IBM storage systems
+
+## Support
+
+(TBD)
 
 
 
 ## Suggestions and Questions
 For any questions, suggestions, or issues, please ...(TBD)
 
-## Support
-
-(TBD)
