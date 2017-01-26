@@ -127,6 +127,7 @@ POSIX and NFS Volumes are be created separately by choosing the 'spectrum-scale'
  * Containerization of Ubiquity for Docker and Kubernetes
  * Kubernetes dynamic provisioning support
  * Support for additional IBM storage systems
+ * Support for CloudFoundry
 
 ## Support
 
