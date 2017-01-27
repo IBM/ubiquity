@@ -6,12 +6,10 @@ import (
 	"github.ibm.com/almaden-containers/ubiquity/utils"
 
 	"os"
-	"os/signal"
-	"os/user"
 	"path"
-	"syscall"
 
 	"fmt"
+
 	"github.ibm.com/almaden-containers/ubiquity/local/spectrumscale/connectors"
 	"github.ibm.com/almaden-containers/ubiquity/model"
 )
@@ -19,7 +17,7 @@ import (
 type spectrumLocalClient struct {
 	logger      *log.Logger
 	connector   connectors.SpectrumScaleConnector
-	dbClient    utils.DatabaseClient
+	dataModel   SpectrumDataModel
 	fileLock    utils.FileLock
 	executor    utils.Executor
 	isActivated bool
@@ -36,86 +34,34 @@ const (
 	USER_SPECIFIED_FILESET    string = "fileset"
 	USER_SPECIFIED_FILESYSTEM string = "filesystem"
 
-	USER_SPECIFIED_UID string = "uid"
-	USER_SPECIFIED_GID string = "gid"
-
 	FILESET_TYPE  string = "fileset"
 	LTWT_VOL_TYPE string = "lightweight"
 )
 
-func NewSpectrumLocalClient(logger *log.Logger, config model.SpectrumConfig) (model.StorageClient, error) {
+func NewSpectrumLocalClient(logger *log.Logger, config model.SpectrumConfig, dbClient utils.DatabaseClient, fileLock utils.FileLock) (model.StorageClient, error) {
 	if config.ConfigPath == "" {
 		return nil, fmt.Errorf("spectrumLocalClient: init: missing required parameter 'spectrumConfigPath'")
 	}
 	if config.DefaultFilesystem == "" {
 		return nil, fmt.Errorf("spectrumLocalClient: init: missing required parameter 'spectrumDefaultFileSystem'")
 	}
-	return newSpectrumLocalClient(logger, config)
+	return newSpectrumLocalClient(logger, config, dbClient, fileLock)
 }
 
-func NewSpectrumLocalClientWithClients(logger *log.Logger, connector connectors.SpectrumScaleConnector, dbClient utils.DatabaseClient, fLock utils.FileLock, spectrumExecutor utils.Executor, config model.SpectrumConfig) (model.StorageClient, error) {
-	return &spectrumLocalClient{logger: logger, connector: connector, dbClient: dbClient, fileLock: fLock, executor: spectrumExecutor, config: config}, nil
+func NewSpectrumLocalClientWithConnectors(logger *log.Logger, connector connectors.SpectrumScaleConnector, dbClient utils.DatabaseClient, fileLock utils.FileLock, spectrumExecutor utils.Executor, config model.SpectrumConfig) (model.StorageClient, error) {
+	return &spectrumLocalClient{logger: logger, connector: connector, dataModel: NewSpectrumDataModel(logger, dbClient), executor: spectrumExecutor, config: config, fileLock: fileLock}, nil
 }
 
-func newSpectrumLocalClient(logger *log.Logger, config model.SpectrumConfig) (*spectrumLocalClient, error) {
+func newSpectrumLocalClient(logger *log.Logger, config model.SpectrumConfig, dbClient utils.DatabaseClient, fileLock utils.FileLock) (*spectrumLocalClient, error) {
 	logger.Println("spectrumLocalClient: init start")
 	defer logger.Println("spectrumLocalClient: init end")
-	spectrumExecutor := utils.NewExecutor(logger)
-	ubiquityConfigPath, err := setupConfigDirectory(logger, spectrumExecutor, config.ConfigPath)
-	if err != nil {
-		return &spectrumLocalClient{}, err
-	}
 
-	dbClient := utils.NewDatabaseClient(logger, ubiquityConfigPath)
-	err = dbClient.Init()
+	client, err := connectors.GetSpectrumScaleConnector(logger, config.Connector, map[string]interface{}{})
 	if err != nil {
 		logger.Fatalln(err.Error())
 		return &spectrumLocalClient{}, err
 	}
-
-	// Catch Ctrl-C / interrupts to perform DB connection cleanup
-	c := make(chan os.Signal, 1)
-	signal.Notify(c, os.Interrupt)
-	signal.Notify(c, syscall.SIGTERM)
-	go func() {
-		<-c
-		dbClient.Close()
-		os.Exit(1)
-	}()
-
-	client, err := connectors.GetSpectrumScaleConnector(logger, config.Connector, map[string]interface{}{})
-	return &spectrumLocalClient{logger: logger, connector: client, dbClient: dbClient,
-		fileLock: utils.NewFileLock(logger, ubiquityConfigPath), executor: spectrumExecutor, config: config}, nil
-}
-
-func setupConfigDirectory(logger *log.Logger, executor utils.Executor, configPath string) (string, error) {
-	logger.Println("setupConfigPath start")
-	defer logger.Println("setupConfigPath end")
-	ubiquityConfigPath := path.Join(configPath, ".config")
-	log.Printf("User specified config path: %s", configPath)
-
-	if _, err := executor.Stat(ubiquityConfigPath); os.IsNotExist(err) {
-		args := []string{"mkdir", ubiquityConfigPath}
-		_, err := executor.Execute("sudo", args)
-		if err != nil {
-			logger.Printf("Error creating directory")
-		}
-		return "", err
-	}
-	currentUser, err := user.Current()
-	if err != nil {
-		logger.Printf("Error determining current user: %s", err.Error())
-		return "", err
-	}
-
-	args := []string{"chown", "-R", fmt.Sprintf("%s:%s", currentUser.Uid, currentUser.Gid), ubiquityConfigPath}
-	_, err = executor.Execute("sudo", args)
-	if err != nil {
-		logger.Printf("Error setting permissions on config directory %s", ubiquityConfigPath)
-		return "", err
-	}
-
-	return ubiquityConfigPath, nil
+	return &spectrumLocalClient{logger: logger, connector: client, dataModel: NewSpectrumDataModel(logger, dbClient), config: config, fileLock: fileLock}, nil
 }
 
 func (s *spectrumLocalClient) Activate() (err error) {
@@ -169,9 +115,9 @@ func (s *spectrumLocalClient) Activate() (err error) {
 		return clusterIdErr
 	}
 
-	s.dbClient.SetClusterId(clusterId)
+	s.dataModel.SetClusterId(clusterId)
 
-	err = s.dbClient.CreateVolumeTable()
+	err = s.dataModel.CreateVolumeTable()
 
 	if err != nil {
 		s.logger.Println(err.Error())
@@ -198,7 +144,7 @@ func (s *spectrumLocalClient) CreateVolume(name string, opts map[string]interfac
 		}
 	}()
 
-	volExists, err := s.dbClient.VolumeExists(name)
+	volExists, err := s.dataModel.VolumeExists(name)
 
 	if err != nil {
 		s.logger.Println(err.Error())
@@ -271,7 +217,7 @@ func (s *spectrumLocalClient) RemoveVolume(name string, forceDelete bool) (err e
 		}
 	}()
 
-	volExists, err := s.dbClient.VolumeExists(name)
+	volExists, err := s.dataModel.VolumeExists(name)
 
 	if err != nil {
 		s.logger.Println(err.Error())
@@ -282,14 +228,14 @@ func (s *spectrumLocalClient) RemoveVolume(name string, forceDelete bool) (err e
 		return fmt.Errorf("Volume not found")
 	}
 
-	existingVolume, err := s.dbClient.GetVolume(name)
+	existingVolume, err := s.dataModel.GetVolume(name)
 
 	if err != nil {
 		s.logger.Println(err.Error())
 		return err
 	}
-	if existingVolume.Type == utils.LIGHTWEIGHT {
-		err = s.dbClient.DeleteVolume(name)
+	if existingVolume.Type == LIGHTWEIGHT {
+		err = s.dataModel.DeleteVolume(name)
 
 		if err != nil {
 			s.logger.Println(err.Error())
@@ -328,7 +274,7 @@ func (s *spectrumLocalClient) RemoveVolume(name string, forceDelete bool) (err e
 			return err
 		}
 	}
-	err = s.dbClient.DeleteVolume(name)
+	err = s.dataModel.DeleteVolume(name)
 
 	if err != nil {
 		s.logger.Println(err.Error())
@@ -363,7 +309,7 @@ func (s *spectrumLocalClient) GetVolume(name string) (volumeMetadata model.Volum
 		}
 	}()
 
-	volExists, err := s.dbClient.VolumeExists(name)
+	volExists, err := s.dataModel.VolumeExists(name)
 
 	if err != nil {
 		s.logger.Println(err.Error())
@@ -372,7 +318,7 @@ func (s *spectrumLocalClient) GetVolume(name string) (volumeMetadata model.Volum
 
 	if volExists {
 
-		existingVolume, err := s.dbClient.GetVolume(name)
+		existingVolume, err := s.dataModel.GetVolume(name)
 
 		if err != nil {
 			s.logger.Println(err.Error())
@@ -402,7 +348,7 @@ func (s *spectrumLocalClient) Attach(name string) (mountPath string, err error) 
 		}
 	}()
 
-	volExists, err := s.dbClient.VolumeExists(name)
+	volExists, err := s.dataModel.VolumeExists(name)
 
 	if err != nil {
 		s.logger.Println(err.Error())
@@ -413,7 +359,7 @@ func (s *spectrumLocalClient) Attach(name string) (mountPath string, err error) 
 		return "", fmt.Errorf("Volume not found")
 	}
 
-	existingVolume, err := s.dbClient.GetVolume(name)
+	existingVolume, err := s.dataModel.GetVolume(name)
 
 	if err != nil {
 		s.logger.Println(err.Error())
@@ -428,7 +374,7 @@ func (s *spectrumLocalClient) Attach(name string) (mountPath string, err error) 
 		s.logger.Println(err.Error())
 		return "", err
 	}
-	if existingVolume.Type == utils.LIGHTWEIGHT {
+	if existingVolume.Type == LIGHTWEIGHT {
 
 		mountPath = path.Join(mountpoint, existingVolume.Fileset, existingVolume.Directory)
 	} else {
@@ -469,7 +415,7 @@ func (s *spectrumLocalClient) Attach(name string) (mountPath string, err error) 
 		}
 	}
 
-	err = s.dbClient.UpdateVolumeMountpoint(name, mountPath)
+	err = s.dataModel.UpdateVolumeMountpoint(name, mountPath)
 
 	if err != nil {
 		s.logger.Printf("internal error updating database %v", err)
@@ -495,7 +441,7 @@ func (s *spectrumLocalClient) Detach(name string) (err error) {
 		}
 	}()
 
-	volExists, err := s.dbClient.VolumeExists(name)
+	volExists, err := s.dataModel.VolumeExists(name)
 
 	if err != nil {
 		s.logger.Println(err.Error())
@@ -506,7 +452,7 @@ func (s *spectrumLocalClient) Detach(name string) (err error) {
 		return fmt.Errorf("Volume not found")
 	}
 
-	existingVolume, err := s.dbClient.GetVolume(name)
+	existingVolume, err := s.dataModel.GetVolume(name)
 
 	if err != nil {
 		s.logger.Println(err.Error())
@@ -517,7 +463,7 @@ func (s *spectrumLocalClient) Detach(name string) (err error) {
 		return fmt.Errorf("volume not attached")
 	}
 
-	err = s.dbClient.UpdateVolumeMountpoint(name, "")
+	err = s.dataModel.UpdateVolumeMountpoint(name, "")
 
 	if err != nil {
 		s.logger.Printf("error updating database %v", err.Error())
@@ -539,7 +485,7 @@ func (s *spectrumLocalClient) createFilesetVolume(filesystem, name string, opts 
 		return err
 	}
 
-	err = s.dbClient.InsertFilesetVolume(filesetName, name, filesystem, opts)
+	err = s.dataModel.InsertFilesetVolume(filesetName, name, filesystem, opts)
 
 	if err != nil {
 		s.logger.Printf("Error inserting fileset %v", err)
@@ -593,7 +539,7 @@ func (s *spectrumLocalClient) createFilesetQuotaVolume(filesystem, name, quota s
 		return err
 	}
 
-	err = s.dbClient.InsertFilesetQuotaVolume(filesetName, quota, name, filesystem, opts)
+	err = s.dataModel.InsertFilesetQuotaVolume(filesetName, quota, name, filesystem, opts)
 
 	if err != nil {
 		return err
@@ -640,7 +586,7 @@ func (s *spectrumLocalClient) createLightweightVolume(filesystem, name, fileset 
 		return err
 	}
 
-	err = s.dbClient.InsertLightweightVolume(fileset, lightweightVolumeName, name, filesystem, opts)
+	err = s.dataModel.InsertLightweightVolume(fileset, lightweightVolumeName, name, filesystem, opts)
 
 	if err != nil {
 		return err
@@ -670,7 +616,7 @@ func (s *spectrumLocalClient) ListVolumes() ([]model.VolumeMetadata, error) {
 		}
 	}()
 
-	volumesInDb, err := s.dbClient.ListVolumes()
+	volumesInDb, err := s.dataModel.ListVolumes()
 
 	if err != nil {
 		s.logger.Printf("error retrieving volumes from db %#v\n", err)
@@ -705,7 +651,7 @@ func (s *spectrumLocalClient) updateDBWithExistingFileset(filesystem, name, user
 		return err
 	}
 
-	err = s.dbClient.InsertFilesetVolume(userSpecifiedFileset, name, filesystem, opts)
+	err = s.dataModel.InsertFilesetVolume(userSpecifiedFileset, name, filesystem, opts)
 
 	if err != nil {
 		s.logger.Println(err.Error())
@@ -747,7 +693,7 @@ func (s *spectrumLocalClient) updateDBWithExistingFilesetQuota(filesystem, name,
 
 	}
 
-	err = s.dbClient.InsertFilesetQuotaVolume(userSpecifiedFileset, quota, name, filesystem, opts)
+	err = s.dataModel.InsertFilesetQuotaVolume(userSpecifiedFileset, quota, name, filesystem, opts)
 
 	if err != nil {
 		s.logger.Println(err.Error())
@@ -792,7 +738,7 @@ func (s *spectrumLocalClient) updateDBWithExistingDirectory(filesystem, name, us
 		return err
 	}
 
-	err = s.dbClient.InsertLightweightVolume(userSpecifiedFileset, userSpecifiedDirectory, name, filesystem, opts)
+	err = s.dataModel.InsertLightweightVolume(userSpecifiedFileset, userSpecifiedDirectory, name, filesystem, opts)
 
 	if err != nil {
 		s.logger.Println(err.Error())

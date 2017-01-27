@@ -9,9 +9,14 @@ import (
 
 	"flag"
 
+	"os/signal"
+	"os/user"
+	"syscall"
+
 	"github.com/BurntSushi/toml"
 	"github.ibm.com/almaden-containers/ubiquity/local"
 	"github.ibm.com/almaden-containers/ubiquity/model"
+	"github.ibm.com/almaden-containers/ubiquity/utils"
 	"github.ibm.com/almaden-containers/ubiquity/web_server"
 )
 
@@ -39,7 +44,32 @@ func main() {
 	logger, logFile := setupLogger(config.LogPath)
 	defer closeLogs(logFile)
 
-	clients, err := local.GetLocalClients(logger, config)
+	spectrumExecutor := utils.NewExecutor(logger)
+	ubiquityConfigPath, err := setupConfigDirectory(logger, spectrumExecutor, config.SpectrumConfig.ConfigPath)
+	if err != nil {
+		panic(err.Error())
+	}
+
+	dbClient := utils.NewDatabaseClient(logger, ubiquityConfigPath)
+	err = dbClient.Init()
+	if err != nil {
+		panic(err.Error())
+
+	}
+
+	// Catch Ctrl-C / interrupts to perform DB connection cleanup
+	c := make(chan os.Signal, 1)
+	signal.Notify(c, os.Interrupt)
+	signal.Notify(c, syscall.SIGTERM)
+	go func() {
+		<-c
+		dbClient.Close()
+		os.Exit(1)
+	}()
+
+	fileLock := utils.NewFileLock(logger, ubiquityConfigPath)
+
+	clients, err := local.GetLocalClients(logger, config, dbClient, fileLock)
 	if err != nil {
 		panic(err)
 	}
@@ -66,4 +96,34 @@ func setupLogger(logPath string) (*log.Logger, *os.File) {
 func closeLogs(logFile *os.File) {
 	logFile.Sync()
 	logFile.Close()
+}
+
+func setupConfigDirectory(logger *log.Logger, executor utils.Executor, configPath string) (string, error) {
+	logger.Println("setupConfigPath start")
+	defer logger.Println("setupConfigPath end")
+	ubiquityConfigPath := path.Join(configPath, ".config")
+	log.Printf("User specified config path: %s", configPath)
+
+	if _, err := executor.Stat(ubiquityConfigPath); os.IsNotExist(err) {
+		args := []string{"mkdir", ubiquityConfigPath}
+		_, err := executor.Execute("sudo", args)
+		if err != nil {
+			logger.Printf("Error creating directory")
+		}
+		return "", err
+	}
+	currentUser, err := user.Current()
+	if err != nil {
+		logger.Printf("Error determining current user: %s", err.Error())
+		return "", err
+	}
+
+	args := []string{"chown", "-R", fmt.Sprintf("%s:%s", currentUser.Uid, currentUser.Gid), ubiquityConfigPath}
+	_, err = executor.Execute("sudo", args)
+	if err != nil {
+		logger.Printf("Error setting permissions on config directory %s", ubiquityConfigPath)
+		return "", err
+	}
+
+	return ubiquityConfigPath, nil
 }
