@@ -393,7 +393,7 @@ func SetFilesetQuotaInternal(logger *log.Logger, executor utils.Executor, filesy
 
 	if err != nil {
 		logger.Printf("Failed to set quota '%s' for fileset '%s'", quota, filesetName)
-		return err
+		return fmt.Errorf("Failed to set quota '%s' for fileset '%s'", quota, filesetName)
 	}
 
 	logger.Printf("setFilesetQuota output: %s\n", string(output))
