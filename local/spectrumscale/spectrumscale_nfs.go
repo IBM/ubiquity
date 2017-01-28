@@ -6,6 +6,7 @@ import (
 	"os/exec"
 
 	"github.ibm.com/almaden-containers/ubiquity/model"
+	"github.ibm.com/almaden-containers/ubiquity/utils"
 )
 
 type spectrumNfsLocalClient struct {
@@ -13,7 +14,7 @@ type spectrumNfsLocalClient struct {
 	config         model.SpectrumConfig
 }
 
-func NewSpectrumNfsLocalClient(logger *log.Logger, config model.SpectrumConfig) (model.StorageClient, error) {
+func NewSpectrumNfsLocalClient(logger *log.Logger, config model.SpectrumConfig, dbClient utils.DatabaseClient, fileLock utils.FileLock) (model.StorageClient, error) {
 	logger.Println("spectrumNfsLocalClient: init start")
 	defer logger.Println("spectrumNfsLocalClient: init end")
 
@@ -29,7 +30,7 @@ func NewSpectrumNfsLocalClient(logger *log.Logger, config model.SpectrumConfig) 
 		return nil, fmt.Errorf("spectrumNfsLocalClient: init: missing required parameter 'spectrumNfsServerAddr'")
 	}
 
-	spectrumClient, err := newSpectrumLocalClient(logger, config)
+	spectrumClient, err := newSpectrumLocalClient(logger, config, dbClient, fileLock)
 	if err != nil {
 		return nil, err
 	}
@@ -147,7 +148,7 @@ func (s *spectrumNfsLocalClient) exportNfs(name, clientCIDR string) error {
 	s.spectrumClient.logger.Printf("spectrumNfsLocalClient: ExportNfs start with name=%#v and clientCIDR=%#v\n", name, clientCIDR)
 	defer s.spectrumClient.logger.Printf("spectrumNfsLocalClient: ExportNfs end")
 
-	existingVolume, err := s.spectrumClient.dbClient.GetVolume(name)
+	existingVolume, err := s.spectrumClient.dataModel.GetVolume(name)
 
 	if err != nil {
 		s.spectrumClient.logger.Printf("spectrumNfsLocalClient: DbClient.GetVolume returned error %#v\n", err.Error())
@@ -170,7 +171,7 @@ func (s *spectrumNfsLocalClient) unexportNfs(name string) error {
 	s.spectrumClient.logger.Printf("spectrumNfsLocalClient: UnexportNfs start with name=%s\n", name)
 	defer s.spectrumClient.logger.Printf("spectrumNfsLocalClient: ExportNfs end")
 
-	existingVolume, err := s.spectrumClient.dbClient.GetVolume(name)
+	existingVolume, err := s.spectrumClient.dataModel.GetVolume(name)
 
 	if err != nil {
 		s.spectrumClient.logger.Printf("spectrumNfsLocalClient: error getting volume %#s \n", err)
@@ -187,7 +188,7 @@ func (s *spectrumNfsLocalClient) unexportNfs(name string) error {
 	}
 	s.spectrumClient.logger.Printf("spectrumNfsLocalClient: UnexportNfs output: %s\n", string(output))
 
-	if err = s.spectrumClient.dbClient.UpdateVolumeMountpoint(name, ""); err != nil {
+	if err = s.spectrumClient.dataModel.UpdateVolumeMountpoint(name, ""); err != nil {
 		s.spectrumClient.logger.Printf("spectrumNfsLocalClient: UnexportNfs: Could not update volume mountpoint: %s", err)
 		return err
 	}
