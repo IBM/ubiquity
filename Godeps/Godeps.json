@@ -190,6 +190,22 @@
 		{
 			"ImportPath": "gopkg.in/yaml.v2",
 			"Rev": "4c78c975fe7c825c6d1466c42be594d1d6f3aba6"
+		},
+		{
+			"ImportPath": "github.ibm.com/alchemy-containers/armada-slclient-lib/services",
+			"Rev": "683a1654bf32f888fbf24efb0dfec12647b665e2"
+		},
+		{
+			"ImportPath": "github.ibm.com/alchemy-containers/armada-slclient-lib/interfaces",
+			"Rev": "683a1654bf32f888fbf24efb0dfec12647b665e2"
+		},
+		{
+			"ImportPath": "github.ibm.com/alchemy-containers/armada-slclient-lib/datatypes",
+			"Rev": "683a1654bf32f888fbf24efb0dfec12647b665e2"
+		},
+		{
+			"ImportPath": "github.ibm.com/alchemy-containers/armada-slclient-lib/client",
+			"Rev": "683a1654bf32f888fbf24efb0dfec12647b665e2"
 		}
 	]
 }
