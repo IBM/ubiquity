@@ -10,7 +10,7 @@ import (
 	"github.ibm.com/almaden-containers/ubiquity/utils"
 )
 
-//go:generate counterfeiter -o ../fakes/fake_SpectrumDataModel.go . SpectrumDataModel
+//go:generate counterfeiter -o ../../fakes/fake_SpectrumDataModel.go . SpectrumDataModel
 type SpectrumDataModel interface {
 	CreateVolumeTable() error
 	SetClusterId(string)

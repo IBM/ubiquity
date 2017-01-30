@@ -48,8 +48,8 @@ func NewSpectrumLocalClient(logger *log.Logger, config model.SpectrumConfig, dbC
 	return newSpectrumLocalClient(logger, config, dbClient, fileLock)
 }
 
-func NewSpectrumLocalClientWithConnectors(logger *log.Logger, connector connectors.SpectrumScaleConnector, dbClient utils.DatabaseClient, fileLock utils.FileLock, spectrumExecutor utils.Executor, config model.SpectrumConfig) (model.StorageClient, error) {
-	return &spectrumLocalClient{logger: logger, connector: connector, dataModel: NewSpectrumDataModel(logger, dbClient), executor: spectrumExecutor, config: config, fileLock: fileLock}, nil
+func NewSpectrumLocalClientWithConnectors(logger *log.Logger, connector connectors.SpectrumScaleConnector, fileLock utils.FileLock, spectrumExecutor utils.Executor, config model.SpectrumConfig, datamodel SpectrumDataModel) (model.StorageClient, error) {
+	return &spectrumLocalClient{logger: logger, connector: connector, dataModel: datamodel, executor: spectrumExecutor, config: config, fileLock: fileLock}, nil
 }
 
 func newSpectrumLocalClient(logger *log.Logger, config model.SpectrumConfig, dbClient utils.DatabaseClient, fileLock utils.FileLock) (*spectrumLocalClient, error) {
