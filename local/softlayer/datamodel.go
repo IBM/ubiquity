@@ -15,7 +15,6 @@ type SoftlayerDataModel interface {
 	CreateVolumeTable() error
 	DeleteVolume(name string) error
 	InsertFileshare(fileshareID int, volumeName string, mountPath string, opts map[string]interface{}) error
-	UpdateVolumeMountpoint(name, mountpoint string) error
 	GetVolume(name string) (Volume, bool, error)
 	GetVolumeForMountPoint(mountpoint string) (string, error)
 	ListVolumes() ([]Volume, error)
@@ -52,8 +51,6 @@ func (d *softlayerDataModel) CreateVolumeTable() error {
 	     Id       INTEGER PRIMARY KEY AUTOINCREMENT,
 	     Name     TEXT NOT NULL,
 	     FileshareID    TEXT NOT NULL,
-             Directory      TEXT,
-             MountPoint     TEXT,
              AdditionalData TEXT
          );
 	`
@@ -107,8 +104,8 @@ func (d *softlayerDataModel) insertVolume(volume Volume) error {
 	defer d.log.Println("SoftlayerDataModel: insertVolume end")
 
 	insert_volume_stmt := `
-	INSERT INTO SLVolumes(Name, Type, ClusterId, Filesystem, Fileset, Directory, MountPoint, AdditionalData)
-	values(?,?,?,?,?,?,?,?);
+	INSERT INTO SLVolumes(Name, FileshareID, AdditionalData)
+	values(?,?,?);
 	`
 
 	stmt, err := d.databaseClient.GetHandle().Prepare(insert_volume_stmt)
@@ -125,33 +122,6 @@ func (d *softlayerDataModel) insertVolume(volume Volume) error {
 
 	if err != nil {
 		return fmt.Errorf("Failed to Insert Volume %s : %s", volume.Name, err.Error())
-	}
-
-	return nil
-}
-
-func (d *softlayerDataModel) UpdateVolumeMountpoint(name, mountpoint string) error {
-	d.log.Println("SoftlayerDataModel: UpdateVolumeMountpoint start")
-	defer d.log.Println("SoftlayerDataModel: UpdateVolumeMountpoint end")
-
-	update_volume_stmt := `
-	UPDATE SLVolumes
-	SET MountPoint = ?
-	WHERE Name = ?
-	`
-
-	stmt, err := d.databaseClient.GetHandle().Prepare(update_volume_stmt)
-
-	if err != nil {
-		return fmt.Errorf("Failed to create UpdateVolume Stmt for %s: %s", name, err.Error())
-	}
-
-	defer stmt.Close()
-
-	_, err = stmt.Exec(mountpoint, name)
-
-	if err != nil {
-		return fmt.Errorf("Failed to Update Volume %s : %s", name, err.Error())
 	}
 
 	return nil

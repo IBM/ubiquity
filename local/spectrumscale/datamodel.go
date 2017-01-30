@@ -77,7 +77,6 @@ func (d *spectrumDataModel) CreateVolumeTable() error {
              Filesystem     TEXT NOT NULL,
              Fileset        TEXT NOT NULL,
              Directory      TEXT,
-             MountPoint     TEXT,
              AdditionalData TEXT
          );
 	`
@@ -90,38 +89,6 @@ func (d *spectrumDataModel) CreateVolumeTable() error {
 
 	return nil
 }
-
-/*
-func (d *spectrumDataModel) VolumeExists(name string) (bool, error) {
-	d.log.Println("SpectrumDataModel: VolumeExists start")
-	defer d.log.Println("SpectrumDataModel: VolumeExists end")
-
-	volume_exists_stmt := `
-	SELECT EXISTS ( SELECT Name FROM Volumes WHERE Name = ? )
-	`
-
-	stmt, err := d.databaseClient.GetHandle().Prepare(volume_exists_stmt)
-
-	if err != nil {
-		return false, fmt.Errorf("Failed to create VolumeExists Stmt for %s: %s", name, err.Error())
-	}
-
-	defer stmt.Close()
-
-	var exists int
-	err = stmt.QueryRow(name).Scan(&exists)
-
-	if err != nil {
-		return false, fmt.Errorf("Failed to query VolumeExists stmt for %s: %s", name, err.Error())
-	}
-
-	if exists == 1 {
-		return true, nil
-	}
-
-	return false, nil
-}
-*/
 
 func (d *spectrumDataModel) DeleteVolume(name string) error {
 	d.log.Println("SpectrumDataModel: DeleteVolume start")
