@@ -120,7 +120,7 @@ var _ = Describe("local-client", func() {
 			Expect(err).To(HaveOccurred())
 			Expect(fakeLock.LockCallCount()).To(Equal(2))
 			Expect(fakeLock.UnlockCallCount()).To(Equal(1))
-			Expect(fakeSoftlayerDataModel.VolumeExistsCallCount()).To(Equal(0))
+			Expect(fakeSoftlayerDataModel.GetVolumeCallCount()).To(Equal(0))
 
 		})
 
@@ -132,33 +132,33 @@ var _ = Describe("local-client", func() {
 			Expect(err).To(HaveOccurred())
 			Expect(fakeLock.LockCallCount()).To(Equal(2))
 			Expect(fakeLock.UnlockCallCount()).To(Equal(2))
-			Expect(fakeSoftlayerDataModel.VolumeExistsCallCount()).To(Equal(1))
+			Expect(fakeSoftlayerDataModel.GetVolumeCallCount()).To(Equal(1))
 
 		})
 
 		It("should fail when dbClient volumeExists errors", func() {
 			fakeLock.LockReturns(nil)
 			fakeLock.UnlockReturns(nil)
-			fakeSoftlayerDataModel.VolumeExistsReturns(false, fmt.Errorf("error checking if volume exists"))
+			fakeSoftlayerDataModel.GetVolumeReturns(softlayer.Volume{}, false, fmt.Errorf("error checking if volume exists"))
 			err = client.CreateVolume("fake-volume", opts)
 			Expect(err).To(HaveOccurred())
 			Expect(err.Error()).To(Equal("error checking if volume exists"))
 			Expect(fakeLock.LockCallCount()).To(Equal(2))
 			Expect(fakeLock.UnlockCallCount()).To(Equal(2))
-			Expect(fakeSoftlayerDataModel.VolumeExistsCallCount()).To(Equal(1))
+			Expect(fakeSoftlayerDataModel.GetVolumeCallCount()).To(Equal(1))
 			Expect(fakeSoftlayerStorageService.CreateStorageCallCount()).To(Equal(0))
 		})
 
 		It("should fail when dbClient volumeExists returns true", func() {
 			fakeLock.LockReturns(nil)
 			fakeLock.UnlockReturns(nil)
-			fakeSoftlayerDataModel.VolumeExistsReturns(true, nil)
+			fakeSoftlayerDataModel.GetVolumeReturns(softlayer.Volume{}, true, nil)
 			err = client.CreateVolume("fake-volume", opts)
 			Expect(err).To(HaveOccurred())
 			Expect(err.Error()).To(Equal("Volume already exists"))
 			Expect(fakeLock.LockCallCount()).To(Equal(2))
 			Expect(fakeLock.UnlockCallCount()).To(Equal(2))
-			Expect(fakeSoftlayerDataModel.VolumeExistsCallCount()).To(Equal(1))
+			Expect(fakeSoftlayerDataModel.GetVolumeCallCount()).To(Equal(1))
 			Expect(fakeSoftlayerStorageService.CreateStorageCallCount()).To(Equal(0))
 		})
 
@@ -206,7 +206,7 @@ var _ = Describe("local-client", func() {
 
 		It("should fail when the dbClient fails to check the volume", func() {
 			fakeLock.LockReturns(nil)
-			fakeSoftlayerDataModel.GetVolumeReturns(softlayer.Volume{}, fmt.Errorf("failed getting volume"))
+			fakeSoftlayerDataModel.GetVolumeReturns(softlayer.Volume{}, false, fmt.Errorf("failed getting volume"))
 			err = client.RemoveVolume("fake-volume", false)
 			Expect(err).To(HaveOccurred())
 			Expect(err.Error()).To(Equal("failed getting volume"))
@@ -214,9 +214,8 @@ var _ = Describe("local-client", func() {
 
 		It("should fail when slClient fails to removeAccess to fileshare", func() {
 			fakeLock.LockReturns(nil)
-			fakeSoftlayerDataModel.VolumeExistsReturns(true, nil)
 			volume := softlayer.Volume{Name: "fake-volume"}
-			fakeSoftlayerDataModel.GetVolumeReturns(volume, nil)
+			fakeSoftlayerDataModel.GetVolumeReturns(volume, true, nil)
 			fakeSoftlayerStorageService.RemoveAccessFromAllSubnetsReturns(false, fmt.Errorf("error in removeAccess"))
 			err = client.RemoveVolume("fake-volume", false)
 			Expect(err).To(HaveOccurred())
@@ -228,9 +227,8 @@ var _ = Describe("local-client", func() {
 
 		It("should fail when dbClient fails to delete fileshare", func() {
 			fakeLock.LockReturns(nil)
-			fakeSoftlayerDataModel.VolumeExistsReturns(true, nil)
 			volume := softlayer.Volume{Name: "fake-volume"}
-			fakeSoftlayerDataModel.GetVolumeReturns(volume, nil)
+			fakeSoftlayerDataModel.GetVolumeReturns(volume, true, nil)
 			fakeSoftlayerStorageService.RemoveAccessFromAllSubnetsReturns(true, nil)
 			fakeSoftlayerDataModel.DeleteVolumeReturns(fmt.Errorf("error deleting volume"))
 			err = client.RemoveVolume("fake-volume", false)
@@ -243,9 +241,8 @@ var _ = Describe("local-client", func() {
 
 		It("should fail when forceDelete is true and slclient fails to delete fileshare", func() {
 			fakeLock.LockReturns(nil)
-			fakeSoftlayerDataModel.VolumeExistsReturns(true, nil)
 			volume := softlayer.Volume{Name: "fake-volume"}
-			fakeSoftlayerDataModel.GetVolumeReturns(volume, nil)
+			fakeSoftlayerDataModel.GetVolumeReturns(volume, true, nil)
 			fakeSoftlayerStorageService.RemoveAccessFromAllSubnetsReturns(true, nil)
 			fakeSoftlayerDataModel.DeleteVolumeReturns(nil)
 			fakeSoftlayerStorageService.DeleteStorageReturns(fmt.Errorf("error deleting fileshare"))
@@ -259,9 +256,8 @@ var _ = Describe("local-client", func() {
 
 		It("should succeed when forceDelete is true", func() {
 			fakeLock.LockReturns(nil)
-			fakeSoftlayerDataModel.VolumeExistsReturns(true, nil)
 			volume := softlayer.Volume{Name: "fake-volume"}
-			fakeSoftlayerDataModel.GetVolumeReturns(volume, nil)
+			fakeSoftlayerDataModel.GetVolumeReturns(volume, true, nil)
 			fakeSoftlayerStorageService.RemoveAccessFromAllSubnetsReturns(true, nil)
 			fakeSoftlayerDataModel.DeleteVolumeReturns(nil)
 			fakeSoftlayerStorageService.DeleteStorageReturns(nil)
@@ -274,9 +270,8 @@ var _ = Describe("local-client", func() {
 
 		It("should succeed when type is fileshare and forceDelete is false", func() {
 			fakeLock.LockReturns(nil)
-			fakeSoftlayerDataModel.VolumeExistsReturns(true, nil)
 			volume := softlayer.Volume{Name: "fake-volume"}
-			fakeSoftlayerDataModel.GetVolumeReturns(volume, nil)
+			fakeSoftlayerDataModel.GetVolumeReturns(volume, true, nil)
 			fakeSoftlayerStorageService.RemoveAccessFromAllSubnetsReturns(true, nil)
 			fakeSoftlayerDataModel.DeleteVolumeReturns(nil)
 			fakeSoftlayerStorageService.DeleteStorageReturns(nil)
@@ -335,53 +330,38 @@ var _ = Describe("local-client", func() {
 			Expect(err).To(HaveOccurred())
 			Expect(err.Error()).To(Equal("error aquiring the lock"))
 			Expect(fakeLock.LockCallCount()).To(Equal(1))
-			Expect(fakeSoftlayerDataModel.VolumeExistsCallCount()).To(Equal(0))
+			Expect(fakeSoftlayerDataModel.GetVolumeCallCount()).To(Equal(0))
 		})
 
 		It("should fail when dbClient fails to check if the volume exists", func() {
 			fakeLock.LockReturns(nil)
-			fakeSoftlayerDataModel.VolumeExistsReturns(false, fmt.Errorf("error checking volume"))
+			fakeSoftlayerDataModel.GetVolumeReturns(softlayer.Volume{}, false, fmt.Errorf("error checking volume"))
 			_, _, err = client.GetVolume("fake-volume")
 			Expect(err).To(HaveOccurred())
 			Expect(err.Error()).To(Equal("error checking volume"))
 			Expect(fakeLock.LockCallCount()).To(Equal(1))
-			Expect(fakeSoftlayerDataModel.VolumeExistsCallCount()).To(Equal(1))
+			Expect(fakeSoftlayerDataModel.GetVolumeCallCount()).To(Equal(1))
 		})
 
 		It("should fail when volume exists and dbClient fails to getVolume", func() {
 			fakeLock.LockReturns(nil)
-			fakeSoftlayerDataModel.VolumeExistsReturns(true, nil)
-			fakeSoftlayerDataModel.GetVolumeReturns(softlayer.Volume{}, fmt.Errorf("error getting volume"))
+			fakeSoftlayerDataModel.GetVolumeReturns(softlayer.Volume{}, true, fmt.Errorf("error getting volume"))
 			_, _, err = client.GetVolume("fake-volume")
 			Expect(err).To(HaveOccurred())
 			Expect(err.Error()).To(Equal("error getting volume"))
 			Expect(fakeLock.LockCallCount()).To(Equal(1))
-			Expect(fakeSoftlayerDataModel.VolumeExistsCallCount()).To(Equal(1))
 			Expect(fakeSoftlayerDataModel.GetVolumeCallCount()).To(Equal(1))
-		})
-
-		It("should fail when volume does not exist", func() {
-			fakeLock.LockReturns(nil)
-			fakeSoftlayerDataModel.VolumeExistsReturns(false, nil)
-			_, _, err = client.GetVolume("fake-volume")
-			Expect(err).To(HaveOccurred())
-			Expect(err.Error()).To(Equal("Volume not found"))
-			Expect(fakeLock.LockCallCount()).To(Equal(1))
-			Expect(fakeSoftlayerDataModel.VolumeExistsCallCount()).To(Equal(1))
 		})
 
 		It("should succeed  when volume exists", func() {
 			fakeLock.LockReturns(nil)
-			fakeSoftlayerDataModel.VolumeExistsReturns(true, nil)
-
 			volume := softlayer.Volume{Name: "fake-volume", Mountpoint: "fake-mountpoint"}
-			fakeSoftlayerDataModel.GetVolumeReturns(volume, nil)
+			fakeSoftlayerDataModel.GetVolumeReturns(volume, true, nil)
 			vol, _, err := client.GetVolume("fake-volume")
 			Expect(err).ToNot(HaveOccurred())
 			Expect(vol.Name).To(Equal("fake-volume"))
 			Expect(vol.Mountpoint).To(Equal("fake-mountpoint"))
 			Expect(fakeLock.LockCallCount()).To(Equal(1))
-			Expect(fakeSoftlayerDataModel.VolumeExistsCallCount()).To(Equal(1))
 			Expect(fakeSoftlayerDataModel.GetVolumeCallCount()).To(Equal(1))
 		})
 
@@ -390,7 +370,7 @@ var _ = Describe("local-client", func() {
 	Context(".Attach", func() {
 
 		It("should fail when volume exists and dbClient fails to getVolume", func() {
-			fakeSoftlayerDataModel.GetVolumeReturns(softlayer.Volume{}, fmt.Errorf("error getting volume"))
+			fakeSoftlayerDataModel.GetVolumeReturns(softlayer.Volume{}, false, fmt.Errorf("error getting volume"))
 			mountpath, err := client.Attach("fake-volume")
 			Expect(err).To(HaveOccurred())
 			Expect(err.Error()).To(Equal("error getting volume"))
@@ -400,7 +380,7 @@ var _ = Describe("local-client", func() {
 
 		It("should fail when slClient fails to attach it", func() {
 			volume := softlayer.Volume{Name: "fake-volume", Id: -1}
-			fakeSoftlayerDataModel.GetVolumeReturns(volume, nil)
+			fakeSoftlayerDataModel.GetVolumeReturns(volume, true, nil)
 			fakeSoftlayerStorageService.AllowAccessFromAllSubnetsReturns(false, fmt.Errorf("failed to grant access"))
 			mountpath, err := client.Attach("fake-volume")
 			Expect(err).To(HaveOccurred())
@@ -412,7 +392,7 @@ var _ = Describe("local-client", func() {
 
 		It("should succeed when volume is valid", func() {
 			volume := softlayer.Volume{Name: "fake-volume", Id: -1, Mountpoint: "fake-mountpoint"}
-			fakeSoftlayerDataModel.GetVolumeReturns(volume, nil)
+			fakeSoftlayerDataModel.GetVolumeReturns(volume, true, nil)
 			mountpath, err := client.Attach("fake-volume")
 			Expect(err).ToNot(HaveOccurred())
 			Expect(mountpath).To(Equal("fake-mountpoint"))
@@ -424,7 +404,7 @@ var _ = Describe("local-client", func() {
 	Context(".Detach", func() {
 
 		It("should fail when volume exists and dbClient fails to getVolume", func() {
-			fakeSoftlayerDataModel.GetVolumeReturns(softlayer.Volume{}, fmt.Errorf("error getting volume"))
+			fakeSoftlayerDataModel.GetVolumeReturns(softlayer.Volume{}, false, fmt.Errorf("error getting volume"))
 			err = client.Detach("fake-volume")
 			Expect(err).To(HaveOccurred())
 			Expect(err.Error()).To(Equal("error getting volume"))
@@ -433,7 +413,7 @@ var _ = Describe("local-client", func() {
 
 		It("should succeed when volume exists and is detachable", func() {
 			volume := softlayer.Volume{Name: "fake-volume", Mountpoint: "fake-mountpoint"}
-			fakeSoftlayerDataModel.GetVolumeReturns(volume, nil)
+			fakeSoftlayerDataModel.GetVolumeReturns(volume, true, nil)
 			err := client.Detach("fake-volume")
 			Expect(err).ToNot(HaveOccurred())
 			Expect(fakeSoftlayerDataModel.GetVolumeCallCount()).To(Equal(1))

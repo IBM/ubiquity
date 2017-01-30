@@ -13,11 +13,10 @@ import (
 //go:generate counterfeiter -o ../../fakes/fake_SoftlayerDataModel.go . SoftlayerDataModel
 type SoftlayerDataModel interface {
 	CreateVolumeTable() error
-	VolumeExists(name string) (bool, error)
 	DeleteVolume(name string) error
 	InsertFileshare(fileshareID int, volumeName string, mountPath string, opts map[string]interface{}) error
 	UpdateVolumeMountpoint(name, mountpoint string) error
-	GetVolume(name string) (Volume, error)
+	GetVolume(name string) (Volume, bool, error)
 	GetVolumeForMountPoint(mountpoint string) (string, error)
 	ListVolumes() ([]Volume, error)
 }
@@ -66,36 +65,6 @@ func (d *softlayerDataModel) CreateVolumeTable() error {
 	}
 
 	return nil
-}
-
-func (d *softlayerDataModel) VolumeExists(name string) (bool, error) {
-	d.log.Println("SoftlayerDataModel: VolumeExists start")
-	defer d.log.Println("SoftlayerDataModel: VolumeExists end")
-
-	volume_exists_stmt := `
-	SELECT EXISTS ( SELECT Name FROM SLVolumes WHERE Name = ? )
-	`
-
-	stmt, err := d.databaseClient.GetHandle().Prepare(volume_exists_stmt)
-
-	if err != nil {
-		return false, fmt.Errorf("Failed to create VolumeExists Stmt for %s: %s", name, err.Error())
-	}
-
-	defer stmt.Close()
-
-	var exists int
-	err = stmt.QueryRow(name).Scan(&exists)
-
-	if err != nil {
-		return false, fmt.Errorf("Failed to query VolumeExists stmt for %s: %s", name, err.Error())
-	}
-
-	if exists == 1 {
-		return true, nil
-	}
-
-	return false, nil
 }
 
 func (d *softlayerDataModel) DeleteVolume(name string) error {
@@ -188,7 +157,7 @@ func (d *softlayerDataModel) UpdateVolumeMountpoint(name, mountpoint string) err
 	return nil
 }
 
-func (d *softlayerDataModel) GetVolume(name string) (Volume, error) {
+func (d *softlayerDataModel) GetVolume(name string) (Volume, bool, error) {
 	d.log.Println("SoftlayerDataModel: GetVolume start")
 	defer d.log.Println("SoftlayerDataModel: GetVolume end")
 
@@ -199,7 +168,7 @@ func (d *softlayerDataModel) GetVolume(name string) (Volume, error) {
 	stmt, err := d.databaseClient.GetHandle().Prepare(read_volume_stmt)
 
 	if err != nil {
-		return Volume{}, fmt.Errorf("Failed to create GetVolume Stmt for %s : %s", name, err.Error())
+		return Volume{}, false, fmt.Errorf("Failed to create GetVolume Stmt for %s : %s", name, err.Error())
 	}
 
 	defer stmt.Close()
@@ -210,14 +179,14 @@ func (d *softlayerDataModel) GetVolume(name string) (Volume, error) {
 	err = stmt.QueryRow(name).Scan(&volId, &volName, &fileshareID, &mountpoint, &addData)
 
 	if err != nil {
-		return Volume{}, fmt.Errorf("Failed to Get Volume for %s : %s", name, err.Error())
+		return Volume{}, false, fmt.Errorf("Failed to Get Volume for %s : %s", name, err.Error())
 	}
 
 	scannedVolume := Volume{Id: volId, Name: volName, FileshareID: fileshareID, Mountpoint: mountpoint}
 
 	setAdditionalData(addData, &scannedVolume)
 
-	return scannedVolume, nil
+	return scannedVolume, true, nil
 }
 
 func (d *softlayerDataModel) GetVolumeForMountPoint(mountpoint string) (string, error) {

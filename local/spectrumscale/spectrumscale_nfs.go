@@ -148,15 +148,24 @@ func (s *spectrumNfsLocalClient) exportNfs(name, clientCIDR string) error {
 	s.spectrumClient.logger.Printf("spectrumNfsLocalClient: ExportNfs start with name=%#v and clientCIDR=%#v\n", name, clientCIDR)
 	defer s.spectrumClient.logger.Printf("spectrumNfsLocalClient: ExportNfs end")
 
-	existingVolume, err := s.spectrumClient.dataModel.GetVolume(name)
+	existingVolume, exists, err := s.spectrumClient.dataModel.GetVolume(name)
 
 	if err != nil {
 		s.spectrumClient.logger.Printf("spectrumNfsLocalClient: DbClient.GetVolume returned error %#v\n", err.Error())
 		return err
 	}
+	if exists == false {
+		s.spectrumClient.logger.Printf("spectrumNfsLocalClient: volume %#s not found\n", err)
+		return err
+	}
 
 	spectrumCommand := "/usr/lpp/mmfs/bin/mmnfs"
-	args := []string{"export", "add", existingVolume.Mountpoint, "--client", fmt.Sprintf("%s(Access_Type=RW,Protocols=3:4,Squash=no_root_squash)", clientCIDR)}
+	volumeMountpoint, _, err := s.spectrumClient.getVolumeMountPoint(existingVolume)
+	if err != nil {
+		return err
+	}
+
+	args := []string{"export", "add", volumeMountpoint, "--client", fmt.Sprintf("%s(Access_Type=RW,Protocols=3:4,Squash=no_root_squash)", clientCIDR)}
 	cmd := exec.Command(spectrumCommand, args...)
 	output, err := cmd.Output()
 	if err != nil {
@@ -171,15 +180,24 @@ func (s *spectrumNfsLocalClient) unexportNfs(name string) error {
 	s.spectrumClient.logger.Printf("spectrumNfsLocalClient: UnexportNfs start with name=%s\n", name)
 	defer s.spectrumClient.logger.Printf("spectrumNfsLocalClient: ExportNfs end")
 
-	existingVolume, err := s.spectrumClient.dataModel.GetVolume(name)
+	existingVolume, exists, err := s.spectrumClient.dataModel.GetVolume(name)
 
 	if err != nil {
 		s.spectrumClient.logger.Printf("spectrumNfsLocalClient: error getting volume %#s \n", err)
 		return err
 	}
+	if exists == false {
+		s.spectrumClient.logger.Printf("spectrumNfsLocalClient: volume %#s not found\n", err)
+		return err
+	}
 
 	spectrumCommand := "/usr/lpp/mmfs/bin/mmnfs"
-	args := []string{"export", "remove", existingVolume.Mountpoint, "--force"}
+	volumeMountpoint, _, err := s.spectrumClient.getVolumeMountPoint(existingVolume)
+	if err != nil {
+		return err
+	}
+
+	args := []string{"export", "remove", volumeMountpoint, "--force"}
 	cmd := exec.Command(spectrumCommand, args...)
 	output, err := cmd.Output()
 	if err != nil {
@@ -188,9 +206,5 @@ func (s *spectrumNfsLocalClient) unexportNfs(name string) error {
 	}
 	s.spectrumClient.logger.Printf("spectrumNfsLocalClient: UnexportNfs output: %s\n", string(output))
 
-	if err = s.spectrumClient.dataModel.UpdateVolumeMountpoint(name, ""); err != nil {
-		s.spectrumClient.logger.Printf("spectrumNfsLocalClient: UnexportNfs: Could not update volume mountpoint: %s", err)
-		return err
-	}
 	return nil
 }

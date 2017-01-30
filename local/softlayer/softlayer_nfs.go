@@ -88,7 +88,7 @@ func (s *softlayerLocalClient) CreateVolume(name string, opts map[string]interfa
 		}
 	}()
 
-	volExists, err := s.dataModel.VolumeExists(name)
+	_, volExists, err := s.dataModel.GetVolume(name)
 
 	if err != nil {
 		s.logger.Println(err.Error())
@@ -154,9 +154,13 @@ func (s *softlayerLocalClient) RemoveVolume(name string, forceDelete bool) (err 
 		}
 	}()
 
-	existingVolume, err := s.dataModel.GetVolume(name)
+	existingVolume, exists, err := s.dataModel.GetVolume(name)
 
 	if err != nil {
+		s.logger.Println(err.Error())
+		return err
+	}
+	if exists == false {
 		s.logger.Println(err.Error())
 		return err
 	}
@@ -201,7 +205,7 @@ func (s *softlayerLocalClient) GetVolume(name string) (volumeMetadata model.Volu
 		}
 	}()
 
-	volExists, err := s.dataModel.VolumeExists(name)
+	existingVolume, volExists, err := s.dataModel.GetVolume(name)
 
 	if err != nil {
 		s.logger.Println(err.Error())
@@ -209,13 +213,6 @@ func (s *softlayerLocalClient) GetVolume(name string) (volumeMetadata model.Volu
 	}
 
 	if volExists {
-
-		existingVolume, err := s.dataModel.GetVolume(name)
-
-		if err != nil {
-			s.logger.Println(err.Error())
-			return model.VolumeMetadata{}, nil, err
-		}
 
 		volumeMetadata = model.VolumeMetadata{Name: existingVolume.Name, Mountpoint: existingVolume.Mountpoint}
 		volumeConfigDetails := existingVolume.AdditionalData
@@ -234,9 +231,13 @@ func (s *softlayerLocalClient) Attach(name string) (string, error) {
 	s.logger.Println("softlayerLocalClient: attach start")
 	defer s.logger.Println("softlayerLocalClient: attach end")
 
-	existingVolume, err := s.dataModel.GetVolume(name)
+	existingVolume, exists, err := s.dataModel.GetVolume(name)
 
 	if err != nil {
+		s.logger.Println(err.Error())
+		return "", err
+	}
+	if exists == false {
 		s.logger.Println(err.Error())
 		return "", err
 	}
@@ -254,9 +255,13 @@ func (s *softlayerLocalClient) Attach(name string) (string, error) {
 func (s *softlayerLocalClient) Detach(name string) (err error) {
 	s.logger.Println("softlayerLocalClient: detach start")
 	defer s.logger.Println("softlayerLocalClient: detach end")
-	existingVolume, err := s.dataModel.GetVolume(name)
+	existingVolume, exists, err := s.dataModel.GetVolume(name)
 
 	if err != nil {
+		s.logger.Println(err.Error())
+		return err
+	}
+	if exists == false {
 		s.logger.Println(err.Error())
 		return err
 	}
