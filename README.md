@@ -84,7 +84,7 @@ The following snippet shows a sample configuration file:
 
 ```toml
 port = 9999       # The TCP port to listen on
-logPath = "/tmp"  # The Ubiquity service will write logs to file "ubiquity.log" in this path.
+logPath = "/var/log/ubiquity"  # The Ubiquity service will write logs to file "ubiquity.log" in this path.  This path must already exist.
 
 [SpectrumConfig]             # If this section is specified, the "spectrum-scale" backend will be enabled.
 defaultFilesystem = "gold"   # Default name of Spectrum Scale file system to use if user does not specify one during creation of a volume.  This file system must already exist.
