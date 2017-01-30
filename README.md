@@ -129,7 +129,7 @@ Currently there are 2 different ways for Ubiquity to manage volumes in IBM Spect
  * Support OpenStack Manila storage back-end
  * Add explicit instrucitons on use of certificates to secure communication between plugins and Ubiquity service
  * API for updating volumes
- * Additional options to expore more features of Spectrum Scale
+ * Additional options to expore more features of Spectrum Scale, including use of the Spectrum Scale REST API.
  * Containerization of Ubiquity for Docker and Kubernetes
  * Kubernetes dynamic provisioning support
  * Support for additional IBM storage systems
