@@ -88,15 +88,15 @@ logPath = "/tmp"  # The Ubiquity service will write logs to file "ubiquity.log" 
 
 [SpectrumConfig]             # If this section is specified, the "spectrum-scale" backend will be enabled.
 defaultFilesystem = "gold"   # Default name of Spectrum Scale file system to use if user does not specify one during creation of a volume.  This file system must already exist.
-configPath = "/gpfs/gold/config"    # Path in an existing Spectrum Scale filesystem where Ubiquity can create/store metadata DB.
+configPath = "/gpfs/gold/config"    # Path in an existing filesystem where Ubiquity can create/store volume DB.
 nfsServerAddr = "CESClusterHost"  # IP/hostname of Spectrum Scale CES NFS cluster.  This is the hostname that NFS clients will use to mount NFS volumes. (required for creation of NFS accessible volumes)
 
 ```
 
-Please make sure that the configPath is a valid directory under a gpfs and is mounted. Ubiquity stores its metadata DB in this location.
+Note that the file system chosen for where to store the DB that tracks volumes is important.  Ubiquity uses a sqllite db, and so can support any storage location that sqllite supports.  This can be a local file system such as Ext4, NFS (if exclusive access is ensured from a single host), or a parallel file system such as Spectrum Scale.  In our example above, we are storing the DB in Spectrum Scale to both allow access from multiple hosts (Ubiquity will ensure consistency across hosts to the parallel file system) as well as provide availability and durability of the data.
 
 ### Next Steps
-Install appropriate storage-specific plugin ([docker](https://github.ibm.com/almaden-containers/ubiquity-docker-plugin), [kubernetes](https://github.ibm.com/almaden-containers/ubiquity-flexvolume))
+To use Ubiquity, please install appropriate storage-specific plugin ([docker](https://github.ibm.com/almaden-containers/ubiquity-docker-plugin), [kubernetes](https://github.ibm.com/almaden-containers/ubiquity-flexvolume))
 
 ## Additional Considerations
 ### High-Availability
