@@ -25,13 +25,14 @@ This deployment shows a Kubernetes pod or cluster as well as a Docker Swarm clus
 This is identical to the previous deployment example except that the Kubernetes or Docker Swarm hosts are using NFS to access their volumes.  Note that a typical Spectrum Scale deployment would have several CES NFS servers (protocol servers) and the Ubiquity service could be installed on one of those servers or on a separate management server (such as the node collecting Zimon stats or where the GUI service is installed).
 
 ## Installation
-### Prerequisites
-  * A deployed storage service that will be used by the Docker containers. Currently Ubiquity supports Spectrum Scale (POSIX or CES NFS) and OpenStack Manila.
+### Build Prerequisites
   * Install [golang](https://golang.org/) (>=1.6)
-  * Install git
+  * Install git (if accessing source code from github)
   * Install gcc
 
-Note that if Ubiquity is run on multiple nodes, then these steps must be completed on each node.
+### Deployment Prerequisites
+Once the Ubiquity binary is built, then the only requirements on the node where it is deployed is that the Ubiquity service has access to a deployed storage service that will be used by the containers.  The type of access Ubiquity needs to the storage service depends on the storage backend that is being used.  See 'Available Storage Systems' for more details.
+  
 
 ### Configuration
 
@@ -117,6 +118,11 @@ The current plugin supports the following protocols:
  * CES NFS (Scalable and Clustered NFS Exports)
 
 POSIX and NFS Volumes are be created separately by choosing the 'spectrum-scale' volume driver or the 'spectrum-scale-nfs' volume driver.  Note that POSIX volumes are not accessible via NFS, but, NFS volumes are accessible via POSIX.  To make a POSIX volume accessible via NFS, simply create the volume using the 'spectrum-scale-nfs' driver using the same path or fileset name. 
+
+### Ubiquity Access to IBM Spectrum Scale
+Currently there are 2 different ways for Ubiquity to manage volumes in IBM Spectrum Scale.
+ * Direct access - In this setup, Ubiquity will directly call the IBM Spectrum Scale CLI (e.g., 'mm' commands).  This means that Ubiquity must be deployed on a node that can directly call the CLI.
+ * ssh - In this setup, Ubiquity uses ssh to call the IBM Spectrum Scale CLI that is deployed on another node.  This avoids the need to run Ubiquity on a node that is part of the IBM Spectrum Scale cluster.  For example, this would also allow Ubiquity to run in a container.
 
 ## Roadmap
 
