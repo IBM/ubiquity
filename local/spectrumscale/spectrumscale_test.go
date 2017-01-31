@@ -23,7 +23,7 @@ var _ = Describe("local-client", func() {
 		fakeSpectrumDataModel      *fakes.FakeSpectrumDataModel
 		fakeLock                   *fakes.FakeFileLock
 		fakeExec                   *fakes.FakeExecutor
-		fakeConfig                 model.SpectrumConfig
+		fakeConfig                 model.SpectrumScaleConfig
 		err                        error
 	)
 	BeforeEach(func() {
@@ -33,7 +33,7 @@ var _ = Describe("local-client", func() {
 		fakeLock = new(fakes.FakeFileLock)
 		fakeExec = new(fakes.FakeExecutor)
 		fakeSpectrumDataModel = new(fakes.FakeSpectrumDataModel)
-		fakeConfig = model.SpectrumConfig{}
+		fakeConfig = model.SpectrumScaleConfig{}
 		client, err = spectrumscale.NewSpectrumLocalClientWithConnectors(logger, fakeSpectrumScaleConnector, fakeLock, fakeExec, fakeConfig, fakeSpectrumDataModel)
 		Expect(err).ToNot(HaveOccurred())
 

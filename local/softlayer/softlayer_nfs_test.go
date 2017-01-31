@@ -23,7 +23,7 @@ var _ = Describe("local-client", func() {
 		fakeSoftlayerDataModel      *fakes.FakeSoftlayerDataModel
 		fakeLock                    *fakes.FakeFileLock
 		fakeExec                    *fakes.FakeExecutor
-		fakeConfig                  model.SpectrumConfig
+		fakeConfig                  model.SpectrumScaleConfig
 		fakeSoftlayerStorageService *fakes.FakeSoftlayer_Storage_Service
 		err                         error
 	)
@@ -34,7 +34,7 @@ var _ = Describe("local-client", func() {
 		fakeExec = new(fakes.FakeExecutor)
 		fakeSoftlayerDataModel = new(fakes.FakeSoftlayerDataModel)
 		fakeSoftlayerStorageService = new(fakes.FakeSoftlayer_Storage_Service)
-		fakeConfig = model.SpectrumConfig{}
+		fakeConfig = model.SpectrumScaleConfig{}
 		client, err = softlayer.NewSoftlayerLocalClientWithDataModelAndSLService(logger, fakeSoftlayerDataModel, fakeLock, fakeSoftlayerStorageService)
 		Expect(err).ToNot(HaveOccurred())
 

@@ -10,13 +10,13 @@ import (
 type StorageClientFactory func(logger *log.Logger, backendName string, storageApiURL string, params map[string]interface{}) (StorageClient, error)
 
 type UbiquityServerConfig struct {
-	Port           int
-	LogPath        string
-	SpectrumConfig SpectrumConfig
-	BrokerConfig   BrokerConfig
+	Port                int
+	LogPath             string
+	SpectrumScaleConfig SpectrumScaleConfig
+	BrokerConfig        BrokerConfig
 }
 
-type SpectrumConfig struct {
+type SpectrumScaleConfig struct {
 	DefaultFilesystem string
 	ConfigPath        string
 	Connector         string

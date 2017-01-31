@@ -30,7 +30,7 @@ const (
 	SL_LOCATION         = "sl_location"
 )
 
-func NewSoftlayerLocalClient(logger *log.Logger, config model.SpectrumConfig, dbClient utils.DatabaseClient, fileLock utils.FileLock) (model.StorageClient, error) {
+func NewSoftlayerLocalClient(logger *log.Logger, config model.SpectrumScaleConfig, dbClient utils.DatabaseClient, fileLock utils.FileLock) (model.StorageClient, error) {
 
 	//Get the service client
 	// has to look for access details in config before preoceeding

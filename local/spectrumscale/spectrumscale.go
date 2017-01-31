@@ -22,7 +22,7 @@ type spectrumLocalClient struct {
 	executor    utils.Executor
 	isActivated bool
 	isMounted   bool
-	config      model.SpectrumConfig
+	config      model.SpectrumScaleConfig
 }
 
 const (
@@ -38,7 +38,7 @@ const (
 	LTWT_VOL_TYPE string = "lightweight"
 )
 
-func NewSpectrumLocalClient(logger *log.Logger, config model.SpectrumConfig, dbClient utils.DatabaseClient, fileLock utils.FileLock) (model.StorageClient, error) {
+func NewSpectrumLocalClient(logger *log.Logger, config model.SpectrumScaleConfig, dbClient utils.DatabaseClient, fileLock utils.FileLock) (model.StorageClient, error) {
 	if config.ConfigPath == "" {
 		return nil, fmt.Errorf("spectrumLocalClient: init: missing required parameter 'spectrumConfigPath'")
 	}
@@ -48,11 +48,11 @@ func NewSpectrumLocalClient(logger *log.Logger, config model.SpectrumConfig, dbC
 	return newSpectrumLocalClient(logger, config, dbClient, fileLock)
 }
 
-func NewSpectrumLocalClientWithConnectors(logger *log.Logger, connector connectors.SpectrumScaleConnector, fileLock utils.FileLock, spectrumExecutor utils.Executor, config model.SpectrumConfig, datamodel SpectrumDataModel) (model.StorageClient, error) {
+func NewSpectrumLocalClientWithConnectors(logger *log.Logger, connector connectors.SpectrumScaleConnector, fileLock utils.FileLock, spectrumExecutor utils.Executor, config model.SpectrumScaleConfig, datamodel SpectrumDataModel) (model.StorageClient, error) {
 	return &spectrumLocalClient{logger: logger, connector: connector, dataModel: datamodel, executor: spectrumExecutor, config: config, fileLock: fileLock}, nil
 }
 
-func newSpectrumLocalClient(logger *log.Logger, config model.SpectrumConfig, dbClient utils.DatabaseClient, fileLock utils.FileLock) (*spectrumLocalClient, error) {
+func newSpectrumLocalClient(logger *log.Logger, config model.SpectrumScaleConfig, dbClient utils.DatabaseClient, fileLock utils.FileLock) (*spectrumLocalClient, error) {
 	logger.Println("spectrumLocalClient: init start")
 	defer logger.Println("spectrumLocalClient: init end")
 

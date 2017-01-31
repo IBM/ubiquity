@@ -180,7 +180,7 @@ var _ = Describe("ibm-storage-broker Broker", func() {
 				successfulServiceInstanceCreate(testLogger, fakeBackend, instance, controller, serviceGuid)
 			})
 			It("should be able bind service instance", func() {
-				config := model.SpectrumConfig{}
+				config := model.SpectrumScaleConfig{}
 				//model.SpectrumConfig
 				fakeBackend.GetVolumeReturns(&model.VolumeMetadata{Mountpoint: "/gpfs/fileset1"}, &config, nil)
 				bindingResponse, err := controller.BindServiceInstance(testLogger, serviceGuid, "some-binding-id", bindingInfo)
@@ -190,14 +190,14 @@ var _ = Describe("ibm-storage-broker Broker", func() {
 			})
 			Context("should fail", func() {
 				It("when unable to find the backing share", func() {
-					config := model.SpectrumConfig{}
+					config := model.SpectrumScaleConfig{}
 					fakeBackend.GetVolumeReturns(&model.VolumeMetadata{}, &config, fmt.Errorf("Cannot find fileset, internal error"))
 					_, err := controller.BindServiceInstance(testLogger, serviceGuid, "some-binding-id", bindingInfo)
 					Expect(err).To(HaveOccurred())
 					Expect(err.Error()).To(Equal("Cannot find fileset, internal error"))
 				})
 				It("when updating internal bookkeeping fails", func() {
-					config := model.SpectrumConfig{}
+					config := model.SpectrumScaleConfig{}
 					fakeBackend.GetVolumeReturns(&model.VolumeMetadata{Mountpoint: "/gpfs/fileset1"}, &config, nil)
 					controller = core.NewController(storageBackends, "/non-existent-path")
 					_, err := controller.BindServiceInstance(testLogger, serviceGuid, "some-binding-id", bindingInfo)
@@ -218,7 +218,7 @@ var _ = Describe("ibm-storage-broker Broker", func() {
 				bindingId = "some-binding-id"
 			})
 			It("should confirm existence of service instance", func() {
-				config := model.SpectrumConfig{}
+				config := model.SpectrumScaleConfig{}
 				fakeBackend.GetVolumeReturns(&model.VolumeMetadata{Mountpoint: "/gpfs/fileset1"}, &config, nil)
 				binding := model.ServiceBinding{}
 				successfulServiceInstanceCreate(testLogger, fakeBackend, instance, controller, serviceGuid)
@@ -245,7 +245,7 @@ var _ = Describe("ibm-storage-broker Broker", func() {
 			})
 			It("should return true if properties match", func() {
 				binding := model.ServiceBinding{}
-				config := model.SpectrumConfig{}
+				config := model.SpectrumScaleConfig{}
 				fakeBackend.GetVolumeReturns(&model.VolumeMetadata{Mountpoint: "/gpfs/fileset1"}, &config, nil)
 				successfulServiceInstanceCreate(testLogger, fakeBackend, instance, controller, serviceGuid)
 				successfulServiceBindingCreate(testLogger, fakeBackend, binding, controller, serviceGuid, bindingId)
@@ -255,7 +255,7 @@ var _ = Describe("ibm-storage-broker Broker", func() {
 			})
 			It("should return false if properties do not match", func() {
 				binding := model.ServiceBinding{}
-				config := model.SpectrumConfig{}
+				config := model.SpectrumScaleConfig{}
 				fakeBackend.GetVolumeReturns(&model.VolumeMetadata{Mountpoint: "/gpfs/fileset1"}, &config, nil)
 				successfulServiceInstanceCreate(testLogger, fakeBackend, instance, controller, serviceGuid)
 				successfulServiceBindingCreate(testLogger, fakeBackend, binding, controller, serviceGuid, bindingId)

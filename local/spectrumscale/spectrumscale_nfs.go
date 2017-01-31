@@ -11,10 +11,10 @@ import (
 
 type spectrumNfsLocalClient struct {
 	spectrumClient *spectrumLocalClient
-	config         model.SpectrumConfig
+	config         model.SpectrumScaleConfig
 }
 
-func NewSpectrumNfsLocalClient(logger *log.Logger, config model.SpectrumConfig, dbClient utils.DatabaseClient, fileLock utils.FileLock) (model.StorageClient, error) {
+func NewSpectrumNfsLocalClient(logger *log.Logger, config model.SpectrumScaleConfig, dbClient utils.DatabaseClient, fileLock utils.FileLock) (model.StorageClient, error) {
 	logger.Println("spectrumNfsLocalClient: init start")
 	defer logger.Println("spectrumNfsLocalClient: init end")
 
