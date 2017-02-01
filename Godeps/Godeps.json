@@ -2,14 +2,7 @@
 	"ImportPath": "github.ibm.com/almaden-containers/ubiquity",
 	"GoVersion": "go1.7",
 	"GodepVersion": "v74",
-	"Packages": [
-		"./..."
-	],
 	"Deps": [
-		{
-			"ImportPath": "git.openstack.org/openstack/golang-client.git/util",
-			"Rev": "753e96dd4a3983c05c665bc6f7a2abb25ceabd04"
-		},
 		{
 			"ImportPath": "github.com/BurntSushi/toml",
 			"Comment": "v0.2.0-21-g9906417",
@@ -31,172 +24,7 @@
 			"Rev": "7ed900a7c4cc22315a007cc49821cce3baa7be0f"
 		},
 		{
-			"ImportPath": "github.com/onsi/ginkgo",
-			"Comment": "v1.2.0-89-ga23f924",
-			"Rev": "a23f924ce96d61f963fb6219b8ff069d8d768cc2"
-		},
-		{
-			"ImportPath": "github.com/onsi/ginkgo/config",
-			"Comment": "v1.2.0-89-ga23f924",
-			"Rev": "a23f924ce96d61f963fb6219b8ff069d8d768cc2"
-		},
-		{
-			"ImportPath": "github.com/onsi/ginkgo/internal/codelocation",
-			"Comment": "v1.2.0-89-ga23f924",
-			"Rev": "a23f924ce96d61f963fb6219b8ff069d8d768cc2"
-		},
-		{
-			"ImportPath": "github.com/onsi/ginkgo/internal/containernode",
-			"Comment": "v1.2.0-89-ga23f924",
-			"Rev": "a23f924ce96d61f963fb6219b8ff069d8d768cc2"
-		},
-		{
-			"ImportPath": "github.com/onsi/ginkgo/internal/failer",
-			"Comment": "v1.2.0-89-ga23f924",
-			"Rev": "a23f924ce96d61f963fb6219b8ff069d8d768cc2"
-		},
-		{
-			"ImportPath": "github.com/onsi/ginkgo/internal/leafnodes",
-			"Comment": "v1.2.0-89-ga23f924",
-			"Rev": "a23f924ce96d61f963fb6219b8ff069d8d768cc2"
-		},
-		{
-			"ImportPath": "github.com/onsi/ginkgo/internal/remote",
-			"Comment": "v1.2.0-89-ga23f924",
-			"Rev": "a23f924ce96d61f963fb6219b8ff069d8d768cc2"
-		},
-		{
-			"ImportPath": "github.com/onsi/ginkgo/internal/spec",
-			"Comment": "v1.2.0-89-ga23f924",
-			"Rev": "a23f924ce96d61f963fb6219b8ff069d8d768cc2"
-		},
-		{
-			"ImportPath": "github.com/onsi/ginkgo/internal/specrunner",
-			"Comment": "v1.2.0-89-ga23f924",
-			"Rev": "a23f924ce96d61f963fb6219b8ff069d8d768cc2"
-		},
-		{
-			"ImportPath": "github.com/onsi/ginkgo/internal/suite",
-			"Comment": "v1.2.0-89-ga23f924",
-			"Rev": "a23f924ce96d61f963fb6219b8ff069d8d768cc2"
-		},
-		{
-			"ImportPath": "github.com/onsi/ginkgo/internal/testingtproxy",
-			"Comment": "v1.2.0-89-ga23f924",
-			"Rev": "a23f924ce96d61f963fb6219b8ff069d8d768cc2"
-		},
-		{
-			"ImportPath": "github.com/onsi/ginkgo/internal/writer",
-			"Comment": "v1.2.0-89-ga23f924",
-			"Rev": "a23f924ce96d61f963fb6219b8ff069d8d768cc2"
-		},
-		{
-			"ImportPath": "github.com/onsi/ginkgo/reporters",
-			"Comment": "v1.2.0-89-ga23f924",
-			"Rev": "a23f924ce96d61f963fb6219b8ff069d8d768cc2"
-		},
-		{
-			"ImportPath": "github.com/onsi/ginkgo/reporters/stenographer",
-			"Comment": "v1.2.0-89-ga23f924",
-			"Rev": "a23f924ce96d61f963fb6219b8ff069d8d768cc2"
-		},
-		{
-			"ImportPath": "github.com/onsi/ginkgo/reporters/stenographer/support/go-colorable",
-			"Comment": "v1.2.0-89-ga23f924",
-			"Rev": "a23f924ce96d61f963fb6219b8ff069d8d768cc2"
-		},
-		{
-			"ImportPath": "github.com/onsi/ginkgo/reporters/stenographer/support/go-isatty",
-			"Comment": "v1.2.0-89-ga23f924",
-			"Rev": "a23f924ce96d61f963fb6219b8ff069d8d768cc2"
-		},
-		{
-			"ImportPath": "github.com/onsi/ginkgo/types",
-			"Comment": "v1.2.0-89-ga23f924",
-			"Rev": "a23f924ce96d61f963fb6219b8ff069d8d768cc2"
-		},
-		{
-			"ImportPath": "github.com/onsi/gomega",
-			"Comment": "v1.0-153-ge85f63a",
-			"Rev": "e85f63af4302dc0e4277c6008ecf803f1d80e4f0"
-		},
-		{
-			"ImportPath": "github.com/onsi/gomega/format",
-			"Comment": "v1.0-153-ge85f63a",
-			"Rev": "e85f63af4302dc0e4277c6008ecf803f1d80e4f0"
-		},
-		{
-			"ImportPath": "github.com/onsi/gomega/internal/assertion",
-			"Comment": "v1.0-153-ge85f63a",
-			"Rev": "e85f63af4302dc0e4277c6008ecf803f1d80e4f0"
-		},
-		{
-			"ImportPath": "github.com/onsi/gomega/internal/asyncassertion",
-			"Comment": "v1.0-153-ge85f63a",
-			"Rev": "e85f63af4302dc0e4277c6008ecf803f1d80e4f0"
-		},
-		{
-			"ImportPath": "github.com/onsi/gomega/internal/oraclematcher",
-			"Comment": "v1.0-153-ge85f63a",
-			"Rev": "e85f63af4302dc0e4277c6008ecf803f1d80e4f0"
-		},
-		{
-			"ImportPath": "github.com/onsi/gomega/internal/testingtsupport",
-			"Comment": "v1.0-153-ge85f63a",
-			"Rev": "e85f63af4302dc0e4277c6008ecf803f1d80e4f0"
-		},
-		{
-			"ImportPath": "github.com/onsi/gomega/matchers",
-			"Comment": "v1.0-153-ge85f63a",
-			"Rev": "e85f63af4302dc0e4277c6008ecf803f1d80e4f0"
-		},
-		{
-			"ImportPath": "github.com/onsi/gomega/matchers/support/goraph/bipartitegraph",
-			"Comment": "v1.0-153-ge85f63a",
-			"Rev": "e85f63af4302dc0e4277c6008ecf803f1d80e4f0"
-		},
-		{
-			"ImportPath": "github.com/onsi/gomega/matchers/support/goraph/edge",
-			"Comment": "v1.0-153-ge85f63a",
-			"Rev": "e85f63af4302dc0e4277c6008ecf803f1d80e4f0"
-		},
-		{
-			"ImportPath": "github.com/onsi/gomega/matchers/support/goraph/node",
-			"Comment": "v1.0-153-ge85f63a",
-			"Rev": "e85f63af4302dc0e4277c6008ecf803f1d80e4f0"
-		},
-		{
-			"ImportPath": "github.com/onsi/gomega/matchers/support/goraph/util",
-			"Comment": "v1.0-153-ge85f63a",
-			"Rev": "e85f63af4302dc0e4277c6008ecf803f1d80e4f0"
-		},
-		{
-			"ImportPath": "github.com/onsi/gomega/types",
-			"Comment": "v1.0-153-ge85f63a",
-			"Rev": "e85f63af4302dc0e4277c6008ecf803f1d80e4f0"
-		},
-		{
-			"ImportPath": "github.com/openstack/golang-client/openstack",
-			"Rev": "753e96dd4a3983c05c665bc6f7a2abb25ceabd04"
-		},
-		{
-			"ImportPath": "golang.org/x/net/context",
-			"Rev": "f2499483f923065a842d38eb4c7f1927e6fc6e6d"
-		},
-		{
-			"ImportPath": "golang.org/x/sys/unix",
-			"Rev": "d75a52659825e75fff6158388dddc6a5b04f9ba5"
-		},
-		{
-			"ImportPath": "gopkg.in/yaml.v2",
-			"Rev": "4c78c975fe7c825c6d1466c42be594d1d6f3aba6"
-		},
-		{
-			"ImportPath": "github.ibm.com/alchemy-containers/armada-slclient-lib/services",
-			"Rev": "683a1654bf32f888fbf24efb0dfec12647b665e2"
-		},
-		{
-			"ImportPath": "github.ibm.com/alchemy-containers/armada-slclient-lib/interfaces",
+			"ImportPath": "github.ibm.com/alchemy-containers/armada-slclient-lib/client",
 			"Rev": "683a1654bf32f888fbf24efb0dfec12647b665e2"
 		},
 		{
@@ -204,8 +32,21 @@
 			"Rev": "683a1654bf32f888fbf24efb0dfec12647b665e2"
 		},
 		{
-			"ImportPath": "github.ibm.com/alchemy-containers/armada-slclient-lib/client",
+			"ImportPath": "github.ibm.com/alchemy-containers/armada-slclient-lib/interfaces",
 			"Rev": "683a1654bf32f888fbf24efb0dfec12647b665e2"
+		},
+		{
+			"ImportPath": "github.ibm.com/alchemy-containers/armada-slclient-lib/services",
+			"Rev": "683a1654bf32f888fbf24efb0dfec12647b665e2"
+		},
+		{
+			"ImportPath": "golang.org/x/net/context",
+			"Rev": "f2499483f923065a842d38eb4c7f1927e6fc6e6d"
+		},
+		{
+			"ImportPath": "k8s.io/kubernetes/staging/src/k8s.io/client-go/_vendor/github.com/golang/glog",
+			"Comment": "v1.6.0-alpha.1-185-gd06ff13",
+			"Rev": "d06ff13b5a63a272aacfd0ae09352df738b09a85"
 		}
 	]
 }
