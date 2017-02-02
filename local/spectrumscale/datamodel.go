@@ -8,6 +8,7 @@ import (
 
 	_ "github.com/mattn/go-sqlite3"
 	"github.ibm.com/almaden-containers/ubiquity/utils"
+	"database/sql"
 )
 
 //go:generate counterfeiter -o ../../fakes/fake_SpectrumDataModel.go . SpectrumDataModel
@@ -206,6 +207,9 @@ func (d *spectrumDataModel) GetVolume(name string) (Volume, bool, error) {
 	err = stmt.QueryRow(name).Scan(&volId, &volName, &volType, &clusterId, &filesystem, &fileset, &directory, &addData)
 
 	if err != nil {
+		if err == sql.ErrNoRows {
+			return Volume{}, false, nil
+		}
 		return Volume{}, false, fmt.Errorf("Failed to Get Volume for %s : %s", name, err.Error())
 	}
 
