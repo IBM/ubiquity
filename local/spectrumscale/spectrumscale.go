@@ -61,7 +61,7 @@ func newSpectrumLocalClient(logger *log.Logger, config model.SpectrumScaleConfig
 		logger.Fatalln(err.Error())
 		return &spectrumLocalClient{}, err
 	}
-	return &spectrumLocalClient{logger: logger, connector: client, dataModel: NewSpectrumDataModel(logger, dbClient), config: config, fileLock: fileLock}, nil
+	return &spectrumLocalClient{logger: logger, connector: client, dataModel: NewSpectrumDataModel(logger, dbClient), config: config, fileLock: fileLock, executor: utils.NewExecutor(logger)}, nil
 }
 
 func (s *spectrumLocalClient) Activate() (err error) {
