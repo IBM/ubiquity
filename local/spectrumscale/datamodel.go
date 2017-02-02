@@ -162,7 +162,7 @@ func (d *spectrumDataModel) insertVolume(volume Volume) error {
 
 	insert_volume_stmt := `
 	INSERT INTO Volumes(Name, Type, ClusterId, Filesystem, Fileset, Directory, AdditionalData)
-	values(?,?,?,?,?,?,?,?);
+	values(?,?,?,?,?,?,?);
 	`
 
 	stmt, err := d.databaseClient.GetHandle().Prepare(insert_volume_stmt)
