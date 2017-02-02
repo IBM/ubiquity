@@ -311,12 +311,15 @@ func (s *spectrumLocalClient) GetVolume(name string) (volumeMetadata model.Volum
 
 	if volExists {
 
-		volumeMountpoint, _, err := s.getVolumeMountPoint(existingVolume)
+		volumeMountpoint, isLinked, err := s.getVolumeMountPoint(existingVolume)
 		if err != nil {
 			s.logger.Println(err.Error())
 			return model.VolumeMetadata{}, nil, err
 		}
-		volumeMetadata = model.VolumeMetadata{Name: existingVolume.Name, Mountpoint: volumeMountpoint}
+		volumeMetadata = model.VolumeMetadata{Name: existingVolume.Name}
+		if isLinked {
+			volumeMetadata.Mountpoint = volumeMountpoint
+		}
 		volumeConfigDetails = map[string]interface{}{"FilesetId": existingVolume.Fileset, "Filesystem": existingVolume.FileSystem}
 		return volumeMetadata, volumeConfigDetails, nil
 	}
@@ -778,8 +781,8 @@ func (s *spectrumLocalClient) validateAndParseParams(logger *log.Logger, opts ma
 }
 
 func (s *spectrumLocalClient) getVolumeMountPoint(volume Volume) (string, bool, error) {
-	s.logger.Println("validateAndParseParams start")
-	defer s.logger.Println("validateAndParseParams end")
+	s.logger.Println("getVolumeMountPoint start")
+	defer s.logger.Println("getVolumeMountPoint end")
 
 	fsMountpoint, err := s.connector.GetFilesystemMountpoint(volume.FileSystem)
 	if err != nil {
