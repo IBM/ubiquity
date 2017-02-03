@@ -111,10 +111,17 @@ func (s *spectrumNfsLocalClient) CreateVolume(name string, opts map[string]inter
 	}
 
 	if _, err := s.spectrumClient.Attach(name); err != nil {
-		s.spectrumClient.logger.Printf("spectrumNfsLocalClient: error attaching volume %#v\n", err)
+		s.spectrumClient.logger.Printf("spectrumNfsLocalClient: error attaching volume %#v\n; deleting volume", err)
+		s.spectrumClient.RemoveVolume(name, true)
 		return err
 	}
-	return s.exportNfs(name, nfsClientCIDR)
+
+	if err := s.exportNfs(name, nfsClientCIDR); err != nil {
+		s.spectrumClient.logger.Printf("spectrumNfsLocalClient: error exporting volume %#v\n; deleting volume", err)
+		s.spectrumClient.RemoveVolume(name, true)
+		return err
+	}
+	return nil
 }
 
 func (s *spectrumNfsLocalClient) RemoveVolume(name string, forceDelete bool) error {
