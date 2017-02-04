@@ -29,7 +29,7 @@ func GetLocalClients(logger *log.Logger, config model.UbiquityServerConfig, dbCl
 		clients["spectrum-scale-nfs"] = spectrumNfsClient
 	}
 
-	softlayerClient, err := softlayer.NewSoftlayerLocalClient(logger, config.SpectrumScaleConfig, dbClient, fileLock)
+	softlayerClient, err := softlayer.NewSoftlayerLocalClient(logger, config.SoftlayerConfig, dbClient, fileLock)
 	if err != nil {
 		logger.Printf("Not enough params to initialize 'softlayer-nfs' client")
 	} else {

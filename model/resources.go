@@ -14,6 +14,7 @@ type UbiquityServerConfig struct {
 	LogPath             string
 	SpectrumScaleConfig SpectrumScaleConfig
 	BrokerConfig        BrokerConfig
+	SoftlayerConfig     SoftlayerConfig
 }
 
 type SpectrumScaleConfig struct {
@@ -21,6 +22,9 @@ type SpectrumScaleConfig struct {
 	ConfigPath        string
 	Connector         string
 	NfsServerAddr     string
+}
+type SoftlayerConfig struct {
+	Tenant string
 }
 
 type SpectrumNfsRemoteConfig struct {
