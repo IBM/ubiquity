@@ -1,14 +1,13 @@
 package spectrumscale
 
 import (
-	"fmt"
 	"log"
 
-	"strings"
+	"fmt"
 
+	"github.com/jinzhu/gorm"
 	_ "github.com/mattn/go-sqlite3"
-	"github.ibm.com/almaden-containers/ubiquity/utils"
-	"database/sql"
+	"github.ibm.com/almaden-containers/ubiquity/model"
 )
 
 //go:generate counterfeiter -o ../../fakes/fake_SpectrumDataModel.go . SpectrumDataModel
@@ -16,19 +15,19 @@ type SpectrumDataModel interface {
 	CreateVolumeTable() error
 	SetClusterId(string)
 	GetClusterId() string
-	//VolumeExists(name string) (bool, error)
 	DeleteVolume(name string) error
 	InsertFilesetVolume(fileset, volumeName string, filesystem string, opts map[string]interface{}) error
 	InsertLightweightVolume(fileset, directory, volumeName string, filesystem string, opts map[string]interface{}) error
 	InsertFilesetQuotaVolume(fileset, quota, volumeName string, filesystem string, opts map[string]interface{}) error
-	GetVolume(name string) (Volume, bool, error)
-	ListVolumes() ([]Volume, error)
+	GetVolume(name string) (SpectrumScaleVolume, bool, error)
+	ListVolumes() ([]SpectrumScaleVolume, error)
 }
 
 type spectrumDataModel struct {
-	log            *log.Logger
-	databaseClient utils.DatabaseClient
-	clusterId      string
+	log       *log.Logger
+	database  *gorm.DB
+	clusterId string
+	backend   model.BackendType
 }
 
 type VolumeType int
@@ -44,19 +43,22 @@ const (
 	USER_SPECIFIED_GID string = "gid"
 )
 
-type Volume struct {
-	Id             int
-	Name           string
-	Type           VolumeType
-	ClusterId      string
-	FileSystem     string
-	Fileset        string
-	Directory      string
-	AdditionalData map[string]string
+type SpectrumScaleVolume struct {
+	ID         uint
+	Volume     model.Volume
+	VolumeID   uint
+	Type       VolumeType
+	ClusterId  string
+	FileSystem string
+	Fileset    string
+	Directory  string
+	UID        string
+	GID        string
+	Quota      string
 }
 
-func NewSpectrumDataModel(log *log.Logger, dbClient utils.DatabaseClient) SpectrumDataModel {
-	return &spectrumDataModel{log: log, databaseClient: dbClient}
+func NewSpectrumDataModel(log *log.Logger, db *gorm.DB, backend model.BackendType) SpectrumDataModel {
+	return &spectrumDataModel{log: log, database: db, backend: backend}
 }
 
 func (d *spectrumDataModel) SetClusterId(id string) {
@@ -69,25 +71,9 @@ func (d *spectrumDataModel) CreateVolumeTable() error {
 	d.log.Println("SpectrumDataModel: Create Volumes Table start")
 	defer d.log.Println("SpectrumDataModel: Create Volumes Table end")
 
-	volumes_table_create_stmt := `
-	 CREATE TABLE IF NOT EXISTS Volumes (
-	     Id       INTEGER PRIMARY KEY AUTOINCREMENT,
-	     Name     TEXT NOT NULL,
-	     Type     INTEGER NOT NULL,
-	     ClusterId      TEXT NOT NULL,
-             Filesystem     TEXT NOT NULL,
-             Fileset        TEXT NOT NULL,
-             Directory      TEXT,
-             AdditionalData TEXT
-         );
-	`
-
-	_, err := d.databaseClient.GetHandle().Exec(volumes_table_create_stmt)
-
-	if err != nil {
-		return fmt.Errorf("Failed To Create Volumes Table: %s", err.Error())
+	if err := d.database.AutoMigrate(&SpectrumScaleVolume{}).Error; err != nil {
+		return err
 	}
-
 	return nil
 }
 
@@ -95,25 +81,18 @@ func (d *spectrumDataModel) DeleteVolume(name string) error {
 	d.log.Println("SpectrumDataModel: DeleteVolume start")
 	defer d.log.Println("SpectrumDataModel: DeleteVolume end")
 
-	// Delete volume from table
-	delete_volume_stmt := `
-	DELETE FROM Volumes WHERE Name = ?
-	`
-
-	stmt, err := d.databaseClient.GetHandle().Prepare(delete_volume_stmt)
+	volume, exists, err := d.GetVolume(name)
 
 	if err != nil {
-		return fmt.Errorf("Failed to create DeleteVolume Stmt for %s: %s", name, err.Error())
+		return err
+	}
+	if exists == false {
+		return fmt.Errorf("Volume : %s not found", name)
 	}
 
-	defer stmt.Close()
-
-	_, err = stmt.Exec(name)
-
-	if err != nil {
-		return fmt.Errorf("Failed to Delete Volume %s : %s", name, err.Error())
+	if err := d.database.Delete(&volume).Error; err != nil {
+		return err
 	}
-
 	return nil
 }
 
@@ -121,7 +100,7 @@ func (d *spectrumDataModel) InsertFilesetVolume(fileset, volumeName string, file
 	d.log.Println("SpectrumDataModel: InsertFilesetVolume start")
 	defer d.log.Println("SpectrumDataModel: InsertFilesetVolume end")
 
-	volume := Volume{Name: volumeName, Type: FILESET, ClusterId: d.clusterId, FileSystem: filesystem,
+	volume := SpectrumScaleVolume{Volume: model.Volume{Name: volumeName, Backend: d.backend}, Type: FILESET, ClusterId: d.clusterId, FileSystem: filesystem,
 		Fileset: fileset}
 
 	addPermissionsForVolume(&volume, opts)
@@ -133,7 +112,7 @@ func (d *spectrumDataModel) InsertLightweightVolume(fileset, directory, volumeNa
 	d.log.Println("SpectrumDataModel: InsertLightweightVolume start")
 	defer d.log.Println("SpectrumDataModel: InsertLightweightVolume end")
 
-	volume := Volume{Name: volumeName, Type: LIGHTWEIGHT, ClusterId: d.clusterId, FileSystem: filesystem,
+	volume := SpectrumScaleVolume{Volume: model.Volume{Name: volumeName, Backend: d.backend}, Type: LIGHTWEIGHT, ClusterId: d.clusterId, FileSystem: filesystem,
 		Fileset: fileset, Directory: directory}
 
 	addPermissionsForVolume(&volume, opts)
@@ -145,169 +124,67 @@ func (d *spectrumDataModel) InsertFilesetQuotaVolume(fileset, quota, volumeName 
 	d.log.Println("SpectrumDataModel: InsertFilesetQuotaVolume start")
 	defer d.log.Println("SpectrumDataModel: InsertFilesetQuotaVolume end")
 
-	volume := Volume{Name: volumeName, Type: FILESET_WITH_QUOTA, ClusterId: d.clusterId, FileSystem: filesystem,
-		Fileset: fileset}
-
-	volume.AdditionalData = make(map[string]string)
-	volume.AdditionalData["quota"] = quota
+	volume := SpectrumScaleVolume{Volume: model.Volume{Name: volumeName, Backend: d.backend}, Type: FILESET_WITH_QUOTA, ClusterId: d.clusterId, FileSystem: filesystem,
+		Fileset: fileset, Quota: quota}
 
 	addPermissionsForVolume(&volume, opts)
 
 	return d.insertVolume(volume)
 }
 
-func (d *spectrumDataModel) insertVolume(volume Volume) error {
+func (d *spectrumDataModel) insertVolume(volume SpectrumScaleVolume) error {
 	d.log.Println("SpectrumDataModel: insertVolume start")
 	defer d.log.Println("SpectrumDataModel: insertVolume end")
 
-	insert_volume_stmt := `
-	INSERT INTO Volumes(Name, Type, ClusterId, Filesystem, Fileset, Directory, AdditionalData)
-	values(?,?,?,?,?,?,?);
-	`
-
-	stmt, err := d.databaseClient.GetHandle().Prepare(insert_volume_stmt)
-
-	if err != nil {
-		return fmt.Errorf("Failed to create InsertVolume Stmt for %s: %s", volume.Name, err.Error())
+	if err := d.database.Create(&volume).Error; err != nil {
+		return err
 	}
-
-	defer stmt.Close()
-
-	additionalData := getAdditionalData(&volume)
-
-	_, err = stmt.Exec(volume.Name, volume.Type, volume.ClusterId, volume.FileSystem, volume.Fileset,
-		volume.Directory, additionalData)
-
-	if err != nil {
-		return fmt.Errorf("Failed to Insert Volume %s : %s", volume.Name, err.Error())
-	}
-
 	return nil
 }
 
-func (d *spectrumDataModel) GetVolume(name string) (Volume, bool, error) {
+func (d *spectrumDataModel) GetVolume(name string) (SpectrumScaleVolume, bool, error) {
 	d.log.Println("SpectrumDataModel: GetVolume start")
 	defer d.log.Println("SpectrumDataModel: GetVolume end")
 
-	read_volume_stmt := `
-        SELECT * FROM Volumes WHERE Name = ?
-        `
-
-	stmt, err := d.databaseClient.GetHandle().Prepare(read_volume_stmt)
-
-	if err != nil {
-		return Volume{}, false, fmt.Errorf("Failed to create GetVolume Stmt for %s : %s", name, err.Error())
-	}
-
-	defer stmt.Close()
-
-	var volName, clusterId, filesystem, fileset, directory, addData string
-	var volType, volId int
-
-	err = stmt.QueryRow(name).Scan(&volId, &volName, &volType, &clusterId, &filesystem, &fileset, &directory, &addData)
-
-	if err != nil {
-		if err == sql.ErrNoRows {
-			return Volume{}, false, nil
+	var volume model.Volume
+	if err := d.database.Where("name = ? AND backend = ?", name, d.backend).First(&volume).Error; err != nil {
+		if err.Error() == "record not found" {
+			return SpectrumScaleVolume{}, false, nil
 		}
-		return Volume{}, false, fmt.Errorf("Failed to Get Volume for %s : %s", name, err.Error())
+		return SpectrumScaleVolume{}, false, err
 	}
 
-	scannedVolume := Volume{Id: volId, Name: volName, Type: VolumeType(volType), ClusterId: clusterId, FileSystem: filesystem,
-		Fileset: fileset, Directory: directory}
-
-	setAdditionalData(addData, &scannedVolume)
-
-	return scannedVolume, true, nil
+	var spectrumVolume SpectrumScaleVolume
+	if err := d.database.Where("volume_id = ?", volume.ID).Preload("Volume").First(&spectrumVolume).Error; err != nil {
+		if err.Error() == "record not found" {
+			return SpectrumScaleVolume{}, false, nil
+		}
+		return SpectrumScaleVolume{}, false, err
+	}
+	return spectrumVolume, true, nil
 }
 
-func (d *spectrumDataModel) ListVolumes() ([]Volume, error) {
+func (d *spectrumDataModel) ListVolumes() ([]SpectrumScaleVolume, error) {
 	d.log.Println("SpectrumDataModel: ListVolumes start")
 	defer d.log.Println("SpectrumDataModel: ListVolumes end")
 
-	list_volumes_stmt := `
-        SELECT *
-        FROM Volumes
-        `
-
-	rows, err := d.databaseClient.GetHandle().Query(list_volumes_stmt)
-	defer rows.Close()
-
-	if err != nil {
-		return nil, fmt.Errorf("Failed to List Volumes : %s", err.Error())
+	var volumes []SpectrumScaleVolume
+	if err := d.database.Preload("Volume").Find(&volumes).Error; err != nil {
+		return nil, err
 	}
-
-	var volumes []Volume
-	var volName, clusterId, filesystem, fileset, directory, addData string
-	var volType, volId int
-
-	for rows.Next() {
-
-		err = rows.Scan(&volId, &volName, &volType, &clusterId, &filesystem, &fileset, &directory, &addData)
-
-		if err != nil {
-			return nil, fmt.Errorf("Failed to scan rows while listing volumes: %s", err.Error())
-		}
-
-		scannedVolume := Volume{Id: volId, Name: volName, Type: VolumeType(volType), ClusterId: clusterId,
-			FileSystem: filesystem, Fileset: fileset, Directory: directory}
-
-		setAdditionalData(addData, &scannedVolume)
-
-		volumes = append(volumes, scannedVolume)
-	}
-
-	err = rows.Err()
-
-	if err != nil {
-		return nil, fmt.Errorf("Failure while iterating rows : %s", err.Error())
-	}
-
 	return volumes, nil
 }
 
-func getAdditionalData(volume *Volume) string {
-
-	var addData string
-
-	if len(volume.AdditionalData) > 0 {
-
-		for key, value := range volume.AdditionalData {
-			addData += key + "=" + value + ","
-		}
-		addData = strings.TrimSuffix(addData, ",")
-	}
-	return addData
-}
-
-func setAdditionalData(addData string, volume *Volume) {
-
-	if len(addData) > 0 {
-		volume.AdditionalData = make(map[string]string)
-
-		lines := strings.Split(addData, ",")
-
-		for _, line := range lines {
-			tokens := strings.Split(line, "=")
-			volume.AdditionalData[tokens[0]] = tokens[1]
-		}
-	}
-}
-
-func addPermissionsForVolume(volume *Volume, opts map[string]interface{}) {
+func addPermissionsForVolume(volume *SpectrumScaleVolume, opts map[string]interface{}) {
 
 	if len(opts) > 0 {
 		uid, uidSpecified := opts[USER_SPECIFIED_UID]
 		gid, gidSpecified := opts[USER_SPECIFIED_GID]
 
 		if uidSpecified && gidSpecified {
+			volume.UID = uid.(string)
+			volume.GID = gid.(string)
 
-			if volume.AdditionalData == nil {
-				volume.AdditionalData = make(map[string]string)
-			}
-
-			volume.AdditionalData["uid"] = uid.(string)
-			volume.AdditionalData["gid"] = gid.(string)
 		}
 	}
 }

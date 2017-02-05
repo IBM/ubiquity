@@ -9,11 +9,11 @@ import (
 
 	"flag"
 
-	"os/signal"
 	"os/user"
-	"syscall"
 
 	"github.com/BurntSushi/toml"
+	"github.com/jinzhu/gorm"
+	_ "github.com/jinzhu/gorm/dialects/sqlite"
 	"github.ibm.com/almaden-containers/ubiquity/local"
 	"github.ibm.com/almaden-containers/ubiquity/model"
 	"github.ibm.com/almaden-containers/ubiquity/utils"
@@ -50,26 +50,19 @@ func main() {
 		panic(err.Error())
 	}
 
-	dbClient := utils.NewDatabaseClient(logger, ubiquityConfigPath)
-	err = dbClient.Init()
+	db, err := gorm.Open("sqlite3", path.Join(ubiquityConfigPath, "ubiquity.db"))
 	if err != nil {
-		panic(err.Error())
-
+		panic("failed to connect database")
 	}
+	defer db.Close()
 
-	// Catch Ctrl-C / interrupts to perform DB connection cleanup
-	c := make(chan os.Signal, 1)
-	signal.Notify(c, os.Interrupt)
-	signal.Notify(c, syscall.SIGTERM)
-	go func() {
-		<-c
-		dbClient.Close()
-		os.Exit(1)
-	}()
+	if err := db.AutoMigrate(&model.Volume{}).Error; err != nil {
+		panic(err)
+	}
 
 	fileLock := utils.NewFileLock(logger, ubiquityConfigPath)
 
-	clients, err := local.GetLocalClients(logger, config, dbClient, fileLock)
+	clients, err := local.GetLocalClients(logger, config, db, fileLock)
 	if err != nil {
 		panic(err)
 	}
