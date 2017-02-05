@@ -5,6 +5,7 @@ import (
 	"log"
 	"os/exec"
 
+	"github.com/jinzhu/gorm"
 	"github.ibm.com/almaden-containers/ubiquity/model"
 	"github.ibm.com/almaden-containers/ubiquity/utils"
 )
@@ -14,7 +15,7 @@ type spectrumNfsLocalClient struct {
 	config         model.SpectrumScaleConfig
 }
 
-func NewSpectrumNfsLocalClient(logger *log.Logger, config model.SpectrumScaleConfig, dbClient utils.DatabaseClient, fileLock utils.FileLock) (model.StorageClient, error) {
+func NewSpectrumNfsLocalClient(logger *log.Logger, config model.SpectrumScaleConfig, db *gorm.DB, fileLock utils.FileLock) (model.StorageClient, error) {
 	logger.Println("spectrumNfsLocalClient: init start")
 	defer logger.Println("spectrumNfsLocalClient: init end")
 
@@ -30,7 +31,7 @@ func NewSpectrumNfsLocalClient(logger *log.Logger, config model.SpectrumScaleCon
 		return nil, fmt.Errorf("spectrumNfsLocalClient: init: missing required parameter 'spectrumNfsServerAddr'")
 	}
 
-	spectrumClient, err := newSpectrumLocalClient(logger, config, dbClient, fileLock)
+	spectrumClient, err := newSpectrumLocalClient(logger, config, db, fileLock, model.SPECTRUM_SCALE_NFS)
 	if err != nil {
 		return nil, err
 	}

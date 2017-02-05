@@ -7,6 +7,7 @@ import (
 
 	"strconv"
 
+	"github.com/jinzhu/gorm"
 	"github.ibm.com/alchemy-containers/armada-slclient-lib/interfaces"
 	"github.ibm.com/alchemy-containers/armada-slclient-lib/services"
 	"github.ibm.com/almaden-containers/ubiquity/model"
@@ -30,14 +31,14 @@ const (
 	SL_LOCATION         = "sl_location"
 )
 
-func NewSoftlayerLocalClient(logger *log.Logger, config model.SoftlayerConfig, dbClient utils.DatabaseClient, fileLock utils.FileLock) (model.StorageClient, error) {
+func NewSoftlayerLocalClient(logger *log.Logger, config model.SoftlayerConfig, db *gorm.DB, fileLock utils.FileLock) (model.StorageClient, error) {
 
 	//Get the service client
 	// has to look for access details in config before preoceeding
 	serviceClient := services.NewServiceClient()
 	softlayerStorageService := serviceClient.GetSoftLayerStorageService()
 
-	return &softlayerLocalClient{logger: logger, fileLock: fileLock, dataModel: NewSoftlayerDataModel(logger, dbClient), softlayerStorageService: softlayerStorageService}, nil
+	return &softlayerLocalClient{logger: logger, fileLock: fileLock, dataModel: NewSoftlayerDataModel(logger, db, model.SOFTLAYER_NFS), softlayerStorageService: softlayerStorageService}, nil
 }
 func NewSoftlayerLocalClientWithDataModelAndSLService(logger *log.Logger, datamodel SoftlayerDataModel, fileLock utils.FileLock, softlayerStorageService interfaces.Softlayer_Storage_Service) (model.StorageClient, error) {
 	return &softlayerLocalClient{logger: logger, fileLock: fileLock, dataModel: datamodel, softlayerStorageService: softlayerStorageService}, nil
@@ -214,13 +215,8 @@ func (s *softlayerLocalClient) GetVolume(name string) (volumeMetadata model.Volu
 
 	if volExists {
 
-		volumeMetadata = model.VolumeMetadata{Name: existingVolume.Name, Mountpoint: existingVolume.Mountpoint}
-		volumeConfigDetails := existingVolume.AdditionalData
-		if volumeConfigDetails == nil {
-			volumeConfigDetails = map[string]interface{}{"FileshareId": strconv.Itoa(existingVolume.FileshareID)}
-		} else {
-			volumeConfigDetails["FileshareId"] = strconv.Itoa(existingVolume.FileshareID)
-		}
+		volumeMetadata = model.VolumeMetadata{Name: existingVolume.Volume.Name, Mountpoint: existingVolume.Mountpoint}
+		volumeConfigDetails = map[string]interface{}{"FileshareId": strconv.Itoa(existingVolume.FileshareID)}
 		return volumeMetadata, volumeConfigDetails, nil
 	}
 	return model.VolumeMetadata{}, nil, fmt.Errorf("Volume not found")
@@ -300,7 +296,7 @@ func (s *softlayerLocalClient) ListVolumes() ([]model.VolumeMetadata, error) {
 	var volumes []model.VolumeMetadata
 	for _, volume := range volumesInDb {
 		s.logger.Printf("Volume from db: %#v\n", volume)
-		volumes = append(volumes, model.VolumeMetadata{Name: volume.Name, Mountpoint: volume.Mountpoint})
+		volumes = append(volumes, model.VolumeMetadata{Name: volume.Volume.Name, Mountpoint: volume.Mountpoint})
 	}
 
 	return volumes, nil

@@ -19,6 +19,20 @@
 			"Rev": "392c28fe23e1c45ddba891b0320b3b5df220beea"
 		},
 		{
+			"ImportPath": "github.com/jinzhu/gorm",
+			"Comment": "v1.0-118-g23abd03",
+			"Rev": "23abd03a95a16de0ef2d559979ead26b2a3cce66"
+		},
+		{
+			"ImportPath": "github.com/jinzhu/gorm/dialects/sqlite",
+			"Comment": "v1.0-118-g23abd03",
+			"Rev": "23abd03a95a16de0ef2d559979ead26b2a3cce66"
+		},
+		{
+			"ImportPath": "github.com/jinzhu/inflection",
+			"Rev": "1c35d901db3da928c72a72d8458480cc9ade058f"
+		},
+		{
 			"ImportPath": "github.com/mattn/go-sqlite3",
 			"Comment": "v1.2.0-20-g7ed900a",
 			"Rev": "7ed900a7c4cc22315a007cc49821cce3baa7be0f"

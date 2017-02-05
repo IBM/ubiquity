@@ -1,13 +1,13 @@
 package softlayer
 
 import (
-	"fmt"
 	"log"
 
-	"strings"
+	"fmt"
 
+	"github.com/jinzhu/gorm"
 	_ "github.com/mattn/go-sqlite3"
-	"github.ibm.com/almaden-containers/ubiquity/utils"
+	"github.ibm.com/almaden-containers/ubiquity/model"
 )
 
 //go:generate counterfeiter -o ../../fakes/fake_SoftlayerDataModel.go . SoftlayerDataModel
@@ -15,9 +15,9 @@ type SoftlayerDataModel interface {
 	CreateVolumeTable() error
 	DeleteVolume(name string) error
 	InsertFileshare(fileshareID int, volumeName string, mountPath string, opts map[string]interface{}) error
-	GetVolume(name string) (Volume, bool, error)
+	GetVolume(name string) (SoftlayerVolume, bool, error)
 	GetVolumeForMountPoint(mountpoint string) (string, error)
-	ListVolumes() ([]Volume, error)
+	ListVolumes() ([]SoftlayerVolume, error)
 }
 
 const (
@@ -26,41 +26,30 @@ const (
 )
 
 type softlayerDataModel struct {
-	log            *log.Logger
-	databaseClient utils.DatabaseClient
+	log      *log.Logger
+	database *gorm.DB
+	backend  model.BackendType
 }
 
-type Volume struct {
-	Id             int
-	Name           string
-	FileshareID    int
-	Mountpoint     string
-	AdditionalData map[string]interface{}
+type SoftlayerVolume struct {
+	ID          uint
+	Volume      model.Volume
+	VolumeID    uint
+	FileshareID int
+	Mountpoint  string
 }
 
-func NewSoftlayerDataModel(log *log.Logger, dbClient utils.DatabaseClient) SoftlayerDataModel {
-	return &softlayerDataModel{log: log, databaseClient: dbClient}
+func NewSoftlayerDataModel(log *log.Logger, db *gorm.DB, backend model.BackendType) SoftlayerDataModel {
+	return &softlayerDataModel{log: log, database: db, backend: backend}
 }
 
 func (d *softlayerDataModel) CreateVolumeTable() error {
 	d.log.Println("SoftlayerDataModel: Create SLVolumes Table start")
 	defer d.log.Println("SoftlayerDataModel: Create SLVolumes Table end")
 
-	volumes_table_create_stmt := `
-	 CREATE TABLE IF NOT EXISTS SLVolumes(
-	     Id       INTEGER PRIMARY KEY AUTOINCREMENT,
-	     Name     TEXT NOT NULL,
-	     FileshareID    TEXT NOT NULL,
-             AdditionalData TEXT
-         );
-	`
-
-	_, err := d.databaseClient.GetHandle().Exec(volumes_table_create_stmt)
-
-	if err != nil {
-		return fmt.Errorf("Failed To Create SLVolumesTable: %s", err.Error())
+	if err := d.database.AutoMigrate(&SoftlayerVolume{}).Error; err != nil {
+		return err
 	}
-
 	return nil
 }
 
@@ -68,23 +57,17 @@ func (d *softlayerDataModel) DeleteVolume(name string) error {
 	d.log.Println("SoftlayerDataModel: DeleteVolume start")
 	defer d.log.Println("SoftlayerDataModel: DeleteVolume end")
 
-	// Delete volume from table
-	delete_volume_stmt := `
-	DELETE FROM SLVolumes WHERE Name = ?
-	`
-
-	stmt, err := d.databaseClient.GetHandle().Prepare(delete_volume_stmt)
+	volume, exists, err := d.GetVolume(name)
 
 	if err != nil {
-		return fmt.Errorf("Failed to create DeleteVolume Stmt for %s: %s", name, err.Error())
+		return err
+	}
+	if exists == false {
+		return fmt.Errorf("Volume : %s not found", name)
 	}
 
-	defer stmt.Close()
-
-	_, err = stmt.Exec(name)
-
-	if err != nil {
-		return fmt.Errorf("Failed to Delete Volume %s : %s", name, err.Error())
+	if err := d.database.Delete(&volume).Error; err != nil {
+		return err
 	}
 
 	return nil
@@ -94,166 +77,79 @@ func (d *softlayerDataModel) InsertFileshare(fileshareID int, volumeName string,
 	d.log.Println("SoftlayerDataModel: InsertFilesetVolume start")
 	defer d.log.Println("SoftlayerDataModel: InsertFilesetVolume end")
 
-	volume := Volume{Name: volumeName, FileshareID: fileshareID, Mountpoint: mountPath, AdditionalData: opts}
+	volume := SoftlayerVolume{Volume: model.Volume{Name: volumeName, Backend: d.backend}, FileshareID: fileshareID, Mountpoint: mountPath}
 
 	return d.insertVolume(volume)
 }
 
-func (d *softlayerDataModel) insertVolume(volume Volume) error {
+func (d *softlayerDataModel) insertVolume(volume SoftlayerVolume) error {
 	d.log.Println("SoftlayerDataModel: insertVolume start")
 	defer d.log.Println("SoftlayerDataModel: insertVolume end")
 
-	insert_volume_stmt := `
-	INSERT INTO SLVolumes(Name, FileshareID, AdditionalData)
-	values(?,?,?);
-	`
-
-	stmt, err := d.databaseClient.GetHandle().Prepare(insert_volume_stmt)
-
-	if err != nil {
-		return fmt.Errorf("Failed to create InsertVolume Stmt for %s: %s", volume.Name, err.Error())
-	}
-
-	defer stmt.Close()
-
-	additionalData := getAdditionalData(&volume)
-
-	_, err = stmt.Exec(volume.Name, volume.FileshareID, volume.Mountpoint, additionalData)
-
-	if err != nil {
-		return fmt.Errorf("Failed to Insert Volume %s : %s", volume.Name, err.Error())
+	if err := d.database.Create(&volume).Error; err != nil {
+		return err
 	}
 
 	return nil
 }
 
-func (d *softlayerDataModel) GetVolume(name string) (Volume, bool, error) {
+func (d *softlayerDataModel) GetVolume(name string) (SoftlayerVolume, bool, error) {
 	d.log.Println("SoftlayerDataModel: GetVolume start")
 	defer d.log.Println("SoftlayerDataModel: GetVolume end")
 
-	read_volume_stmt := `
-        SELECT * FROM SLVolumes WHERE Name = ?
-        `
-
-	stmt, err := d.databaseClient.GetHandle().Prepare(read_volume_stmt)
-
-	if err != nil {
-		return Volume{}, false, fmt.Errorf("Failed to create GetVolume Stmt for %s : %s", name, err.Error())
+	var volume model.Volume
+	if err := d.database.Where("name = ? AND backend = ?", name, d.backend).First(&volume).Error; err != nil {
+		if err.Error() == "record not found" {
+			return SoftlayerVolume{}, false, nil
+		}
+		return SoftlayerVolume{}, false, err
 	}
 
-	defer stmt.Close()
-
-	var volName, mountpoint, addData string
-	var volId, fileshareID int
-
-	err = stmt.QueryRow(name).Scan(&volId, &volName, &fileshareID, &mountpoint, &addData)
-
-	if err != nil {
-		return Volume{}, false, fmt.Errorf("Failed to Get Volume for %s : %s", name, err.Error())
+	var softlayerVolume SoftlayerVolume
+	if err := d.database.Where("volume_id = ?", volume.ID).Preload("Volume").First(&softlayerVolume).Error; err != nil {
+		if err.Error() == "record not found" {
+			return SoftlayerVolume{}, false, nil
+		}
+		return SoftlayerVolume{}, false, err
 	}
 
-	scannedVolume := Volume{Id: volId, Name: volName, FileshareID: fileshareID, Mountpoint: mountpoint}
-
-	setAdditionalData(addData, &scannedVolume)
-
-	return scannedVolume, true, nil
+	return softlayerVolume, true, nil
 }
 
 func (d *softlayerDataModel) GetVolumeForMountPoint(mountpoint string) (string, error) {
 	d.log.Println("SoftlayerDataModel: GetVolumeForMountPoint start")
 	defer d.log.Println("SoftlayerDataModel: GetVolumeForMountPoint end")
 
-	read_volume_stmt := `
-        SELECT Name FROM SLVolumes WHERE MountPoint = ?
-        `
+	//read_volume_stmt := `
+	//SELECT Name FROM SLVolumes WHERE MountPoint = ?
+	//`
+	//
+	//stmt, err := d.databaseClient.GetHandle().Prepare(read_volume_stmt)
+	//
+	//if err != nil {
+	//	return "", fmt.Errorf("Failed to create GetVolumeForMountPoint Stmt for %s : %s", mountpoint, err.Error())
+	//}
+	//
+	//defer stmt.Close()
+	//
+	//var volName string
+	//
+	//err = stmt.QueryRow(mountpoint).Scan(&volName)
+	//
+	//if err != nil {
+	//	return "", fmt.Errorf("Failed to Get Volume for %s : %s", mountpoint, err.Error())
+	//}
 
-	stmt, err := d.databaseClient.GetHandle().Prepare(read_volume_stmt)
-
-	if err != nil {
-		return "", fmt.Errorf("Failed to create GetVolumeForMountPoint Stmt for %s : %s", mountpoint, err.Error())
-	}
-
-	defer stmt.Close()
-
-	var volName string
-
-	err = stmt.QueryRow(mountpoint).Scan(&volName)
-
-	if err != nil {
-		return "", fmt.Errorf("Failed to Get Volume for %s : %s", mountpoint, err.Error())
-	}
-
-	return volName, nil
+	return "", nil
 }
 
-func (d *softlayerDataModel) ListVolumes() ([]Volume, error) {
+func (d *softlayerDataModel) ListVolumes() ([]SoftlayerVolume, error) {
 	d.log.Println("SoftlayerDataModel: ListSLVolumesstart")
 	defer d.log.Println("SoftlayerDataModel: ListSLVolumesend")
 
-	list_volumes_stmt := `
-        SELECT *
-        FROM SLVolumes
-        `
-
-	rows, err := d.databaseClient.GetHandle().Query(list_volumes_stmt)
-	defer rows.Close()
-
-	if err != nil {
-		return nil, fmt.Errorf("Failed to List SLVolumes: %s", err.Error())
+	var volumes []SoftlayerVolume
+	if err := d.database.Preload("Volume").Find(&volumes).Error; err != nil {
+		return nil, err
 	}
-
-	var volumes []Volume
-	var volName, mountpoint, addData string
-	var volId, fileshareId int
-
-	for rows.Next() {
-
-		err = rows.Scan(&volId, &volName, &fileshareId, &mountpoint, &addData)
-
-		if err != nil {
-			return nil, fmt.Errorf("Failed to scan rows while listing volumes: %s", err.Error())
-		}
-
-		scannedVolume := Volume{Id: volId, Name: volName, FileshareID: fileshareId, Mountpoint: mountpoint}
-
-		setAdditionalData(addData, &scannedVolume)
-
-		volumes = append(volumes, scannedVolume)
-	}
-
-	err = rows.Err()
-
-	if err != nil {
-		return nil, fmt.Errorf("Failure while iterating rows : %s", err.Error())
-	}
-
 	return volumes, nil
-}
-
-func getAdditionalData(volume *Volume) string {
-
-	var addData string
-
-	if len(volume.AdditionalData) > 0 {
-
-		for key, value := range volume.AdditionalData {
-			addData += key + "=" + value.(string) + ","
-		}
-		addData = strings.TrimSuffix(addData, ",")
-	}
-	return addData
-}
-
-func setAdditionalData(addData string, volume *Volume) {
-
-	if len(addData) > 0 {
-		volume.AdditionalData = make(map[string]interface{})
-
-		lines := strings.Split(addData, ",")
-
-		for _, line := range lines {
-			tokens := strings.Split(line, "=")
-			volume.AdditionalData[tokens[0]] = tokens[1]
-		}
-	}
 }

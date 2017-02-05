@@ -19,7 +19,6 @@ var _ = Describe("local-client", func() {
 		client                     model.StorageClient
 		logger                     *log.Logger
 		fakeSpectrumScaleConnector *fakes.FakeSpectrumScaleConnector
-		fakeDbClient               *fakes.FakeDatabaseClient
 		fakeSpectrumDataModel      *fakes.FakeSpectrumDataModel
 		fakeLock                   *fakes.FakeFileLock
 		fakeExec                   *fakes.FakeExecutor
@@ -29,7 +28,6 @@ var _ = Describe("local-client", func() {
 	BeforeEach(func() {
 		logger = log.New(os.Stdout, "ubiquity: ", log.Lshortfile|log.LstdFlags)
 		fakeSpectrumScaleConnector = new(fakes.FakeSpectrumScaleConnector)
-		fakeDbClient = new(fakes.FakeDatabaseClient)
 		fakeLock = new(fakes.FakeFileLock)
 		fakeExec = new(fakes.FakeExecutor)
 		fakeSpectrumDataModel = new(fakes.FakeSpectrumDataModel)
@@ -213,7 +211,7 @@ var _ = Describe("local-client", func() {
 		It("should fail when dbClient volumeExists errors", func() {
 			fakeLock.LockReturns(nil)
 			fakeLock.UnlockReturns(nil)
-			fakeSpectrumDataModel.GetVolumeReturns(spectrumscale.Volume{}, false, fmt.Errorf("error checking if volume exists"))
+			fakeSpectrumDataModel.GetVolumeReturns(spectrumscale.SpectrumScaleVolume{}, false, fmt.Errorf("error checking if volume exists"))
 			err = client.CreateVolume("fake-volume", opts)
 			Expect(err).To(HaveOccurred())
 			Expect(err.Error()).To(Equal("error checking if volume exists"))
@@ -226,7 +224,7 @@ var _ = Describe("local-client", func() {
 		It("should fail when dbClient volumeExists returns true", func() {
 			fakeLock.LockReturns(nil)
 			fakeLock.UnlockReturns(nil)
-			fakeSpectrumDataModel.GetVolumeReturns(spectrumscale.Volume{}, true, nil)
+			fakeSpectrumDataModel.GetVolumeReturns(spectrumscale.SpectrumScaleVolume{}, true, nil)
 			err = client.CreateVolume("fake-volume", opts)
 			Expect(err).To(HaveOccurred())
 			Expect(err.Error()).To(Equal("Volume already exists"))
@@ -410,7 +408,7 @@ var _ = Describe("local-client", func() {
 
 		It("should fail when the dbClient fails to check the volume", func() {
 			fakeLock.LockReturns(nil)
-			fakeSpectrumDataModel.GetVolumeReturns(spectrumscale.Volume{}, false, fmt.Errorf("failed checking volume"))
+			fakeSpectrumDataModel.GetVolumeReturns(spectrumscale.SpectrumScaleVolume{}, false, fmt.Errorf("failed checking volume"))
 			err = client.RemoveVolume("fake-volume", false)
 			Expect(err).To(HaveOccurred())
 			Expect(err.Error()).To(Equal("failed checking volume"))
@@ -419,7 +417,7 @@ var _ = Describe("local-client", func() {
 
 		It("should fail when the dbClient does not find the volume", func() {
 			fakeLock.LockReturns(nil)
-			fakeSpectrumDataModel.GetVolumeReturns(spectrumscale.Volume{}, false, nil)
+			fakeSpectrumDataModel.GetVolumeReturns(spectrumscale.SpectrumScaleVolume{}, false, nil)
 			err = client.RemoveVolume("fake-volume", false)
 			Expect(err).To(HaveOccurred())
 			Expect(err.Error()).To(Equal("Volume not found"))
@@ -428,7 +426,7 @@ var _ = Describe("local-client", func() {
 
 		It("should fail when the dbClient fails to get the volume", func() {
 			fakeLock.LockReturns(nil)
-			fakeSpectrumDataModel.GetVolumeReturns(spectrumscale.Volume{}, false, fmt.Errorf("error getting volume"))
+			fakeSpectrumDataModel.GetVolumeReturns(spectrumscale.SpectrumScaleVolume{}, false, fmt.Errorf("error getting volume"))
 			err = client.RemoveVolume("fake-volume", false)
 			Expect(err).To(HaveOccurred())
 			Expect(err.Error()).To(Equal("error getting volume"))
@@ -438,7 +436,7 @@ var _ = Describe("local-client", func() {
 
 		It("should fail when type is lightweight and dbClient fails to delete the volume", func() {
 			fakeLock.LockReturns(nil)
-			volume := spectrumscale.Volume{Name: "fake-volume", Type: 1}
+			volume := spectrumscale.SpectrumScaleVolume{Name: "fake-volume", Type: 1}
 			fakeSpectrumDataModel.GetVolumeReturns(volume, true, nil)
 			fakeSpectrumDataModel.DeleteVolumeReturns(fmt.Errorf("error deleting volume"))
 			err = client.RemoveVolume("fake-volume", false)
@@ -451,7 +449,7 @@ var _ = Describe("local-client", func() {
 
 		It("should fail when type is lightweight and forcedelete is true and spectrumClient fails to get filesystem mountpoint", func() {
 			fakeLock.LockReturns(nil)
-			volume := spectrumscale.Volume{Name: "fake-volume", Type: 1}
+			volume := spectrumscale.SpectrumScaleVolume{Name: "fake-volume", Type: 1}
 			fakeSpectrumDataModel.GetVolumeReturns(volume, true, nil)
 			fakeSpectrumDataModel.DeleteVolumeReturns(nil)
 			fakeSpectrumScaleConnector.GetFilesystemMountpointReturns("", fmt.Errorf("error getting fs mountpoint"))
@@ -466,7 +464,7 @@ var _ = Describe("local-client", func() {
 
 		It("should fail when type is lightweight and forcedelete is true and executor fails to remove volume folder", func() {
 			fakeLock.LockReturns(nil)
-			volume := spectrumscale.Volume{Name: "fake-volume", Type: 1}
+			volume := spectrumscale.SpectrumScaleVolume{Name: "fake-volume", Type: 1}
 			fakeSpectrumDataModel.GetVolumeReturns(volume, true, nil)
 			fakeSpectrumDataModel.DeleteVolumeReturns(nil)
 			fakeSpectrumScaleConnector.GetFilesystemMountpointReturns("fake-mountpoint", nil)
@@ -482,7 +480,7 @@ var _ = Describe("local-client", func() {
 
 		It("should succeed when type is lightweight and forcedelete is true", func() {
 			fakeLock.LockReturns(nil)
-			volume := spectrumscale.Volume{Name: "fake-volume", Type: 1}
+			volume := spectrumscale.SpectrumScaleVolume{Name: "fake-volume", Type: 1}
 			fakeSpectrumDataModel.GetVolumeReturns(volume, true, nil)
 			fakeSpectrumDataModel.DeleteVolumeReturns(nil)
 			fakeSpectrumScaleConnector.GetFilesystemMountpointReturns("fake-mountpoint", nil)
@@ -497,7 +495,7 @@ var _ = Describe("local-client", func() {
 
 		It("should succeed when type is lightweight and forcedelete is false", func() {
 			fakeLock.LockReturns(nil)
-			volume := spectrumscale.Volume{Name: "fake-volume", Type: 1}
+			volume := spectrumscale.SpectrumScaleVolume{Name: "fake-volume", Type: 1}
 			fakeSpectrumDataModel.GetVolumeReturns(volume, true, nil)
 			fakeSpectrumDataModel.DeleteVolumeReturns(nil)
 			err = client.RemoveVolume("fake-volume", false)
@@ -510,7 +508,7 @@ var _ = Describe("local-client", func() {
 
 		It("should fail when type is fileset and spectrumClient fails to check filesetLinked", func() {
 			fakeLock.LockReturns(nil)
-			volume := spectrumscale.Volume{Name: "fake-volume", FileSystem: "fake-filesystem", Type: 0}
+			volume := spectrumscale.SpectrumScaleVolume{Name: "fake-volume", FileSystem: "fake-filesystem", Type: 0}
 			fakeSpectrumDataModel.GetVolumeReturns(volume, true, nil)
 			fakeSpectrumScaleConnector.IsFilesetLinkedReturns(false, fmt.Errorf("error in IsFilesetLinked"))
 			err = client.RemoveVolume("fake-volume", false)
@@ -524,7 +522,7 @@ var _ = Describe("local-client", func() {
 
 		It("should fail when type is fileset and fileset is linked and spectrumClient fails to unlink fileset", func() {
 			fakeLock.LockReturns(nil)
-			volume := spectrumscale.Volume{Name: "fake-volume", FileSystem: "fake-filesystem", Type: 0}
+			volume := spectrumscale.SpectrumScaleVolume{Name: "fake-volume", FileSystem: "fake-filesystem", Type: 0}
 			fakeSpectrumDataModel.GetVolumeReturns(volume, true, nil)
 			fakeSpectrumScaleConnector.IsFilesetLinkedReturns(true, nil)
 			fakeSpectrumScaleConnector.UnlinkFilesetReturns(fmt.Errorf("error in UnlinkFileset"))
@@ -539,7 +537,7 @@ var _ = Describe("local-client", func() {
 
 		It("should fail when type is fileset and dbClient fails to delete fileset", func() {
 			fakeLock.LockReturns(nil)
-			volume := spectrumscale.Volume{Name: "fake-volume", FileSystem: "fake-filesystem", Type: 0}
+			volume := spectrumscale.SpectrumScaleVolume{Name: "fake-volume", FileSystem: "fake-filesystem", Type: 0}
 			fakeSpectrumDataModel.GetVolumeReturns(volume, true, nil)
 			fakeSpectrumScaleConnector.IsFilesetLinkedReturns(false, nil)
 			fakeSpectrumDataModel.DeleteVolumeReturns(fmt.Errorf("error deleting volume"))
@@ -553,7 +551,7 @@ var _ = Describe("local-client", func() {
 
 		It("should fail when type is fileset and forceDelete is true and spectrumClient fails to delete fileset", func() {
 			fakeLock.LockReturns(nil)
-			volume := spectrumscale.Volume{Name: "fake-volume", FileSystem: "fake-filesystem", Type: 0}
+			volume := spectrumscale.SpectrumScaleVolume{Name: "fake-volume", FileSystem: "fake-filesystem", Type: 0}
 			fakeSpectrumDataModel.GetVolumeReturns(volume, true, nil)
 			fakeSpectrumScaleConnector.IsFilesetLinkedReturns(false, nil)
 			fakeSpectrumDataModel.DeleteVolumeReturns(nil)
@@ -568,7 +566,7 @@ var _ = Describe("local-client", func() {
 
 		It("should succeed when type is fileset and forceDelete is true", func() {
 			fakeLock.LockReturns(nil)
-			volume := spectrumscale.Volume{Name: "fake-volume", FileSystem: "fake-filesystem", Type: 0}
+			volume := spectrumscale.SpectrumScaleVolume{Name: "fake-volume", FileSystem: "fake-filesystem", Type: 0}
 			fakeSpectrumDataModel.GetVolumeReturns(volume, true, nil)
 			fakeSpectrumScaleConnector.IsFilesetLinkedReturns(false, nil)
 			fakeSpectrumDataModel.DeleteVolumeReturns(nil)
@@ -582,7 +580,7 @@ var _ = Describe("local-client", func() {
 
 		It("should succeed when type is fileset and forceDelete is false", func() {
 			fakeLock.LockReturns(nil)
-			volume := spectrumscale.Volume{Name: "fake-volume", FileSystem: "fake-filesystem", Type: 0}
+			volume := spectrumscale.SpectrumScaleVolume{Name: "fake-volume", FileSystem: "fake-filesystem", Type: 0}
 			fakeSpectrumDataModel.GetVolumeReturns(volume, true, nil)
 			fakeSpectrumScaleConnector.IsFilesetLinkedReturns(false, nil)
 			fakeSpectrumDataModel.DeleteVolumeReturns(nil)
@@ -620,9 +618,9 @@ var _ = Describe("local-client", func() {
 		It("should succeed to list volumes", func() {
 			fakeLock.LockReturns(nil)
 
-			volume1 := spectrumscale.Volume{Name: "fake-volume1", FileSystem: "fake-filesystem"}
-			volume2 := spectrumscale.Volume{Name: "fake-volume2", FileSystem: "fake-filesystem"}
-			volumesList := make([]spectrumscale.Volume, 2)
+			volume1 := spectrumscale.SpectrumScaleVolume{Name: "fake-volume1", FileSystem: "fake-filesystem"}
+			volume2 := spectrumscale.SpectrumScaleVolume{Name: "fake-volume2", FileSystem: "fake-filesystem"}
+			volumesList := make([]spectrumscale.SpectrumScaleVolume, 2)
 			volumesList[0] = volume1
 			volumesList[1] = volume2
 			fakeSpectrumDataModel.ListVolumesReturns(volumesList, nil)
@@ -647,7 +645,7 @@ var _ = Describe("local-client", func() {
 
 		It("should fail when dbClient fails to check if the volume exists", func() {
 			fakeLock.LockReturns(nil)
-			fakeSpectrumDataModel.GetVolumeReturns(spectrumscale.Volume{}, false, fmt.Errorf("error checking volume"))
+			fakeSpectrumDataModel.GetVolumeReturns(spectrumscale.SpectrumScaleVolume{}, false, fmt.Errorf("error checking volume"))
 			_, _, err = client.GetVolume("fake-volume")
 			Expect(err).To(HaveOccurred())
 			Expect(err.Error()).To(Equal("error checking volume"))
@@ -657,7 +655,7 @@ var _ = Describe("local-client", func() {
 
 		It("should fail when volume exists and dbClient fails to getVolume", func() {
 			fakeLock.LockReturns(nil)
-			fakeSpectrumDataModel.GetVolumeReturns(spectrumscale.Volume{}, false, fmt.Errorf("error getting volume"))
+			fakeSpectrumDataModel.GetVolumeReturns(spectrumscale.SpectrumScaleVolume{}, false, fmt.Errorf("error getting volume"))
 			_, _, err = client.GetVolume("fake-volume")
 			Expect(err).To(HaveOccurred())
 			Expect(err.Error()).To(Equal("error getting volume"))
@@ -667,7 +665,7 @@ var _ = Describe("local-client", func() {
 
 		It("should fail when volume does not exist", func() {
 			fakeLock.LockReturns(nil)
-			fakeSpectrumDataModel.GetVolumeReturns(spectrumscale.Volume{}, false, nil)
+			fakeSpectrumDataModel.GetVolumeReturns(spectrumscale.SpectrumScaleVolume{}, false, nil)
 			_, _, err = client.GetVolume("fake-volume")
 			Expect(err).To(HaveOccurred())
 			Expect(err.Error()).To(Equal("Volume not found"))
@@ -678,7 +676,7 @@ var _ = Describe("local-client", func() {
 		It("should succeed  when volume exists", func() {
 			fakeLock.LockReturns(nil)
 
-			volume := spectrumscale.Volume{Name: "fake-volume", FileSystem: "fake-filesystem"}
+			volume := spectrumscale.SpectrumScaleVolume{Name: "fake-volume", FileSystem: "fake-filesystem"}
 			fakeSpectrumDataModel.GetVolumeReturns(volume, true, nil)
 			vol, _, err := client.GetVolume("fake-volume")
 			Expect(err).ToNot(HaveOccurred())
@@ -702,7 +700,7 @@ var _ = Describe("local-client", func() {
 
 		It("should fail when dbClient fails to check volumeExists", func() {
 			fakeLock.LockReturns(nil)
-			fakeSpectrumDataModel.GetVolumeReturns(spectrumscale.Volume{}, false, fmt.Errorf("error in checking volume"))
+			fakeSpectrumDataModel.GetVolumeReturns(spectrumscale.SpectrumScaleVolume{}, false, fmt.Errorf("error in checking volume"))
 			mountpath, err := client.Attach("fake-volume")
 			Expect(err).To(HaveOccurred())
 			Expect(err.Error()).To(Equal("error in checking volume"))
@@ -713,7 +711,7 @@ var _ = Describe("local-client", func() {
 
 		It("should fail when volume does not exist", func() {
 			fakeLock.LockReturns(nil)
-			fakeSpectrumDataModel.GetVolumeReturns(spectrumscale.Volume{}, false, nil)
+			fakeSpectrumDataModel.GetVolumeReturns(spectrumscale.SpectrumScaleVolume{}, false, nil)
 			mountpath, err := client.Attach("fake-volume")
 			Expect(err).To(HaveOccurred())
 			Expect(err.Error()).To(Equal("Volume not found"))
@@ -724,7 +722,7 @@ var _ = Describe("local-client", func() {
 
 		It("should fail when volume exists and dbClient fails to getVolume", func() {
 			fakeLock.LockReturns(nil)
-			fakeSpectrumDataModel.GetVolumeReturns(spectrumscale.Volume{}, false, fmt.Errorf("error getting volume"))
+			fakeSpectrumDataModel.GetVolumeReturns(spectrumscale.SpectrumScaleVolume{}, false, fmt.Errorf("error getting volume"))
 			mountpath, err := client.Attach("fake-volume")
 			Expect(err).To(HaveOccurred())
 			Expect(err.Error()).To(Equal("error getting volume"))
@@ -736,7 +734,7 @@ var _ = Describe("local-client", func() {
 
 		It("should fail when volume is not attached and dbClient fails to get filesystem mountpoint", func() {
 			fakeLock.LockReturns(nil)
-			volume := spectrumscale.Volume{Name: "fake-volume", FileSystem: "fake-filesystem"}
+			volume := spectrumscale.SpectrumScaleVolume{Name: "fake-volume", FileSystem: "fake-filesystem"}
 			fakeSpectrumDataModel.GetVolumeReturns(volume, true, nil)
 			fakeSpectrumScaleConnector.GetFilesystemMountpointReturns("", fmt.Errorf("error getting mountpoint"))
 			mountpath, err := client.Attach("fake-volume")
@@ -751,7 +749,7 @@ var _ = Describe("local-client", func() {
 
 		It("should fail when volume is fileset volume and spectrumClient fails to check fileset linked", func() {
 			fakeLock.LockReturns(nil)
-			volume := spectrumscale.Volume{Name: "fake-volume", FileSystem: "fake-filesystem", Type: spectrumscale.FILESET}
+			volume := spectrumscale.SpectrumScaleVolume{Name: "fake-volume", FileSystem: "fake-filesystem", Type: spectrumscale.FILESET}
 			fakeSpectrumDataModel.GetVolumeReturns(volume, true, nil)
 			fakeSpectrumScaleConnector.GetFilesystemMountpointReturns("fake-mountpoint", nil)
 			fakeSpectrumScaleConnector.IsFilesetLinkedReturns(false, fmt.Errorf("error checking filesetlinked"))
@@ -768,7 +766,7 @@ var _ = Describe("local-client", func() {
 
 		It("should fail when volume is fileset volume and spectrumClient fails to link it", func() {
 			fakeLock.LockReturns(nil)
-			volume := spectrumscale.Volume{Name: "fake-volume", FileSystem: "fake-filesystem", Type: spectrumscale.FILESET}
+			volume := spectrumscale.SpectrumScaleVolume{Name: "fake-volume", FileSystem: "fake-filesystem", Type: spectrumscale.FILESET}
 			fakeSpectrumDataModel.GetVolumeReturns(volume, true, nil)
 			fakeSpectrumScaleConnector.GetFilesystemMountpointReturns("fake-mountpoint", nil)
 			fakeSpectrumScaleConnector.IsFilesetLinkedReturns(false, nil)
@@ -786,10 +784,7 @@ var _ = Describe("local-client", func() {
 
 		It("should fail when volume is fileset volume with permissions and executor fails to execute permissions change", func() {
 			fakeLock.LockReturns(nil)
-			data := make(map[string]string)
-			data["uid"] = "fake-uid"
-			data["gid"] = "gid"
-			volume := spectrumscale.Volume{Name: "fake-volume", FileSystem: "fake-filesystem", Type: spectrumscale.FILESET, AdditionalData: data}
+			volume := spectrumscale.SpectrumScaleVolume{Name: "fake-volume", FileSystem: "fake-filesystem", Type: spectrumscale.FILESET, UID: "fake-uid", GID: "gid"}
 			fakeSpectrumDataModel.GetVolumeReturns(volume, true, nil)
 			fakeSpectrumScaleConnector.GetFilesystemMountpointReturns("fake-mountpoint", nil)
 			fakeSpectrumScaleConnector.IsFilesetLinkedReturns(false, nil)
@@ -809,10 +804,7 @@ var _ = Describe("local-client", func() {
 
 		It("should succeed when volume is lightweight volume with permissions", func() {
 			fakeLock.LockReturns(nil)
-			data := make(map[string]string)
-			data["uid"] = "fake-uid"
-			data["gid"] = "gid"
-			volume := spectrumscale.Volume{Name: "fake-volume", FileSystem: "fake-filesystem", Type: spectrumscale.LIGHTWEIGHT, AdditionalData: data}
+			volume := spectrumscale.SpectrumScaleVolume{Name: "fake-volume", FileSystem: "fake-filesystem", Type: spectrumscale.LIGHTWEIGHT, UID: "fake-uid", GID: "gid"}
 			fakeSpectrumDataModel.GetVolumeReturns(volume, true, nil)
 			fakeSpectrumScaleConnector.GetFilesystemMountpointReturns("fake-mountpoint", nil)
 			fakeSpectrumScaleConnector.IsFilesetLinkedReturns(false, nil)
@@ -831,10 +823,8 @@ var _ = Describe("local-client", func() {
 
 		It("should succeed when volume is fileset volume with permissions", func() {
 			fakeLock.LockReturns(nil)
-			data := make(map[string]string)
-			data["uid"] = "fake-uid"
-			data["gid"] = "gid"
-			volume := spectrumscale.Volume{Name: "fake-volume", FileSystem: "fake-filesystem", Type: spectrumscale.FILESET, AdditionalData: data}
+
+			volume := spectrumscale.SpectrumScaleVolume{Name: "fake-volume", FileSystem: "fake-filesystem", Type: spectrumscale.FILESET, UID: "fake-uid", GID: "gid"}
 			fakeSpectrumDataModel.GetVolumeReturns(volume, true, nil)
 			fakeSpectrumScaleConnector.GetFilesystemMountpointReturns("fake-mountpoint", nil)
 			fakeSpectrumScaleConnector.IsFilesetLinkedReturns(false, nil)
@@ -865,7 +855,7 @@ var _ = Describe("local-client", func() {
 
 		It("should fail when dbClient fails to check volumeExists", func() {
 			fakeLock.LockReturns(nil)
-			fakeSpectrumDataModel.GetVolumeReturns(spectrumscale.Volume{}, false, fmt.Errorf("error in checking volume"))
+			fakeSpectrumDataModel.GetVolumeReturns(spectrumscale.SpectrumScaleVolume{}, false, fmt.Errorf("error in checking volume"))
 			err = client.Detach("fake-volume")
 			Expect(err).To(HaveOccurred())
 			Expect(err.Error()).To(Equal("error in checking volume"))
@@ -875,7 +865,7 @@ var _ = Describe("local-client", func() {
 
 		It("should fail when volume does not exist", func() {
 			fakeLock.LockReturns(nil)
-			fakeSpectrumDataModel.GetVolumeReturns(spectrumscale.Volume{}, false, nil)
+			fakeSpectrumDataModel.GetVolumeReturns(spectrumscale.SpectrumScaleVolume{}, false, nil)
 			err = client.Detach("fake-volume")
 			Expect(err).To(HaveOccurred())
 			Expect(err.Error()).To(Equal("Volume not found"))
@@ -885,7 +875,7 @@ var _ = Describe("local-client", func() {
 
 		It("should fail when volume exists and dbClient fails to getVolume", func() {
 			fakeLock.LockReturns(nil)
-			fakeSpectrumDataModel.GetVolumeReturns(spectrumscale.Volume{}, false, fmt.Errorf("error getting volume"))
+			fakeSpectrumDataModel.GetVolumeReturns(spectrumscale.SpectrumScaleVolume{}, false, fmt.Errorf("error getting volume"))
 			err = client.Detach("fake-volume")
 			Expect(err).To(HaveOccurred())
 			Expect(err.Error()).To(Equal("error getting volume"))
@@ -896,7 +886,7 @@ var _ = Describe("local-client", func() {
 		It("should fail when volume exists but not attached", func() {
 			fakeLock.LockReturns(nil)
 
-			volume := spectrumscale.Volume{Name: "fake-volume", FileSystem: "fake-filesystem"}
+			volume := spectrumscale.SpectrumScaleVolume{Name: "fake-volume", FileSystem: "fake-filesystem"}
 			fakeSpectrumDataModel.GetVolumeReturns(volume, true, nil)
 			err := client.Detach("fake-volume")
 			Expect(err).To(HaveOccurred())
@@ -910,7 +900,7 @@ var _ = Describe("local-client", func() {
 			fakeSpectrumScaleConnector.IsFilesystemMountedReturns(true, nil)
 			fakeSpectrumScaleConnector.IsFilesetLinkedReturns(true, nil)
 
-			volume := spectrumscale.Volume{Name: "fake-volume", FileSystem: "fake-filesystem"}
+			volume := spectrumscale.SpectrumScaleVolume{Name: "fake-volume", FileSystem: "fake-filesystem"}
 			fakeSpectrumDataModel.GetVolumeReturns(volume, true, nil)
 			err := client.Detach("fake-volume")
 			Expect(err).ToNot(HaveOccurred())

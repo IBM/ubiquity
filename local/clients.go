@@ -5,31 +5,32 @@ import (
 
 	"fmt"
 
+	"github.com/jinzhu/gorm"
 	"github.ibm.com/almaden-containers/ubiquity/local/softlayer"
 	"github.ibm.com/almaden-containers/ubiquity/local/spectrumscale"
 	"github.ibm.com/almaden-containers/ubiquity/model"
 	"github.ibm.com/almaden-containers/ubiquity/utils"
 )
 
-func GetLocalClients(logger *log.Logger, config model.UbiquityServerConfig, dbClient utils.DatabaseClient, fileLock utils.FileLock) (map[string]model.StorageClient, error) {
+func GetLocalClients(logger *log.Logger, config model.UbiquityServerConfig, database *gorm.DB, fileLock utils.FileLock) (map[string]model.StorageClient, error) {
 
 	var clients map[string]model.StorageClient
 	clients = make(map[string]model.StorageClient)
-	spectrumClient, err := spectrumscale.NewSpectrumLocalClient(logger, config.SpectrumScaleConfig, dbClient, fileLock)
+	spectrumClient, err := spectrumscale.NewSpectrumLocalClient(logger, config.SpectrumScaleConfig, database, fileLock)
 	if err != nil {
 		logger.Printf("Not enough params to initialize 'spectrum-scale' client")
 	} else {
 		clients["spectrum-scale"] = spectrumClient
 	}
 
-	spectrumNfsClient, err := spectrumscale.NewSpectrumNfsLocalClient(logger, config.SpectrumScaleConfig, dbClient, fileLock)
+	spectrumNfsClient, err := spectrumscale.NewSpectrumNfsLocalClient(logger, config.SpectrumScaleConfig, database, fileLock)
 	if err != nil {
 		logger.Printf("Not enough params to initialize 'spectrum-scale-nfs' client")
 	} else {
 		clients["spectrum-scale-nfs"] = spectrumNfsClient
 	}
 
-	softlayerClient, err := softlayer.NewSoftlayerLocalClient(logger, config.SoftlayerConfig, dbClient, fileLock)
+	softlayerClient, err := softlayer.NewSoftlayerLocalClient(logger, config.SoftlayerConfig, database, fileLock)
 	if err != nil {
 		logger.Printf("Not enough params to initialize 'softlayer-nfs' client")
 	} else {
