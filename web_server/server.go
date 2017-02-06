@@ -17,8 +17,8 @@ type Server struct {
 	logger            *log.Logger
 }
 
-func NewServer(logger *log.Logger, backends map[string]model.StorageClient, config model.UbiquityServerConfig) (*Server, error) {
-	brokerController := core.NewController(backends, config.BrokerConfig.ConfigPath)
+func NewServer(logger *log.Logger, backends map[model.Backend]model.StorageClient, config model.UbiquityServerConfig) (*Server, error) {
+	brokerController := core.NewController(nil, config.BrokerConfig.ConfigPath)
 	return &Server{brokerApiHandler: NewBrokerApiHandler(logger, brokerController), storageApiHandler: NewStorageApiHandler(logger, backends), logger: logger}, nil
 }
 

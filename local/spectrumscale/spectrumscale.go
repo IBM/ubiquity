@@ -53,7 +53,7 @@ func NewSpectrumLocalClientWithConnectors(logger *log.Logger, connector connecto
 	return &spectrumLocalClient{logger: logger, connector: connector, dataModel: datamodel, executor: spectrumExecutor, config: config, fileLock: fileLock}, nil
 }
 
-func newSpectrumLocalClient(logger *log.Logger, config model.SpectrumScaleConfig, database *gorm.DB, fileLock utils.FileLock, backend model.BackendType) (*spectrumLocalClient, error) {
+func newSpectrumLocalClient(logger *log.Logger, config model.SpectrumScaleConfig, database *gorm.DB, fileLock utils.FileLock, backend model.Backend) (*spectrumLocalClient, error) {
 	logger.Println("spectrumLocalClient: init start")
 	defer logger.Println("spectrumLocalClient: init end")
 

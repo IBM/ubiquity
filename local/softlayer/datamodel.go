@@ -28,7 +28,7 @@ const (
 type softlayerDataModel struct {
 	log      *log.Logger
 	database *gorm.DB
-	backend  model.BackendType
+	backend  model.Backend
 }
 
 type SoftlayerVolume struct {
@@ -39,7 +39,7 @@ type SoftlayerVolume struct {
 	Mountpoint  string
 }
 
-func NewSoftlayerDataModel(log *log.Logger, db *gorm.DB, backend model.BackendType) SoftlayerDataModel {
+func NewSoftlayerDataModel(log *log.Logger, db *gorm.DB, backend model.Backend) SoftlayerDataModel {
 	return &softlayerDataModel{log: log, database: db, backend: backend}
 }
 
@@ -77,7 +77,7 @@ func (d *softlayerDataModel) InsertFileshare(fileshareID int, volumeName string,
 	d.log.Println("SoftlayerDataModel: InsertFilesetVolume start")
 	defer d.log.Println("SoftlayerDataModel: InsertFilesetVolume end")
 
-	volume := SoftlayerVolume{Volume: model.Volume{Name: volumeName, Backend: d.backend}, FileshareID: fileshareID, Mountpoint: mountPath}
+	volume := SoftlayerVolume{Volume: model.Volume{Name: volumeName, Backend: fmt.Sprintf("%s", d.backend)}, FileshareID: fileshareID, Mountpoint: mountPath}
 
 	return d.insertVolume(volume)
 }
@@ -97,8 +97,8 @@ func (d *softlayerDataModel) GetVolume(name string) (SoftlayerVolume, bool, erro
 	d.log.Println("SoftlayerDataModel: GetVolume start")
 	defer d.log.Println("SoftlayerDataModel: GetVolume end")
 
-	var volume model.Volume
-	if err := d.database.Where("name = ? AND backend = ?", name, d.backend).First(&volume).Error; err != nil {
+	volume, err := model.GetVolume(d.database, name, d.backend)
+	if err != nil {
 		if err.Error() == "record not found" {
 			return SoftlayerVolume{}, false, nil
 		}
