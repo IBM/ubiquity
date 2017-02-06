@@ -92,16 +92,16 @@ func (s *spectrumNfsLocalClient) CreateVolume(name string, opts map[string]inter
 	s.spectrumClient.logger.Printf("spectrumNfsLocalClient: Create-start with name %s and opts %#v\n", name, opts)
 	defer s.spectrumClient.logger.Println("spectrumNfsLocalClient: Create-end")
 
-	nfsClientCIDR, ok := opts["nfsClientCIDR"].(string)
+	nfsClientConfig, ok := opts["nfsClientConfig"].(string)
 	if !ok {
-		errorMsg := "Cannot create volume (opts missing required parameter 'nfsClientCIDR')"
+		errorMsg := "Cannot create volume (opts missing required parameter 'nfsClientConfig')"
 		s.spectrumClient.logger.Printf("spectrumNfsLocalClient: Create: Error: %s", errorMsg)
 		return fmt.Errorf(errorMsg)
 	}
 
 	spectrumOpts := make(map[string]interface{})
 	for k, v := range opts {
-		if k != "nfsClientCIDR" {
+		if k != "nfsClientConfig" {
 			spectrumOpts[k] = v
 		}
 	}
@@ -117,7 +117,7 @@ func (s *spectrumNfsLocalClient) CreateVolume(name string, opts map[string]inter
 		return err
 	}
 
-	if err := s.exportNfs(name, nfsClientCIDR); err != nil {
+	if err := s.exportNfs(name, nfsClientConfig); err != nil {
 		s.spectrumClient.logger.Printf("spectrumNfsLocalClient: error exporting volume %#v\n; deleting volume", err)
 		s.spectrumClient.RemoveVolume(name, true)
 		return err
@@ -152,8 +152,8 @@ func (s *spectrumNfsLocalClient) GetVolume(name string) (model.VolumeMetadata, m
 	return volumeMetadata, volumeConfig, nil
 }
 
-func (s *spectrumNfsLocalClient) exportNfs(name, clientCIDR string) error {
-	s.spectrumClient.logger.Printf("spectrumNfsLocalClient: ExportNfs start with name=%#v and clientCIDR=%#v\n", name, clientCIDR)
+func (s *spectrumNfsLocalClient) exportNfs(name, clientConfig string) error {
+	s.spectrumClient.logger.Printf("spectrumNfsLocalClient: ExportNfs start with name=%#v and clientConfig=%#v\n", name, clientConfig)
 	defer s.spectrumClient.logger.Printf("spectrumNfsLocalClient: ExportNfs end")
 
 	existingVolume, exists, err := s.spectrumClient.dataModel.GetVolume(name)
@@ -173,7 +173,7 @@ func (s *spectrumNfsLocalClient) exportNfs(name, clientCIDR string) error {
 		return err
 	}
 
-	args := []string{"export", "add", volumeMountpoint, "--client", fmt.Sprintf("%s(Access_Type=RW,Protocols=3:4,Squash=no_root_squash)", clientCIDR)}
+	args := []string{"export", "add", volumeMountpoint, "--client", fmt.Sprintf("%s", clientConfig)}
 	cmd := exec.Command(spectrumCommand, args...)
 	output, err := cmd.Output()
 	if err != nil {

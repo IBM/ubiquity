@@ -23,7 +23,7 @@ type nfsRemoteClient struct {
 }
 
 func NewNfsRemoteClient(logger *log.Logger, backendName, storageApiURL string, config model.SpectrumNfsRemoteConfig) (model.StorageClient, error) {
-	if config.CIDR == "" {
+	if config.ClientConfig == "" {
 		return nil, fmt.Errorf("newNFSRemoteClient: Missing required parameter 'CIDR'")
 	}
 	return &nfsRemoteClient{logger: logger, storageApiURL: storageApiURL, httpClient: &http.Client{}, backendName: backendName, config: config}, nil
@@ -64,7 +64,7 @@ func (s *nfsRemoteClient) CreateVolume(name string, opts map[string]interface{})
 	for k, v := range opts {
 		extendedOpts[k] = v
 	}
-	extendedOpts["nfsClientCIDR"] = s.config.CIDR
+	extendedOpts["nfsClientConfig"] = s.config.ClientConfig
 	createVolumeRequest := model.CreateRequest{Name: name, Opts: extendedOpts}
 
 	response, err := utils.HttpExecute(s.httpClient, s.logger, "POST", createRemoteURL, createVolumeRequest)

@@ -28,7 +28,7 @@ type SoftlayerConfig struct {
 }
 
 type SpectrumNfsRemoteConfig struct {
-	CIDR string
+	ClientConfig string
 }
 
 type BrokerConfig struct {
