@@ -27,7 +27,7 @@ type spectrumDataModel struct {
 	log       *log.Logger
 	database  *gorm.DB
 	clusterId string
-	backend   model.BackendType
+	backend   model.Backend
 }
 
 type VolumeType int
@@ -57,7 +57,7 @@ type SpectrumScaleVolume struct {
 	Quota      string
 }
 
-func NewSpectrumDataModel(log *log.Logger, db *gorm.DB, backend model.BackendType) SpectrumDataModel {
+func NewSpectrumDataModel(log *log.Logger, db *gorm.DB, backend model.Backend) SpectrumDataModel {
 	return &spectrumDataModel{log: log, database: db, backend: backend}
 }
 
@@ -100,7 +100,7 @@ func (d *spectrumDataModel) InsertFilesetVolume(fileset, volumeName string, file
 	d.log.Println("SpectrumDataModel: InsertFilesetVolume start")
 	defer d.log.Println("SpectrumDataModel: InsertFilesetVolume end")
 
-	volume := SpectrumScaleVolume{Volume: model.Volume{Name: volumeName, Backend: d.backend}, Type: FILESET, ClusterId: d.clusterId, FileSystem: filesystem,
+	volume := SpectrumScaleVolume{Volume: model.Volume{Name: volumeName, Backend: fmt.Sprintf("%s", d.backend)}, Type: FILESET, ClusterId: d.clusterId, FileSystem: filesystem,
 		Fileset: fileset}
 
 	addPermissionsForVolume(&volume, opts)
@@ -112,7 +112,7 @@ func (d *spectrumDataModel) InsertLightweightVolume(fileset, directory, volumeNa
 	d.log.Println("SpectrumDataModel: InsertLightweightVolume start")
 	defer d.log.Println("SpectrumDataModel: InsertLightweightVolume end")
 
-	volume := SpectrumScaleVolume{Volume: model.Volume{Name: volumeName, Backend: d.backend}, Type: LIGHTWEIGHT, ClusterId: d.clusterId, FileSystem: filesystem,
+	volume := SpectrumScaleVolume{Volume: model.Volume{Name: volumeName, Backend: fmt.Sprintf("%s", d.backend)}, Type: LIGHTWEIGHT, ClusterId: d.clusterId, FileSystem: filesystem,
 		Fileset: fileset, Directory: directory}
 
 	addPermissionsForVolume(&volume, opts)
@@ -124,7 +124,7 @@ func (d *spectrumDataModel) InsertFilesetQuotaVolume(fileset, quota, volumeName 
 	d.log.Println("SpectrumDataModel: InsertFilesetQuotaVolume start")
 	defer d.log.Println("SpectrumDataModel: InsertFilesetQuotaVolume end")
 
-	volume := SpectrumScaleVolume{Volume: model.Volume{Name: volumeName, Backend: d.backend}, Type: FILESET_WITH_QUOTA, ClusterId: d.clusterId, FileSystem: filesystem,
+	volume := SpectrumScaleVolume{Volume: model.Volume{Name: volumeName, Backend: fmt.Sprintf("%s", d.backend)}, Type: FILESET_WITH_QUOTA, ClusterId: d.clusterId, FileSystem: filesystem,
 		Fileset: fileset, Quota: quota}
 
 	addPermissionsForVolume(&volume, opts)
@@ -146,8 +146,8 @@ func (d *spectrumDataModel) GetVolume(name string) (SpectrumScaleVolume, bool, e
 	d.log.Println("SpectrumDataModel: GetVolume start")
 	defer d.log.Println("SpectrumDataModel: GetVolume end")
 
-	var volume model.Volume
-	if err := d.database.Where("name = ? AND backend = ?", name, d.backend).First(&volume).Error; err != nil {
+	volume, err := model.GetVolume(d.database, name, d.backend)
+	if err != nil {
 		if err.Error() == "record not found" {
 			return SpectrumScaleVolume{}, false, nil
 		}

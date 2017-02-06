@@ -12,10 +12,10 @@ import (
 
 type StorageApiHandler struct {
 	logger   *log.Logger
-	backends map[string]model.StorageClient
+	backends map[model.Backend]model.StorageClient
 }
 
-func NewStorageApiHandler(logger *log.Logger, backends map[string]model.StorageClient) *StorageApiHandler {
+func NewStorageApiHandler(logger *log.Logger, backends map[model.Backend]model.StorageClient) *StorageApiHandler {
 	return &StorageApiHandler{logger: logger, backends: backends}
 }
 
@@ -199,7 +199,7 @@ func (h *StorageApiHandler) getBackend(req *http.Request) (model.StorageClient, 
 		return nil, fmt.Errorf("Cannot find backend in url path")
 	}
 
-	backend, exists := h.backends[backendName]
+	backend, exists := h.backends[model.Backend(backendName)]
 	if !exists {
 		h.logger.Printf("Cannot find backend %s" + backendName)
 		return nil, fmt.Errorf("Cannot find backend %s", backend)
