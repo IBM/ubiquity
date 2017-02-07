@@ -8,7 +8,7 @@ import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 
-	"github.ibm.com/almaden-containers/ubiquity/model"
+	"github.ibm.com/almaden-containers/ubiquity/resources"
 
 	"github.ibm.com/alchemy-containers/armada-slclient-lib/datatypes"
 	"github.ibm.com/almaden-containers/ubiquity/fakes"
@@ -17,13 +17,13 @@ import (
 
 var _ = Describe("local-client", func() {
 	var (
-		client                      model.StorageClient
+		client                      resources.StorageClient
 		logger                      *log.Logger
 		fakeDbClient                *fakes.FakeDatabaseClient
 		fakeSoftlayerDataModel      *fakes.FakeSoftlayerDataModel
 		fakeLock                    *fakes.FakeFileLock
 		fakeExec                    *fakes.FakeExecutor
-		fakeConfig                  model.SpectrumScaleConfig
+		fakeConfig                  resources.SpectrumScaleConfig
 		fakeSoftlayerStorageService *fakes.FakeSoftlayer_Storage_Service
 		err                         error
 	)
@@ -34,7 +34,7 @@ var _ = Describe("local-client", func() {
 		fakeExec = new(fakes.FakeExecutor)
 		fakeSoftlayerDataModel = new(fakes.FakeSoftlayerDataModel)
 		fakeSoftlayerStorageService = new(fakes.FakeSoftlayer_Storage_Service)
-		fakeConfig = model.SpectrumScaleConfig{}
+		fakeConfig = resources.SpectrumScaleConfig{}
 		client, err = softlayer.NewSoftlayerLocalClientWithDataModelAndSLService(logger, fakeSoftlayerDataModel, fakeLock, fakeSoftlayerStorageService)
 		Expect(err).ToNot(HaveOccurred())
 

@@ -6,16 +6,16 @@ import (
 	"os/exec"
 
 	"github.com/jinzhu/gorm"
-	"github.ibm.com/almaden-containers/ubiquity/model"
+	"github.ibm.com/almaden-containers/ubiquity/resources"
 	"github.ibm.com/almaden-containers/ubiquity/utils"
 )
 
 type spectrumNfsLocalClient struct {
 	spectrumClient *spectrumLocalClient
-	config         model.SpectrumScaleConfig
+	config         resources.SpectrumScaleConfig
 }
 
-func NewSpectrumNfsLocalClient(logger *log.Logger, config model.SpectrumScaleConfig, db *gorm.DB, fileLock utils.FileLock) (model.StorageClient, error) {
+func NewSpectrumNfsLocalClient(logger *log.Logger, config resources.SpectrumScaleConfig, db *gorm.DB, fileLock utils.FileLock) (resources.StorageClient, error) {
 	logger.Println("spectrumNfsLocalClient: init start")
 	defer logger.Println("spectrumNfsLocalClient: init end")
 
@@ -31,7 +31,7 @@ func NewSpectrumNfsLocalClient(logger *log.Logger, config model.SpectrumScaleCon
 		return nil, fmt.Errorf("spectrumNfsLocalClient: init: missing required parameter 'spectrumNfsServerAddr'")
 	}
 
-	spectrumClient, err := newSpectrumLocalClient(logger, config, db, fileLock, model.SPECTRUM_SCALE_NFS)
+	spectrumClient, err := newSpectrumLocalClient(logger, config, db, fileLock, resources.SPECTRUM_SCALE_NFS)
 	if err != nil {
 		return nil, err
 	}
@@ -45,7 +45,7 @@ func (s *spectrumNfsLocalClient) Activate() error {
 	return s.spectrumClient.Activate()
 }
 
-func (s *spectrumNfsLocalClient) ListVolumes() ([]model.VolumeMetadata, error) {
+func (s *spectrumNfsLocalClient) ListVolumes() ([]resources.VolumeMetadata, error) {
 	s.spectrumClient.logger.Println("spectrumNfsLocalClient: List-volumes-start")
 	defer s.spectrumClient.logger.Println("spectrumNfsLocalClient: List-volumes-end")
 
@@ -138,7 +138,7 @@ func (s *spectrumNfsLocalClient) RemoveVolume(name string, forceDelete bool) err
 	return s.spectrumClient.RemoveVolume(name, forceDelete)
 }
 
-func (s *spectrumNfsLocalClient) GetVolume(name string) (model.VolumeMetadata, map[string]interface{}, error) {
+func (s *spectrumNfsLocalClient) GetVolume(name string) (resources.VolumeMetadata, map[string]interface{}, error) {
 	s.spectrumClient.logger.Println("spectrumNfsLocalClient: GetV-start")
 	defer s.spectrumClient.logger.Println("spectrumNfsLocalClient: Get-end")
 

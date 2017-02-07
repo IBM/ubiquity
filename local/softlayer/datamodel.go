@@ -8,6 +8,7 @@ import (
 	"github.com/jinzhu/gorm"
 	_ "github.com/mattn/go-sqlite3"
 	"github.ibm.com/almaden-containers/ubiquity/model"
+	"github.ibm.com/almaden-containers/ubiquity/resources"
 )
 
 //go:generate counterfeiter -o ../../fakes/fake_SoftlayerDataModel.go . SoftlayerDataModel
@@ -28,7 +29,7 @@ const (
 type softlayerDataModel struct {
 	log      *log.Logger
 	database *gorm.DB
-	backend  model.Backend
+	backend  resources.Backend
 }
 
 type SoftlayerVolume struct {
@@ -39,7 +40,7 @@ type SoftlayerVolume struct {
 	Mountpoint  string
 }
 
-func NewSoftlayerDataModel(log *log.Logger, db *gorm.DB, backend model.Backend) SoftlayerDataModel {
+func NewSoftlayerDataModel(log *log.Logger, db *gorm.DB, backend resources.Backend) SoftlayerDataModel {
 	return &softlayerDataModel{log: log, database: db, backend: backend}
 }
 

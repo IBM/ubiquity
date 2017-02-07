@@ -1,13 +1,18 @@
-package model
+package resources
 
 import (
 	"encoding/json"
 	"fmt"
-	"log"
 	"net/http"
 )
 
-type StorageClientFactory func(logger *log.Logger, backendName string, storageApiURL string, params map[string]interface{}) (StorageClient, error)
+const (
+	SPECTRUM_SCALE     Backend = "spectrum-scale"
+	SPECTRUM_SCALE_NFS Backend = "spectrum-scale-nfs"
+	SOFTLAYER_NFS      Backend = "softlayer-nfs"
+)
+
+type Backend string
 
 type UbiquityServerConfig struct {
 	Port                int
@@ -189,14 +194,6 @@ type FlexVolumeMountRequest struct {
 	MountPath   string                 `json:"mountPath"`
 	MountDevice string                 `json:"name"`
 	Opts        map[string]interface{} `json:"opts"`
-}
-
-type FlexVolumeAttachRequest struct {
-	VolumeId   string `json:"volumeID"`
-	Filesystem string `json:"filesystem"`
-	Size       string `json:"size"`
-	Path       string `json:"path"`
-	Fileset    string `json:"fileset"`
 }
 
 type FlexVolumeUnmountRequest struct {

@@ -5,8 +5,8 @@ import (
 	"log"
 	"net/http"
 
-	"github.ibm.com/almaden-containers/ubiquity/core"
-	"github.ibm.com/almaden-containers/ubiquity/model"
+	"github.ibm.com/almaden-containers/ubiquity/service_broker"
+	"github.ibm.com/almaden-containers/ubiquity/resources"
 
 	"github.com/gorilla/mux"
 )
@@ -17,8 +17,8 @@ type Server struct {
 	logger            *log.Logger
 }
 
-func NewServer(logger *log.Logger, backends map[model.Backend]model.StorageClient, config model.UbiquityServerConfig) (*Server, error) {
-	brokerController := core.NewController(nil, config.BrokerConfig.ConfigPath)
+func NewServer(logger *log.Logger, backends map[resources.Backend]resources.StorageClient, config resources.UbiquityServerConfig) (*Server, error) {
+	brokerController := service_broker.NewController(nil, config.BrokerConfig.ConfigPath)
 	return &Server{brokerApiHandler: NewBrokerApiHandler(logger, brokerController), storageApiHandler: NewStorageApiHandler(logger, backends), logger: logger}, nil
 }
 

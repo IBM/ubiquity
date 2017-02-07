@@ -16,6 +16,7 @@ import (
 	_ "github.com/jinzhu/gorm/dialects/sqlite"
 	"github.ibm.com/almaden-containers/ubiquity/local"
 	"github.ibm.com/almaden-containers/ubiquity/model"
+	"github.ibm.com/almaden-containers/ubiquity/resources"
 	"github.ibm.com/almaden-containers/ubiquity/utils"
 	"github.ibm.com/almaden-containers/ubiquity/web_server"
 )
@@ -28,7 +29,7 @@ var configFile = flag.String(
 
 func main() {
 	flag.Parse()
-	var config model.UbiquityServerConfig
+	var config resources.UbiquityServerConfig
 
 	fmt.Printf("Starting ubiquity service with %s config file\n", *configFile)
 

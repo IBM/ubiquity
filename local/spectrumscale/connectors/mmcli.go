@@ -6,7 +6,7 @@ import (
 	"path"
 	"strings"
 
-	"github.ibm.com/almaden-containers/ubiquity/model"
+	"github.ibm.com/almaden-containers/ubiquity/resources"
 	"github.ibm.com/almaden-containers/ubiquity/utils"
 )
 
@@ -319,10 +319,10 @@ func UnlinkFilesetInternal(logger *log.Logger, executor utils.Executor, filesyst
 	return nil
 }
 
-func (s *spectrum_mmcli) ListFilesets(filesystemName string) ([]model.VolumeMetadata, error) {
+func (s *spectrum_mmcli) ListFilesets(filesystemName string) ([]resources.VolumeMetadata, error) {
 	return nil, nil
 }
-func (s *spectrum_mmcli) ListFileset(filesystemName string, filesetName string) (model.VolumeMetadata, error) {
+func (s *spectrum_mmcli) ListFileset(filesystemName string, filesetName string) (resources.VolumeMetadata, error) {
 	s.logger.Println("spectrumLocalClient: ListFileset start")
 	defer s.logger.Println("spectrumLocalClient: ListFileset end")
 
@@ -330,14 +330,14 @@ func (s *spectrum_mmcli) ListFileset(filesystemName string, filesetName string) 
 	args := []string{spectrumCommand, filesystemName, filesetName, "-Y"}
 	return ListFilesetInternal(s.logger, s.executor, filesystemName, filesetName, "sudo", args)
 }
-func ListFilesetInternal(logger *log.Logger, executor utils.Executor, filesystemName string, filesetName string, command string, args []string) (model.VolumeMetadata, error) {
+func ListFilesetInternal(logger *log.Logger, executor utils.Executor, filesystemName string, filesetName string, command string, args []string) (resources.VolumeMetadata, error) {
 	_, err := executor.Execute(command, args)
 	if err != nil {
 		logger.Println(err)
-		return model.VolumeMetadata{}, err
+		return resources.VolumeMetadata{}, err
 	}
 	//TODO check what we need to return
-	return model.VolumeMetadata{Name: filesetName}, err
+	return resources.VolumeMetadata{Name: filesetName}, err
 }
 
 //TODO modify quota from string to Capacity (see kubernetes)

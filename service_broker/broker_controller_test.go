@@ -1,4 +1,4 @@
-package core_test
+package service_broker_test
 
 import (
 	"fmt"
@@ -6,34 +6,34 @@ import (
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
-	"github.ibm.com/almaden-containers/ubiquity/core"
 	"github.ibm.com/almaden-containers/ubiquity/fakes"
-	"github.ibm.com/almaden-containers/ubiquity/model"
+	"github.ibm.com/almaden-containers/ubiquity/resources"
+	"github.ibm.com/almaden-containers/ubiquity/service_broker"
 )
 
 var _ = Describe("ibm-storage-broker Broker", func() {
 	var (
-		controller      core.BrokerController
+		controller      service_broker.BrokerController
 		localMountPoint string
 		serviceGuid     string
-		instanceMap     map[string]*model.ServiceInstance
-		bindingMap      map[string]*model.ServiceBinding
+		instanceMap     map[string]*resources.ServiceInstance
+		bindingMap      map[string]*resources.ServiceBinding
 		testLogger      log.Logger
 		fakeBackend     *fakes.FakeStorageClient
 		configPath      string
-		storageBackends map[string]model.StorageClient
+		storageBackends map[string]resources.StorageClient
 	)
 	BeforeEach(func() {
 		serviceGuid = "some-service-guid"
 		localMountPoint = "/tmp/share"
 		configPath = "/tmp/ibm-storage-broker"
-		instanceMap = make(map[string]*model.ServiceInstance)
-		bindingMap = make(map[string]*model.ServiceBinding)
+		instanceMap = make(map[string]*resources.ServiceInstance)
+		bindingMap = make(map[string]*resources.ServiceBinding)
 		fakeBackend = new(fakes.FakeStorageClient)
 
-		storageBackends = make(map[string]model.StorageClient)
+		storageBackends = make(map[string]resources.StorageClient)
 		storageBackends["fake-backend"] = fakeBackend
-		controller = core.NewController(storageBackends, configPath)
+		controller = service_broker.NewController(storageBackends, configPath)
 		//controller = core.NewController(fakeBackend, configPath, instanceMap, bindingMap)
 
 	})
@@ -57,10 +57,10 @@ var _ = Describe("ibm-storage-broker Broker", func() {
 		})
 		Context(".CreateServiceInstance", func() {
 			var (
-				instance model.ServiceInstance
+				instance resources.ServiceInstance
 			)
 			BeforeEach(func() {
-				instance = model.ServiceInstance{}
+				instance = resources.ServiceInstance{}
 				instance.PlanId = "some-planId"
 				instance.Parameters = map[string]interface{}{"some-property": "some-value"}
 
@@ -78,7 +78,7 @@ var _ = Describe("ibm-storage-broker Broker", func() {
 					Expect(err.Error()).To(Equal("Failed to create fileset"))
 				})
 				It("should error when updating internal bookkeeping fails", func() {
-					controller = core.NewController(storageBackends, "/non-existent-path")
+					controller = service_broker.NewController(storageBackends, "/non-existent-path")
 					_, err := controller.CreateServiceInstance(testLogger, "service-instance-guid", instance)
 					Expect(err).To(HaveOccurred())
 					Expect(err.Error()).To(Equal(fmt.Sprintf("open /non-existent-path/service_instances.json: no such file or directory")))
@@ -88,10 +88,10 @@ var _ = Describe("ibm-storage-broker Broker", func() {
 		})
 		Context(".ServiceInstanceExists", func() {
 			var (
-				instance model.ServiceInstance
+				instance resources.ServiceInstance
 			)
 			BeforeEach(func() {
-				instance = model.ServiceInstance{}
+				instance = resources.ServiceInstance{}
 				instance.PlanId = "some-planId"
 				instance.Parameters = map[string]interface{}{"some-property": "some-value"}
 
@@ -108,17 +108,17 @@ var _ = Describe("ibm-storage-broker Broker", func() {
 		})
 		Context(".ServiceInstancePropertiesMatch", func() {
 			var (
-				instance model.ServiceInstance
+				instance resources.ServiceInstance
 			)
 			BeforeEach(func() {
-				instance = model.ServiceInstance{}
+				instance = resources.ServiceInstance{}
 				instance.PlanId = "some-planId"
 				instance.Parameters = map[string]interface{}{"some-property": "some-value"}
 
 			})
 			It("should return true if properties match", func() {
 				successfulServiceInstanceCreate(testLogger, fakeBackend, instance, controller, serviceGuid)
-				anotherInstance := model.ServiceInstance{}
+				anotherInstance := resources.ServiceInstance{}
 				properties := map[string]interface{}{"some-property": "some-value"}
 				anotherInstance.Parameters = properties
 				anotherInstance.PlanId = "some-planId"
@@ -127,7 +127,7 @@ var _ = Describe("ibm-storage-broker Broker", func() {
 			})
 			It("should return false if properties do not match", func() {
 				successfulServiceInstanceCreate(testLogger, fakeBackend, instance, controller, serviceGuid)
-				anotherInstance := model.ServiceInstance{}
+				anotherInstance := resources.ServiceInstance{}
 				properties := map[string]interface{}{"some-property": "some-value"}
 				anotherInstance.Parameters = properties
 				anotherInstance.PlanId = "some-other-planId"
@@ -138,10 +138,10 @@ var _ = Describe("ibm-storage-broker Broker", func() {
 
 		Context(".ServiceInstanceDelete", func() {
 			var (
-				instance model.ServiceInstance
+				instance resources.ServiceInstance
 			)
 			BeforeEach(func() {
-				instance = model.ServiceInstance{}
+				instance = resources.ServiceInstance{}
 				instance.PlanId = "some-planId"
 				instance.Parameters = map[string]interface{}{"some-property": "some-value"}
 			})
@@ -160,7 +160,7 @@ var _ = Describe("ibm-storage-broker Broker", func() {
 				Expect(err.Error()).To(Equal("Failed to delete fileset, fileset not found"))
 			})
 			It("should error when updating internal bookkeeping fails", func() {
-				controller = core.NewController(storageBackends, "/non-existent-path")
+				controller = service_broker.NewController(storageBackends, "/non-existent-path")
 				err := controller.DeleteServiceInstance(testLogger, serviceGuid)
 				Expect(err).To(HaveOccurred())
 				Expect(err.Error()).To(Equal(fmt.Sprintf("open /non-existent-path/service_instances.json: no such file or directory")))
@@ -169,20 +169,20 @@ var _ = Describe("ibm-storage-broker Broker", func() {
 		})
 		Context(".BindServiceInstance", func() {
 			var (
-				instance    model.ServiceInstance
-				bindingInfo model.ServiceBinding
+				instance    resources.ServiceInstance
+				bindingInfo resources.ServiceBinding
 			)
 			BeforeEach(func() {
-				instance = model.ServiceInstance{}
+				instance = resources.ServiceInstance{}
 				instance.PlanId = "some-planId"
 				instance.Parameters = map[string]interface{}{"some-property": "some-value"}
-				bindingInfo = model.ServiceBinding{}
+				bindingInfo = resources.ServiceBinding{}
 				successfulServiceInstanceCreate(testLogger, fakeBackend, instance, controller, serviceGuid)
 			})
 			It("should be able bind service instance", func() {
-				config := model.SpectrumScaleConfig{}
+				config := resources.SpectrumScaleConfig{}
 				//model.SpectrumConfig
-				fakeBackend.GetVolumeReturns(&model.VolumeMetadata{Mountpoint: "/gpfs/fileset1"}, &config, nil)
+				fakeBackend.GetVolumeReturns(&resources.VolumeMetadata{Mountpoint: "/gpfs/fileset1"}, &config, nil)
 				bindingResponse, err := controller.BindServiceInstance(testLogger, serviceGuid, "some-binding-id", bindingInfo)
 				Expect(err).ToNot(HaveOccurred())
 				Expect(bindingResponse.VolumeMounts).ToNot(BeNil())
@@ -190,16 +190,16 @@ var _ = Describe("ibm-storage-broker Broker", func() {
 			})
 			Context("should fail", func() {
 				It("when unable to find the backing share", func() {
-					config := model.SpectrumScaleConfig{}
-					fakeBackend.GetVolumeReturns(&model.VolumeMetadata{}, &config, fmt.Errorf("Cannot find fileset, internal error"))
+					config := resources.SpectrumScaleConfig{}
+					fakeBackend.GetVolumeReturns(&resources.VolumeMetadata{}, &config, fmt.Errorf("Cannot find fileset, internal error"))
 					_, err := controller.BindServiceInstance(testLogger, serviceGuid, "some-binding-id", bindingInfo)
 					Expect(err).To(HaveOccurred())
 					Expect(err.Error()).To(Equal("Cannot find fileset, internal error"))
 				})
 				It("when updating internal bookkeeping fails", func() {
-					config := model.SpectrumScaleConfig{}
-					fakeBackend.GetVolumeReturns(&model.VolumeMetadata{Mountpoint: "/gpfs/fileset1"}, &config, nil)
-					controller = core.NewController(storageBackends, "/non-existent-path")
+					config := resources.SpectrumScaleConfig{}
+					fakeBackend.GetVolumeReturns(&resources.VolumeMetadata{Mountpoint: "/gpfs/fileset1"}, &config, nil)
+					controller = service_broker.NewController(storageBackends, "/non-existent-path")
 					_, err := controller.BindServiceInstance(testLogger, serviceGuid, "some-binding-id", bindingInfo)
 					Expect(err).To(HaveOccurred())
 					Expect(err.Error()).To(Equal(fmt.Sprintf("open /non-existent-path/service_bindings.json: no such file or directory")))
@@ -208,19 +208,19 @@ var _ = Describe("ibm-storage-broker Broker", func() {
 		})
 		Context(".ServiceBindingExists", func() {
 			var (
-				instance  model.ServiceInstance
+				instance  resources.ServiceInstance
 				bindingId string
 			)
 			BeforeEach(func() {
-				instance = model.ServiceInstance{}
+				instance = resources.ServiceInstance{}
 				instance.PlanId = "some-planId"
 				instance.Parameters = map[string]interface{}{"some-property": "some-value"}
 				bindingId = "some-binding-id"
 			})
 			It("should confirm existence of service instance", func() {
-				config := model.SpectrumScaleConfig{}
-				fakeBackend.GetVolumeReturns(&model.VolumeMetadata{Mountpoint: "/gpfs/fileset1"}, &config, nil)
-				binding := model.ServiceBinding{}
+				config := resources.SpectrumScaleConfig{}
+				fakeBackend.GetVolumeReturns(&resources.VolumeMetadata{Mountpoint: "/gpfs/fileset1"}, &config, nil)
+				binding := resources.ServiceBinding{}
 				successfulServiceInstanceCreate(testLogger, fakeBackend, instance, controller, serviceGuid)
 				successfulServiceBindingCreate(testLogger, fakeBackend, binding, controller, serviceGuid, bindingId)
 				bindingExists := controller.ServiceBindingExists(testLogger, serviceGuid, bindingId)
@@ -233,33 +233,33 @@ var _ = Describe("ibm-storage-broker Broker", func() {
 		})
 		Context(".ServiceBindingPropertiesMatch", func() {
 			var (
-				instance  model.ServiceInstance
+				instance  resources.ServiceInstance
 				bindingId string
 			)
 			BeforeEach(func() {
-				instance = model.ServiceInstance{}
+				instance = resources.ServiceInstance{}
 				instance.PlanId = "some-planId"
 				instance.Parameters = map[string]interface{}{"some-property": "some-value"}
 				bindingId = "some-binding-id"
 
 			})
 			It("should return true if properties match", func() {
-				binding := model.ServiceBinding{}
-				config := model.SpectrumScaleConfig{}
-				fakeBackend.GetVolumeReturns(&model.VolumeMetadata{Mountpoint: "/gpfs/fileset1"}, &config, nil)
+				binding := resources.ServiceBinding{}
+				config := resources.SpectrumScaleConfig{}
+				fakeBackend.GetVolumeReturns(&resources.VolumeMetadata{Mountpoint: "/gpfs/fileset1"}, &config, nil)
 				successfulServiceInstanceCreate(testLogger, fakeBackend, instance, controller, serviceGuid)
 				successfulServiceBindingCreate(testLogger, fakeBackend, binding, controller, serviceGuid, bindingId)
-				anotherBinding := model.ServiceBinding{}
+				anotherBinding := resources.ServiceBinding{}
 				propertiesMatch := controller.ServiceBindingPropertiesMatch(testLogger, serviceGuid, bindingId, anotherBinding)
 				Expect(propertiesMatch).To(Equal(true))
 			})
 			It("should return false if properties do not match", func() {
-				binding := model.ServiceBinding{}
-				config := model.SpectrumScaleConfig{}
-				fakeBackend.GetVolumeReturns(&model.VolumeMetadata{Mountpoint: "/gpfs/fileset1"}, &config, nil)
+				binding := resources.ServiceBinding{}
+				config := resources.SpectrumScaleConfig{}
+				fakeBackend.GetVolumeReturns(&resources.VolumeMetadata{Mountpoint: "/gpfs/fileset1"}, &config, nil)
 				successfulServiceInstanceCreate(testLogger, fakeBackend, instance, controller, serviceGuid)
 				successfulServiceBindingCreate(testLogger, fakeBackend, binding, controller, serviceGuid, bindingId)
-				anotherBinding := model.ServiceBinding{}
+				anotherBinding := resources.ServiceBinding{}
 				anotherBinding.AppId = "some-other-appId"
 				propertiesMatch := controller.ServiceBindingPropertiesMatch(testLogger, serviceGuid, bindingId, anotherBinding)
 				Expect(propertiesMatch).ToNot(Equal(true))
@@ -268,14 +268,14 @@ var _ = Describe("ibm-storage-broker Broker", func() {
 	})
 })
 
-func successfulServiceInstanceCreate(testLogger log.Logger, fakeBackend *fakes.FakeStorageClient, instance model.ServiceInstance, controller core.BrokerController, serviceGuid string) {
+func successfulServiceInstanceCreate(testLogger log.Logger, fakeBackend *fakes.FakeStorageClient, instance resources.ServiceInstance, controller service_broker.BrokerController, serviceGuid string) {
 	fakeBackend.CreateVolumeReturns(nil)
 	createResponse, err := controller.CreateServiceInstance(testLogger, serviceGuid, instance)
 	Expect(err).ToNot(HaveOccurred())
 	Expect(createResponse.DashboardUrl).ToNot(Equal(""))
 }
 
-func successfulServiceBindingCreate(testLogger log.Logger, fakeBackend *fakes.FakeStorageClient, binding model.ServiceBinding, controller core.BrokerController, serviceGuid string, bindingId string) {
+func successfulServiceBindingCreate(testLogger log.Logger, fakeBackend *fakes.FakeStorageClient, binding resources.ServiceBinding, controller service_broker.BrokerController, serviceGuid string, bindingId string) {
 	bindResponse, err := controller.BindServiceInstance(testLogger, serviceGuid, bindingId, binding)
 	Expect(err).ToNot(HaveOccurred())
 	Expect(bindResponse.VolumeMounts).ToNot(BeNil())

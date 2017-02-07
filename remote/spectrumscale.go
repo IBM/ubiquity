@@ -6,7 +6,7 @@ import (
 
 	"net/http"
 
-	"github.ibm.com/almaden-containers/ubiquity/model"
+	"github.ibm.com/almaden-containers/ubiquity/resources"
 	"github.ibm.com/almaden-containers/ubiquity/utils"
 )
 
@@ -19,7 +19,7 @@ type spectrumRemoteClient struct {
 	backendName   string
 }
 
-func NewSpectrumRemoteClient(logger *log.Logger, backendName, storageApiURL string) (model.StorageClient, error) {
+func NewSpectrumRemoteClient(logger *log.Logger, backendName, storageApiURL string) (resources.StorageClient, error) {
 	return &spectrumRemoteClient{logger: logger, storageApiURL: storageApiURL, httpClient: &http.Client{}, backendName: backendName}, nil
 }
 
@@ -53,7 +53,7 @@ func (s *spectrumRemoteClient) CreateVolume(name string, opts map[string]interfa
 	defer s.logger.Println("spectrumRemoteClient: create end")
 
 	createRemoteURL := utils.FormatURL(s.storageApiURL, s.backendName, "volumes")
-	createVolumeRequest := model.CreateRequest{Name: name, Opts: opts}
+	createVolumeRequest := resources.CreateRequest{Name: name, Opts: opts}
 
 	response, err := utils.HttpExecute(s.httpClient, s.logger, "POST", createRemoteURL, createVolumeRequest)
 	if err != nil {
@@ -74,7 +74,7 @@ func (s *spectrumRemoteClient) RemoveVolume(name string, forceDelete bool) (err 
 	defer s.logger.Println("spectrumRemoteClient: remove end")
 
 	removeRemoteURL := utils.FormatURL(s.storageApiURL, s.backendName, "volumes", name)
-	removeRequest := model.RemoveRequest{Name: name, ForceDelete: forceDelete}
+	removeRequest := resources.RemoveRequest{Name: name, ForceDelete: forceDelete}
 
 	response, err := utils.HttpExecute(s.httpClient, s.logger, "DELETE", removeRemoteURL, removeRequest)
 	if err != nil {
@@ -90,7 +90,7 @@ func (s *spectrumRemoteClient) RemoveVolume(name string, forceDelete bool) (err 
 	return nil
 }
 
-func (s *spectrumRemoteClient) GetVolume(name string) (model.VolumeMetadata, map[string]interface{}, error) {
+func (s *spectrumRemoteClient) GetVolume(name string) (resources.VolumeMetadata, map[string]interface{}, error) {
 	s.logger.Println("spectrumRemoteClient: get start")
 	defer s.logger.Println("spectrumRemoteClient: get finish")
 
@@ -98,19 +98,19 @@ func (s *spectrumRemoteClient) GetVolume(name string) (model.VolumeMetadata, map
 	response, err := utils.HttpExecute(s.httpClient, s.logger, "GET", getRemoteURL, nil)
 	if err != nil {
 		s.logger.Printf("Error in get volume remote call %#v", err)
-		return model.VolumeMetadata{}, nil, fmt.Errorf("Error in get volume remote call")
+		return resources.VolumeMetadata{}, nil, fmt.Errorf("Error in get volume remote call")
 	}
 
 	if response.StatusCode != http.StatusOK {
 		s.logger.Printf("Error in get volume remote call %#v", response)
-		return model.VolumeMetadata{}, nil, utils.ExtractErrorResponse(response)
+		return resources.VolumeMetadata{}, nil, utils.ExtractErrorResponse(response)
 	}
 
-	getResponse := model.GetResponse{}
+	getResponse := resources.GetResponse{}
 	err = utils.UnmarshalResponse(response, &getResponse)
 	if err != nil {
 		s.logger.Printf("Error in unmarshalling response for get remote call %#v for response %#v", err, response)
-		return model.VolumeMetadata{}, nil, fmt.Errorf("Error in unmarshalling response for get remote call")
+		return resources.VolumeMetadata{}, nil, fmt.Errorf("Error in unmarshalling response for get remote call")
 	}
 
 	return getResponse.Volume, getResponse.Config, nil
@@ -133,7 +133,7 @@ func (s *spectrumRemoteClient) Attach(name string) (string, error) {
 		return "", utils.ExtractErrorResponse(response)
 	}
 
-	mountResponse := model.MountResponse{}
+	mountResponse := resources.MountResponse{}
 	err = utils.UnmarshalResponse(response, &mountResponse)
 	if err != nil {
 		return "", fmt.Errorf("Error in unmarshalling response for attach remote call")
@@ -161,7 +161,7 @@ func (s *spectrumRemoteClient) Detach(name string) error {
 
 }
 
-func (s *spectrumRemoteClient) ListVolumes() ([]model.VolumeMetadata, error) {
+func (s *spectrumRemoteClient) ListVolumes() ([]resources.VolumeMetadata, error) {
 	s.logger.Println("spectrumRemoteClient: list start")
 	defer s.logger.Println("spectrumRemoteClient: list end")
 
@@ -177,11 +177,11 @@ func (s *spectrumRemoteClient) ListVolumes() ([]model.VolumeMetadata, error) {
 		return nil, utils.ExtractErrorResponse(response)
 	}
 
-	listResponse := model.ListResponse{}
+	listResponse := resources.ListResponse{}
 	err = utils.UnmarshalResponse(response, &listResponse)
 	if err != nil {
 		s.logger.Printf("Error in unmarshalling response for get remote call %#v for response %#v", err, response)
-		return []model.VolumeMetadata{}, nil
+		return []resources.VolumeMetadata{}, nil
 	}
 
 	return listResponse.Volumes, nil

@@ -1,4 +1,4 @@
-package model
+package resources
 
 type ServiceBinding struct {
 	Id                string                 `json:"id"`

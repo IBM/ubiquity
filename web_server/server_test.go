@@ -9,7 +9,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 
-	"github.ibm.com/almaden-containers/ubiquity/model"
+	"github.ibm.com/almaden-containers/ubiquity/resources"
 	"github.ibm.com/almaden-containers/ubiquity/web_server"
 
 	. "github.com/onsi/ginkgo"
@@ -30,17 +30,17 @@ var _ = Describe("ibm-storage-broker Broker Handlers", func() {
 			logger = log.New(&buf, "logger: ", log.Lshortfile)
 			fakeController = new(fakes.FakeBrokerController)
 			//logger *log.Logger, backends map[string]model.StorageClient, config model.UbiquityServerConfig
-			backends := make(map[string]model.StorageClient)
+			backends := make(map[string]resources.StorageClient)
 			backends["dummy"] = fakeController
-			config := &model.UbiquityServerConfig{}
+			config := &resources.UbiquityServerConfig{}
 			server, err := web_server.NewServer(*logger, backends, config)
 			Expect(err).ToNot(HaveOccurred())
 			handler = server.InitializeHandler()
 		})
 		Context(".Catalog", func() {
 			It("should produce valid catalog response", func() {
-				fakeServices := []model.Service{model.Service{Id: "some-service-id"}}
-				fakeCatalog := model.Catalog{
+				fakeServices := []resources.Service{resources.Service{Id: "some-service-id"}}
+				fakeCatalog := resources.Catalog{
 					Services: fakeServices,
 				}
 				fakeController.GetCatalogReturns(fakeCatalog, nil)
@@ -48,7 +48,7 @@ var _ = Describe("ibm-storage-broker Broker Handlers", func() {
 				r, _ := http.NewRequest("GET", "http://0.0.0.0/v2/catalog", nil)
 				handler.ServeHTTP(w, r)
 				Expect(w.Code).Should(Equal(200))
-				catalog := model.Catalog{}
+				catalog := resources.Catalog{}
 				body, err := ioutil.ReadAll(w.Body)
 				Expect(err).ToNot(HaveOccurred())
 				err = json.Unmarshal(body, &catalog)
@@ -56,13 +56,13 @@ var _ = Describe("ibm-storage-broker Broker Handlers", func() {
 				Expect(len(catalog.Services)).To(Equal(1))
 			})
 			It("should error on catalog generation error", func() {
-				fakeCatalog := model.Catalog{}
+				fakeCatalog := resources.Catalog{}
 				fakeController.GetCatalogReturns(fakeCatalog, fmt.Errorf("Error building catalog"))
 				w := httptest.NewRecorder()
 				r, _ := http.NewRequest("GET", "http://0.0.0.0/v2/catalog", nil)
 				handler.ServeHTTP(w, r)
 				Expect(w.Code).Should(Equal(200))
-				catalog := model.Catalog{}
+				catalog := resources.Catalog{}
 				body, err := ioutil.ReadAll(w.Body)
 				Expect(err).ToNot(HaveOccurred())
 				err = json.Unmarshal(body, &catalog)
@@ -80,9 +80,9 @@ var _ = Describe("ibm-storage-broker Broker Handlers", func() {
 				successfulCreateService(handler, fakeController)
 				fakeController.ServiceInstanceExistsReturns(true)
 				fakeController.ServiceInstancePropertiesMatchReturns(false)
-				fakeCreateResponse := model.CreateServiceInstanceResponse{}
+				fakeCreateResponse := resources.CreateServiceInstanceResponse{}
 				fakeController.CreateServiceInstanceReturns(fakeCreateResponse, nil)
-				serviceInstance := model.ServiceInstance{
+				serviceInstance := resources.ServiceInstance{
 					Id:               "ibm-storage-broker-service-guid",
 					DashboardUrl:     "http://dashboard_url",
 					InternalId:       "ibm-storage-broker-service-guid",
@@ -109,7 +109,7 @@ var _ = Describe("ibm-storage-broker Broker Handlers", func() {
 				Expect(w.Code).Should(Equal(409))
 			})
 			It("should return 409 if service creation fails", func() {
-				serviceInstance := model.ServiceInstance{
+				serviceInstance := resources.ServiceInstance{
 					Id:               "ibm-storage-broker-service-guid",
 					DashboardUrl:     "http://dashboard_url",
 					InternalId:       "ibm-storage-broker-service-guid",
@@ -124,7 +124,7 @@ var _ = Describe("ibm-storage-broker Broker Handlers", func() {
 				Expect(err).ToNot(HaveOccurred())
 				reader := bytes.NewReader(payload)
 				fakeController.ServiceInstanceExistsReturns(false)
-				fakeCreateResponse := model.CreateServiceInstanceResponse{}
+				fakeCreateResponse := resources.CreateServiceInstanceResponse{}
 				fakeController.CreateServiceInstanceReturns(fakeCreateResponse, fmt.Errorf("Error creating service instance"))
 				w := httptest.NewRecorder()
 				r, _ := http.NewRequest("PUT", "http://0.0.0.0/v2/service_instances/cephfs-service-guid", reader)
@@ -135,9 +135,9 @@ var _ = Describe("ibm-storage-broker Broker Handlers", func() {
 				successfulCreateService(handler, fakeController)
 				fakeController.ServiceInstanceExistsReturns(true)
 				fakeController.ServiceInstancePropertiesMatchReturns(true)
-				fakeCreateResponse := model.CreateServiceInstanceResponse{}
+				fakeCreateResponse := resources.CreateServiceInstanceResponse{}
 				fakeController.CreateServiceInstanceReturns(fakeCreateResponse, nil)
-				serviceInstance := model.ServiceInstance{
+				serviceInstance := resources.ServiceInstance{
 					Id:               "ibm-storage-broker-service-guid",
 					DashboardUrl:     "http://dashboard_url",
 					InternalId:       "ibm-storage-broker-service-guid",
@@ -164,7 +164,7 @@ var _ = Describe("ibm-storage-broker Broker Handlers", func() {
 				successfulDeleteService(handler, fakeController)
 			})
 			It("should return 410 if service instance does not exist", func() {
-				serviceInstance := model.ServiceInstance{
+				serviceInstance := resources.ServiceInstance{
 					Id:               "ibm-storage-broker-service-guid",
 					DashboardUrl:     "http://dashboard_url",
 					InternalId:       "ibm-storage-broker-service-guid",
@@ -186,7 +186,7 @@ var _ = Describe("ibm-storage-broker Broker Handlers", func() {
 			It("should return 409 if service instance deletion fails", func() {
 				fakeController.ServiceInstanceExistsReturns(true)
 				fakeController.DeleteServiceInstanceReturns(fmt.Errorf("error deleting service instance"))
-				serviceInstance := model.ServiceInstance{
+				serviceInstance := resources.ServiceInstance{
 					Id:               "ibm-storage-broker-service-guid",
 					DashboardUrl:     "http://dashboard_url",
 					InternalId:       "ibm-storage-broker-service-guid",
@@ -217,9 +217,9 @@ var _ = Describe("ibm-storage-broker Broker Handlers", func() {
 				successfulBindService(handler, fakeController)
 				fakeController.ServiceBindingExistsReturns(true)
 				fakeController.ServiceBindingPropertiesMatchReturns(false)
-				fakeBindResponse := model.CreateServiceBindingResponse{}
+				fakeBindResponse := resources.CreateServiceBindingResponse{}
 				fakeController.BindServiceInstanceReturns(fakeBindResponse, nil)
-				binding := model.ServiceBinding{
+				binding := resources.ServiceBinding{
 					Id: "ibm-storage-broker-service-guid",
 				}
 				w := httptest.NewRecorder()
@@ -238,14 +238,14 @@ var _ = Describe("ibm-storage-broker Broker Handlers", func() {
 				Expect(w.Code).Should(Equal(409))
 			})
 			It("should return 409 if service binding fails", func() {
-				binding := model.ServiceBinding{
+				binding := resources.ServiceBinding{
 					Id: "ibm-storage-broker-service-guid",
 				}
 				payload, err := json.Marshal(binding)
 				Expect(err).ToNot(HaveOccurred())
 				reader := bytes.NewReader(payload)
 				fakeController.ServiceBindingExistsReturns(false)
-				fakeBindingResponse := model.CreateServiceBindingResponse{}
+				fakeBindingResponse := resources.CreateServiceBindingResponse{}
 				fakeController.BindServiceInstanceReturns(fakeBindingResponse, fmt.Errorf("Error binding service instance"))
 				w := httptest.NewRecorder()
 				r, _ := http.NewRequest("PUT", "http://0.0.0.0/v2/service_instances/cephfs-service-guid/service_bindings/cephfs-service-binding-guid", reader)
@@ -257,9 +257,9 @@ var _ = Describe("ibm-storage-broker Broker Handlers", func() {
 				successfulBindService(handler, fakeController)
 				fakeController.ServiceBindingExistsReturns(true)
 				fakeController.ServiceBindingPropertiesMatchReturns(true)
-				fakeBindingResponse := model.CreateServiceBindingResponse{}
+				fakeBindingResponse := resources.CreateServiceBindingResponse{}
 				fakeController.BindServiceInstanceReturns(fakeBindingResponse, nil)
-				binding := model.ServiceBinding{
+				binding := resources.ServiceBinding{
 					Id: "ibm-storage-broker-service-guid",
 				}
 				w := httptest.NewRecorder()
@@ -275,9 +275,9 @@ var _ = Describe("ibm-storage-broker Broker Handlers", func() {
 })
 
 func successfulCreateService(handler http.Handler, fakeController *fakes.FakeBrokerController) {
-	fakeCreateResponse := model.CreateServiceInstanceResponse{}
+	fakeCreateResponse := resources.CreateServiceInstanceResponse{}
 	fakeController.CreateServiceInstanceReturns(fakeCreateResponse, nil)
-	serviceInstance := model.ServiceInstance{
+	serviceInstance := resources.ServiceInstance{
 		Id:               "ibm-storage-broker-service-guid",
 		DashboardUrl:     "http://dashboard_url",
 		InternalId:       "ibm-storage-broker-service-guid",
@@ -297,13 +297,13 @@ func successfulCreateService(handler http.Handler, fakeController *fakes.FakeBro
 	Expect(w.Code).Should(Equal(201))
 	body, err := ioutil.ReadAll(w.Body)
 	Expect(err).ToNot(HaveOccurred())
-	createServiceResponse := model.CreateServiceInstanceResponse{}
+	createServiceResponse := resources.CreateServiceInstanceResponse{}
 	err = json.Unmarshal(body, &createServiceResponse)
 	Expect(err).ToNot(HaveOccurred())
 }
 
 func successfulDeleteService(handler http.Handler, fakeController *fakes.FakeBrokerController) {
-	serviceInstance := model.ServiceInstance{
+	serviceInstance := resources.ServiceInstance{
 		Id:               "ibm-storage-broker-service-guid",
 		DashboardUrl:     "http://dashboard_url",
 		InternalId:       "ibm-storage-broker-service-guid",
@@ -325,9 +325,9 @@ func successfulDeleteService(handler http.Handler, fakeController *fakes.FakeBro
 }
 
 func successfulBindService(handler http.Handler, fakeController *fakes.FakeBrokerController) {
-	fakeBindResponse := model.CreateServiceBindingResponse{}
+	fakeBindResponse := resources.CreateServiceBindingResponse{}
 	fakeController.BindServiceInstanceReturns(fakeBindResponse, nil)
-	binding := model.ServiceBinding{
+	binding := resources.ServiceBinding{
 		Id: "ibm-storage-broker-service-guid",
 	}
 	w := httptest.NewRecorder()
@@ -339,7 +339,7 @@ func successfulBindService(handler http.Handler, fakeController *fakes.FakeBroke
 	Expect(w.Code).Should(Equal(201))
 	body, err := ioutil.ReadAll(w.Body)
 	Expect(err).ToNot(HaveOccurred())
-	bindingResponse := model.CreateServiceBindingResponse{}
+	bindingResponse := resources.CreateServiceBindingResponse{}
 	err = json.Unmarshal(body, &bindingResponse)
 	Expect(err).ToNot(HaveOccurred())
 }

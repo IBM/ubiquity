@@ -8,6 +8,7 @@ import (
 	"github.com/jinzhu/gorm"
 	_ "github.com/mattn/go-sqlite3"
 	"github.ibm.com/almaden-containers/ubiquity/model"
+	"github.ibm.com/almaden-containers/ubiquity/resources"
 )
 
 //go:generate counterfeiter -o ../../fakes/fake_SpectrumDataModel.go . SpectrumDataModel
@@ -27,7 +28,7 @@ type spectrumDataModel struct {
 	log       *log.Logger
 	database  *gorm.DB
 	clusterId string
-	backend   model.Backend
+	backend   resources.Backend
 }
 
 type VolumeType int
@@ -57,7 +58,7 @@ type SpectrumScaleVolume struct {
 	Quota      string
 }
 
-func NewSpectrumDataModel(log *log.Logger, db *gorm.DB, backend model.Backend) SpectrumDataModel {
+func NewSpectrumDataModel(log *log.Logger, db *gorm.DB, backend resources.Backend) SpectrumDataModel {
 	return &spectrumDataModel{log: log, database: db, backend: backend}
 }
 

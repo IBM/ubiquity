@@ -1,4 +1,4 @@
-package core_test
+package service_broker_test
 
 import (
 	"fmt"
