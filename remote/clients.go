@@ -9,10 +9,10 @@ import (
 
 func NewRemoteClient(logger *log.Logger, backendName, storageApiURL string, config model.UbiquityPluginConfig) (model.StorageClient, error) {
 
-	if backendName == model.SPECTRUM_SCALE {
+	if model.Backend(backendName) == model.SPECTRUM_SCALE {
 		return NewSpectrumRemoteClient(logger, backendName, storageApiURL)
 	}
-	if backendName == model.SPECTRUM_SCALE_NFS {
+	if model.Backend(backendName) == model.SPECTRUM_SCALE_NFS {
 		return NewNfsRemoteClient(logger, backendName, storageApiURL, config.SpectrumNfsRemoteConfig)
 	}
 
