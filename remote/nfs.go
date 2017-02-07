@@ -24,7 +24,7 @@ type nfsRemoteClient struct {
 
 func NewNfsRemoteClient(logger *log.Logger, backendName, storageApiURL string, config model.SpectrumNfsRemoteConfig) (model.StorageClient, error) {
 	if config.ClientConfig == "" {
-		return nil, fmt.Errorf("newNFSRemoteClient: Missing required parameter 'CIDR'")
+		return nil, fmt.Errorf("newNFSRemoteClient: Missing required parameter 'clientConfig'")
 	}
 	return &nfsRemoteClient{logger: logger, storageApiURL: storageApiURL, httpClient: &http.Client{}, backendName: backendName, config: config}, nil
 }
