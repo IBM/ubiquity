@@ -12,7 +12,7 @@ import (
 
 	"github.com/jinzhu/gorm"
 	"github.ibm.com/almaden-containers/ubiquity/local/spectrumscale/connectors"
-	"github.ibm.com/almaden-containers/ubiquity/model"
+	"github.ibm.com/almaden-containers/ubiquity/resources"
 )
 
 type spectrumLocalClient struct {
@@ -23,7 +23,7 @@ type spectrumLocalClient struct {
 	executor    utils.Executor
 	isActivated bool
 	isMounted   bool
-	config      model.SpectrumScaleConfig
+	config      resources.SpectrumScaleConfig
 }
 
 const (
@@ -39,21 +39,21 @@ const (
 	LTWT_VOL_TYPE string = "lightweight"
 )
 
-func NewSpectrumLocalClient(logger *log.Logger, config model.SpectrumScaleConfig, database *gorm.DB, fileLock utils.FileLock) (model.StorageClient, error) {
+func NewSpectrumLocalClient(logger *log.Logger, config resources.SpectrumScaleConfig, database *gorm.DB, fileLock utils.FileLock) (resources.StorageClient, error) {
 	if config.ConfigPath == "" {
 		return nil, fmt.Errorf("spectrumLocalClient: init: missing required parameter 'spectrumConfigPath'")
 	}
 	if config.DefaultFilesystem == "" {
 		return nil, fmt.Errorf("spectrumLocalClient: init: missing required parameter 'spectrumDefaultFileSystem'")
 	}
-	return newSpectrumLocalClient(logger, config, database, fileLock, model.SPECTRUM_SCALE)
+	return newSpectrumLocalClient(logger, config, database, fileLock, resources.SPECTRUM_SCALE)
 }
 
-func NewSpectrumLocalClientWithConnectors(logger *log.Logger, connector connectors.SpectrumScaleConnector, fileLock utils.FileLock, spectrumExecutor utils.Executor, config model.SpectrumScaleConfig, datamodel SpectrumDataModel) (model.StorageClient, error) {
+func NewSpectrumLocalClientWithConnectors(logger *log.Logger, connector connectors.SpectrumScaleConnector, fileLock utils.FileLock, spectrumExecutor utils.Executor, config resources.SpectrumScaleConfig, datamodel SpectrumDataModel) (resources.StorageClient, error) {
 	return &spectrumLocalClient{logger: logger, connector: connector, dataModel: datamodel, executor: spectrumExecutor, config: config, fileLock: fileLock}, nil
 }
 
-func newSpectrumLocalClient(logger *log.Logger, config model.SpectrumScaleConfig, database *gorm.DB, fileLock utils.FileLock, backend model.Backend) (*spectrumLocalClient, error) {
+func newSpectrumLocalClient(logger *log.Logger, config resources.SpectrumScaleConfig, database *gorm.DB, fileLock utils.FileLock, backend resources.Backend) (*spectrumLocalClient, error) {
 	logger.Println("spectrumLocalClient: init start")
 	defer logger.Println("spectrumLocalClient: init end")
 
@@ -287,14 +287,14 @@ func (s *spectrumLocalClient) RemoveVolume(name string, forceDelete bool) (err e
 	return nil
 }
 
-func (s *spectrumLocalClient) GetVolume(name string) (volumeMetadata model.VolumeMetadata, volumeConfigDetails map[string]interface{}, err error) {
+func (s *spectrumLocalClient) GetVolume(name string) (volumeMetadata resources.VolumeMetadata, volumeConfigDetails map[string]interface{}, err error) {
 	s.logger.Println("spectrumLocalClient: get start")
 	defer s.logger.Println("spectrumLocalClient: get finish")
 
 	err = s.fileLock.Lock()
 	if err != nil {
 		s.logger.Printf("error aquiring lock", err)
-		return model.VolumeMetadata{}, nil, err
+		return resources.VolumeMetadata{}, nil, err
 	}
 	defer func() {
 		lockErr := s.fileLock.Unlock()
@@ -307,7 +307,7 @@ func (s *spectrumLocalClient) GetVolume(name string) (volumeMetadata model.Volum
 
 	if err != nil {
 		s.logger.Println(err.Error())
-		return model.VolumeMetadata{}, nil, err
+		return resources.VolumeMetadata{}, nil, err
 	}
 
 	if volExists {
@@ -315,16 +315,16 @@ func (s *spectrumLocalClient) GetVolume(name string) (volumeMetadata model.Volum
 		volumeMountpoint, isLinked, err := s.getVolumeMountPoint(existingVolume)
 		if err != nil {
 			s.logger.Println(err.Error())
-			return model.VolumeMetadata{}, nil, err
+			return resources.VolumeMetadata{}, nil, err
 		}
-		volumeMetadata = model.VolumeMetadata{Name: existingVolume.Volume.Name}
+		volumeMetadata = resources.VolumeMetadata{Name: existingVolume.Volume.Name}
 		if isLinked {
 			volumeMetadata.Mountpoint = volumeMountpoint
 		}
 		volumeConfigDetails = map[string]interface{}{"FilesetId": existingVolume.Fileset, "Filesystem": existingVolume.FileSystem}
 		return volumeMetadata, volumeConfigDetails, nil
 	}
-	return model.VolumeMetadata{}, nil, fmt.Errorf("Volume not found")
+	return resources.VolumeMetadata{}, nil, fmt.Errorf("Volume not found")
 }
 
 func (s *spectrumLocalClient) Attach(name string) (volumeMountpoint string, err error) {
@@ -420,7 +420,7 @@ func (s *spectrumLocalClient) Detach(name string) (err error) {
 
 	return nil
 }
-func (s *spectrumLocalClient) ListVolumes() ([]model.VolumeMetadata, error) {
+func (s *spectrumLocalClient) ListVolumes() ([]resources.VolumeMetadata, error) {
 	s.logger.Println("spectrumLocalClient: list start")
 	defer s.logger.Println("spectrumLocalClient: list end")
 	var err error
@@ -443,7 +443,7 @@ func (s *spectrumLocalClient) ListVolumes() ([]model.VolumeMetadata, error) {
 		return nil, err
 	}
 	s.logger.Printf("Volumes in db: %d\n", len(volumesInDb))
-	var volumes []model.VolumeMetadata
+	var volumes []resources.VolumeMetadata
 	for _, volume := range volumesInDb {
 		s.logger.Printf("Volume from db: %#v\n", volume)
 
@@ -453,7 +453,7 @@ func (s *spectrumLocalClient) ListVolumes() ([]model.VolumeMetadata, error) {
 			return nil, err
 		}
 
-		volumes = append(volumes, model.VolumeMetadata{Name: volume.Volume.Name, Mountpoint: volumeMountpoint})
+		volumes = append(volumes, resources.VolumeMetadata{Name: volume.Volume.Name, Mountpoint: volumeMountpoint})
 	}
 
 	return volumes, nil

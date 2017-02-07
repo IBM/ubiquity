@@ -12,7 +12,7 @@ import (
 	"strings"
 	"time"
 
-	"github.ibm.com/almaden-containers/ubiquity/model"
+	"github.ibm.com/almaden-containers/ubiquity/resources"
 
 	"github.com/openstack/golang-client/openstack"
 )
@@ -43,8 +43,8 @@ func NewManilaBackend(logger *log.Logger, osConfig OpenstackConfig, configPath, 
 	return &manilaBackend
 }
 
-func (m *ManilaBackend) GetServices() []model.Service {
-	plan1 := model.ServicePlan{
+func (m *ManilaBackend) GetServices() []resources.Service {
+	plan1 := resources.ServicePlan{
 		Name:        "bronze",
 		Id:          "manila-bronze-plan-1",
 		Description: "Default Plan for Manila/NFS Storage Service providing 1GiB of shared storage",
@@ -52,7 +52,7 @@ func (m *ManilaBackend) GetServices() []model.Service {
 		Free:        true,
 	}
 
-	plan2 := model.ServicePlan{
+	plan2 := resources.ServicePlan{
 		Name:        "silver",
 		Id:          "manila-silver-plan-10",
 		Description: "Default Plan for Manila/NFS Storage Service providing 10GiB of shared storage",
@@ -60,7 +60,7 @@ func (m *ManilaBackend) GetServices() []model.Service {
 		Free:        true,
 	}
 
-	plan3 := model.ServicePlan{
+	plan3 := resources.ServicePlan{
 		Name:        "gold",
 		Id:          "manila-gold-plan-100",
 		Description: "Default Plan for Manila/NFS Storage Service providing 100GiB of shared storage",
@@ -68,7 +68,7 @@ func (m *ManilaBackend) GetServices() []model.Service {
 		Free:        true,
 	}
 
-	service := model.Service{
+	service := resources.Service{
 		Name:            "manila-nfs",
 		Id:              "manila-nfs-guid",
 		Description:     "Provides the Manila/NFS volume service",
@@ -77,14 +77,14 @@ func (m *ManilaBackend) GetServices() []model.Service {
 		Tags:            []string{"manila", "nfs"},
 		Requires:        []string{"volume_mount"},
 		Metadata:        nil,
-		Plans:           []model.ServicePlan{plan1, plan2, plan3},
+		Plans:           []resources.ServicePlan{plan1, plan2, plan3},
 		DashboardClient: nil,
 	}
 
-	return []model.Service{service}
+	return []resources.Service{service}
 }
 
-func (m *ManilaBackend) CreateVolume(serviceInstance model.ServiceInstance, name string, opts map[string]interface{}) error {
+func (m *ManilaBackend) CreateVolume(serviceInstance resources.ServiceInstance, name string, opts map[string]interface{}) error {
 	m.logger.Println("ManilaBackend: CreateVolume start")
 	defer m.logger.Println("ManilaBackend: CreateVolume end")
 
@@ -111,7 +111,7 @@ func (m *ManilaBackend) CreateVolume(serviceInstance model.ServiceInstance, name
 	return m.persistShareIds()
 }
 
-func (m *ManilaBackend) RemoveVolume(serviceInstance model.ServiceInstance, name string) error {
+func (m *ManilaBackend) RemoveVolume(serviceInstance resources.ServiceInstance, name string) error {
 	m.logger.Println("ManilaBackend: RemoveVolume start")
 	defer m.logger.Println("ManilaBackend: RemoveVolume end")
 
@@ -127,18 +127,18 @@ func (m *ManilaBackend) RemoveVolume(serviceInstance model.ServiceInstance, name
 	return m.persistShareIds()
 }
 
-func (m *ManilaBackend) ListVolumes(serviceInstance model.ServiceInstance) ([]model.VolumeMetadata, error) {
+func (m *ManilaBackend) ListVolumes(serviceInstance resources.ServiceInstance) ([]resources.VolumeMetadata, error) {
 	m.logger.Println("ManilaBackend: ListVolumes start")
 	defer m.logger.Println("ManilaBackend: ListVolumes end")
 
 	manilaShares, err := m.manilaGetShares()
 	if err != nil {
-		return []model.VolumeMetadata{}, err
+		return []resources.VolumeMetadata{}, err
 	}
 
-	volumeMetaData := make([]model.VolumeMetadata, len(manilaShares))
+	volumeMetaData := make([]resources.VolumeMetadata, len(manilaShares))
 	for i, manilaShare := range manilaShares {
-		volumeMetaData[i] = model.VolumeMetadata{
+		volumeMetaData[i] = resources.VolumeMetadata{
 			Name:       manilaShare.Name,
 			Mountpoint: "N/A",
 		}
@@ -146,7 +146,7 @@ func (m *ManilaBackend) ListVolumes(serviceInstance model.ServiceInstance) ([]mo
 	return volumeMetaData, nil
 }
 
-func (m *ManilaBackend) GetVolume(serviceInstance model.ServiceInstance, name string) (volumeMetadata *model.VolumeMetadata, clientDriverName *string, config *map[string]interface{}, err error) {
+func (m *ManilaBackend) GetVolume(serviceInstance resources.ServiceInstance, name string) (volumeMetadata *resources.VolumeMetadata, clientDriverName *string, config *map[string]interface{}, err error) {
 	m.logger.Println("ManilaBackend: GetVolume start")
 	defer m.logger.Println("ManilaBackend: GetVolume end")
 
@@ -162,7 +162,7 @@ func (m *ManilaBackend) GetVolume(serviceInstance model.ServiceInstance, name st
 		return nil, nil, nil, err
 	}
 
-	volumeMetadata = &model.VolumeMetadata{
+	volumeMetadata = &resources.VolumeMetadata{
 		Name:       name,
 		Mountpoint: "N/A",
 	}

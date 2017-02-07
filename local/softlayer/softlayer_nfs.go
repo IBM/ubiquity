@@ -10,7 +10,7 @@ import (
 	"github.com/jinzhu/gorm"
 	"github.ibm.com/alchemy-containers/armada-slclient-lib/interfaces"
 	"github.ibm.com/alchemy-containers/armada-slclient-lib/services"
-	"github.ibm.com/almaden-containers/ubiquity/model"
+	"github.ibm.com/almaden-containers/ubiquity/resources"
 	"github.ibm.com/almaden-containers/ubiquity/utils"
 	"k8s.io/kubernetes/staging/src/k8s.io/client-go/_vendor/github.com/golang/glog"
 )
@@ -31,16 +31,16 @@ const (
 	SL_LOCATION         = "sl_location"
 )
 
-func NewSoftlayerLocalClient(logger *log.Logger, config model.SoftlayerConfig, db *gorm.DB, fileLock utils.FileLock) (model.StorageClient, error) {
+func NewSoftlayerLocalClient(logger *log.Logger, config resources.SoftlayerConfig, db *gorm.DB, fileLock utils.FileLock) (resources.StorageClient, error) {
 
 	//Get the service client
 	// has to look for access details in config before preoceeding
 	serviceClient := services.NewServiceClient()
 	softlayerStorageService := serviceClient.GetSoftLayerStorageService()
 
-	return &softlayerLocalClient{logger: logger, fileLock: fileLock, dataModel: NewSoftlayerDataModel(logger, db, model.SOFTLAYER_NFS), softlayerStorageService: softlayerStorageService}, nil
+	return &softlayerLocalClient{logger: logger, fileLock: fileLock, dataModel: NewSoftlayerDataModel(logger, db, resources.SOFTLAYER_NFS), softlayerStorageService: softlayerStorageService}, nil
 }
-func NewSoftlayerLocalClientWithDataModelAndSLService(logger *log.Logger, datamodel SoftlayerDataModel, fileLock utils.FileLock, softlayerStorageService interfaces.Softlayer_Storage_Service) (model.StorageClient, error) {
+func NewSoftlayerLocalClientWithDataModelAndSLService(logger *log.Logger, datamodel SoftlayerDataModel, fileLock utils.FileLock, softlayerStorageService interfaces.Softlayer_Storage_Service) (resources.StorageClient, error) {
 	return &softlayerLocalClient{logger: logger, fileLock: fileLock, dataModel: datamodel, softlayerStorageService: softlayerStorageService}, nil
 }
 
@@ -190,14 +190,14 @@ func (s *softlayerLocalClient) RemoveVolume(name string, forceDelete bool) (err 
 	return nil
 }
 
-func (s *softlayerLocalClient) GetVolume(name string) (volumeMetadata model.VolumeMetadata, volumeConfigDetails map[string]interface{}, err error) {
+func (s *softlayerLocalClient) GetVolume(name string) (volumeMetadata resources.VolumeMetadata, volumeConfigDetails map[string]interface{}, err error) {
 	s.logger.Println("softlayerLocalClient: get start")
 	defer s.logger.Println("softlayerLocalClient: get finish")
 
 	err = s.fileLock.Lock()
 	if err != nil {
 		s.logger.Printf("error aquiring lock", err)
-		return model.VolumeMetadata{}, nil, err
+		return resources.VolumeMetadata{}, nil, err
 	}
 	defer func() {
 		lockErr := s.fileLock.Unlock()
@@ -210,16 +210,16 @@ func (s *softlayerLocalClient) GetVolume(name string) (volumeMetadata model.Volu
 
 	if err != nil {
 		s.logger.Println(err.Error())
-		return model.VolumeMetadata{}, nil, err
+		return resources.VolumeMetadata{}, nil, err
 	}
 
 	if volExists {
 
-		volumeMetadata = model.VolumeMetadata{Name: existingVolume.Volume.Name, Mountpoint: existingVolume.Mountpoint}
+		volumeMetadata = resources.VolumeMetadata{Name: existingVolume.Volume.Name, Mountpoint: existingVolume.Mountpoint}
 		volumeConfigDetails = map[string]interface{}{"FileshareId": strconv.Itoa(existingVolume.FileshareID)}
 		return volumeMetadata, volumeConfigDetails, nil
 	}
-	return model.VolumeMetadata{}, nil, fmt.Errorf("Volume not found")
+	return resources.VolumeMetadata{}, nil, fmt.Errorf("Volume not found")
 
 }
 
@@ -270,7 +270,7 @@ func (s *softlayerLocalClient) Detach(name string) (err error) {
 	return nil
 }
 
-func (s *softlayerLocalClient) ListVolumes() ([]model.VolumeMetadata, error) {
+func (s *softlayerLocalClient) ListVolumes() ([]resources.VolumeMetadata, error) {
 	s.logger.Println("softlayerLocalClient: list start")
 	defer s.logger.Println("softlayerLocalClient: list end")
 	var err error
@@ -293,10 +293,10 @@ func (s *softlayerLocalClient) ListVolumes() ([]model.VolumeMetadata, error) {
 		return nil, err
 	}
 	s.logger.Printf("Volumes in db: %d\n", len(volumesInDb))
-	var volumes []model.VolumeMetadata
+	var volumes []resources.VolumeMetadata
 	for _, volume := range volumesInDb {
 		s.logger.Printf("Volume from db: %#v\n", volume)
-		volumes = append(volumes, model.VolumeMetadata{Name: volume.Volume.Name, Mountpoint: volume.Mountpoint})
+		volumes = append(volumes, resources.VolumeMetadata{Name: volume.Volume.Name, Mountpoint: volume.Mountpoint})
 	}
 
 	return volumes, nil

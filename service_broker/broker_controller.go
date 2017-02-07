@@ -1,4 +1,4 @@
-package core
+package service_broker
 
 import (
 	"encoding/json"
@@ -9,7 +9,7 @@ import (
 	"path"
 	"reflect"
 
-	"github.ibm.com/almaden-containers/ubiquity/model"
+	"github.ibm.com/almaden-containers/ubiquity/resources"
 	"github.ibm.com/almaden-containers/ubiquity/utils"
 )
 
@@ -21,21 +21,21 @@ const (
 //go:generate counterfeiter -o ../fakes/fake_broker_controller.go . BrokerController
 
 type BrokerController interface {
-	GetCatalog(logger *log.Logger) (model.Catalog, error)
-	CreateServiceInstance(logger *log.Logger, serverInstanceId string, instance model.ServiceInstance) (model.CreateServiceInstanceResponse, error)
+	GetCatalog(logger *log.Logger) (resources.Catalog, error)
+	CreateServiceInstance(logger *log.Logger, serverInstanceId string, instance resources.ServiceInstance) (resources.CreateServiceInstanceResponse, error)
 	ServiceInstanceExists(logger *log.Logger, serviceInstanceId string) bool
-	ServiceInstancePropertiesMatch(logger *log.Logger, serviceInstanceId string, instance model.ServiceInstance) bool
+	ServiceInstancePropertiesMatch(logger *log.Logger, serviceInstanceId string, instance resources.ServiceInstance) bool
 	DeleteServiceInstance(logger *log.Logger, serviceInstanceId string) error
-	BindServiceInstance(logger *log.Logger, serverInstanceId string, bindingId string, bindingInfo model.ServiceBinding) (model.CreateServiceBindingResponse, error)
+	BindServiceInstance(logger *log.Logger, serverInstanceId string, bindingId string, bindingInfo resources.ServiceBinding) (resources.CreateServiceBindingResponse, error)
 	ServiceBindingExists(logger *log.Logger, serviceInstanceId string, bindingId string) bool
-	ServiceBindingPropertiesMatch(logger *log.Logger, serviceInstanceId string, bindingId string, binding model.ServiceBinding) bool
-	GetBinding(logger *log.Logger, instanceId, bindingId string) (model.ServiceBinding, error)
+	ServiceBindingPropertiesMatch(logger *log.Logger, serviceInstanceId string, bindingId string, binding resources.ServiceBinding) bool
+	GetBinding(logger *log.Logger, instanceId, bindingId string) (resources.ServiceBinding, error)
 	UnbindServiceInstance(logger *log.Logger, serverInstanceId string, bindingId string) error
 }
 
-func getServices(backend model.StorageClient) model.Service {
+func getServices(backend resources.StorageClient) resources.Service {
 	//TOOD:  branch on backend
-	plan1 := model.ServicePlan{
+	plan1 := resources.ServicePlan{
 		Name:        "gold",
 		Id:          "spectrum-scale-gold",
 		Description: "Gold Tier Performance and Resiliency",
@@ -43,7 +43,7 @@ func getServices(backend model.StorageClient) model.Service {
 		Free:        true,
 	}
 
-	plan2 := model.ServicePlan{
+	plan2 := resources.ServicePlan{
 		Name:        "bronze",
 		Id:          "spectrum-scale-bronze",
 		Description: "Bronze Tier Performance and Resiliency",
@@ -51,7 +51,7 @@ func getServices(backend model.StorageClient) model.Service {
 		Free:        true,
 	}
 
-	service := model.Service{
+	service := resources.Service{
 		Name:            "spectrum-scale",
 		Id:              "spectrum-service-guid",
 		Description:     "Provides the Spectrum FS volume service, including volume creation and volume mounts",
@@ -60,7 +60,7 @@ func getServices(backend model.StorageClient) model.Service {
 		Tags:            []string{"gpfs"},
 		Requires:        []string{"volume_mount"},
 		Metadata:        nil,
-		Plans:           []model.ServicePlan{plan1, plan2},
+		Plans:           []resources.ServicePlan{plan1, plan2},
 		DashboardClient: nil,
 	}
 
@@ -68,14 +68,14 @@ func getServices(backend model.StorageClient) model.Service {
 }
 
 type controller struct {
-	backends map[string]model.StorageClient
+	backends map[string]resources.StorageClient
 	//log         *log.Logger
-	instanceMap map[string]*model.ServiceInstance
-	bindingMap  map[string]*model.ServiceBinding
+	instanceMap map[string]*resources.ServiceInstance
+	bindingMap  map[string]*resources.ServiceBinding
 	configPath  string
 }
 
-func NewController(backends map[string]model.StorageClient, configPath string) BrokerController {
+func NewController(backends map[string]resources.StorageClient, configPath string) BrokerController {
 
 	existingServiceInstances, err := loadServiceInstances(configPath)
 	if err != nil {
@@ -102,25 +102,25 @@ func NewController(backends map[string]model.StorageClient, configPath string) B
 	return &controller{backends: backends, configPath: configPath, instanceMap: existingServiceInstances, bindingMap: existingServiceBindings}
 }
 
-func (c *controller) GetCatalog(logger *log.Logger) (model.Catalog, error) {
-	allServices := make([]model.Service, 0, len(c.backends))
+func (c *controller) GetCatalog(logger *log.Logger) (resources.Catalog, error) {
+	allServices := make([]resources.Service, 0, len(c.backends))
 	for _, backend := range c.backends {
 		allServices = append(allServices, getServices(backend))
 	}
-	catalog := model.Catalog{Services: allServices}
+	catalog := resources.Catalog{Services: allServices}
 	return catalog, nil
 }
 
-func (c *controller) CreateServiceInstance(logger *log.Logger, serviceInstanceId string, instance model.ServiceInstance) (model.CreateServiceInstanceResponse, error) {
+func (c *controller) CreateServiceInstance(logger *log.Logger, serviceInstanceId string, instance resources.ServiceInstance) (resources.CreateServiceInstanceResponse, error) {
 	backend, exists := c.backends[instance.ServiceId]
 	if !exists {
 		logger.Printf("Error: backend does not exist")
-		return model.CreateServiceInstanceResponse{}, fmt.Errorf("Error: backend does not exist")
+		return resources.CreateServiceInstanceResponse{}, fmt.Errorf("Error: backend does not exist")
 	}
 
 	instance.Id = serviceInstanceId
 	instance.DashboardUrl = "http://dashboard_url"
-	instance.LastOperation = &model.LastOperation{
+	instance.LastOperation = &resources.LastOperation{
 		State:                    "in progress",
 		Description:              "creating service instance...",
 		AsyncPollIntervalSeconds: DEFAULT_POLLING_INTERVAL_SECONDS,
@@ -131,17 +131,17 @@ func (c *controller) CreateServiceInstance(logger *log.Logger, serviceInstanceId
 
 	if err := backend.CreateVolume(volumeName, nil); err != nil {
 		logger.Printf("Error: %s", err.Error())
-		return model.CreateServiceInstanceResponse{}, err
+		return resources.CreateServiceInstanceResponse{}, err
 	}
 
 	c.instanceMap[serviceInstanceId] = &instance
 
 	if err := persistServiceInstances(c.configPath, c.instanceMap); err != nil {
 		logger.Printf("Error: %s", err.Error())
-		return model.CreateServiceInstanceResponse{}, err
+		return resources.CreateServiceInstanceResponse{}, err
 	}
 
-	response := model.CreateServiceInstanceResponse{
+	response := resources.CreateServiceInstanceResponse{
 		DashboardUrl:  instance.DashboardUrl,
 		LastOperation: instance.LastOperation,
 	}
@@ -154,7 +154,7 @@ func (c *controller) ServiceInstanceExists(logger *log.Logger, serviceInstanceId
 	return exists
 }
 
-func (c *controller) ServiceInstancePropertiesMatch(logger *log.Logger, serviceInstanceId string, instance model.ServiceInstance) bool {
+func (c *controller) ServiceInstancePropertiesMatch(logger *log.Logger, serviceInstanceId string, instance resources.ServiceInstance) bool {
 	existingServiceInstance, exists := c.instanceMap[serviceInstanceId]
 	if exists == false {
 		return false
@@ -193,12 +193,12 @@ func (c *controller) DeleteServiceInstance(logger *log.Logger, serviceInstanceId
 	return nil
 }
 
-func (c *controller) BindServiceInstance(logger *log.Logger, serviceInstanceId string, bindingId string, bindingInfo model.ServiceBinding) (model.CreateServiceBindingResponse, error) {
+func (c *controller) BindServiceInstance(logger *log.Logger, serviceInstanceId string, bindingId string, bindingInfo resources.ServiceBinding) (resources.CreateServiceBindingResponse, error) {
 	serviceInstance := c.instanceMap[serviceInstanceId]
 	backend, exists := c.backends[serviceInstance.ServiceId]
 	if !exists {
 		logger.Printf("Error: backend does not exist")
-		return model.CreateServiceBindingResponse{}, fmt.Errorf("Error: backend does not exist")
+		return resources.CreateServiceBindingResponse{}, fmt.Errorf("Error: backend does not exist")
 	}
 
 	c.bindingMap[bindingId] = &bindingInfo
@@ -207,26 +207,26 @@ func (c *controller) BindServiceInstance(logger *log.Logger, serviceInstanceId s
 	_, config, err := backend.GetVolume(volumeName)
 	if err != nil {
 		logger.Printf("Error: %s", err.Error())
-		return model.CreateServiceBindingResponse{}, err
+		return resources.CreateServiceBindingResponse{}, err
 	}
 	containerMountPath := determineContainerMountPath(bindingInfo.Parameters, serviceInstanceId)
 
 	configJson, err := json.Marshal(config)
 	if err != nil {
 		logger.Printf("Error: %s", err.Error())
-		return model.CreateServiceBindingResponse{}, err
+		return resources.CreateServiceBindingResponse{}, err
 	}
 
-	privateDetails := model.VolumeMountPrivateDetails{Driver: "spctrum-scale", GroupId: volumeName, Config: string(configJson)} //TODO: fix hardcoding
-	volumeMount := model.VolumeMount{ContainerPath: containerMountPath, Mode: "rw", Private: privateDetails}
-	volumeMounts := []model.VolumeMount{volumeMount}
+	privateDetails := resources.VolumeMountPrivateDetails{Driver: "spctrum-scale", GroupId: volumeName, Config: string(configJson)} //TODO: fix hardcoding
+	volumeMount := resources.VolumeMount{ContainerPath: containerMountPath, Mode: "rw", Private: privateDetails}
+	volumeMounts := []resources.VolumeMount{volumeMount}
 
 	if err = persistServiceBindings(c.configPath, c.bindingMap); err != nil {
 		logger.Printf("Error: %s", err.Error())
-		return model.CreateServiceBindingResponse{}, err
+		return resources.CreateServiceBindingResponse{}, err
 	}
 
-	createBindingResponse := model.CreateServiceBindingResponse{VolumeMounts: volumeMounts}
+	createBindingResponse := resources.CreateServiceBindingResponse{VolumeMounts: volumeMounts}
 	return createBindingResponse, nil
 }
 
@@ -235,7 +235,7 @@ func (c *controller) ServiceBindingExists(logger *log.Logger, serviceInstanceId 
 	return exists
 }
 
-func (c *controller) ServiceBindingPropertiesMatch(logger *log.Logger, serviceInstanceId string, bindingId string, binding model.ServiceBinding) bool {
+func (c *controller) ServiceBindingPropertiesMatch(logger *log.Logger, serviceInstanceId string, bindingId string, binding resources.ServiceBinding) bool {
 	existingBinding, exists := c.bindingMap[bindingId]
 	if exists == false {
 		return false
@@ -258,12 +258,12 @@ func (c *controller) ServiceBindingPropertiesMatch(logger *log.Logger, serviceIn
 	return true
 }
 
-func (c *controller) GetBinding(logger *log.Logger, instanceId, bindingId string) (model.ServiceBinding, error) {
+func (c *controller) GetBinding(logger *log.Logger, instanceId, bindingId string) (resources.ServiceBinding, error) {
 	binding, exists := c.bindingMap[bindingId]
 	if exists == true {
 		return *binding, nil
 	}
-	return model.ServiceBinding{}, fmt.Errorf("binding not found")
+	return resources.ServiceBinding{}, fmt.Errorf("binding not found")
 
 }
 
@@ -295,14 +295,14 @@ func determineContainerMountPath(parameters map[string]interface{}, volId string
 //	return nil, errors.New(fmt.Sprintf("Could not locate service for serviceId %s", serviceId))
 //}
 
-func loadServiceInstances(configPath string) (map[string]*model.ServiceInstance, error) {
-	var serviceInstancesMap map[string]*model.ServiceInstance
+func loadServiceInstances(configPath string) (map[string]*resources.ServiceInstance, error) {
+	var serviceInstancesMap map[string]*resources.ServiceInstance
 
 	err := utils.ReadAndUnmarshal(&serviceInstancesMap, configPath, "service_instances.json")
 	if err != nil {
 		if os.IsNotExist(err) {
 			fmt.Printf("WARNING: service instance data file '%s' does not exist: \n", "service_instances.json")
-			serviceInstancesMap = make(map[string]*model.ServiceInstance)
+			serviceInstancesMap = make(map[string]*resources.ServiceInstance)
 		} else {
 			return nil, errors.New(fmt.Sprintf("Could not load the service instances, message: %s", err.Error()))
 		}
@@ -311,17 +311,17 @@ func loadServiceInstances(configPath string) (map[string]*model.ServiceInstance,
 	return serviceInstancesMap, nil
 }
 
-func persistServiceInstances(configPath string, instanceMap map[string]*model.ServiceInstance) error {
+func persistServiceInstances(configPath string, instanceMap map[string]*resources.ServiceInstance) error {
 	return utils.MarshalAndRecord(instanceMap, configPath, "service_instances.json")
 }
 
-func loadServiceBindings(configPath string) (map[string]*model.ServiceBinding, error) {
-	var bindingMap map[string]*model.ServiceBinding
+func loadServiceBindings(configPath string) (map[string]*resources.ServiceBinding, error) {
+	var bindingMap map[string]*resources.ServiceBinding
 	err := utils.ReadAndUnmarshal(&bindingMap, configPath, "service_bindings.json")
 	if err != nil {
 		if os.IsNotExist(err) {
 			fmt.Printf("WARNING: key map data file '%s' does not exist: \n", "service_bindings.json")
-			bindingMap = make(map[string]*model.ServiceBinding)
+			bindingMap = make(map[string]*resources.ServiceBinding)
 		} else {
 			return nil, errors.New(fmt.Sprintf("Could not load the service instances, message: %s", err.Error()))
 		}
@@ -330,11 +330,11 @@ func loadServiceBindings(configPath string) (map[string]*model.ServiceBinding, e
 	return bindingMap, nil
 }
 
-func persistServiceBindings(configPath string, bindingMap map[string]*model.ServiceBinding) error {
+func persistServiceBindings(configPath string, bindingMap map[string]*resources.ServiceBinding) error {
 	return utils.MarshalAndRecord(bindingMap, configPath, "service_bindings.json")
 }
 
-func getVolumeNameForServiceInstance(serviceInstance *model.ServiceInstance) string {
+func getVolumeNameForServiceInstance(serviceInstance *resources.ServiceInstance) string {
 	volumeName := serviceInstance.Id // default to Service Instance ID as volume name if not provided
 	if serviceInstance.Parameters != nil {
 		volumeNameParam, ok := serviceInstance.Parameters.(map[string]interface{})["volumeName"]

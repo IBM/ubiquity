@@ -5,7 +5,7 @@ import (
 	"log"
 	"path"
 
-	"github.ibm.com/almaden-containers/ubiquity/model"
+	"github.ibm.com/almaden-containers/ubiquity/resources"
 	"github.ibm.com/almaden-containers/ubiquity/utils"
 )
 
@@ -162,11 +162,11 @@ func (s *spectrum_ssh) UnlinkFileset(filesystemName string, filesetName string) 
 	return UnlinkFilesetInternal(s.logger, s.executor, filesystemName, filesetName, "ssh", args)
 }
 
-func (s *spectrum_ssh) ListFilesets(filesystemName string) ([]model.VolumeMetadata, error) {
+func (s *spectrum_ssh) ListFilesets(filesystemName string) ([]resources.VolumeMetadata, error) {
 	return nil, nil
 }
 
-func (s *spectrum_ssh) ListFileset(filesystemName string, filesetName string) (model.VolumeMetadata, error) {
+func (s *spectrum_ssh) ListFileset(filesystemName string, filesetName string) (resources.VolumeMetadata, error) {
 	s.logger.Println("spectrumLocalClient: ListFileset start")
 	defer s.logger.Println("spectrumLocalClient: ListFileset end")
 

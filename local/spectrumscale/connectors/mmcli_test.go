@@ -9,7 +9,7 @@ import (
 	. "github.com/onsi/gomega"
 	"github.ibm.com/almaden-containers/ubiquity/fakes"
 	"github.ibm.com/almaden-containers/ubiquity/local/spectrumscale/connectors"
-	"github.ibm.com/almaden-containers/ubiquity/model"
+	"github.ibm.com/almaden-containers/ubiquity/resources"
 )
 
 var _ = Describe("spectrum_mmcli", func() {
@@ -313,7 +313,7 @@ var _ = Describe("spectrum_mmcli", func() {
 			volume, err := spectrumMMCLI.ListFileset(filesystem, fileset)
 			Expect(err).To(HaveOccurred())
 			Expect(err.Error()).To(Equal(errorMsg))
-			Expect(volume).To(Equal(model.VolumeMetadata{}))
+			Expect(volume).To(Equal(resources.VolumeMetadata{}))
 		})
 
 		It("should succeed when execute command does not error", func() {

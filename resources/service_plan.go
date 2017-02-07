@@ -1,4 +1,4 @@
-package model
+package resources
 
 type ServicePlan struct {
 	Name        string      `json:"name"`

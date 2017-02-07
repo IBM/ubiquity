@@ -1,4 +1,4 @@
-package model
+package resources
 
 type ServiceInstance struct {
 	Id               string `json:"id"`

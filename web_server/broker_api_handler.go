@@ -5,17 +5,17 @@ import (
 	"log"
 	"net/http"
 
-	"github.ibm.com/almaden-containers/ubiquity/core"
-	"github.ibm.com/almaden-containers/ubiquity/model"
+	"github.ibm.com/almaden-containers/ubiquity/service_broker"
+	"github.ibm.com/almaden-containers/ubiquity/resources"
 	"github.ibm.com/almaden-containers/ubiquity/utils"
 )
 
 type BrokerApiHandler struct {
-	Controller core.BrokerController
+	Controller service_broker.BrokerController
 	log        *log.Logger
 }
 
-func NewBrokerApiHandler(logger *log.Logger, controller core.BrokerController) *BrokerApiHandler {
+func NewBrokerApiHandler(logger *log.Logger, controller service_broker.BrokerController) *BrokerApiHandler {
 
 	return &BrokerApiHandler{log: logger, Controller: controller}
 }
@@ -36,7 +36,7 @@ func (h *BrokerApiHandler) Catalog() http.HandlerFunc {
 func (h *BrokerApiHandler) CreateServiceInstance() http.HandlerFunc {
 	return func(w http.ResponseWriter, req *http.Request) {
 		instanceId := utils.ExtractVarsFromRequest(req, "service_instance_guid")
-		var instance model.ServiceInstance
+		var instance resources.ServiceInstance
 		err := utils.UnmarshalDataFromRequest(req, &instance)
 		if err != nil {
 			utils.WriteResponse(w, 409, struct{}{})
@@ -45,7 +45,7 @@ func (h *BrokerApiHandler) CreateServiceInstance() http.HandlerFunc {
 		serviceInstanceExists := h.Controller.ServiceInstanceExists(h.log, instanceId)
 		if serviceInstanceExists {
 			if h.Controller.ServiceInstancePropertiesMatch(h.log, instanceId, instance) == true {
-				response := model.CreateServiceInstanceResponse{
+				response := resources.CreateServiceInstanceResponse{
 					DashboardUrl:  "http://dashboard_url",
 					LastOperation: nil,
 				}
@@ -88,7 +88,7 @@ func (h *BrokerApiHandler) BindServiceInstance() http.HandlerFunc {
 	return func(w http.ResponseWriter, req *http.Request) {
 		instanceId := utils.ExtractVarsFromRequest(req, "service_instance_guid")
 		bindingId := utils.ExtractVarsFromRequest(req, "service_binding_guid")
-		var binding model.ServiceBinding
+		var binding resources.ServiceBinding
 		err := utils.UnmarshalDataFromRequest(req, &binding)
 		if err != nil {
 			h.log.Println("Error unmarshaling data from request")

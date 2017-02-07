@@ -1,4 +1,4 @@
-package model
+package resources
 
 type Service struct {
 	Name           string   `json:"name"`
