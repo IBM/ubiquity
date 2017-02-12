@@ -281,7 +281,7 @@ func (s *spectrum_mmcli) LinkFileset(filesystemName string, filesetName string) 
 		s.logger.Printf("error linking fileset %v", err)
 		return err
 	}
-
+	//
 	//hack for now
 	args = []string{"chmod", "-R", "777", filesetPath}
 

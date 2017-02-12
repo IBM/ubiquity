@@ -3,7 +3,6 @@ package spectrumscale
 import (
 	"fmt"
 	"log"
-	"os/exec"
 
 	"github.com/jinzhu/gorm"
 	"github.ibm.com/almaden-containers/ubiquity/resources"
@@ -13,6 +12,7 @@ import (
 type spectrumNfsLocalClient struct {
 	spectrumClient *spectrumLocalClient
 	config         resources.SpectrumScaleConfig
+	executor       utils.Executor
 }
 
 func NewSpectrumNfsLocalClient(logger *log.Logger, config resources.SpectrumScaleConfig, db *gorm.DB, fileLock utils.FileLock) (resources.StorageClient, error) {
@@ -35,7 +35,7 @@ func NewSpectrumNfsLocalClient(logger *log.Logger, config resources.SpectrumScal
 	if err != nil {
 		return nil, err
 	}
-	return &spectrumNfsLocalClient{config: config, spectrumClient: spectrumClient}, nil
+	return &spectrumNfsLocalClient{config: config, spectrumClient: spectrumClient, executor: utils.NewExecutor(logger)}, nil
 }
 
 func (s *spectrumNfsLocalClient) Activate() error {
@@ -167,19 +167,22 @@ func (s *spectrumNfsLocalClient) exportNfs(name, clientConfig string) error {
 		return err
 	}
 
-	spectrumCommand := "/usr/lpp/mmfs/bin/mmnfs"
 	volumeMountpoint, _, err := s.spectrumClient.getVolumeMountPoint(existingVolume)
 	if err != nil {
 		return err
 	}
 
-	args := []string{"export", "add", volumeMountpoint, "--client", fmt.Sprintf("%s", clientConfig)}
-	cmd := exec.Command(spectrumCommand, args...)
-	output, err := cmd.Output()
+	spectrumCommand := "/usr/lpp/mmfs/bin/mmnfs"
+
+	args := []string{spectrumCommand, "export", "add", volumeMountpoint, "--client", fmt.Sprintf("%s", clientConfig)}
+
+	output, err := s.executor.Execute("sudo", args)
+
 	if err != nil {
 		s.spectrumClient.logger.Printf("spectrumNfsLocalClient: error %#v ExportNfs output: %#v\n", err, output)
 		return fmt.Errorf("Failed to export fileset via Nfs: %s", err.Error())
 	}
+
 	s.spectrumClient.logger.Printf("spectrumNfsLocalClient: ExportNfs output: %s\n", string(output))
 	return nil
 }
@@ -205,13 +208,16 @@ func (s *spectrumNfsLocalClient) unexportNfs(name string) error {
 		return err
 	}
 
-	args := []string{"export", "remove", volumeMountpoint, "--force"}
-	cmd := exec.Command(spectrumCommand, args...)
-	output, err := cmd.Output()
+	args := []string{spectrumCommand, "export", "remove", volumeMountpoint, "--force"}
+
+	output, err := s.executor.Execute("sudo", args)
+
 	if err != nil {
 		s.spectrumClient.logger.Printf("spectrumNfsLocalClient: error %#v executing mmnfs command for output %#v \n", err, output)
 		return fmt.Errorf("spectrumNfsLocalClient: Failed to unexport fileset via Nfs: %s", err.Error())
+
 	}
+
 	s.spectrumClient.logger.Printf("spectrumNfsLocalClient: UnexportNfs output: %s\n", string(output))
 
 	return nil
