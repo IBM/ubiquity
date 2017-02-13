@@ -138,6 +138,34 @@ func (s *spectrumRemoteClient) Attach(name string) (string, error) {
 	if err != nil {
 		return "", fmt.Errorf("Error in unmarshalling response for attach remote call")
 	}
+
+	_, volumeConfig, err := s.GetVolume(name)
+	if err != nil {
+		return "", err
+	}
+	isPreexisting, isPreexistingSpecified := volumeConfig["isPreexisting"]
+	if isPreexistingSpecified && isPreexisting.(bool) == false {
+		uid, uidSpecified := volumeConfig["uid"]
+		gid, gidSpecified := volumeConfig["gid"]
+		executor := utils.NewExecutor(s.logger)
+		if uidSpecified || gidSpecified {
+			args := []string{"chown", fmt.Sprintf("%s:%s", uid, gid), mountResponse.Mountpoint}
+			_, err = executor.Execute("sudo", args)
+			if err != nil {
+				s.logger.Printf("Failed to change permissions of mountpoint %s: %s", mountResponse.Mountpoint, err.Error())
+				return "", err
+			}
+		} else {
+			//chmod 777 mountpoint
+			args := []string{"chmod", "777", mountResponse.Mountpoint}
+			_, err = executor.Execute("sudo", args)
+			if err != nil {
+				s.logger.Printf("Failed to change permissions of mountpoint %s: %s", mountResponse.Mountpoint, err.Error())
+				return "", err
+			}
+		}
+	}
+
 	return mountResponse.Mountpoint, nil
 }
 
