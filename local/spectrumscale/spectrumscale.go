@@ -321,7 +321,18 @@ func (s *spectrumLocalClient) GetVolume(name string) (volumeMetadata resources.V
 		if isLinked {
 			volumeMetadata.Mountpoint = volumeMountpoint
 		}
-		volumeConfigDetails = map[string]interface{}{"FilesetId": existingVolume.Fileset, "Filesystem": existingVolume.FileSystem}
+		volumeConfigDetails = make(map[string]interface{})
+		volumeConfigDetails["filesetId"] = existingVolume.Fileset
+		volumeConfigDetails["filesystem"] = existingVolume.FileSystem
+		volumeConfigDetails["clusterId"] = existingVolume.ClusterId
+		if existingVolume.GID != "" {
+			volumeConfigDetails["gid"] = existingVolume.GID
+		}
+		if existingVolume.UID != "" {
+			volumeConfigDetails["uid"] = existingVolume.UID
+		}
+		volumeConfigDetails["isPreexisting"] = existingVolume.IsPreexisting
+
 		return volumeMetadata, volumeConfigDetails, nil
 	}
 	return resources.VolumeMetadata{}, nil, fmt.Errorf("Volume not found")
