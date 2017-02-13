@@ -556,12 +556,15 @@ func (s *spectrumLocalClient) createLightweightVolume(filesystem, name, fileset 
 
 	lightweightVolumePath := path.Join(mountpoint, fileset, lightweightVolumeName)
 
-	err = s.executor.Mkdir(lightweightVolumePath, 0755)
+	//	err = s.executor.Mkdir(lightweightVolumePath, 0755)
+	args := []string{"mkdir", "-p", lightweightVolumePath}
+	_, err = s.executor.Execute("sudo", args)
 
 	if err != nil {
 		s.logger.Printf("Failed to create directory path %s : %s", lightweightVolumePath, err.Error())
 		return err
 	}
+	s.logger.Printf("creating directory for lwv: %s\n", lightweightVolumePath)
 
 	err = s.dataModel.InsertLightweightVolume(fileset, lightweightVolumeName, name, filesystem, false, opts)
 
@@ -719,13 +722,19 @@ func (s *spectrumLocalClient) validateAndParseParams(logger *log.Logger, opts ma
 	_, uidSpecified := opts[USER_SPECIFIED_UID]
 	_, gidSpecified := opts[USER_SPECIFIED_GID]
 
-	if uidSpecified && gidSpecified && (existingFilesetSpecified || existingLightWeightDirSpecified) {
-		return true, "", "", "", fmt.Errorf("uid/gid cannot be specified along with existing fileset")
-	}
 	userSpecifiedType, err := determineTypeFromRequest(logger, opts)
 	if err != nil {
 		logger.Printf("%s", err.Error())
 		return false, "", "", "", err
+	}
+
+	if uidSpecified && gidSpecified {
+		if existingFilesetSpecified && userSpecifiedType != LTWT_VOL_TYPE {
+			return true, "", "", "", fmt.Errorf("uid/gid cannot be specified along with existing fileset")
+		}
+		if existingLightWeightDirSpecified {
+			return true, "", "", "", fmt.Errorf("uid/gid cannot be specified along with existing lightweight volume")
+		}
 	}
 
 	if (userSpecifiedType == FILESET_TYPE && existingFilesetSpecified) || (userSpecifiedType == LTWT_VOL_TYPE && existingLightWeightDirSpecified) {
