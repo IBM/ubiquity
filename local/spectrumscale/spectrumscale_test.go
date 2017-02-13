@@ -783,26 +783,6 @@ var _ = Describe("local-client", func() {
 			Expect(fakeSpectrumScaleConnector.LinkFilesetCallCount()).To(Equal(1))
 		})
 
-		It("should fail when volume is fileset volume with permissions and executor fails to execute permissions change", func() {
-			fakeLock.LockReturns(nil)
-			volume := spectrumscale.SpectrumScaleVolume{Volume: model.Volume{Name: "fake-volume"}, FileSystem: "fake-filesystem", Type: spectrumscale.FILESET, UID: "fake-uid", GID: "gid"}
-			fakeSpectrumDataModel.GetVolumeReturns(volume, true, nil)
-			fakeSpectrumScaleConnector.GetFilesystemMountpointReturns("fake-mountpoint", nil)
-			fakeSpectrumScaleConnector.IsFilesetLinkedReturns(false, nil)
-			fakeSpectrumScaleConnector.LinkFilesetReturns(nil)
-			fakeExec.ExecuteReturns(nil, fmt.Errorf("error executing command"))
-			mountpath, err := client.Attach("fake-volume")
-			Expect(err).To(HaveOccurred())
-			Expect(err.Error()).To(Equal("error executing command"))
-			Expect(mountpath).To(Equal(""))
-			Expect(fakeLock.LockCallCount()).To(Equal(1))
-			Expect(fakeSpectrumDataModel.GetVolumeCallCount()).To(Equal(1))
-			Expect(fakeSpectrumScaleConnector.GetFilesystemMountpointCallCount()).To(Equal(2))
-			Expect(fakeSpectrumScaleConnector.IsFilesetLinkedCallCount()).To(Equal(1))
-			Expect(fakeSpectrumScaleConnector.LinkFilesetCallCount()).To(Equal(1))
-			Expect(fakeExec.ExecuteCallCount()).To(Equal(1))
-		})
-
 		It("should succeed when volume is lightweight volume with permissions", func() {
 			fakeLock.LockReturns(nil)
 			volume := spectrumscale.SpectrumScaleVolume{Volume: model.Volume{Name: "fake-volume"}, FileSystem: "fake-filesystem", Type: spectrumscale.LIGHTWEIGHT, UID: "fake-uid", GID: "gid"}
@@ -816,10 +796,9 @@ var _ = Describe("local-client", func() {
 			Expect(mountpath).To(Equal("fake-mountpoint"))
 			Expect(fakeLock.LockCallCount()).To(Equal(1))
 			Expect(fakeSpectrumDataModel.GetVolumeCallCount()).To(Equal(1))
-			Expect(fakeSpectrumScaleConnector.GetFilesystemMountpointCallCount()).To(Equal(2))
+			Expect(fakeSpectrumScaleConnector.GetFilesystemMountpointCallCount()).To(Equal(1))
 			Expect(fakeSpectrumScaleConnector.IsFilesetLinkedCallCount()).To(Equal(1))
 			Expect(fakeSpectrumScaleConnector.LinkFilesetCallCount()).To(Equal(1))
-			Expect(fakeExec.ExecuteCallCount()).To(Equal(1))
 		})
 
 		It("should succeed when volume is fileset volume with permissions", func() {
@@ -836,10 +815,9 @@ var _ = Describe("local-client", func() {
 			Expect(mountpath).To(Equal("fake-mountpoint"))
 			Expect(fakeLock.LockCallCount()).To(Equal(1))
 			Expect(fakeSpectrumDataModel.GetVolumeCallCount()).To(Equal(1))
-			Expect(fakeSpectrumScaleConnector.GetFilesystemMountpointCallCount()).To(Equal(2))
+			Expect(fakeSpectrumScaleConnector.GetFilesystemMountpointCallCount()).To(Equal(1))
 			Expect(fakeSpectrumScaleConnector.IsFilesetLinkedCallCount()).To(Equal(1))
 			Expect(fakeSpectrumScaleConnector.LinkFilesetCallCount()).To(Equal(1))
-			Expect(fakeExec.ExecuteCallCount()).To(Equal(1))
 		})
 
 	})
