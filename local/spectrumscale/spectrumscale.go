@@ -321,7 +321,18 @@ func (s *spectrumLocalClient) GetVolume(name string) (volumeMetadata resources.V
 		if isLinked {
 			volumeMetadata.Mountpoint = volumeMountpoint
 		}
-		volumeConfigDetails = map[string]interface{}{"FilesetId": existingVolume.Fileset, "Filesystem": existingVolume.FileSystem}
+		volumeConfigDetails = make(map[string]interface{})
+		volumeConfigDetails["filesetId"] = existingVolume.Fileset
+		volumeConfigDetails["filesystem"] = existingVolume.FileSystem
+		volumeConfigDetails["clusterId"] = existingVolume.ClusterId
+		if existingVolume.GID != "" {
+			volumeConfigDetails["gid"] = existingVolume.GID
+		}
+		if existingVolume.UID != "" {
+			volumeConfigDetails["uid"] = existingVolume.UID
+		}
+		volumeConfigDetails["isPreexisting"] = existingVolume.IsPreexisting
+
 		return volumeMetadata, volumeConfigDetails, nil
 	}
 	return resources.VolumeMetadata{}, nil, fmt.Errorf("Volume not found")
@@ -362,17 +373,6 @@ func (s *spectrumLocalClient) Attach(name string) (volumeMountpoint string, err 
 	}
 	if linked == false {
 		err = s.connector.LinkFileset(existingVolume.FileSystem, existingVolume.Fileset)
-
-		if err != nil {
-			s.logger.Println(err.Error())
-			return "", err
-		}
-	}
-
-	// change owner of linked fileset if User and Group specified.
-
-	if existingVolume.UID != "" && existingVolume.GID != "" {
-		err := s.changePermissionsOfFileset(existingVolume.FileSystem, existingVolume.Fileset, existingVolume.UID, existingVolume.GID)
 
 		if err != nil {
 			s.logger.Println(err.Error())
@@ -472,7 +472,7 @@ func (s *spectrumLocalClient) createFilesetVolume(filesystem, name string, opts 
 		return err
 	}
 
-	err = s.dataModel.InsertFilesetVolume(filesetName, name, filesystem, opts)
+	err = s.dataModel.InsertFilesetVolume(filesetName, name, filesystem, false, opts)
 
 	if err != nil {
 		s.logger.Printf("Error inserting fileset %v", err)
@@ -482,27 +482,28 @@ func (s *spectrumLocalClient) createFilesetVolume(filesystem, name string, opts 
 	s.logger.Printf("Created fileset volume with fileset %s\n", filesetName)
 	return nil
 }
-func (s *spectrumLocalClient) changePermissionsOfFileset(filesystem, filesetName, uid, gid string) error {
-	s.logger.Println("spectrumLocalClient: changeOwnerOfFileset start")
-	defer s.logger.Println("spectrumLocalClient: changeOwnerOfFileset end")
 
-	s.logger.Printf("Changing Owner of Fileset %s to uid %s , gid %s", filesetName, uid, gid)
-
-	mountpoint, err := s.connector.GetFilesystemMountpoint(filesystem)
-	if err != nil {
-		s.logger.Printf("Failed to change permissions of fileset %s : %s", filesetName, err.Error())
-		return err
-	}
-
-	filesetPath := path.Join(mountpoint, filesetName)
-	args := []string{"chown", "-R", fmt.Sprintf("%s:%s", uid, gid), filesetPath}
-	_, err = s.executor.Execute("sudo", args)
-	if err != nil {
-		s.logger.Printf("Failed to change permissions of fileset %s: %s", filesetName, err.Error())
-		return err
-	}
-	return nil
-}
+//func (s *spectrumLocalClient) changePermissionsOfFileset(filesystem, filesetName, uid, gid string) error {
+//	s.logger.Println("spectrumLocalClient: changeOwnerOfFileset start")
+//	defer s.logger.Println("spectrumLocalClient: changeOwnerOfFileset end")
+//
+//	s.logger.Printf("Changing Owner of Fileset %s to uid %s , gid %s", filesetName, uid, gid)
+//
+//	mountpoint, err := s.connector.GetFilesystemMountpoint(filesystem)
+//	if err != nil {
+//		s.logger.Printf("Failed to change permissions of fileset %s : %s", filesetName, err.Error())
+//		return err
+//	}
+//
+//	filesetPath := path.Join(mountpoint, filesetName)
+//	args := []string{"chown", "-R", fmt.Sprintf("%s:%s", uid, gid), filesetPath}
+//	_, err = s.executor.Execute("sudo", args)
+//	if err != nil {
+//		s.logger.Printf("Failed to change permissions of fileset %s: %s", filesetName, err.Error())
+//		return err
+//	}
+//	return nil
+//}
 
 func (s *spectrumLocalClient) createFilesetQuotaVolume(filesystem, name, quota string, opts map[string]interface{}) error {
 	s.logger.Println("spectrumLocalClient: createFilesetQuotaVolume start")
@@ -526,7 +527,7 @@ func (s *spectrumLocalClient) createFilesetQuotaVolume(filesystem, name, quota s
 		return err
 	}
 
-	err = s.dataModel.InsertFilesetQuotaVolume(filesetName, quota, name, filesystem, opts)
+	err = s.dataModel.InsertFilesetQuotaVolume(filesetName, quota, name, filesystem, false, opts)
 
 	if err != nil {
 		return err
@@ -566,14 +567,17 @@ func (s *spectrumLocalClient) createLightweightVolume(filesystem, name, fileset 
 
 	lightweightVolumePath := path.Join(mountpoint, fileset, lightweightVolumeName)
 
-	err = s.executor.Mkdir(lightweightVolumePath, 0755)
+	//	err = s.executor.Mkdir(lightweightVolumePath, 0755)
+	args := []string{"mkdir", "-p", lightweightVolumePath}
+	_, err = s.executor.Execute("sudo", args)
 
 	if err != nil {
 		s.logger.Printf("Failed to create directory path %s : %s", lightweightVolumePath, err.Error())
 		return err
 	}
+	s.logger.Printf("creating directory for lwv: %s\n", lightweightVolumePath)
 
-	err = s.dataModel.InsertLightweightVolume(fileset, lightweightVolumeName, name, filesystem, opts)
+	err = s.dataModel.InsertLightweightVolume(fileset, lightweightVolumeName, name, filesystem, false, opts)
 
 	if err != nil {
 		return err
@@ -606,7 +610,7 @@ func (s *spectrumLocalClient) updateDBWithExistingFileset(filesystem, name, user
 		return err
 	}
 
-	err = s.dataModel.InsertFilesetVolume(userSpecifiedFileset, name, filesystem, opts)
+	err = s.dataModel.InsertFilesetVolume(userSpecifiedFileset, name, filesystem, true, opts)
 
 	if err != nil {
 		s.logger.Println(err.Error())
@@ -648,7 +652,7 @@ func (s *spectrumLocalClient) updateDBWithExistingFilesetQuota(filesystem, name,
 
 	}
 
-	err = s.dataModel.InsertFilesetQuotaVolume(userSpecifiedFileset, quota, name, filesystem, opts)
+	err = s.dataModel.InsertFilesetQuotaVolume(userSpecifiedFileset, quota, name, filesystem, true, opts)
 
 	if err != nil {
 		s.logger.Println(err.Error())
@@ -693,7 +697,7 @@ func (s *spectrumLocalClient) updateDBWithExistingDirectory(filesystem, name, us
 		return err
 	}
 
-	err = s.dataModel.InsertLightweightVolume(userSpecifiedFileset, userSpecifiedDirectory, name, filesystem, opts)
+	err = s.dataModel.InsertLightweightVolume(userSpecifiedFileset, userSpecifiedDirectory, name, filesystem, true, opts)
 
 	if err != nil {
 		s.logger.Println(err.Error())
@@ -726,10 +730,22 @@ func (s *spectrumLocalClient) validateAndParseParams(logger *log.Logger, opts ma
 	existingFileset, existingFilesetSpecified := opts[USER_SPECIFIED_FILESET]
 	existingLightWeightDir, existingLightWeightDirSpecified := opts[USER_SPECIFIED_DIRECTORY]
 	filesystem, filesystemSpecified := opts[USER_SPECIFIED_FILESYSTEM]
+	_, uidSpecified := opts[USER_SPECIFIED_UID]
+	_, gidSpecified := opts[USER_SPECIFIED_GID]
+
 	userSpecifiedType, err := determineTypeFromRequest(logger, opts)
 	if err != nil {
 		logger.Printf("%s", err.Error())
 		return false, "", "", "", err
+	}
+
+	if uidSpecified && gidSpecified {
+		if existingFilesetSpecified && userSpecifiedType != LTWT_VOL_TYPE {
+			return true, "", "", "", fmt.Errorf("uid/gid cannot be specified along with existing fileset")
+		}
+		if existingLightWeightDirSpecified {
+			return true, "", "", "", fmt.Errorf("uid/gid cannot be specified along with existing lightweight volume")
+		}
 	}
 
 	if (userSpecifiedType == FILESET_TYPE && existingFilesetSpecified) || (userSpecifiedType == LTWT_VOL_TYPE && existingLightWeightDirSpecified) {

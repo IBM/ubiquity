@@ -281,14 +281,6 @@ func (s *spectrum_mmcli) LinkFileset(filesystemName string, filesetName string) 
 		s.logger.Printf("error linking fileset %v", err)
 		return err
 	}
-	//
-	//hack for now
-	args = []string{"chmod", "-R", "777", filesetPath}
-
-	_, err = s.executor.Execute("sudo", args)
-	if err != nil {
-		return fmt.Errorf("Failed to set permissions for fileset: %s", err.Error())
-	}
 	return nil
 }
 

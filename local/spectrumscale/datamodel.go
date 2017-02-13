@@ -17,9 +17,9 @@ type SpectrumDataModel interface {
 	SetClusterId(string)
 	GetClusterId() string
 	DeleteVolume(name string) error
-	InsertFilesetVolume(fileset, volumeName string, filesystem string, opts map[string]interface{}) error
-	InsertLightweightVolume(fileset, directory, volumeName string, filesystem string, opts map[string]interface{}) error
-	InsertFilesetQuotaVolume(fileset, quota, volumeName string, filesystem string, opts map[string]interface{}) error
+	InsertFilesetVolume(fileset, volumeName string, filesystem string, isPreexisting bool, opts map[string]interface{}) error
+	InsertLightweightVolume(fileset, directory, volumeName string, filesystem string, isPreexisting bool, opts map[string]interface{}) error
+	InsertFilesetQuotaVolume(fileset, quota, volumeName string, filesystem string, isPreexisting bool, opts map[string]interface{}) error
 	GetVolume(name string) (SpectrumScaleVolume, bool, error)
 	ListVolumes() ([]SpectrumScaleVolume, error)
 }
@@ -45,17 +45,18 @@ const (
 )
 
 type SpectrumScaleVolume struct {
-	ID         uint
-	Volume     model.Volume
-	VolumeID   uint
-	Type       VolumeType
-	ClusterId  string
-	FileSystem string
-	Fileset    string
-	Directory  string
-	UID        string
-	GID        string
-	Quota      string
+	ID            uint
+	Volume        model.Volume
+	VolumeID      uint
+	Type          VolumeType
+	ClusterId     string
+	FileSystem    string
+	Fileset       string
+	Directory     string
+	UID           string
+	GID           string
+	Quota         string
+	IsPreexisting bool
 }
 
 func NewSpectrumDataModel(log *log.Logger, db *gorm.DB, backend resources.Backend) SpectrumDataModel {
@@ -97,36 +98,36 @@ func (d *spectrumDataModel) DeleteVolume(name string) error {
 	return nil
 }
 
-func (d *spectrumDataModel) InsertFilesetVolume(fileset, volumeName string, filesystem string, opts map[string]interface{}) error {
+func (d *spectrumDataModel) InsertFilesetVolume(fileset, volumeName string, filesystem string, isPreexisting bool, opts map[string]interface{}) error {
 	d.log.Println("SpectrumDataModel: InsertFilesetVolume start")
 	defer d.log.Println("SpectrumDataModel: InsertFilesetVolume end")
 
 	volume := SpectrumScaleVolume{Volume: model.Volume{Name: volumeName, Backend: fmt.Sprintf("%s", d.backend)}, Type: FILESET, ClusterId: d.clusterId, FileSystem: filesystem,
-		Fileset: fileset}
+		Fileset: fileset, IsPreexisting: isPreexisting}
 
 	addPermissionsForVolume(&volume, opts)
 
 	return d.insertVolume(volume)
 }
 
-func (d *spectrumDataModel) InsertLightweightVolume(fileset, directory, volumeName string, filesystem string, opts map[string]interface{}) error {
+func (d *spectrumDataModel) InsertLightweightVolume(fileset, directory, volumeName string, filesystem string, isPreexisting bool, opts map[string]interface{}) error {
 	d.log.Println("SpectrumDataModel: InsertLightweightVolume start")
 	defer d.log.Println("SpectrumDataModel: InsertLightweightVolume end")
 
 	volume := SpectrumScaleVolume{Volume: model.Volume{Name: volumeName, Backend: fmt.Sprintf("%s", d.backend)}, Type: LIGHTWEIGHT, ClusterId: d.clusterId, FileSystem: filesystem,
-		Fileset: fileset, Directory: directory}
+		Fileset: fileset, Directory: directory, IsPreexisting: isPreexisting}
 
 	addPermissionsForVolume(&volume, opts)
 
 	return d.insertVolume(volume)
 }
 
-func (d *spectrumDataModel) InsertFilesetQuotaVolume(fileset, quota, volumeName string, filesystem string, opts map[string]interface{}) error {
+func (d *spectrumDataModel) InsertFilesetQuotaVolume(fileset, quota, volumeName string, filesystem string, isPreexisting bool, opts map[string]interface{}) error {
 	d.log.Println("SpectrumDataModel: InsertFilesetQuotaVolume start")
 	defer d.log.Println("SpectrumDataModel: InsertFilesetQuotaVolume end")
 
 	volume := SpectrumScaleVolume{Volume: model.Volume{Name: volumeName, Backend: fmt.Sprintf("%s", d.backend)}, Type: FILESET_WITH_QUOTA, ClusterId: d.clusterId, FileSystem: filesystem,
-		Fileset: fileset, Quota: quota}
+		Fileset: fileset, Quota: quota, IsPreexisting: isPreexisting}
 
 	addPermissionsForVolume(&volume, opts)
 
