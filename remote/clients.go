@@ -4,15 +4,15 @@ import (
 	"fmt"
 	"log"
 
-	"github.ibm.com/almaden-containers/ubiquity/model"
+	"github.ibm.com/almaden-containers/ubiquity/resources"
 )
 
-func NewRemoteClient(logger *log.Logger, backendName, storageApiURL string, config model.UbiquityPluginConfig) (model.StorageClient, error) {
+func NewRemoteClient(logger *log.Logger, backendName, storageApiURL string, config resources.UbiquityPluginConfig) (resources.StorageClient, error) {
 
-	if backendName == "spectrum-scale" {
+	if resources.Backend(backendName) == resources.SPECTRUM_SCALE {
 		return NewSpectrumRemoteClient(logger, backendName, storageApiURL)
 	}
-	if backendName == "spectrum-scale-nfs" {
+	if resources.Backend(backendName) == resources.SPECTRUM_SCALE_NFS {
 		return NewNfsRemoteClient(logger, backendName, storageApiURL, config.SpectrumNfsRemoteConfig)
 	}
 

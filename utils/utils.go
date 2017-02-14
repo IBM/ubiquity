@@ -7,7 +7,7 @@ import (
 	"net/http"
 	"os"
 
-	"github.ibm.com/almaden-containers/ubiquity/model"
+	"github.ibm.com/almaden-containers/ubiquity/resources"
 
 	"path"
 	"strings"
@@ -19,7 +19,7 @@ import (
 )
 
 func ExtractErrorResponse(response *http.Response) error {
-	errorResponse := model.GenericResponse{}
+	errorResponse := resources.GenericResponse{}
 	err := UnmarshalResponse(response, &errorResponse)
 	if err != nil {
 		return err
@@ -200,7 +200,7 @@ func MkDir(path string) error {
 	return err
 }
 
-func PrintResponse(f model.FlexVolumeResponse) error {
+func PrintResponse(f resources.FlexVolumeResponse) error {
 	responseBytes, err := json.Marshal(f)
 	if err != nil {
 		return err

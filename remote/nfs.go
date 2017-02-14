@@ -9,7 +9,7 @@ import (
 	"path"
 	"strings"
 
-	"github.ibm.com/almaden-containers/ubiquity/model"
+	"github.ibm.com/almaden-containers/ubiquity/resources"
 	"github.ibm.com/almaden-containers/ubiquity/utils"
 )
 
@@ -19,12 +19,12 @@ type nfsRemoteClient struct {
 	httpClient    *http.Client
 	storageApiURL string
 	backendName   string
-	config        model.SpectrumNfsRemoteConfig
+	config        resources.SpectrumNfsRemoteConfig
 }
 
-func NewNfsRemoteClient(logger *log.Logger, backendName, storageApiURL string, config model.SpectrumNfsRemoteConfig) (model.StorageClient, error) {
-	if config.CIDR == "" {
-		return nil, fmt.Errorf("newNFSRemoteClient: Missing required parameter 'CIDR'")
+func NewNfsRemoteClient(logger *log.Logger, backendName, storageApiURL string, config resources.SpectrumNfsRemoteConfig) (resources.StorageClient, error) {
+	if config.ClientConfig == "" {
+		return nil, fmt.Errorf("newNFSRemoteClient: Missing required parameter 'clientConfig'")
 	}
 	return &nfsRemoteClient{logger: logger, storageApiURL: storageApiURL, httpClient: &http.Client{}, backendName: backendName, config: config}, nil
 }
@@ -64,8 +64,8 @@ func (s *nfsRemoteClient) CreateVolume(name string, opts map[string]interface{})
 	for k, v := range opts {
 		extendedOpts[k] = v
 	}
-	extendedOpts["nfsClientCIDR"] = s.config.CIDR
-	createVolumeRequest := model.CreateRequest{Name: name, Opts: extendedOpts}
+	extendedOpts["nfsClientConfig"] = s.config.ClientConfig
+	createVolumeRequest := resources.CreateRequest{Name: name, Opts: extendedOpts}
 
 	response, err := utils.HttpExecute(s.httpClient, s.logger, "POST", createRemoteURL, createVolumeRequest)
 	if err != nil {
@@ -86,7 +86,7 @@ func (s *nfsRemoteClient) RemoveVolume(name string, forceDelete bool) (err error
 	defer s.logger.Println("nfsRemoteClient:  remove end")
 
 	removeRemoteURL := utils.FormatURL(s.storageApiURL, s.backendName, "volumes", name)
-	removeRequest := model.RemoveRequest{Name: name, ForceDelete: forceDelete}
+	removeRequest := resources.RemoveRequest{Name: name, ForceDelete: forceDelete}
 
 	response, err := utils.HttpExecute(s.httpClient, s.logger, "DELETE", removeRemoteURL, removeRequest)
 	if err != nil {
@@ -102,7 +102,7 @@ func (s *nfsRemoteClient) RemoveVolume(name string, forceDelete bool) (err error
 	return nil
 }
 
-func (s *nfsRemoteClient) GetVolume(name string) (model.VolumeMetadata, map[string]interface{}, error) {
+func (s *nfsRemoteClient) GetVolume(name string) (resources.VolumeMetadata, map[string]interface{}, error) {
 	s.logger.Println("nfsRemoteClient: get start")
 	defer s.logger.Println("nfsRemoteClient: get finish")
 
@@ -110,19 +110,19 @@ func (s *nfsRemoteClient) GetVolume(name string) (model.VolumeMetadata, map[stri
 	response, err := utils.HttpExecute(s.httpClient, s.logger, "GET", getRemoteURL, nil)
 	if err != nil {
 		s.logger.Printf("nfsRemoteClient: Error in get volume remote call %#v", err)
-		return model.VolumeMetadata{}, nil, fmt.Errorf("Error in get volume remote call")
+		return resources.VolumeMetadata{}, nil, fmt.Errorf("Error in get volume remote call")
 	}
 
 	if response.StatusCode != http.StatusOK {
 		s.logger.Printf("nfsRemoteClient: Error in get volume remote call %#v", response)
-		return model.VolumeMetadata{}, nil, utils.ExtractErrorResponse(response)
+		return resources.VolumeMetadata{}, nil, utils.ExtractErrorResponse(response)
 	}
 
-	getResponse := model.GetResponse{}
+	getResponse := resources.GetResponse{}
 	err = utils.UnmarshalResponse(response, &getResponse)
 	if err != nil {
 		s.logger.Printf("nfsRemoteClient: Error in unmarshalling response for get remote call %#v for response %#v", err, response)
-		return model.VolumeMetadata{}, nil, fmt.Errorf("Error in unmarshalling response for get remote call")
+		return resources.VolumeMetadata{}, nil, fmt.Errorf("Error in unmarshalling response for get remote call")
 	}
 
 	return getResponse.Volume, getResponse.Config, nil
@@ -146,7 +146,7 @@ func (s *nfsRemoteClient) Attach(name string) (string, error) {
 	}
 
 	// FIXME: Ubiquity Storage API should not return a MountResponse on Attach calls.
-	mountResponse := model.MountResponse{}
+	mountResponse := resources.MountResponse{}
 	err = utils.UnmarshalResponse(response, &mountResponse)
 	if err != nil {
 		return "", fmt.Errorf("Error in unmarshalling response for attach remote call")
@@ -194,7 +194,7 @@ func (s *nfsRemoteClient) Detach(name string) error {
 	return nil
 }
 
-func (s *nfsRemoteClient) ListVolumes() ([]model.VolumeMetadata, error) {
+func (s *nfsRemoteClient) ListVolumes() ([]resources.VolumeMetadata, error) {
 	s.logger.Println("nfsRemoteClient: list start")
 	defer s.logger.Println("nfsRemoteClient: list end")
 
@@ -210,11 +210,11 @@ func (s *nfsRemoteClient) ListVolumes() ([]model.VolumeMetadata, error) {
 		return nil, utils.ExtractErrorResponse(response)
 	}
 
-	listResponse := model.ListResponse{}
+	listResponse := resources.ListResponse{}
 	err = utils.UnmarshalResponse(response, &listResponse)
 	if err != nil {
 		s.logger.Printf("nfsRemoteClient: Error in unmarshalling response for get remote call %#v for response %#v", err, response)
-		return []model.VolumeMetadata{}, nil
+		return []resources.VolumeMetadata{}, nil
 	}
 
 	return listResponse.Volumes, nil
