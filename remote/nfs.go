@@ -153,10 +153,50 @@ func (s *nfsRemoteClient) Attach(name string) (string, error) {
 	}
 
 	nfsShare := mountResponse.Mountpoint
-
 	// FIXME: What is our local mount path? Should we be getting this from the volume config? Using same path as on ubiquity server below /mnt/ for now.
 	remoteMountpoint := path.Join("/mnt/", strings.Split(nfsShare, ":")[1])
 
+	_, volumeConfig, err := s.GetVolume(name)
+	if err != nil {
+		return "", err
+	}
+
+	if s.isMounted(nfsShare, remoteMountpoint) {
+		s.logger.Printf("nfsRemoteClient: - mount: %s is already mounted at %s\n", nfsShare, remoteMountpoint)
+		return remoteMountpoint, nil
+	}
+
+	s.logger.Printf("nfsRemoteClient: mkdir -p %s\n", remoteMountpoint)
+	args := []string{"mkdir", "-p", remoteMountpoint}
+
+	executor := utils.NewExecutor(s.logger)
+	_, err = executor.Execute("sudo", args)
+	if err != nil {
+		return "", fmt.Errorf("nfsRemoteClient: Failed to mkdir for remote mountpoint %s (share %s, error '%s')\n", remoteMountpoint, nfsShare, err.Error())
+	}
+
+	isPreexisting, isPreexistingSpecified := volumeConfig["isPreexisting"]
+	if isPreexistingSpecified && isPreexisting.(bool) == false {
+		uid, uidSpecified := volumeConfig["uid"]
+		gid, gidSpecified := volumeConfig["gid"]
+		executor := utils.NewExecutor(s.logger)
+		if uidSpecified || gidSpecified {
+			args := []string{"chown", fmt.Sprintf("%s:%s", uid, gid), remoteMountpoint}
+			_, err = executor.Execute("sudo", args)
+			if err != nil {
+				s.logger.Printf("Failed to change permissions of mountpoint %s: %s", mountResponse.Mountpoint, err.Error())
+				return "", err
+			}
+		} else {
+			//chmod 777 mountpoint
+			args := []string{"chmod", "777", remoteMountpoint}
+			_, err = executor.Execute("sudo", args)
+			if err != nil {
+				s.logger.Printf("Failed to change permissions of mountpoint %s: %s", mountResponse.Mountpoint, err.Error())
+				return "", err
+			}
+		}
+	}
 	return s.mount(nfsShare, remoteMountpoint)
 }
 
@@ -225,34 +265,9 @@ func (s *nfsRemoteClient) mount(nfsShare, remoteMountpoint string) (string, erro
 	s.logger.Printf("nfsRemoteClient: - mount start nfsShare=%s\n", nfsShare)
 	defer s.logger.Printf("nfsRemoteClient: - mount end nfsShare=%s\n", nfsShare)
 
-	if s.isMounted(nfsShare, remoteMountpoint) {
-		s.logger.Printf("nfsRemoteClient: - mount: %s is already mounted at %s\n", nfsShare, remoteMountpoint)
-		return remoteMountpoint, nil
-	}
-
-	s.logger.Printf("nfsRemoteClient: mkdir -p %s\n", remoteMountpoint)
-	command := "mkdir"
-	args := []string{"-p", remoteMountpoint}
-	cmd := exec.Command(command, args...)
-	output, err := cmd.Output()
-	if err != nil {
-		return "", fmt.Errorf("nfsRemoteClient: Failed to mkdir for remote mountpoint %s (share %s, error '%s', output '%s')\n", remoteMountpoint, nfsShare, err.Error(), output)
-	}
-	s.logger.Printf("nfsRemoteClient: mkdir output: %s\n", string(output))
-
-	//hack for now
-	command = "chmod"
-	args = []string{"-R", "777", remoteMountpoint}
-	cmd = exec.Command(command, args...)
-	output, err = cmd.Output()
-	if err != nil {
-		s.logger.Printf("nfsRemoteClient: Non-fatal error: Failed to set permissions for share (error '%s', output '%s')\n", err.Error(), output)
-	}
-
-	command = "mount"
-	args = []string{"-t", "nfs", nfsShare, remoteMountpoint}
-	cmd = exec.Command(command, args...)
-	output, err = cmd.Output()
+	executor := utils.NewExecutor(s.logger)
+	args := []string{"mount", "-t", "nfs", nfsShare, remoteMountpoint}
+	output, err := executor.Execute("sudo", args)
 	if err != nil {
 		return "", fmt.Errorf("nfsRemoteClient: Failed to mount share %s to remote mountpoint %s (error '%s', output '%s')\n", nfsShare, remoteMountpoint, err.Error(), output)
 	}
@@ -275,11 +290,9 @@ func (s *nfsRemoteClient) isMounted(nfsShare, remoteMountpoint string) bool {
 func (s *nfsRemoteClient) unmount(remoteMountpoint string) error {
 	s.logger.Printf("nfsRemoteClient: - unmount start remoteMountpoint=%s\n", remoteMountpoint)
 	defer s.logger.Printf("nfsRemoteClient: - unmount end remoteMountpoint=%s\n", remoteMountpoint)
-
-	command := "umount"
-	args := []string{remoteMountpoint}
-	cmd := exec.Command(command, args...)
-	output, err := cmd.Output()
+	executor := utils.NewExecutor(s.logger)
+	args := []string{"umount", remoteMountpoint}
+	output, err := executor.Execute("sudo", args)
 	if err != nil {
 		return fmt.Errorf("Failed to unmount remote mountpoint %s (error '%s', output '%s')\n", remoteMountpoint, err.Error(), output)
 	}
