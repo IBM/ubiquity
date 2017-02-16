@@ -57,7 +57,7 @@ func newSpectrumLocalClient(logger *log.Logger, config resources.SpectrumScaleCo
 	logger.Println("spectrumLocalClient: init start")
 	defer logger.Println("spectrumLocalClient: init end")
 
-	client, err := connectors.GetSpectrumScaleConnector(logger, config.Connector, map[string]interface{}{})
+	client, err := connectors.GetSpectrumScaleConnector(logger, config)
 	if err != nil {
 		logger.Fatalln(err.Error())
 		return &spectrumLocalClient{}, err
@@ -511,7 +511,7 @@ func (s *spectrumLocalClient) createFilesetQuotaVolume(filesystem, name, quota s
 
 	filesetName := generateFilesetName(name)
 
-	err := s.connector.CreateFileset(filesystem, name, opts)
+	err := s.connector.CreateFileset(filesystem, filesetName, opts)
 
 	if err != nil {
 		return err

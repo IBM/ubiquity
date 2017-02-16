@@ -26,8 +26,7 @@ var _ = Describe("spectrum_mmcli", func() {
 	BeforeEach(func() {
 		logger = log.New(os.Stdout, "spectrum: ", log.Lshortfile|log.LstdFlags)
 		fakeExec = new(fakes.FakeExecutor)
-		opts = make(map[string]interface{})
-		spectrumMMCLI, err = connectors.NewSpectrumMMCLIWithExecutor(logger, fakeExec, opts)
+		spectrumMMCLI, err = connectors.NewSpectrumMMCLIWithExecutor(logger, fakeExec)
 		Expect(err).ToNot(HaveOccurred())
 		fileset = "fake-fileset"
 		filesystem = "fake-filesystem"

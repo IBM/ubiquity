@@ -25,8 +25,19 @@ type UbiquityServerConfig struct {
 type SpectrumScaleConfig struct {
 	DefaultFilesystem string
 	ConfigPath        string
-	Connector         string
 	NfsServerAddr     string
+	SshConfig         SshConfig
+	RestConfig        RestConfig
+}
+
+type SshConfig struct {
+	User string
+	Host string
+	Port string
+}
+
+type RestConfig struct {
+	Endpoint string
 }
 type SoftlayerConfig struct {
 	Tenant string
