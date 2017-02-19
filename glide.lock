@@ -1,0 +1,82 @@
+hash: 4f314eadbdbd20c8d3d3fcb564dd24af260ed2c46506457b13fa24fa34a9df07
+updated: 2017-02-19T09:03:24.625156062-08:00
+imports:
+- name: git.openstack.org/openstack/golang-client.git
+  version: 753e96dd4a3983c05c665bc6f7a2abb25ceabd04
+  subpackages:
+  - util
+- name: github.com/BurntSushi/toml
+  version: bbd5bb678321a0d6e58f1099321dfa73391c1b6f
+- name: github.com/djherbis/times
+  version: 95292e44976d1217cf3611dc7c8d9466877d3ed5
+- name: github.com/gorilla/context
+  version: 215affda49addc4c8ef7e2534915df2c8c35c6cd
+- name: github.com/gorilla/mux
+  version: 392c28fe23e1c45ddba891b0320b3b5df220beea
+- name: github.com/jinzhu/gorm
+  version: 5174cc5c242a728b435ea2be8a2f7f998e15429b
+  subpackages:
+  - dialects/sqlite
+- name: github.com/jinzhu/inflection
+  version: 1c35d901db3da928c72a72d8458480cc9ade058f
+- name: github.com/mattn/go-sqlite3
+  version: ca5e3819723d8eeaf170ad510e7da1d6d2e94a08
+- name: github.com/openstack/golang-client
+  version: 753e96dd4a3983c05c665bc6f7a2abb25ceabd04
+  subpackages:
+  - openstack
+- name: github.ibm.com/alchemy-containers/armada-slclient-lib
+  version: 683a1654bf32f888fbf24efb0dfec12647b665e2
+  subpackages:
+  - client
+  - datatypes
+  - interfaces
+  - services
+- name: golang.org/x/net
+  version: f2499483f923065a842d38eb4c7f1927e6fc6e6d
+  subpackages:
+  - context
+- name: k8s.io/kubernetes
+  version: 5802799e56c7fcd1638e5848a13c5f3b0b1479ab
+  subpackages:
+  - staging/src/k8s.io/client-go/_vendor/github.com/golang/glog
+testImports:
+- name: github.com/onsi/ginkgo
+  version: bb93381d543b0e5725244abe752214a110791d01
+  subpackages:
+  - config
+  - internal/codelocation
+  - internal/containernode
+  - internal/failer
+  - internal/leafnodes
+  - internal/remote
+  - internal/spec
+  - internal/specrunner
+  - internal/suite
+  - internal/testingtproxy
+  - internal/writer
+  - reporters
+  - reporters/stenographer
+  - reporters/stenographer/support/go-colorable
+  - reporters/stenographer/support/go-isatty
+  - types
+- name: github.com/onsi/gomega
+  version: c463cd2a8578290d4be7a25cba69de81cf35785e
+  subpackages:
+  - format
+  - internal/assertion
+  - internal/asyncassertion
+  - internal/oraclematcher
+  - internal/testingtsupport
+  - matchers
+  - matchers/support/goraph/bipartitegraph
+  - matchers/support/goraph/edge
+  - matchers/support/goraph/node
+  - matchers/support/goraph/util
+  - types
+- name: golang.org/x/sys
+  version: 8f0908ab3b2457e2e15403d3697c9ef5cb4b57a9
+  subpackages:
+  - unix
+- name: gopkg.in/yaml.v2
+  version: 53feefa2559fb8dfa8d81baad31be332c97d6c77
