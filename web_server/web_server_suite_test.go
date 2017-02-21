@@ -9,5 +9,5 @@ import (
 
 func TestCFStorageHandlers(t *testing.T) {
 	RegisterFailHandler(Fail)
-	RunSpecs(t, "ibm-storage-broker Broker Web Server Handlers Suite")
+	RunSpecs(t, " Web Server Handlers Suite")
 }
