@@ -3,9 +3,11 @@ package utils
 import (
 	"encoding/json"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"net/http"
 	"os"
+	"os/user"
 
 	"github.ibm.com/almaden-containers/ubiquity/resources"
 
@@ -207,4 +209,50 @@ func PrintResponse(f resources.FlexVolumeResponse) error {
 	}
 	fmt.Printf("%s", string(responseBytes[:]))
 	return nil
+}
+
+func SetupLogger(logPath string) (*log.Logger, *os.File) {
+	logFile, err := os.OpenFile(path.Join(logPath, "ubiquity.log"), os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0640)
+	if err != nil {
+		fmt.Printf("Failed to setup logger: %s\n", err.Error())
+		return nil, nil
+	}
+	log.SetOutput(logFile)
+	logger := log.New(io.MultiWriter(logFile, os.Stdout), "ubiquity: ", log.Lshortfile|log.LstdFlags)
+	return logger, logFile
+}
+
+func CloseLogs(logFile *os.File) {
+	logFile.Sync()
+	logFile.Close()
+}
+
+func SetupConfigDirectory(logger *log.Logger, executor Executor, configPath string) (string, error) {
+	logger.Println("setupConfigPath start")
+	defer logger.Println("setupConfigPath end")
+	ubiquityConfigPath := path.Join(configPath, ".config")
+	log.Printf("User specified config path: %s", configPath)
+
+	if _, err := executor.Stat(ubiquityConfigPath); os.IsNotExist(err) {
+		args := []string{"mkdir", ubiquityConfigPath}
+		_, err := executor.Execute("sudo", args)
+		if err != nil {
+			logger.Printf("Error creating directory")
+		}
+		return "", err
+	}
+	currentUser, err := user.Current()
+	if err != nil {
+		logger.Printf("Error determining current user: %s", err.Error())
+		return "", err
+	}
+
+	args := []string{"chown", "-R", fmt.Sprintf("%s:%s", currentUser.Uid, currentUser.Gid), ubiquityConfigPath}
+	_, err = executor.Execute("sudo", args)
+	if err != nil {
+		logger.Printf("Error setting permissions on config directory %s", ubiquityConfigPath)
+		return "", err
+	}
+
+	return ubiquityConfigPath, nil
 }

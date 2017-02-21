@@ -49,6 +49,7 @@ type SpectrumNfsRemoteConfig struct {
 
 type BrokerConfig struct {
 	ConfigPath string
+	Port       int //for CF Service broker
 }
 
 type UbiquityPluginConfig struct {

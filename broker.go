@@ -28,7 +28,7 @@ func main() {
 	flag.Parse()
 	var config resources.UbiquityServerConfig
 
-	fmt.Printf("Starting Ubiquity Storage API server with %s config file\n", *configFile)
+	fmt.Printf("Starting Ubiquity Broker API server with %s config file\n", *configFile)
 
 	if _, err := os.Stat(*configFile); os.IsNotExist(err) {
 		panic(fmt.Sprintf("Cannot open config file: %s, aborting...", *configFile))
@@ -65,10 +65,10 @@ func main() {
 		panic(err)
 	}
 
-	server, err := web_server.NewStorageApiServer(logger, clients, config)
+	server, err := web_server.NewBrokerApiServer(logger, clients, config)
 	if err != nil {
-		log.Fatal(fmt.Sprintf("Error creating Storage API server [%s]...", err.Error()))
+		log.Fatal(fmt.Sprintf("Error creating Broker API server [%s]...", err.Error()))
 	}
 
-	log.Fatal(server.Start(config.Port))
+	log.Fatal(server.Start(config.BrokerConfig.Port))
 }

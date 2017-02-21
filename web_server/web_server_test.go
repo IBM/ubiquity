@@ -33,7 +33,7 @@ var _ = Describe("ibm-storage-broker Broker Handlers", func() {
 			backends := make(map[string]resources.StorageClient)
 			backends["dummy"] = fakeController
 			config := &resources.UbiquityServerConfig{}
-			server, err := web_server.NewServer(*logger, backends, config)
+			server, err := web_server.NewBrokerApiServer(*logger, backends, config)
 			Expect(err).ToNot(HaveOccurred())
 			handler = server.InitializeHandler()
 		})
