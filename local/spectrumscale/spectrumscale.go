@@ -332,6 +332,10 @@ func (s *spectrumLocalClient) GetVolume(name string) (volumeMetadata resources.V
 			volumeConfigDetails["uid"] = existingVolume.UID
 		}
 		volumeConfigDetails["isPreexisting"] = existingVolume.IsPreexisting
+		volumeConfigDetails["type"] = existingVolume.Type
+		if existingVolume.Type == LIGHTWEIGHT {
+			volumeConfigDetails["directory"] = existingVolume.Directory
+		}
 
 		return volumeMetadata, volumeConfigDetails, nil
 	}
@@ -483,28 +487,6 @@ func (s *spectrumLocalClient) createFilesetVolume(filesystem, name string, opts 
 	return nil
 }
 
-//func (s *spectrumLocalClient) changePermissionsOfFileset(filesystem, filesetName, uid, gid string) error {
-//	s.logger.Println("spectrumLocalClient: changeOwnerOfFileset start")
-//	defer s.logger.Println("spectrumLocalClient: changeOwnerOfFileset end")
-//
-//	s.logger.Printf("Changing Owner of Fileset %s to uid %s , gid %s", filesetName, uid, gid)
-//
-//	mountpoint, err := s.connector.GetFilesystemMountpoint(filesystem)
-//	if err != nil {
-//		s.logger.Printf("Failed to change permissions of fileset %s : %s", filesetName, err.Error())
-//		return err
-//	}
-//
-//	filesetPath := path.Join(mountpoint, filesetName)
-//	args := []string{"chown", "-R", fmt.Sprintf("%s:%s", uid, gid), filesetPath}
-//	_, err = s.executor.Execute("sudo", args)
-//	if err != nil {
-//		s.logger.Printf("Failed to change permissions of fileset %s: %s", filesetName, err.Error())
-//		return err
-//	}
-//	return nil
-//}
-
 func (s *spectrumLocalClient) createFilesetQuotaVolume(filesystem, name, quota string, opts map[string]interface{}) error {
 	s.logger.Println("spectrumLocalClient: createFilesetQuotaVolume start")
 	defer s.logger.Println("spectrumLocalClient: createFilesetQuotaVolume end")
@@ -564,11 +546,17 @@ func (s *spectrumLocalClient) createLightweightVolume(filesystem, name, fileset 
 		s.logger.Println(err.Error())
 		return err
 	}
+	//open permissions on enclosing fileset
+	args := []string{"chmod", "777", path.Join(mountpoint, fileset)}
+	_, err = s.executor.Execute("sudo", args)
+
+	if err != nil {
+		s.logger.Printf("Failed update permissions of fileset %s containing LTW volumes with error: %s", fileset, err.Error())
+		return err
+	}
 
 	lightweightVolumePath := path.Join(mountpoint, fileset, lightweightVolumeName)
-
-	//	err = s.executor.Mkdir(lightweightVolumePath, 0755)
-	args := []string{"mkdir", "-p", lightweightVolumePath}
+	args = []string{"mkdir", "-p", lightweightVolumePath}
 	_, err = s.executor.Execute("sudo", args)
 
 	if err != nil {
@@ -814,4 +802,51 @@ func (s *spectrumLocalClient) getVolumeMountPoint(volume SpectrumScaleVolume) (s
 
 	return path.Join(fsMountpoint, volume.Fileset), isFilesetLinked, nil
 
+}
+func (s *spectrumLocalClient) updatePermissions(name string) error {
+	s.logger.Println("spectrumLocalClient: updatePermissions-start")
+	defer s.logger.Println("spectrumLocalClient: updatePermissions-end")
+	_, volumeConfig, err := s.GetVolume(name)
+	if err != nil {
+		return err
+	}
+	filesystem, exists := volumeConfig["filesystem"]
+	if exists == false {
+		return fmt.Errorf("Cannot determine filesystem for volume: %s", name)
+	}
+	fsMountpoint, err := s.connector.GetFilesystemMountpoint(filesystem.(string))
+	if err != nil {
+		return err
+	}
+	volumeType, exists := volumeConfig["type"]
+	if exists == false {
+		return fmt.Errorf("Cannot determine type for volume: %s", name)
+	}
+	fileset, exists := volumeConfig["filesetId"]
+	if exists == false {
+		return fmt.Errorf("Cannot determine filesetId for volume: %s", name)
+	}
+	executor := utils.NewExecutor(s.logger)
+	filesetPath := path.Join(fsMountpoint, fileset.(string))
+	//chmod 777 mountpoint
+	args := []string{"chmod", "777", filesetPath}
+	_, err = executor.Execute("sudo", args)
+	if err != nil {
+		s.logger.Printf("Failed to change permissions of filesetpath %s: %s", filesetPath, err.Error())
+		return err
+	}
+	if volumeType == LIGHTWEIGHT {
+		directory, exists := volumeConfig["directory"]
+		if exists == false {
+			return fmt.Errorf("Cannot determine directory for volume: %s", name)
+		}
+		directoryPath := path.Join(filesetPath, directory.(string))
+		args := []string{"chmod", "777", directoryPath}
+		_, err = executor.Execute("sudo", args)
+		if err != nil {
+			s.logger.Printf("Failed to change permissions of directorypath %s: %s", directoryPath, err.Error())
+			return err
+		}
+	}
+	return nil
 }

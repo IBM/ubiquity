@@ -187,6 +187,14 @@ func (s *nfsRemoteClient) Attach(name string) (string, error) {
 				s.logger.Printf("Failed to change permissions of mountpoint %s: %s", mountResponse.Mountpoint, err.Error())
 				return "", err
 			}
+			//set permissions to specific user
+			args = []string{"chmod", "u+rw", remoteMountpoint}
+			_, err = executor.Execute("sudo", args)
+			if err != nil {
+				s.logger.Printf("Failed to set user permissions of mountpoint %s: %s", mountResponse.Mountpoint, err.Error())
+				return "", err
+			}
+
 		} else {
 			//chmod 777 mountpoint
 			args := []string{"chmod", "777", remoteMountpoint}
@@ -197,7 +205,12 @@ func (s *nfsRemoteClient) Attach(name string) (string, error) {
 			}
 		}
 	}
-	return s.mount(nfsShare, remoteMountpoint)
+	err = s.mount(nfsShare, remoteMountpoint)
+	if err != nil {
+		return "", err
+	}
+	return remoteMountpoint, nil
+
 }
 
 func (s *nfsRemoteClient) Detach(name string) error {
@@ -261,7 +274,7 @@ func (s *nfsRemoteClient) ListVolumes() ([]resources.VolumeMetadata, error) {
 
 }
 
-func (s *nfsRemoteClient) mount(nfsShare, remoteMountpoint string) (string, error) {
+func (s *nfsRemoteClient) mount(nfsShare, remoteMountpoint string) error {
 	s.logger.Printf("nfsRemoteClient: - mount start nfsShare=%s\n", nfsShare)
 	defer s.logger.Printf("nfsRemoteClient: - mount end nfsShare=%s\n", nfsShare)
 
@@ -269,11 +282,11 @@ func (s *nfsRemoteClient) mount(nfsShare, remoteMountpoint string) (string, erro
 	args := []string{"mount", "-t", "nfs", nfsShare, remoteMountpoint}
 	output, err := executor.Execute("sudo", args)
 	if err != nil {
-		return "", fmt.Errorf("nfsRemoteClient: Failed to mount share %s to remote mountpoint %s (error '%s', output '%s')\n", nfsShare, remoteMountpoint, err.Error(), output)
+		return fmt.Errorf("nfsRemoteClient: Failed to mount share %s to remote mountpoint %s (error '%s', output '%s')\n", nfsShare, remoteMountpoint, err.Error(), output)
 	}
 	s.logger.Printf("nfsRemoteClient:  mount output: %s\n", string(output))
 
-	return remoteMountpoint, nil
+	return nil
 }
 
 func (s *nfsRemoteClient) isMounted(nfsShare, remoteMountpoint string) bool {
