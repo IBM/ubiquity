@@ -144,7 +144,7 @@ func (s *spectrumNfsLocalClient) RemoveVolume(name string, forceDelete bool) err
 }
 
 func (s *spectrumNfsLocalClient) GetVolume(name string) (resources.VolumeMetadata, map[string]interface{}, error) {
-	s.spectrumClient.logger.Println("spectrumNfsLocalClient: GetV-start")
+	s.spectrumClient.logger.Println("spectrumNfsLocalClient: Get-start")
 	defer s.spectrumClient.logger.Println("spectrumNfsLocalClient: Get-end")
 
 	volumeMetadata, volumeConfig, err := s.spectrumClient.GetVolume(name)
