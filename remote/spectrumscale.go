@@ -156,7 +156,7 @@ func (s *spectrumRemoteClient) Attach(name string) (string, error) {
 				return "", err
 			}
 			//set permissions to specific user
-			args = []string{"chmod", "u+rw", mountResponse.Mountpoint}
+			args = []string{"chmod", "og-rw", mountResponse.Mountpoint}
 			_, err = executor.Execute("sudo", args)
 			if err != nil {
 				s.logger.Printf("Failed to set user permissions of mountpoint %s: %s", mountResponse.Mountpoint, err.Error())

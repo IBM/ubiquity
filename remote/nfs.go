@@ -188,7 +188,7 @@ func (s *nfsRemoteClient) Attach(name string) (string, error) {
 				return "", err
 			}
 			//set permissions to specific user
-			args = []string{"chmod", "u+rw", remoteMountpoint}
+			args = []string{"chmod", "og-rw", remoteMountpoint}
 			_, err = executor.Execute("sudo", args)
 			if err != nil {
 				s.logger.Printf("Failed to set user permissions of mountpoint %s: %s", mountResponse.Mountpoint, err.Error())
