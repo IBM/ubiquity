@@ -170,12 +170,13 @@ func (d *spectrumDataModel) ListVolumes() ([]SpectrumScaleVolume, error) {
 	d.log.Println("SpectrumDataModel: ListVolumes start")
 	defer d.log.Println("SpectrumDataModel: ListVolumes end")
 
-	var volumes []SpectrumScaleVolume
-	if err := d.database.Preload("Volume").Find(&volumes).Error; err != nil {
+	var volumesInDb []SpectrumScaleVolume
+	if err := d.database.Preload("Volume").Find(&volumesInDb).Error; err != nil {
 		return nil, err
 	}
 	// hack: to be replaced by proper DB filtering (joins)
-	for _, volume := range volumes {
+	var volumes []SpectrumScaleVolume
+	for _, volume := range volumesInDb {
 		if resources.Backend(volume.Volume.Backend) == d.backend {
 			volumes = append(volumes, volume)
 		}
