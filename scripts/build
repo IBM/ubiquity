@@ -5,3 +5,4 @@ set -e
 scripts=$(dirname $0)
 
 go build -o $scripts/../bin/ubiquity $scripts/../main.go
+go build -o $scripts/../bin/ubiquity-service-broker $scripts/../broker.go

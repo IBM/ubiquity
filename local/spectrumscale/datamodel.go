@@ -174,6 +174,13 @@ func (d *spectrumDataModel) ListVolumes() ([]SpectrumScaleVolume, error) {
 	if err := d.database.Preload("Volume").Find(&volumes).Error; err != nil {
 		return nil, err
 	}
+	// hack: to be replaced by proper DB filtering (joins)
+	for _, volume := range volumes {
+		if resources.Backend(volume.Volume.Backend) == d.backend {
+			volumes = append(volumes, volume)
+		}
+	}
+
 	return volumes, nil
 }
 

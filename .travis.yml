@@ -1,0 +1,10 @@
+language: go
+
+go:
+  - 1.7
+
+install:
+  - sh scripts/build
+
+script:
+  - sh scripts/run_units.sh

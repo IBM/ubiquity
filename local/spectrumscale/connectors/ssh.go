@@ -14,27 +14,27 @@ type spectrum_ssh struct {
 	executor  utils.Executor
 	user      string
 	host      string
-	port      int
+	port      string
 	isMounted bool
 }
 
-func NewSpectrumSSH(logger *log.Logger, opts map[string]interface{}) (SpectrumScaleConnector, error) {
-	user, _ := opts["user"]
-	host, _ := opts["host"]
-	port, _ := opts["port"]
-	return &spectrum_ssh{logger: logger, executor: utils.NewExecutor(logger), user: user.(string), host: host.(string), port: port.(int)}, nil
+func NewSpectrumSSH(logger *log.Logger, sshConfig resources.SshConfig) (SpectrumScaleConnector, error) {
+	user := sshConfig.User
+	host := sshConfig.Host
+	port := sshConfig.Port
+	return &spectrum_ssh{logger: logger, executor: utils.NewExecutor(logger), user: user, host: host, port: port}, nil
 }
-func NewSpectrumSSHWithExecutor(logger *log.Logger, executor utils.Executor, opts map[string]interface{}) (SpectrumScaleConnector, error) {
-	user, _ := opts["user"]
-	host, _ := opts["host"]
-	port, _ := opts["port"]
-	return &spectrum_ssh{logger: logger, executor: executor, user: user.(string), host: host.(string), port: port.(int)}, nil
+func NewSpectrumSSHWithExecutor(logger *log.Logger, sshConfig resources.SshConfig, executor utils.Executor) (SpectrumScaleConnector, error) {
+	user := sshConfig.User
+	host := sshConfig.Host
+	port := sshConfig.Port
+	return &spectrum_ssh{logger: logger, executor: executor, user: user, host: host, port: port}, nil
 }
 
 func (s *spectrum_ssh) GetClusterId() (string, error) {
 	spectrumCommand := "/usr/lpp/mmfs/bin/mmlscluster"
 	userAndHost := fmt.Sprintf("%s@%s", s.user, s.host)
-	args := []string{userAndHost, "-p", string(s.port), "sudo", spectrumCommand}
+	args := []string{userAndHost, "-p", s.port, "sudo", spectrumCommand}
 	return GetClusterIdInternal(s.logger, s.executor, "ssh", args)
 }
 func (s *spectrum_ssh) IsFilesystemMounted(filesystemName string) (bool, error) {
@@ -47,7 +47,7 @@ func (s *spectrum_ssh) IsFilesystemMounted(filesystemName string) (bool, error) 
 	}
 	spectrumCommand := "/usr/lpp/mmfs/bin/mmlsmount"
 	userAndHost := fmt.Sprintf("%s@%s", s.user, s.host)
-	args := []string{userAndHost, "-p", string(s.port), "sudo", spectrumCommand, filesystemName, "-L", "-Y"}
+	args := []string{userAndHost, "-p", s.port, "sudo", spectrumCommand, filesystemName, "-L", "-Y"}
 	isMounted, err := IsFilesystemMountedInternal(s.logger, s.executor, filesystemName, "ssh", args)
 	s.isMounted = isMounted
 	return s.isMounted, err
@@ -63,7 +63,7 @@ func (s *spectrum_ssh) MountFileSystem(filesystemName string) error {
 
 	spectrumCommand := "/usr/lpp/mmfs/bin/mmmount"
 	userAndHost := fmt.Sprintf("%s@%s", s.user, s.host)
-	args := []string{userAndHost, "-p", string(s.port), "sudo", spectrumCommand, filesystemName, "-a"}
+	args := []string{userAndHost, "-p", s.port, "sudo", spectrumCommand, filesystemName, "-a"}
 
 	err := MountFileSystemInternal(s.logger, s.executor, filesystemName, "ssh", args)
 	if err != nil {
@@ -80,7 +80,7 @@ func (s *spectrum_ssh) ListFilesystems() ([]string, error) {
 func (s *spectrum_ssh) GetFilesystemMountpoint(filesystemName string) (string, error) {
 	spectrumCommand := "/usr/lpp/mmfs/bin/mmlsfs"
 	userAndHost := fmt.Sprintf("%s@%s", s.user, s.host)
-	args := []string{userAndHost, "-p", string(s.port), "sudo", spectrumCommand, filesystemName, "-T", "-Y"}
+	args := []string{userAndHost, "-p", s.port, "sudo", spectrumCommand, filesystemName, "-T", "-Y"}
 	return GetFilesystemMountpointInternal(s.logger, s.executor, filesystemName, "ssh", args)
 }
 
@@ -93,9 +93,13 @@ func (s *spectrum_ssh) CreateFileset(filesystemName string, filesetName string, 
 	// create fileset
 	spectrumCommand := "/usr/lpp/mmfs/bin/mmcrfileset"
 	userAndHost := fmt.Sprintf("%s@%s", s.user, s.host)
-	args := []string{userAndHost, "-p", string(s.port), "sudo", spectrumCommand, filesystemName, filesetName, "-t", "fileset for container volume"}
-	return CreateFilesetInternal(s.logger, s.executor, filesystemName, filesetName, "ssh", args)
+	args := []string{userAndHost, "-p", s.port, "sudo", spectrumCommand, filesystemName, filesetName, "-t", "'fileset for container volume'"}
 
+	filesetType, filesetTypeSpecified := opts[USER_SPECIFIED_FILESET_TYPE]
+	if filesetTypeSpecified && filesetType.(string) == "independent" {
+		args = append(args, "--inode-space", "new")
+	}
+	return CreateFilesetInternal(s.logger, s.executor, filesystemName, filesetName, "ssh", args)
 }
 
 func (s *spectrum_ssh) DeleteFileset(filesystemName string, filesetName string) error {
@@ -104,7 +108,7 @@ func (s *spectrum_ssh) DeleteFileset(filesystemName string, filesetName string) 
 
 	spectrumCommand := "/usr/lpp/mmfs/bin/mmdelfileset"
 	userAndHost := fmt.Sprintf("%s@%s", s.user, s.host)
-	args := []string{userAndHost, "-p", string(s.port), "sudo", spectrumCommand, filesystemName, filesetName}
+	args := []string{userAndHost, "-p", s.port, "sudo", spectrumCommand, filesystemName, filesetName}
 	return DeleteFilesetInternal(s.logger, s.executor, filesystemName, filesetName, "ssh", args)
 }
 
@@ -114,7 +118,7 @@ func (s *spectrum_ssh) IsFilesetLinked(filesystemName string, filesetName string
 
 	spectrumCommand := "/usr/lpp/mmfs/bin/mmlsfileset"
 	userAndHost := fmt.Sprintf("%s@%s", s.user, s.host)
-	args := []string{userAndHost, "-p", string(s.port), "sudo", spectrumCommand, filesystemName, filesetName, "-Y"}
+	args := []string{userAndHost, "-p", s.port, "sudo", spectrumCommand, filesystemName, filesetName, "-Y"}
 	s.logger.Printf("%#v\n", args)
 	return IsFilesetLinkedInternal(s.logger, s.executor, filesystemName, filesetName, "ssh", args)
 }
@@ -134,20 +138,12 @@ func (s *spectrum_ssh) LinkFileset(filesystemName string, filesetName string) er
 	spectrumCommand := "/usr/lpp/mmfs/bin/mmlinkfileset"
 	filesetPath := path.Join(mountpoint, filesetName)
 	userAndHost := fmt.Sprintf("%s@%s", s.user, s.host)
-	args := []string{userAndHost, "-p", string(s.port), "sudo", spectrumCommand, filesystemName, filesetName, "-J", filesetPath}
+	args := []string{userAndHost, "-p", s.port, "sudo", spectrumCommand, filesystemName, filesetName, "-J", filesetPath}
 	s.logger.Printf("Args for link fileset%#v", args)
 	err = LinkFilesetInternal(s.logger, s.executor, filesystemName, filesetName, "ssh", args)
 	if err != nil {
 		s.logger.Printf("error linking fileset %v", err)
 		return err
-	}
-
-	//hack for now
-	args = []string{userAndHost, "-p", string(s.port), "sudo", "chmod", "-R", "777", filesetPath}
-	_, err = s.executor.Execute("ssh", args)
-
-	if err != nil {
-		return fmt.Errorf("Failed to set permissions for fileset: %s", err.Error())
 	}
 	return nil
 }
@@ -158,7 +154,7 @@ func (s *spectrum_ssh) UnlinkFileset(filesystemName string, filesetName string) 
 
 	spectrumCommand := "/usr/lpp/mmfs/bin/mmunlinkfileset"
 	userAndHost := fmt.Sprintf("%s@%s", s.user, s.host)
-	args := []string{userAndHost, "-p", string(s.port), "sudo", spectrumCommand, filesystemName, filesetName}
+	args := []string{userAndHost, "-p", s.port, "sudo", spectrumCommand, filesystemName, filesetName}
 	return UnlinkFilesetInternal(s.logger, s.executor, filesystemName, filesetName, "ssh", args)
 }
 
@@ -172,7 +168,7 @@ func (s *spectrum_ssh) ListFileset(filesystemName string, filesetName string) (r
 
 	spectrumCommand := "/usr/lpp/mmfs/bin/mmlsfileset"
 	userAndHost := fmt.Sprintf("%s@%s", s.user, s.host)
-	args := []string{userAndHost, "-p", string(s.port), "sudo", spectrumCommand, filesystemName, filesetName, "-Y"}
+	args := []string{userAndHost, "-p", s.port, "sudo", spectrumCommand, filesystemName, filesetName, "-Y"}
 	return ListFilesetInternal(s.logger, s.executor, filesystemName, filesetName, "ssh", args)
 }
 
@@ -183,7 +179,7 @@ func (s *spectrum_ssh) ListFilesetQuota(filesystemName string, filesetName strin
 
 	spectrumCommand := "/usr/lpp/mmfs/bin/mmlsquota"
 	userAndHost := fmt.Sprintf("%s@%s", s.user, s.host)
-	args := []string{userAndHost, "-p", string(s.port), "sudo", spectrumCommand, "-j", filesetName, filesystemName, "--block-size", "auto"}
+	args := []string{userAndHost, "-p", s.port, "sudo", spectrumCommand, "-j", filesetName, filesystemName, "--block-size", "auto"}
 	return ListFilesetQuotaInternal(s.logger, s.executor, filesystemName, filesetName, "ssh", args)
 }
 
@@ -195,6 +191,6 @@ func (s *spectrum_ssh) SetFilesetQuota(filesystemName string, filesetName string
 
 	spectrumCommand := "/usr/lpp/mmfs/bin/mmsetquota"
 	userAndHost := fmt.Sprintf("%s@%s", s.user, s.host)
-	args := []string{userAndHost, "-p", string(s.port), "sudo", spectrumCommand, filesystemName + ":" + filesetName, "--block", quota + ":" + quota}
+	args := []string{userAndHost, "-p", s.port, "sudo", spectrumCommand, filesystemName + ":" + filesetName, "--block", quota + ":" + quota}
 	return SetFilesetQuotaInternal(s.logger, s.executor, filesystemName, filesetName, quota, "ssh", args)
 }

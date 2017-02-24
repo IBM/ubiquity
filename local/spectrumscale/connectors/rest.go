@@ -17,14 +17,14 @@ type spectrum_rest struct {
 	endpoint   string
 }
 
-func NewSpectrumRest(logger *log.Logger, opts map[string]interface{}) (SpectrumScaleConnector, error) {
-	endpoint, _ := opts["endpoint"]
-	return &spectrum_rest{logger: logger, httpClient: &http.Client{}, endpoint: endpoint.(string)}, nil
+func NewSpectrumRest(logger *log.Logger, restConfig resources.RestConfig) (SpectrumScaleConnector, error) {
+	endpoint := restConfig.Endpoint
+	return &spectrum_rest{logger: logger, httpClient: &http.Client{}, endpoint: endpoint}, nil
 }
 
-func NewSpectrumRestWithClient(logger *log.Logger, opts map[string]interface{}, client *http.Client) (SpectrumScaleConnector, error) {
-	endpoint, _ := opts["endpoint"]
-	return &spectrum_rest{logger: logger, httpClient: client, endpoint: endpoint.(string)}, nil
+func NewSpectrumRestWithClient(logger *log.Logger, restConfig resources.RestConfig, client *http.Client) (SpectrumScaleConnector, error) {
+	endpoint := restConfig.Endpoint
+	return &spectrum_rest{logger: logger, httpClient: client, endpoint: endpoint}, nil
 }
 
 func (s *spectrum_rest) GetClusterId() (string, error) {
@@ -108,6 +108,11 @@ func (s *spectrum_rest) CreateFileset(filesystemName string, filesetName string,
 	filesetConfig.Comment = "fileset for container volume"
 	filesetConfig.FilesetName = filesetName
 	filesetConfig.FilesystemName = filesystemName
+
+	filesetType, filesetTypeSpecified := opts[USER_SPECIFIED_FILESET_TYPE]
+	if filesetTypeSpecified && filesetType.(string) == "independent" {
+		filesetConfig.INodeSpace = "new"
+	}
 
 	fileset := Fileset{Config: filesetConfig}
 	createFilesetURL := utils.FormatURL(s.endpoint, "scalemgmt/v1/filesets")

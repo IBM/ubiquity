@@ -1,9 +1,7 @@
 package connectors
 
 import (
-	"fmt"
 	"log"
-
 	"github.ibm.com/almaden-containers/ubiquity/resources"
 )
 
@@ -29,16 +27,22 @@ type SpectrumScaleConnector interface {
 	SetFilesetQuota(filesystemName string, filesetName string, quota string) error
 }
 
-func GetSpectrumScaleConnector(logger *log.Logger, connector string, opts map[string]interface{}) (SpectrumScaleConnector, error) {
-	if connector == "mmcli" {
-		return NewSpectrumMMCLI(logger, opts)
+const (
+	USER_SPECIFIED_FILESET_TYPE string = "filesettype"
+)
+
+func GetSpectrumScaleConnector(logger *log.Logger, config resources.SpectrumScaleConfig) (SpectrumScaleConnector, error) {
+	if config.RestConfig.Endpoint != "" {
+		logger.Printf("Initializing SpectrumScale REST connector with restConfig: %+v\n", config.RestConfig)
+		return NewSpectrumRest(logger, config.RestConfig)
 	}
-	if connector == "rest" {
-		return NewSpectrumRest(logger, opts)
+	if config.SshConfig.User != "" && config.SshConfig.Host != "" {
+		if config.SshConfig.Port == "" || config.SshConfig.Port == "0" {
+			config.SshConfig.Port = "22"
+		}
+		logger.Printf("Initializing SpectrumScale SSH connector with sshConfig: %+v\n", config.SshConfig)
+		return NewSpectrumSSH(logger, config.SshConfig)
 	}
-	if connector == "mmcli" {
-		return NewSpectrumSSH(logger, opts)
-	} else {
-		return nil, fmt.Errorf("This protocol is not recognized")
-	}
+	logger.Println("Initializing SpectrumScale MMCLI Connector")
+	return NewSpectrumMMCLI(logger)
 }

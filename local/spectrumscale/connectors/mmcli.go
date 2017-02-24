@@ -16,11 +16,11 @@ type spectrum_mmcli struct {
 	isMounted bool
 }
 
-func NewSpectrumMMCLI(logger *log.Logger, opts map[string]interface{}) (SpectrumScaleConnector, error) {
+func NewSpectrumMMCLI(logger *log.Logger) (SpectrumScaleConnector, error) {
 	return &spectrum_mmcli{logger: logger, executor: utils.NewExecutor(logger)}, nil
 }
 
-func NewSpectrumMMCLIWithExecutor(logger *log.Logger, executor utils.Executor, opts map[string]interface{}) (SpectrumScaleConnector, error) {
+func NewSpectrumMMCLIWithExecutor(logger *log.Logger, executor utils.Executor) (SpectrumScaleConnector, error) {
 	return &spectrum_mmcli{logger: logger, executor: executor}, nil
 }
 
@@ -191,6 +191,12 @@ func (s *spectrum_mmcli) CreateFileset(filesystemName string, filesetName string
 	// create fileset
 	spectrumCommand := "/usr/lpp/mmfs/bin/mmcrfileset"
 	args := []string{spectrumCommand, filesystemName, filesetName, "-t", "fileset for container volume"}
+
+	filesetType, filesetTypeSpecified := opts[USER_SPECIFIED_FILESET_TYPE]
+	if filesetTypeSpecified && filesetType.(string) == "independent" {
+		args = append(args, "--inode-space", "new")
+	}
+
 	return CreateFilesetInternal(s.logger, s.executor, filesystemName, filesetName, "sudo", args)
 }
 

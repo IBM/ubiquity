@@ -117,6 +117,11 @@ func (s *spectrumNfsLocalClient) CreateVolume(name string, opts map[string]inter
 		return err
 	}
 
+	if err := s.spectrumClient.updatePermissions(name); err != nil {
+		s.spectrumClient.logger.Printf("spectrumNfsLocalClient: error updating permissions of volume %#v\n; deleting volume", err)
+		s.spectrumClient.RemoveVolume(name, true)
+	}
+
 	if err := s.exportNfs(name, nfsClientConfig); err != nil {
 		s.spectrumClient.logger.Printf("spectrumNfsLocalClient: error exporting volume %#v\n; deleting volume", err)
 		s.spectrumClient.RemoveVolume(name, true)
@@ -139,7 +144,7 @@ func (s *spectrumNfsLocalClient) RemoveVolume(name string, forceDelete bool) err
 }
 
 func (s *spectrumNfsLocalClient) GetVolume(name string) (resources.VolumeMetadata, map[string]interface{}, error) {
-	s.spectrumClient.logger.Println("spectrumNfsLocalClient: GetV-start")
+	s.spectrumClient.logger.Println("spectrumNfsLocalClient: Get-start")
 	defer s.spectrumClient.logger.Println("spectrumNfsLocalClient: Get-end")
 
 	volumeMetadata, volumeConfig, err := s.spectrumClient.GetVolume(name)
