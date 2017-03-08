@@ -193,8 +193,14 @@ func (s *spectrum_mmcli) CreateFileset(filesystemName string, filesetName string
 	args := []string{spectrumCommand, filesystemName, filesetName, "-t", "fileset for container volume"}
 
 	filesetType, filesetTypeSpecified := opts[USER_SPECIFIED_FILESET_TYPE]
+	inodeLimit, inodeLimitSpecified := opts[USER_SPECIFIED_INODE_LIMIT]
+
 	if filesetTypeSpecified && filesetType.(string) == "independent" {
 		args = append(args, "--inode-space", "new")
+
+		if inodeLimitSpecified {
+			args = append(args, "--inode-limit", inodeLimit.(string))
+		}
 	}
 
 	return CreateFilesetInternal(s.logger, s.executor, filesystemName, filesetName, "sudo", args)
