@@ -28,7 +28,8 @@ type SpectrumScaleConnector interface {
 }
 
 const (
-	USER_SPECIFIED_FILESET_TYPE string = "filesettype"
+	USER_SPECIFIED_FILESET_TYPE string = "fileset-type"
+	USER_SPECIFIED_INODE_LIMIT string = "inode-limit"
 )
 
 func GetSpectrumScaleConnector(logger *log.Logger, config resources.SpectrumScaleConfig) (SpectrumScaleConnector, error) {

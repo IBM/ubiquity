@@ -172,7 +172,7 @@ func (s *spectrumNfsLocalClient) exportNfs(name, clientConfig string) error {
 		return err
 	}
 
-	volumeMountpoint, _, err := s.spectrumClient.getVolumeMountPoint(existingVolume)
+	volumeMountpoint, err := s.spectrumClient.getVolumeMountPoint(existingVolume)
 	if err != nil {
 		return err
 	}
@@ -208,7 +208,7 @@ func (s *spectrumNfsLocalClient) unexportNfs(name string) error {
 	}
 
 	spectrumCommand := "/usr/lpp/mmfs/bin/mmnfs"
-	volumeMountpoint, _, err := s.spectrumClient.getVolumeMountPoint(existingVolume)
+	volumeMountpoint, err := s.spectrumClient.getVolumeMountPoint(existingVolume)
 	if err != nil {
 		return err
 	}

@@ -110,8 +110,14 @@ func (s *spectrum_rest) CreateFileset(filesystemName string, filesetName string,
 	filesetConfig.FilesystemName = filesystemName
 
 	filesetType, filesetTypeSpecified := opts[USER_SPECIFIED_FILESET_TYPE]
+	inodeLimit, inodeLimitSpecified := opts[USER_SPECIFIED_INODE_LIMIT]
+
 	if filesetTypeSpecified && filesetType.(string) == "independent" {
 		filesetConfig.INodeSpace = "new"
+
+		if inodeLimitSpecified {
+			filesetConfig.MaxNumInodes = inodeLimit.(string)
+		}
 	}
 
 	fileset := Fileset{Config: filesetConfig}
