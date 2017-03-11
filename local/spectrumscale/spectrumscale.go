@@ -12,6 +12,7 @@ import (
 
 	"github.com/jinzhu/gorm"
 	"github.ibm.com/almaden-containers/ubiquity/local/spectrumscale/connectors"
+
 	"github.ibm.com/almaden-containers/ubiquity/resources"
 )
 
@@ -287,14 +288,41 @@ func (s *spectrumLocalClient) RemoveVolume(name string, forceDelete bool) (err e
 	return nil
 }
 
-func (s *spectrumLocalClient) GetVolume(name string) (volumeMetadata resources.VolumeMetadata, volumeConfigDetails map[string]interface{}, err error) {
-	s.logger.Println("spectrumLocalClient: get start")
-	defer s.logger.Println("spectrumLocalClient: get finish")
+func (s *spectrumLocalClient) GetVolume(name string) (resources.Volume, error) {
+	s.logger.Println("spectrumLocalClient: GetVolume start")
+	defer s.logger.Println("spectrumLocalClient: GetVolume finish")
+
+	err := s.fileLock.Lock()
+	if err != nil {
+		s.logger.Printf("error aquiring lock", err)
+		return resources.Volume{}, err
+	}
+	defer func() {
+		lockErr := s.fileLock.Unlock()
+		if lockErr != nil && err == nil {
+			err = lockErr
+		}
+	}()
+
+	existingVolume, volExists, err := s.dataModel.GetVolume(name)
+	if err != nil {
+		return resources.Volume{}, err
+	}
+	if volExists == false {
+		return resources.Volume{}, fmt.Errorf("Volume not found")
+	}
+
+	return resources.Volume{Name: existingVolume.Volume.Name, Backend: resources.Backend(existingVolume.Volume.Backend)}, nil
+}
+
+func (s *spectrumLocalClient) GetVolumeConfig(name string) (volumeConfigDetails map[string]interface{}, err error) {
+	s.logger.Println("spectrumLocalClient: GetVolumeConfig start")
+	defer s.logger.Println("spectrumLocalClient: GetVolumeConfig finish")
 
 	err = s.fileLock.Lock()
 	if err != nil {
 		s.logger.Printf("error aquiring lock", err)
-		return resources.VolumeMetadata{}, nil, err
+		return nil, err
 	}
 	defer func() {
 		lockErr := s.fileLock.Unlock()
@@ -307,27 +335,26 @@ func (s *spectrumLocalClient) GetVolume(name string) (volumeMetadata resources.V
 
 	if err != nil {
 		s.logger.Println(err.Error())
-		return resources.VolumeMetadata{}, nil, err
+		return nil, err
 	}
 
 	if volExists {
-
+		volumeConfigDetails = make(map[string]interface{})
 		volumeMountpoint, err := s.getVolumeMountPoint(existingVolume)
 		if err != nil {
 			s.logger.Println(err.Error())
-			return resources.VolumeMetadata{}, nil, err
+			return nil, err
 		}
-		volumeMetadata = resources.VolumeMetadata{Name: existingVolume.Volume.Name}
 
 		isFilesetLinked, err := s.connector.IsFilesetLinked(existingVolume.FileSystem, existingVolume.Fileset)
 		if err != nil {
 			s.logger.Println(err.Error())
-			return resources.VolumeMetadata{}, nil, err
+			return nil, err
 		}
 		if isFilesetLinked {
-			volumeMetadata.Mountpoint = volumeMountpoint
+			volumeConfigDetails["mountpoint"] = volumeMountpoint
 		}
-		volumeConfigDetails = make(map[string]interface{})
+
 		volumeConfigDetails["filesetId"] = existingVolume.Fileset
 		volumeConfigDetails["filesystem"] = existingVolume.FileSystem
 		volumeConfigDetails["clusterId"] = existingVolume.ClusterId
@@ -343,9 +370,9 @@ func (s *spectrumLocalClient) GetVolume(name string) (volumeMetadata resources.V
 			volumeConfigDetails["directory"] = existingVolume.Directory
 		}
 
-		return volumeMetadata, volumeConfigDetails, nil
+		return volumeConfigDetails, nil
 	}
-	return resources.VolumeMetadata{}, nil, fmt.Errorf("Volume not found")
+	return nil, fmt.Errorf("Volume not found")
 }
 
 func (s *spectrumLocalClient) Attach(name string) (volumeMountpoint string, err error) {
@@ -631,7 +658,7 @@ func (s *spectrumLocalClient) checkIfVolumeExistsInDB(name, userSpecifiedFileset
 	s.logger.Println("spectrumLocalClient:  checkIfVolumeExistsIbDB start")
 	defer s.logger.Println("spectrumLocalClient: checkIfVolumeExistsIbDB end")
 
-	_, volumeConfigDetails, err := s.GetVolume(name)
+	volumeConfigDetails, err := s.GetVolumeConfig(name)
 
 	if err != nil {
 		s.logger.Println(err.Error())
@@ -826,7 +853,7 @@ func (s *spectrumLocalClient) getVolumeMountPoint(volume SpectrumScaleVolume) (s
 func (s *spectrumLocalClient) updatePermissions(name string) error {
 	s.logger.Println("spectrumLocalClient: updatePermissions-start")
 	defer s.logger.Println("spectrumLocalClient: updatePermissions-end")
-	_, volumeConfig, err := s.GetVolume(name)
+	volumeConfig, err := s.GetVolumeConfig(name)
 	if err != nil {
 		return err
 	}
