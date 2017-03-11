@@ -65,7 +65,7 @@ func main() {
 		panic(err)
 	}
 
-	server, err := web_server.NewStorageApiServer(logger, clients, config)
+	server, err := web_server.NewStorageApiServer(logger, clients, config, db)
 	if err != nil {
 		log.Fatal(fmt.Sprintf("Error creating Storage API server [%s]...", err.Error()))
 	}

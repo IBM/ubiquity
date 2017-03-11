@@ -190,14 +190,41 @@ func (s *softlayerLocalClient) RemoveVolume(name string, forceDelete bool) (err 
 	return nil
 }
 
-func (s *softlayerLocalClient) GetVolume(name string) (volumeMetadata resources.VolumeMetadata, volumeConfigDetails map[string]interface{}, err error) {
-	s.logger.Println("softlayerLocalClient: get start")
-	defer s.logger.Println("softlayerLocalClient: get finish")
+func (s *softlayerLocalClient) GetVolume(name string) (resources.Volume, error) {
+	s.logger.Println("spectrumLocalClient: GetVolume start")
+	defer s.logger.Println("spectrumLocalClient: GetVolume finish")
+
+	err := s.fileLock.Lock()
+	if err != nil {
+		s.logger.Printf("error aquiring lock", err)
+		return resources.Volume{}, err
+	}
+	defer func() {
+		lockErr := s.fileLock.Unlock()
+		if lockErr != nil && err == nil {
+			err = lockErr
+		}
+	}()
+
+	existingVolume, volExists, err := s.dataModel.GetVolume(name)
+	if err != nil {
+		return resources.Volume{}, err
+	}
+	if volExists == false {
+		return resources.Volume{}, fmt.Errorf("Cannot find volume %s in DB", name)
+	}
+
+	return resources.Volume{Name: existingVolume.Volume.Name, Backend: resources.Backend(existingVolume.Volume.Backend)}, nil
+}
+
+func (s *softlayerLocalClient) GetVolumeConfig(name string) (volumeConfigDetails map[string]interface{}, err error) {
+	s.logger.Println("softlayerLocalClient: GetVolumeConfig start")
+	defer s.logger.Println("softlayerLocalClient: GetVolumeConfig finish")
 
 	err = s.fileLock.Lock()
 	if err != nil {
 		s.logger.Printf("error aquiring lock", err)
-		return resources.VolumeMetadata{}, nil, err
+		return nil, err
 	}
 	defer func() {
 		lockErr := s.fileLock.Unlock()
@@ -209,17 +236,14 @@ func (s *softlayerLocalClient) GetVolume(name string) (volumeMetadata resources.
 	existingVolume, volExists, err := s.dataModel.GetVolume(name)
 
 	if err != nil {
-		s.logger.Println(err.Error())
-		return resources.VolumeMetadata{}, nil, err
+		return nil, err
+	}
+	if volExists == false {
+		return nil, fmt.Errorf("Cannot find volume %s in DB", name)
 	}
 
-	if volExists {
-
-		volumeMetadata = resources.VolumeMetadata{Name: existingVolume.Volume.Name, Mountpoint: existingVolume.Mountpoint}
-		volumeConfigDetails = map[string]interface{}{"FileshareId": strconv.Itoa(existingVolume.FileshareID)}
-		return volumeMetadata, volumeConfigDetails, nil
-	}
-	return resources.VolumeMetadata{}, nil, fmt.Errorf("Volume not found")
+	volumeConfigDetails = map[string]interface{}{"FileshareId": strconv.Itoa(existingVolume.FileshareID), "mountpoint": existingVolume.Mountpoint}
+	return volumeConfigDetails, nil
 
 }
 

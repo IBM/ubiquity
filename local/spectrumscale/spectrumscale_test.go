@@ -638,7 +638,7 @@ var _ = Describe("local-client", func() {
 	Context("GetVolume", func() {
 		It("should fail when fileLock fails to aquire the lock", func() {
 			fakeLock.LockReturns(fmt.Errorf("error aquiring the lock"))
-			_, _, err = client.GetVolume("fake-volume")
+			_, err = client.GetVolume("fake-volume")
 			Expect(err).To(HaveOccurred())
 			Expect(err.Error()).To(Equal("error aquiring the lock"))
 			Expect(fakeLock.LockCallCount()).To(Equal(1))
@@ -648,7 +648,7 @@ var _ = Describe("local-client", func() {
 		It("should fail when dbClient fails to check if the volume exists", func() {
 			fakeLock.LockReturns(nil)
 			fakeSpectrumDataModel.GetVolumeReturns(spectrumscale.SpectrumScaleVolume{}, false, fmt.Errorf("error checking volume"))
-			_, _, err = client.GetVolume("fake-volume")
+			_, err = client.GetVolume("fake-volume")
 			Expect(err).To(HaveOccurred())
 			Expect(err.Error()).To(Equal("error checking volume"))
 			Expect(fakeLock.LockCallCount()).To(Equal(1))
@@ -658,7 +658,7 @@ var _ = Describe("local-client", func() {
 		It("should fail when volume exists and dbClient fails to getVolume", func() {
 			fakeLock.LockReturns(nil)
 			fakeSpectrumDataModel.GetVolumeReturns(spectrumscale.SpectrumScaleVolume{}, false, fmt.Errorf("error getting volume"))
-			_, _, err = client.GetVolume("fake-volume")
+			_, err = client.GetVolume("fake-volume")
 			Expect(err).To(HaveOccurred())
 			Expect(err.Error()).To(Equal("error getting volume"))
 			Expect(fakeLock.LockCallCount()).To(Equal(1))
@@ -668,7 +668,7 @@ var _ = Describe("local-client", func() {
 		It("should fail when volume does not exist", func() {
 			fakeLock.LockReturns(nil)
 			fakeSpectrumDataModel.GetVolumeReturns(spectrumscale.SpectrumScaleVolume{}, false, nil)
-			_, _, err = client.GetVolume("fake-volume")
+			_, err = client.GetVolume("fake-volume")
 			Expect(err).To(HaveOccurred())
 			Expect(err.Error()).To(Equal("Volume not found"))
 			Expect(fakeLock.LockCallCount()).To(Equal(1))
@@ -680,7 +680,7 @@ var _ = Describe("local-client", func() {
 
 			volume := spectrumscale.SpectrumScaleVolume{Volume: model.Volume{Name: "fake-volume"}, FileSystem: "fake-filesystem"}
 			fakeSpectrumDataModel.GetVolumeReturns(volume, true, nil)
-			vol, _, err := client.GetVolume("fake-volume")
+			vol, err := client.GetVolume("fake-volume")
 			Expect(err).ToNot(HaveOccurred())
 			Expect(vol.Name).To(Equal("fake-volume"))
 			Expect(fakeLock.LockCallCount()).To(Equal(1))

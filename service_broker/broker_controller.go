@@ -204,7 +204,7 @@ func (c *controller) BindServiceInstance(logger *log.Logger, serviceInstanceId s
 	c.bindingMap[bindingId] = &bindingInfo
 	volumeName := getVolumeNameForServiceInstance(serviceInstance)
 	//volumeMetadata *model.VolumeMetadata, volumeConfigDetails *model.SpectrumConfig, err error
-	_, config, err := backend.GetVolume(volumeName)
+	config, err := backend.GetVolumeConfig(volumeName)
 	if err != nil {
 		logger.Printf("Error: %s", err.Error())
 		return resources.CreateServiceBindingResponse{}, err

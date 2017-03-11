@@ -8,6 +8,7 @@ import (
 	"github.ibm.com/almaden-containers/ubiquity/resources"
 
 	"github.com/gorilla/mux"
+	"github.com/jinzhu/gorm"
 )
 
 type StorageApiServer struct {
@@ -15,19 +16,20 @@ type StorageApiServer struct {
 	logger            *log.Logger
 }
 
-func NewStorageApiServer(logger *log.Logger, backends map[resources.Backend]resources.StorageClient, config resources.UbiquityServerConfig) (*StorageApiServer, error) {
-	return &StorageApiServer{storageApiHandler: NewStorageApiHandler(logger, backends), logger: logger}, nil
+func NewStorageApiServer(logger *log.Logger, backends map[resources.Backend]resources.StorageClient, config resources.UbiquityServerConfig, database *gorm.DB) (*StorageApiServer, error) {
+	return &StorageApiServer{storageApiHandler: NewStorageApiHandler(logger, backends, database, config), logger: logger}, nil
 }
 
 func (s *StorageApiServer) InitializeHandler() http.Handler {
 	router := mux.NewRouter()
-	router.HandleFunc("/ubiquity_storage/{backend}/activate", s.storageApiHandler.Activate()).Methods("POST")
-	router.HandleFunc("/ubiquity_storage/{backend}/volumes", s.storageApiHandler.CreateVolume()).Methods("POST")
-	router.HandleFunc("/ubiquity_storage/{backend}/volumes", s.storageApiHandler.ListVolumes()).Methods("GET")
-	router.HandleFunc("/ubiquity_storage/{backend}/volumes/{volume}", s.storageApiHandler.RemoveVolume()).Methods("DELETE")
-	router.HandleFunc("/ubiquity_storage/{backend}/volumes/{volume}/attach", s.storageApiHandler.AttachVolume()).Methods("PUT")
-	router.HandleFunc("/ubiquity_storage/{backend}/volumes/{volume}/detach", s.storageApiHandler.DetachVolume()).Methods("PUT")
-	router.HandleFunc("/ubiquity_storage/{backend}/volumes/{volume}", s.storageApiHandler.GetVolume()).Methods("GET")
+	router.HandleFunc("/ubiquity_storage/activate", s.storageApiHandler.Activate()).Methods("POST")
+	router.HandleFunc("/ubiquity_storage/volumes", s.storageApiHandler.CreateVolume()).Methods("POST")
+	router.HandleFunc("/ubiquity_storage/volumes", s.storageApiHandler.ListVolumes()).Methods("GET")
+	router.HandleFunc("/ubiquity_storage/volumes/{volume}", s.storageApiHandler.RemoveVolume()).Methods("DELETE")
+	router.HandleFunc("/ubiquity_storage/volumes/{volume}/attach", s.storageApiHandler.AttachVolume()).Methods("PUT")
+	router.HandleFunc("/ubiquity_storage/volumes/{volume}/detach", s.storageApiHandler.DetachVolume()).Methods("PUT")
+	router.HandleFunc("/ubiquity_storage/volumes/{volume}", s.storageApiHandler.GetVolume()).Methods("GET")
+	router.HandleFunc("/ubiquity_storage/volumes/{volume}/config", s.storageApiHandler.GetVolumeConfig()).Methods("GET")
 	return router
 }
 

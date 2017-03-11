@@ -20,6 +20,7 @@ type UbiquityServerConfig struct {
 	SpectrumScaleConfig SpectrumScaleConfig
 	BrokerConfig        BrokerConfig
 	SoftlayerConfig     SoftlayerConfig
+	DefaultBackend      string
 }
 
 type SpectrumScaleConfig struct {
@@ -55,7 +56,6 @@ type BrokerConfig struct {
 type UbiquityPluginConfig struct {
 	DockerPlugin            UbiquityDockerPluginConfig
 	LogPath                 string
-	Backend                 string
 	UbiquityServer          UbiquityServerConnectionInfo
 	SpectrumNfsRemoteConfig SpectrumNfsRemoteConfig
 }
@@ -77,8 +77,8 @@ type StorageClient interface {
 	CreateVolume(name string, opts map[string]interface{}) error
 	RemoveVolume(name string, forceDelete bool) error
 	ListVolumes() ([]VolumeMetadata, error)
-	GetVolume(name string) (volumeMetadata VolumeMetadata, volumeConfigDetails map[string]interface{}, err error)
-	//TODO fixme: attach should return just an error
+	GetVolume(name string) (Volume, error)
+	GetVolumeConfig(name string) (map[string]interface{}, error)
 	Attach(name string) (string, error)
 	Detach(name string) error
 }
@@ -160,9 +160,22 @@ type VolumeMetadata struct {
 }
 
 type GetResponse struct {
+	Volume Volume
+	Err    string
+}
+type DockerGetResponse struct {
 	Volume VolumeMetadata
 	Err    string
-	Config map[string]interface{}
+}
+
+type Volume struct {
+	Name    string
+	Backend Backend
+}
+
+type GetConfigResponse struct {
+	VolumeConfig map[string]interface{}
+	Err          string
 }
 
 func (r *GetResponse) WriteResponse(w http.ResponseWriter) {
@@ -172,6 +185,18 @@ func (r *GetResponse) WriteResponse(w http.ResponseWriter) {
 	data, err := json.Marshal(r)
 	if err != nil {
 		fmt.Errorf("Error marshalling Get response: %s", err.Error())
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+	fmt.Fprintf(w, string(data))
+}
+func (r *DockerGetResponse) WriteResponse(w http.ResponseWriter) {
+	if r.Err != "" {
+		w.WriteHeader(http.StatusBadRequest)
+	}
+	data, err := json.Marshal(r)
+	if err != nil {
+		fmt.Errorf("Error marshalling DockerGetResponse: %s", err.Error())
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
