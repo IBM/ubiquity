@@ -218,7 +218,7 @@ func SetupLogger(logPath string, loggerName string) (*log.Logger, *os.File) {
 		return nil, nil
 	}
 	log.SetOutput(logFile)
-	logger := log.New(io.MultiWriter(logFile), fmt.Sprintf("%s: ", loggerName), log.Lshortfile|log.LstdFlags)
+	logger := log.New(io.MultiWriter(logFile, os.Stdout), fmt.Sprintf("%s: ", loggerName), log.Lshortfile|log.LstdFlags)
 	return logger, logFile
 }
 
