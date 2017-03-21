@@ -128,7 +128,6 @@ func (s *remoteClient) GetVolumeConfig(name string) (map[string]interface{}, err
 	s.logger.Println("remoteClient: GetVolumeConfig start")
 	defer s.logger.Println("remoteClient: GetVolumeConfig finish")
 
-	fmt.Printf("1")
 	getRemoteURL := utils.FormatURL(s.storageApiURL, "volumes", name, "config")
 	response, err := utils.HttpExecute(s.httpClient, s.logger, "GET", getRemoteURL, nil)
 	if err != nil {
