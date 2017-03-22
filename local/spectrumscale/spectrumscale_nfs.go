@@ -56,7 +56,7 @@ func (s *spectrumNfsLocalClient) Attach(name string) (string, error) {
 	s.spectrumClient.logger.Println("spectrumNfsLocalClient: Attach-start")
 	defer s.spectrumClient.logger.Println("spectrumNfsLocalClient: Attach-end")
 
-	_, volumeConfig, err := s.GetVolume(name)
+	volumeConfig, err := s.GetVolumeConfig(name)
 	if err != nil {
 		return "", err
 	}
@@ -73,7 +73,7 @@ func (s *spectrumNfsLocalClient) Detach(name string) error {
 	s.spectrumClient.logger.Println("spectrumNfsLocalClient: Detach-start")
 	defer s.spectrumClient.logger.Println("spectrumNfsLocalClient: Detach-end")
 
-	_, _, err := s.spectrumClient.GetVolume(name)
+	_, err := s.spectrumClient.GetVolumeConfig(name)
 
 	if err != nil {
 		s.spectrumClient.logger.Printf("spectrumNfsLocalClient: error in no-op detach for volume %s: %#v\n", name, err)
@@ -81,10 +81,6 @@ func (s *spectrumNfsLocalClient) Detach(name string) error {
 	}
 
 	return nil
-}
-
-func (s *spectrumNfsLocalClient) GetPluginName() string {
-	return "spectrum-scale-nfs"
 }
 
 func (s *spectrumNfsLocalClient) CreateVolume(name string, opts map[string]interface{}) error {
@@ -143,18 +139,27 @@ func (s *spectrumNfsLocalClient) RemoveVolume(name string, forceDelete bool) err
 	return s.spectrumClient.RemoveVolume(name, forceDelete)
 }
 
-func (s *spectrumNfsLocalClient) GetVolume(name string) (resources.VolumeMetadata, map[string]interface{}, error) {
-	s.spectrumClient.logger.Println("spectrumNfsLocalClient: Get-start")
-	defer s.spectrumClient.logger.Println("spectrumNfsLocalClient: Get-end")
+func (s *spectrumNfsLocalClient) GetVolumeConfig(name string) (map[string]interface{}, error) {
+	s.spectrumClient.logger.Println("spectrumNfsLocalClient: GetVolumeConfig-start")
+	defer s.spectrumClient.logger.Println("spectrumNfsLocalClient: GetVolumeConfig-end")
 
-	volumeMetadata, volumeConfig, err := s.spectrumClient.GetVolume(name)
+	volumeConfig, err := s.spectrumClient.GetVolumeConfig(name)
 	if err != nil {
-		return volumeMetadata, volumeConfig, err
+		return volumeConfig, err
 	}
-	nfsShare := fmt.Sprintf("%s:%s", s.config.NfsServerAddr, volumeMetadata.Mountpoint)
+	mountpoint, exists := volumeConfig["mountpoint"]
+	if exists == false {
+		return nil, fmt.Errorf("Volume :%s not found", name)
+	}
+	nfsShare := fmt.Sprintf("%s:%s", s.config.NfsServerAddr, mountpoint)
 	volumeConfig["nfs_share"] = nfsShare
 	s.spectrumClient.logger.Printf("spectrumNfsLocalClient: GetVolume: Adding nfs_share %s to volume config for volume %s\n", nfsShare, name)
-	return volumeMetadata, volumeConfig, nil
+	return volumeConfig, nil
+}
+func (s *spectrumNfsLocalClient) GetVolume(name string) (resources.Volume, error) {
+	s.spectrumClient.logger.Println("spectrumNfsLocalClient: GetVolume start")
+	defer s.spectrumClient.logger.Println("spectrumNfsLocalClient: GetVolume finish")
+	return s.spectrumClient.GetVolume(name)
 }
 
 func (s *spectrumNfsLocalClient) exportNfs(name, clientConfig string) error {

@@ -39,7 +39,7 @@ func main() {
 		return
 	}
 
-	logger, logFile := utils.SetupLogger(config.LogPath)
+	logger, logFile := utils.SetupLogger(config.LogPath, "ubiquity-broker")
 	defer utils.CloseLogs(logFile)
 
 	spectrumExecutor := utils.NewExecutor(logger)

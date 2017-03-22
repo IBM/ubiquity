@@ -12,6 +12,7 @@ import (
 
 	"github.com/jinzhu/gorm"
 	"github.ibm.com/almaden-containers/ubiquity/local/spectrumscale/connectors"
+
 	"github.ibm.com/almaden-containers/ubiquity/resources"
 )
 
@@ -27,16 +28,19 @@ type spectrumLocalClient struct {
 }
 
 const (
-	USER_SPECIFIED_TYPE string = "type"
+	TYPE             string = "type"
+	TYPE_FILESET     string = "fileset"
+	TYPE_LIGHTWEIGHT string = "lightweight"
 
-	USER_SPECIFIED_DIRECTORY string = "directory"
-	USER_SPECIFIED_QUOTA     string = "quota"
+	FILESETID string = "fileset"
+	DIRECTORY string = "directory"
+	QUOTA     string = "quota"
 
-	USER_SPECIFIED_FILESET    string = "fileset"
-	USER_SPECIFIED_FILESYSTEM string = "filesystem"
+	FILESYSTEM string = "filesystem"
 
-	FILESET_TYPE  string = "fileset"
-	LTWT_VOL_TYPE string = "lightweight"
+	IS_PREEXISTING string = "isPreexisting"
+
+	CLUSTER string = "clusterId"
 )
 
 func NewSpectrumLocalClient(logger *log.Logger, config resources.SpectrumScaleConfig, database *gorm.DB, fileLock utils.FileLock) (resources.StorageClient, error) {
@@ -177,26 +181,26 @@ func (s *spectrumLocalClient) CreateVolume(name string, opts map[string]interfac
 
 	s.logger.Printf("Params for create: %s,%s,%s,%s\n", isExistingVolume, filesystem, existingFileset, existingLightWeightDir)
 
-	if isExistingVolume && userSpecifiedType == FILESET_TYPE {
-		quota, quotaSpecified := opts[USER_SPECIFIED_QUOTA]
+	if isExistingVolume && userSpecifiedType == TYPE_FILESET {
+		quota, quotaSpecified := opts[QUOTA]
 		if quotaSpecified {
 			return s.updateDBWithExistingFilesetQuota(filesystem, name, existingFileset, quota.(string), opts)
 		}
 		return s.updateDBWithExistingFileset(filesystem, name, existingFileset, opts)
 	}
 
-	if isExistingVolume && userSpecifiedType == LTWT_VOL_TYPE {
+	if isExistingVolume && userSpecifiedType == TYPE_LIGHTWEIGHT {
 		return s.updateDBWithExistingDirectory(filesystem, name, existingFileset, existingLightWeightDir, opts)
 	}
 
-	if userSpecifiedType == FILESET_TYPE {
-		quota, quotaSpecified := opts[USER_SPECIFIED_QUOTA]
+	if userSpecifiedType == TYPE_FILESET {
+		quota, quotaSpecified := opts[QUOTA]
 		if quotaSpecified {
 			return s.createFilesetQuotaVolume(filesystem, name, quota.(string), opts)
 		}
 		return s.createFilesetVolume(filesystem, name, opts)
 	}
-	if userSpecifiedType == LTWT_VOL_TYPE {
+	if userSpecifiedType == TYPE_LIGHTWEIGHT {
 		return s.createLightweightVolume(filesystem, name, existingFileset, opts)
 	}
 	return fmt.Errorf("Internal error")
@@ -287,14 +291,41 @@ func (s *spectrumLocalClient) RemoveVolume(name string, forceDelete bool) (err e
 	return nil
 }
 
-func (s *spectrumLocalClient) GetVolume(name string) (volumeMetadata resources.VolumeMetadata, volumeConfigDetails map[string]interface{}, err error) {
-	s.logger.Println("spectrumLocalClient: get start")
-	defer s.logger.Println("spectrumLocalClient: get finish")
+func (s *spectrumLocalClient) GetVolume(name string) (resources.Volume, error) {
+	s.logger.Println("spectrumLocalClient: GetVolume start")
+	defer s.logger.Println("spectrumLocalClient: GetVolume finish")
+
+	err := s.fileLock.Lock()
+	if err != nil {
+		s.logger.Printf("error aquiring lock", err)
+		return resources.Volume{}, err
+	}
+	defer func() {
+		lockErr := s.fileLock.Unlock()
+		if lockErr != nil && err == nil {
+			err = lockErr
+		}
+	}()
+
+	existingVolume, volExists, err := s.dataModel.GetVolume(name)
+	if err != nil {
+		return resources.Volume{}, err
+	}
+	if volExists == false {
+		return resources.Volume{}, fmt.Errorf("Volume not found")
+	}
+
+	return resources.Volume{Name: existingVolume.Volume.Name, Backend: resources.Backend(existingVolume.Volume.Backend)}, nil
+}
+
+func (s *spectrumLocalClient) GetVolumeConfig(name string) (volumeConfigDetails map[string]interface{}, err error) {
+	s.logger.Println("spectrumLocalClient: GetVolumeConfig start")
+	defer s.logger.Println("spectrumLocalClient: GetVolumeConfig finish")
 
 	err = s.fileLock.Lock()
 	if err != nil {
 		s.logger.Printf("error aquiring lock", err)
-		return resources.VolumeMetadata{}, nil, err
+		return nil, err
 	}
 	defer func() {
 		lockErr := s.fileLock.Unlock()
@@ -307,45 +338,44 @@ func (s *spectrumLocalClient) GetVolume(name string) (volumeMetadata resources.V
 
 	if err != nil {
 		s.logger.Println(err.Error())
-		return resources.VolumeMetadata{}, nil, err
+		return nil, err
 	}
 
 	if volExists {
-
+		volumeConfigDetails = make(map[string]interface{})
 		volumeMountpoint, err := s.getVolumeMountPoint(existingVolume)
 		if err != nil {
 			s.logger.Println(err.Error())
-			return resources.VolumeMetadata{}, nil, err
+			return nil, err
 		}
-		volumeMetadata = resources.VolumeMetadata{Name: existingVolume.Volume.Name}
 
 		isFilesetLinked, err := s.connector.IsFilesetLinked(existingVolume.FileSystem, existingVolume.Fileset)
 		if err != nil {
 			s.logger.Println(err.Error())
-			return resources.VolumeMetadata{}, nil, err
+			return nil, err
 		}
 		if isFilesetLinked {
-			volumeMetadata.Mountpoint = volumeMountpoint
-		}
-		volumeConfigDetails = make(map[string]interface{})
-		volumeConfigDetails["filesetId"] = existingVolume.Fileset
-		volumeConfigDetails["filesystem"] = existingVolume.FileSystem
-		volumeConfigDetails["clusterId"] = existingVolume.ClusterId
-		if existingVolume.GID != "" {
-			volumeConfigDetails["gid"] = existingVolume.GID
-		}
-		if existingVolume.UID != "" {
-			volumeConfigDetails["uid"] = existingVolume.UID
-		}
-		volumeConfigDetails["isPreexisting"] = existingVolume.IsPreexisting
-		volumeConfigDetails["type"] = existingVolume.Type
-		if existingVolume.Type == LIGHTWEIGHT {
-			volumeConfigDetails["directory"] = existingVolume.Directory
+			volumeConfigDetails["mountpoint"] = volumeMountpoint
 		}
 
-		return volumeMetadata, volumeConfigDetails, nil
+		volumeConfigDetails[FILESETID] = existingVolume.Fileset
+		volumeConfigDetails[FILESYSTEM] = existingVolume.FileSystem
+		volumeConfigDetails[CLUSTER] = existingVolume.ClusterId
+		if existingVolume.GID != "" {
+			volumeConfigDetails[USER_SPECIFIED_GID] = existingVolume.GID
+		}
+		if existingVolume.UID != "" {
+			volumeConfigDetails[USER_SPECIFIED_UID] = existingVolume.UID
+		}
+		volumeConfigDetails[IS_PREEXISTING] = existingVolume.IsPreexisting
+		volumeConfigDetails[TYPE] = existingVolume.Type
+		if existingVolume.Type == LIGHTWEIGHT {
+			volumeConfigDetails[DIRECTORY] = existingVolume.Directory
+		}
+
+		return volumeConfigDetails, nil
 	}
-	return resources.VolumeMetadata{}, nil, fmt.Errorf("Volume not found")
+	return nil, fmt.Errorf("Volume not found")
 }
 
 func (s *spectrumLocalClient) Attach(name string) (volumeMountpoint string, err error) {
@@ -631,7 +661,7 @@ func (s *spectrumLocalClient) checkIfVolumeExistsInDB(name, userSpecifiedFileset
 	s.logger.Println("spectrumLocalClient:  checkIfVolumeExistsIbDB start")
 	defer s.logger.Println("spectrumLocalClient: checkIfVolumeExistsIbDB end")
 
-	_, volumeConfigDetails, err := s.GetVolume(name)
+	volumeConfigDetails, err := s.GetVolumeConfig(name)
 
 	if err != nil {
 		s.logger.Println(err.Error())
@@ -717,16 +747,16 @@ func (s *spectrumLocalClient) updateDBWithExistingDirectory(filesystem, name, us
 func determineTypeFromRequest(logger *log.Logger, opts map[string]interface{}) (string, error) {
 	logger.Print("determineTypeFromRequest start\n")
 	defer logger.Printf("determineTypeFromRequest end\n")
-	userSpecifiedType, exists := opts[USER_SPECIFIED_TYPE]
+	userSpecifiedType, exists := opts[TYPE]
 	if exists == false {
-		_, exists := opts[USER_SPECIFIED_DIRECTORY]
+		_, exists := opts[DIRECTORY]
 		if exists == true {
-			return LTWT_VOL_TYPE, nil
+			return TYPE_LIGHTWEIGHT, nil
 		}
-		return FILESET_TYPE, nil
+		return TYPE_FILESET, nil
 	}
 
-	if userSpecifiedType.(string) != FILESET_TYPE && userSpecifiedType.(string) != LTWT_VOL_TYPE {
+	if userSpecifiedType.(string) != TYPE_FILESET && userSpecifiedType.(string) != TYPE_LIGHTWEIGHT {
 		return "", fmt.Errorf("Unknown 'type' = %s specified", userSpecifiedType.(string))
 	}
 
@@ -735,9 +765,9 @@ func determineTypeFromRequest(logger *log.Logger, opts map[string]interface{}) (
 func (s *spectrumLocalClient) validateAndParseParams(logger *log.Logger, opts map[string]interface{}) (bool, string, string, string, error) {
 	logger.Println("validateAndParseParams start")
 	defer logger.Println("validateAndParseParams end")
-	existingFileset, existingFilesetSpecified := opts[USER_SPECIFIED_FILESET]
-	existingLightWeightDir, existingLightWeightDirSpecified := opts[USER_SPECIFIED_DIRECTORY]
-	filesystem, filesystemSpecified := opts[USER_SPECIFIED_FILESYSTEM]
+	existingFileset, existingFilesetSpecified := opts[TYPE_FILESET]
+	existingLightWeightDir, existingLightWeightDirSpecified := opts[DIRECTORY]
+	filesystem, filesystemSpecified := opts[FILESYSTEM]
 	_, uidSpecified := opts[USER_SPECIFIED_UID]
 	_, gidSpecified := opts[USER_SPECIFIED_GID]
 
@@ -748,7 +778,7 @@ func (s *spectrumLocalClient) validateAndParseParams(logger *log.Logger, opts ma
 	}
 
 	if uidSpecified && gidSpecified {
-		if existingFilesetSpecified && userSpecifiedType != LTWT_VOL_TYPE {
+		if existingFilesetSpecified && userSpecifiedType != TYPE_LIGHTWEIGHT {
 			return true, "", "", "", fmt.Errorf("uid/gid cannot be specified along with existing fileset")
 		}
 		if existingLightWeightDirSpecified {
@@ -756,7 +786,7 @@ func (s *spectrumLocalClient) validateAndParseParams(logger *log.Logger, opts ma
 		}
 	}
 
-	if (userSpecifiedType == FILESET_TYPE && existingFilesetSpecified) || (userSpecifiedType == LTWT_VOL_TYPE && existingLightWeightDirSpecified) {
+	if (userSpecifiedType == TYPE_FILESET && existingFilesetSpecified) || (userSpecifiedType == TYPE_LIGHTWEIGHT && existingLightWeightDirSpecified) {
 		if filesystemSpecified == false {
 			logger.Println("'filesystem' is a required opt for using existing volumes")
 			return true, filesystem.(string), existingFileset.(string), existingLightWeightDir.(string), fmt.Errorf("'filesystem' is a required opt for using existing volumes")
@@ -765,8 +795,8 @@ func (s *spectrumLocalClient) validateAndParseParams(logger *log.Logger, opts ma
 			logger.Println("'fileset' is a required opt for using existing lightweight volumes")
 			return true, filesystem.(string), existingFileset.(string), existingLightWeightDir.(string), fmt.Errorf("'fileset' is a required opt for using existing lightweight volumes")
 		}
-		if userSpecifiedType == LTWT_VOL_TYPE && existingLightWeightDir != nil {
-			_, quotaSpecified := opts[USER_SPECIFIED_QUOTA]
+		if userSpecifiedType == TYPE_LIGHTWEIGHT && existingLightWeightDir != nil {
+			_, quotaSpecified := opts[QUOTA]
 			if quotaSpecified {
 				logger.Println("'quota' is not supported for lightweight volumes")
 				return true, "", "", "", fmt.Errorf("'quota' is not supported for lightweight volumes")
@@ -778,11 +808,11 @@ func (s *spectrumLocalClient) validateAndParseParams(logger *log.Logger, opts ma
 			return true, filesystem.(string), existingFileset.(string), "", nil
 		}
 
-	} else if userSpecifiedType == LTWT_VOL_TYPE {
+	} else if userSpecifiedType == TYPE_LIGHTWEIGHT {
 		//lightweight -- new
 		if filesystemSpecified && existingFilesetSpecified {
 
-			_, quotaSpecified := opts[USER_SPECIFIED_QUOTA]
+			_, quotaSpecified := opts[QUOTA]
 			if quotaSpecified {
 				logger.Println("'quota' is not supported for lightweight volumes")
 				return false, "", "", "", fmt.Errorf("'quota' is not supported for lightweight volumes")
@@ -826,7 +856,7 @@ func (s *spectrumLocalClient) getVolumeMountPoint(volume SpectrumScaleVolume) (s
 func (s *spectrumLocalClient) updatePermissions(name string) error {
 	s.logger.Println("spectrumLocalClient: updatePermissions-start")
 	defer s.logger.Println("spectrumLocalClient: updatePermissions-end")
-	_, volumeConfig, err := s.GetVolume(name)
+	volumeConfig, err := s.GetVolumeConfig(name)
 	if err != nil {
 		return err
 	}
