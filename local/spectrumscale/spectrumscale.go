@@ -235,12 +235,12 @@ func (s *spectrumLocalClient) RemoveVolume(name string, forceDelete bool) (err e
 
 	if existingVolume.Type == LIGHTWEIGHT {
 		err = s.dataModel.DeleteVolume(name)
-
 		if err != nil {
 			s.logger.Println(err.Error())
 			return err
 		}
-		if forceDelete == true {
+
+		if forceDelete == true && existingVolume.IsPreexisting == false {
 			mountpoint, err := s.connector.GetFilesystemMountpoint(existingVolume.FileSystem)
 			if err != nil {
 				s.logger.Println(err.Error())
@@ -279,7 +279,7 @@ func (s *spectrumLocalClient) RemoveVolume(name string, forceDelete bool) (err e
 		s.logger.Println(err.Error())
 		return err
 	}
-	if forceDelete {
+	if forceDelete == true && existingVolume.IsPreexisting == false {
 		err = s.connector.DeleteFileset(existingVolume.FileSystem, existingVolume.Fileset)
 
 		if err != nil {
