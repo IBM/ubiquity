@@ -95,6 +95,9 @@ func (d *spectrumDataModel) DeleteVolume(name string) error {
 	if err := d.database.Delete(&volume).Error; err != nil {
 		return err
 	}
+	if err := model.DeleteVolume(d.database, &volume.Volume).Error; err != nil {
+		return err
+	}
 	return nil
 }
 
