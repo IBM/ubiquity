@@ -35,6 +35,6 @@ func VolumeExists(db *gorm.DB, name string) (bool, error) {
 	}
 	return true, err
 }
-func DeleteVolume(db *gorm.DB, volume *Volume) error {
+func DeleteVolume(db *gorm.DB, volume *Volume) *gorm.DB {
 	return db.Delete(volume)
 }
