@@ -17,7 +17,6 @@ import (
 
 type softlayerLocalClient struct {
 	logger                  *log.Logger
-	fileLock                utils.FileLock
 	dataModel               SoftlayerDataModel
 	isActivated             bool
 	softlayerStorageService interfaces.Softlayer_Storage_Service
@@ -31,33 +30,22 @@ const (
 	SL_LOCATION         = "sl_location"
 )
 
-func NewSoftlayerLocalClient(logger *log.Logger, config resources.SoftlayerConfig, db *gorm.DB, fileLock utils.FileLock) (resources.StorageClient, error) {
+func NewSoftlayerLocalClient(logger *log.Logger, config resources.SoftlayerConfig, db *gorm.DB) (resources.StorageClient, error) {
 
 	//Get the service client
 	// has to look for access details in config before preoceeding
 	serviceClient := services.NewServiceClient()
 	softlayerStorageService := serviceClient.GetSoftLayerStorageService()
 
-	return &softlayerLocalClient{logger: logger, fileLock: fileLock, dataModel: NewSoftlayerDataModel(logger, db, resources.SOFTLAYER_NFS), softlayerStorageService: softlayerStorageService}, nil
+	return &softlayerLocalClient{logger: logger, dataModel: NewSoftlayerDataModel(logger, db, resources.SOFTLAYER_NFS), softlayerStorageService: softlayerStorageService}, nil
 }
-func NewSoftlayerLocalClientWithDataModelAndSLService(logger *log.Logger, datamodel SoftlayerDataModel, fileLock utils.FileLock, softlayerStorageService interfaces.Softlayer_Storage_Service) (resources.StorageClient, error) {
-	return &softlayerLocalClient{logger: logger, fileLock: fileLock, dataModel: datamodel, softlayerStorageService: softlayerStorageService}, nil
+func NewSoftlayerLocalClientWithDataModelAndSLService(logger *log.Logger, datamodel SoftlayerDataModel, fileLock utils.Heartbeat, softlayerStorageService interfaces.Softlayer_Storage_Service) (resources.StorageClient, error) {
+	return &softlayerLocalClient{logger: logger, dataModel: datamodel, softlayerStorageService: softlayerStorageService}, nil
 }
 
 func (s *softlayerLocalClient) Activate() (err error) {
 	s.logger.Println("softlayerLocalClient: Activate start")
 	defer s.logger.Println("softlayerLocalClient: Activate end")
-	err = s.fileLock.Lock()
-	if err != nil {
-		s.logger.Printf("Error aquiring lock %v", err)
-		return err
-	}
-	defer func() {
-		lockErr := s.fileLock.Unlock()
-		if lockErr != nil && err == nil {
-			err = lockErr
-		}
-	}()
 
 	if s.isActivated {
 		return nil
@@ -76,18 +64,6 @@ func (s *softlayerLocalClient) Activate() (err error) {
 func (s *softlayerLocalClient) CreateVolume(name string, opts map[string]interface{}) (err error) {
 	s.logger.Println("softlayerLocalClient: create start")
 	defer s.logger.Println("softlayerLocalClient: create end")
-
-	err = s.fileLock.Lock()
-	if err != nil {
-		s.logger.Printf("error aquiring lock %v", err)
-		return err
-	}
-	defer func() {
-		lockErr := s.fileLock.Unlock()
-		if lockErr != nil && err == nil {
-			err = lockErr
-		}
-	}()
 
 	_, volExists, err := s.dataModel.GetVolume(name)
 
@@ -143,17 +119,6 @@ func (s *softlayerLocalClient) createFileShareVolume(name string, opts map[strin
 func (s *softlayerLocalClient) RemoveVolume(name string, forceDelete bool) (err error) {
 	s.logger.Println("softlayerLocalClient: remove start")
 	defer s.logger.Println("softlayerLocalClient: remove end")
-	err = s.fileLock.Lock()
-	if err != nil {
-		s.logger.Printf("failed to aquire lock %v", err)
-		return err
-	}
-	defer func() {
-		lockErr := s.fileLock.Unlock()
-		if lockErr != nil && err == nil {
-			err = lockErr
-		}
-	}()
 
 	existingVolume, exists, err := s.dataModel.GetVolume(name)
 
@@ -194,18 +159,6 @@ func (s *softlayerLocalClient) GetVolume(name string) (resources.Volume, error) 
 	s.logger.Println("spectrumLocalClient: GetVolume start")
 	defer s.logger.Println("spectrumLocalClient: GetVolume finish")
 
-	err := s.fileLock.Lock()
-	if err != nil {
-		s.logger.Printf("error aquiring lock", err)
-		return resources.Volume{}, err
-	}
-	defer func() {
-		lockErr := s.fileLock.Unlock()
-		if lockErr != nil && err == nil {
-			err = lockErr
-		}
-	}()
-
 	existingVolume, volExists, err := s.dataModel.GetVolume(name)
 	if err != nil {
 		return resources.Volume{}, err
@@ -220,18 +173,6 @@ func (s *softlayerLocalClient) GetVolume(name string) (resources.Volume, error) 
 func (s *softlayerLocalClient) GetVolumeConfig(name string) (volumeConfigDetails map[string]interface{}, err error) {
 	s.logger.Println("softlayerLocalClient: GetVolumeConfig start")
 	defer s.logger.Println("softlayerLocalClient: GetVolumeConfig finish")
-
-	err = s.fileLock.Lock()
-	if err != nil {
-		s.logger.Printf("error aquiring lock", err)
-		return nil, err
-	}
-	defer func() {
-		lockErr := s.fileLock.Unlock()
-		if lockErr != nil && err == nil {
-			err = lockErr
-		}
-	}()
 
 	existingVolume, volExists, err := s.dataModel.GetVolume(name)
 
@@ -298,17 +239,6 @@ func (s *softlayerLocalClient) ListVolumes() ([]resources.VolumeMetadata, error)
 	s.logger.Println("softlayerLocalClient: list start")
 	defer s.logger.Println("softlayerLocalClient: list end")
 	var err error
-	err = s.fileLock.Lock()
-	if err != nil {
-		s.logger.Printf("error aquiring lock", err)
-		return nil, err
-	}
-	defer func() {
-		lockErr := s.fileLock.Unlock()
-		if lockErr != nil && err == nil {
-			err = lockErr
-		}
-	}()
 
 	volumesInDb, err := s.dataModel.ListVolumes()
 
