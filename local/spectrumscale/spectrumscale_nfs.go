@@ -15,7 +15,7 @@ type spectrumNfsLocalClient struct {
 	executor       utils.Executor
 }
 
-func NewSpectrumNfsLocalClient(logger *log.Logger, config resources.SpectrumScaleConfig, db *gorm.DB, fileLock utils.FileLock) (resources.StorageClient, error) {
+func NewSpectrumNfsLocalClient(logger *log.Logger, config resources.SpectrumScaleConfig, db *gorm.DB) (resources.StorageClient, error) {
 	logger.Println("spectrumNfsLocalClient: init start")
 	defer logger.Println("spectrumNfsLocalClient: init end")
 
@@ -31,7 +31,7 @@ func NewSpectrumNfsLocalClient(logger *log.Logger, config resources.SpectrumScal
 		return nil, fmt.Errorf("spectrumNfsLocalClient: init: missing required parameter 'spectrumNfsServerAddr'")
 	}
 
-	spectrumClient, err := newSpectrumLocalClient(logger, config, db, fileLock, resources.SPECTRUM_SCALE_NFS)
+	spectrumClient, err := newSpectrumLocalClient(logger, config, db, resources.SPECTRUM_SCALE_NFS)
 	if err != nil {
 		return nil, err
 	}

@@ -13,18 +13,20 @@ import (
 	"github.com/jinzhu/gorm"
 	"github.ibm.com/almaden-containers/ubiquity/local/spectrumscale/connectors"
 
+	"sync"
+
 	"github.ibm.com/almaden-containers/ubiquity/resources"
 )
 
 type spectrumLocalClient struct {
-	logger      *log.Logger
-	connector   connectors.SpectrumScaleConnector
-	dataModel   SpectrumDataModel
-	fileLock    utils.FileLock
-	executor    utils.Executor
-	isActivated bool
-	isMounted   bool
-	config      resources.SpectrumScaleConfig
+	logger         *log.Logger
+	connector      connectors.SpectrumScaleConnector
+	dataModel      SpectrumDataModel
+	executor       utils.Executor
+	isActivated    bool
+	isMounted      bool
+	config         resources.SpectrumScaleConfig
+	activationLock *sync.RWMutex
 }
 
 const (
@@ -43,54 +45,55 @@ const (
 	CLUSTER string = "clusterId"
 )
 
-func NewSpectrumLocalClient(logger *log.Logger, config resources.SpectrumScaleConfig, database *gorm.DB, fileLock utils.FileLock) (resources.StorageClient, error) {
+func NewSpectrumLocalClient(logger *log.Logger, config resources.SpectrumScaleConfig, database *gorm.DB) (resources.StorageClient, error) {
 	if config.ConfigPath == "" {
 		return nil, fmt.Errorf("spectrumLocalClient: init: missing required parameter 'spectrumConfigPath'")
 	}
 	if config.DefaultFilesystem == "" {
 		return nil, fmt.Errorf("spectrumLocalClient: init: missing required parameter 'spectrumDefaultFileSystem'")
 	}
-	return newSpectrumLocalClient(logger, config, database, fileLock, resources.SPECTRUM_SCALE)
+	return newSpectrumLocalClient(logger, config, database, resources.SPECTRUM_SCALE)
 }
 
-func NewSpectrumLocalClientWithConnectors(logger *log.Logger, connector connectors.SpectrumScaleConnector, fileLock utils.FileLock, spectrumExecutor utils.Executor, config resources.SpectrumScaleConfig, datamodel SpectrumDataModel) (resources.StorageClient, error) {
-	return &spectrumLocalClient{logger: logger, connector: connector, dataModel: datamodel, executor: spectrumExecutor, config: config, fileLock: fileLock}, nil
+func NewSpectrumLocalClientWithConnectors(logger *log.Logger, connector connectors.SpectrumScaleConnector, spectrumExecutor utils.Executor, config resources.SpectrumScaleConfig, datamodel SpectrumDataModel) (resources.StorageClient, error) {
+	err := datamodel.CreateVolumeTable()
+	if err != nil {
+		return &spectrumLocalClient{}, err
+	}
+	return &spectrumLocalClient{logger: logger, connector: connector, dataModel: datamodel, executor: spectrumExecutor, config: config, activationLock: &sync.RWMutex{}}, nil
 }
 
-func newSpectrumLocalClient(logger *log.Logger, config resources.SpectrumScaleConfig, database *gorm.DB, fileLock utils.FileLock, backend resources.Backend) (*spectrumLocalClient, error) {
+func newSpectrumLocalClient(logger *log.Logger, config resources.SpectrumScaleConfig, database *gorm.DB, backend resources.Backend) (*spectrumLocalClient, error) {
 	logger.Println("spectrumLocalClient: init start")
 	defer logger.Println("spectrumLocalClient: init end")
-
 	client, err := connectors.GetSpectrumScaleConnector(logger, config)
 	if err != nil {
 		logger.Fatalln(err.Error())
 		return &spectrumLocalClient{}, err
 	}
-	return &spectrumLocalClient{logger: logger, connector: client, dataModel: NewSpectrumDataModel(logger, database, backend), config: config, fileLock: fileLock, executor: utils.NewExecutor(logger)}, nil
+	datamodel := NewSpectrumDataModel(logger, database, backend)
+	err = datamodel.CreateVolumeTable()
+	if err != nil {
+		return &spectrumLocalClient{}, err
+	}
+	return &spectrumLocalClient{logger: logger, connector: client, dataModel: datamodel, config: config, executor: utils.NewExecutor(logger), activationLock: &sync.RWMutex{}}, nil
 }
 
 func (s *spectrumLocalClient) Activate() (err error) {
 	s.logger.Println("spectrumLocalClient: Activate start")
 	defer s.logger.Println("spectrumLocalClient: Activate end")
 
-	err = s.fileLock.Lock()
-	if err != nil {
-		s.logger.Printf("Error aquiring lock %v", err)
-		return err
-	}
-	defer func() {
-		lockErr := s.fileLock.Unlock()
-		if lockErr != nil && err == nil {
-			err = lockErr
-		}
-	}()
-
+	s.activationLock.RLock()
 	if s.isActivated {
+		s.activationLock.RUnlock()
 		return nil
 	}
+	s.activationLock.RUnlock()
+
+	s.activationLock.Lock() //get a write lock to prevent others from repeating these actions
+	defer s.activationLock.Unlock()
 
 	//check if filesystem is mounted
-
 	mounted, err := s.connector.IsFilesystemMounted(s.config.DefaultFilesystem)
 
 	if err != nil {
@@ -122,13 +125,6 @@ func (s *spectrumLocalClient) Activate() (err error) {
 
 	s.dataModel.SetClusterId(clusterId)
 
-	err = s.dataModel.CreateVolumeTable()
-
-	if err != nil {
-		s.logger.Println(err.Error())
-		return err
-	}
-
 	s.isActivated = true
 	return nil
 }
@@ -136,18 +132,6 @@ func (s *spectrumLocalClient) Activate() (err error) {
 func (s *spectrumLocalClient) CreateVolume(name string, opts map[string]interface{}) (err error) {
 	s.logger.Println("spectrumLocalClient: create start")
 	defer s.logger.Println("spectrumLocalClient: create end")
-
-	err = s.fileLock.Lock()
-	if err != nil {
-		s.logger.Printf("error aquiring lock %v", err)
-		return err
-	}
-	defer func() {
-		lockErr := s.fileLock.Unlock()
-		if lockErr != nil && err == nil {
-			err = lockErr
-		}
-	}()
 
 	_, volExists, err := s.dataModel.GetVolume(name)
 
@@ -210,18 +194,6 @@ func (s *spectrumLocalClient) RemoveVolume(name string, forceDelete bool) (err e
 	s.logger.Println("spectrumLocalClient: remove start")
 	defer s.logger.Println("spectrumLocalClient: remove end")
 
-	err = s.fileLock.Lock()
-	if err != nil {
-		s.logger.Printf("failed to aquire lock %v", err)
-		return err
-	}
-	defer func() {
-		lockErr := s.fileLock.Unlock()
-		if lockErr != nil && err == nil {
-			err = lockErr
-		}
-	}()
-
 	existingVolume, volExists, err := s.dataModel.GetVolume(name)
 
 	if err != nil {
@@ -235,12 +207,12 @@ func (s *spectrumLocalClient) RemoveVolume(name string, forceDelete bool) (err e
 
 	if existingVolume.Type == LIGHTWEIGHT {
 		err = s.dataModel.DeleteVolume(name)
-
 		if err != nil {
 			s.logger.Println(err.Error())
 			return err
 		}
-		if forceDelete == true {
+
+		if forceDelete == true && existingVolume.IsPreexisting == false {
 			mountpoint, err := s.connector.GetFilesystemMountpoint(existingVolume.FileSystem)
 			if err != nil {
 				s.logger.Println(err.Error())
@@ -279,7 +251,7 @@ func (s *spectrumLocalClient) RemoveVolume(name string, forceDelete bool) (err e
 		s.logger.Println(err.Error())
 		return err
 	}
-	if forceDelete {
+	if forceDelete == true && existingVolume.IsPreexisting == false {
 		err = s.connector.DeleteFileset(existingVolume.FileSystem, existingVolume.Fileset)
 
 		if err != nil {
@@ -295,18 +267,6 @@ func (s *spectrumLocalClient) GetVolume(name string) (resources.Volume, error) {
 	s.logger.Println("spectrumLocalClient: GetVolume start")
 	defer s.logger.Println("spectrumLocalClient: GetVolume finish")
 
-	err := s.fileLock.Lock()
-	if err != nil {
-		s.logger.Printf("error aquiring lock", err)
-		return resources.Volume{}, err
-	}
-	defer func() {
-		lockErr := s.fileLock.Unlock()
-		if lockErr != nil && err == nil {
-			err = lockErr
-		}
-	}()
-
 	existingVolume, volExists, err := s.dataModel.GetVolume(name)
 	if err != nil {
 		return resources.Volume{}, err
@@ -321,18 +281,6 @@ func (s *spectrumLocalClient) GetVolume(name string) (resources.Volume, error) {
 func (s *spectrumLocalClient) GetVolumeConfig(name string) (volumeConfigDetails map[string]interface{}, err error) {
 	s.logger.Println("spectrumLocalClient: GetVolumeConfig start")
 	defer s.logger.Println("spectrumLocalClient: GetVolumeConfig finish")
-
-	err = s.fileLock.Lock()
-	if err != nil {
-		s.logger.Printf("error aquiring lock", err)
-		return nil, err
-	}
-	defer func() {
-		lockErr := s.fileLock.Unlock()
-		if lockErr != nil && err == nil {
-			err = lockErr
-		}
-	}()
 
 	existingVolume, volExists, err := s.dataModel.GetVolume(name)
 
@@ -382,18 +330,6 @@ func (s *spectrumLocalClient) Attach(name string) (volumeMountpoint string, err 
 	s.logger.Println("spectrumLocalClient: attach start")
 	defer s.logger.Println("spectrumLocalClient: attach end")
 
-	err = s.fileLock.Lock()
-	if err != nil {
-		s.logger.Printf("failed to aquire lock %v", err)
-		return "", err
-	}
-	defer func() {
-		lockErr := s.fileLock.Unlock()
-		if lockErr != nil && err == nil {
-			err = lockErr
-		}
-	}()
-
 	existingVolume, volExists, err := s.dataModel.GetVolume(name)
 
 	if err != nil {
@@ -435,18 +371,6 @@ func (s *spectrumLocalClient) Detach(name string) (err error) {
 	s.logger.Println("spectrumLocalClient: detach start")
 	defer s.logger.Println("spectrumLocalClient: detach end")
 
-	err = s.fileLock.Lock()
-	if err != nil {
-		s.logger.Printf("error aquiring the lock %v", err)
-		return err
-	}
-	defer func() {
-		lockErr := s.fileLock.Unlock()
-		if lockErr != nil && err == nil {
-			err = lockErr
-		}
-	}()
-
 	existingVolume, volExists, err := s.dataModel.GetVolume(name)
 
 	if err != nil {
@@ -478,17 +402,6 @@ func (s *spectrumLocalClient) ListVolumes() ([]resources.VolumeMetadata, error) 
 	s.logger.Println("spectrumLocalClient: list start")
 	defer s.logger.Println("spectrumLocalClient: list end")
 	var err error
-	err = s.fileLock.Lock()
-	if err != nil {
-		s.logger.Printf("error aquiring lock", err)
-		return nil, err
-	}
-	defer func() {
-		lockErr := s.fileLock.Unlock()
-		if lockErr != nil && err == nil {
-			err = lockErr
-		}
-	}()
 
 	volumesInDb, err := s.dataModel.ListVolumes()
 

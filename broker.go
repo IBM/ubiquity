@@ -58,9 +58,7 @@ func main() {
 		panic(err)
 	}
 
-	fileLock := utils.NewFileLock(logger, ubiquityConfigPath)
-
-	clients, err := local.GetLocalClients(logger, config, db, fileLock)
+	clients, err := local.GetLocalClients(logger, config, db)
 	if err != nil {
 		panic(err)
 	}
