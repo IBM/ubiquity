@@ -1,5 +1,5 @@
-hash: 4f314eadbdbd20c8d3d3fcb564dd24af260ed2c46506457b13fa24fa34a9df07
-updated: 2017-02-19T09:03:24.625156062-08:00
+hash: ce402feec1e4979558c6ff9511a60c84c401dab83f817fa67a59baa8e1d04cd7
+updated: 2017-03-27T09:25:20.198145774-07:00
 imports:
 - name: git.openstack.org/openstack/golang-client.git
   version: 753e96dd4a3983c05c665bc6f7a2abb25ceabd04
@@ -25,19 +25,12 @@ imports:
   version: 753e96dd4a3983c05c665bc6f7a2abb25ceabd04
   subpackages:
   - openstack
-- name: github.ibm.com/alchemy-containers/armada-slclient-lib
-  version: 683a1654bf32f888fbf24efb0dfec12647b665e2
-  subpackages:
-  - client
-  - datatypes
-  - interfaces
-  - services
 - name: golang.org/x/net
-  version: f2499483f923065a842d38eb4c7f1927e6fc6e6d
+  version: e90d6d0afc4c315a0d87a568ae68577cc15149a0
   subpackages:
   - context
 - name: k8s.io/kubernetes
-  version: 5802799e56c7fcd1638e5848a13c5f3b0b1479ab
+  version: 98d693e9d24f585cb4e6615efdb3d07ec3a1616b
   subpackages:
   - staging/src/k8s.io/client-go/_vendor/github.com/golang/glog
 testImports:

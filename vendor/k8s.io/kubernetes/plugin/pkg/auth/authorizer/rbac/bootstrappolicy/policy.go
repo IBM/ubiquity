@@ -294,17 +294,21 @@ func ClusterRoles() []rbac.ClusterRole {
 				rbac.NewRule("delete").Groups(legacyGroup).Resources("secrets").RuleOrDie(),
 				rbac.NewRule("get").Groups(legacyGroup).Resources("endpoints", "namespaces", "serviceaccounts").RuleOrDie(),
 				rbac.NewRule("update").Groups(legacyGroup).Resources("endpoints", "serviceaccounts").RuleOrDie(),
+				// Needed to check API access.  These creates are non-mutating
+				rbac.NewRule("create").Groups(authenticationGroup).Resources("tokenreviews").RuleOrDie(),
 
 				rbac.NewRule("list", "watch").Groups(legacyGroup).Resources(
+					"configmaps",
 					"namespaces",
 					"nodes",
 					"persistentvolumeclaims",
 					"persistentvolumes",
 					"pods",
+					"replicationcontrollers",
+					"resourcequotas",
 					"secrets",
 					"services",
 					"serviceaccounts",
-					"replicationcontrollers",
 				).RuleOrDie(),
 				rbac.NewRule("list", "watch").Groups(extensionsGroup).Resources("daemonsets", "deployments", "replicasets").RuleOrDie(),
 				rbac.NewRule("list", "watch").Groups(batchGroup).Resources("jobs", "cronjobs").RuleOrDie(),
@@ -312,6 +316,7 @@ func ClusterRoles() []rbac.ClusterRole {
 				rbac.NewRule("list", "watch").Groups(policyGroup).Resources("poddisruptionbudgets").RuleOrDie(),
 				rbac.NewRule("list", "watch").Groups(autoscalingGroup).Resources("horizontalpodautoscalers").RuleOrDie(),
 				rbac.NewRule("list", "watch").Groups(certificatesGroup).Resources("certificatesigningrequests").RuleOrDie(),
+				rbac.NewRule("list", "watch").Groups(storageGroup).Resources("storageclasses").RuleOrDie(),
 			},
 		},
 		{

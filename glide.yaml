@@ -15,11 +15,6 @@ import:
 - package: github.com/openstack/golang-client
   subpackages:
   - openstack
-- package: github.ibm.com/alchemy-containers/armada-slclient-lib
-  version: 683a1654bf32f888fbf24efb0dfec12647b665e2
-  subpackages:
-  - interfaces
-  - services
 - package: k8s.io/kubernetes
   version: ^1.6.0-alpha.3
   subpackages:

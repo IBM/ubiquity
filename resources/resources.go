@@ -19,7 +19,6 @@ type UbiquityServerConfig struct {
 	LogPath             string
 	SpectrumScaleConfig SpectrumScaleConfig
 	BrokerConfig        BrokerConfig
-	SoftlayerConfig     SoftlayerConfig
 	DefaultBackend      string
 }
 
@@ -39,9 +38,6 @@ type SshConfig struct {
 
 type RestConfig struct {
 	Endpoint string
-}
-type SoftlayerConfig struct {
-	Tenant string
 }
 
 type SpectrumNfsRemoteConfig struct {

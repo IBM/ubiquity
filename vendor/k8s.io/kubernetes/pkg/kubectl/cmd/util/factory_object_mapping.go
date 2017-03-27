@@ -72,19 +72,13 @@ func (f *ring1Factory) Object() (meta.RESTMapper, runtime.ObjectTyper) {
 				api.Registry.RESTMapper(), // hardcoded fall back
 			},
 		}
+
+		// wrap with shortcuts, they require a discoveryClient
+		mapper, err = NewShortcutExpander(mapper, discoveryClient)
+		// you only have an error on missing discoveryClient, so this shouldn't fail.  Check anyway.
+		CheckErr(err)
 	}
 
-	// wrap with shortcuts
-	mapper = NewShortcutExpander(mapper, discoveryClient)
-
-	// wrap with output preferences
-	cfg, err := f.clientAccessFactory.ClientConfigForVersion(nil)
-	checkErrWithPrefix("failed to get client config: ", err)
-	cmdApiVersion := schema.GroupVersion{}
-	if cfg.GroupVersion != nil {
-		cmdApiVersion = *cfg.GroupVersion
-	}
-	mapper = kubectl.OutputVersionMapper{RESTMapper: mapper, OutputVersions: []schema.GroupVersion{cmdApiVersion}}
 	return mapper, api.Scheme
 }
 
@@ -104,7 +98,8 @@ func (f *ring1Factory) UnstructuredObject() (meta.RESTMapper, runtime.ObjectType
 
 	mapper := discovery.NewDeferredDiscoveryRESTMapper(discoveryClient, meta.InterfacesForUnstructured)
 	typer := discovery.NewUnstructuredObjectTyper(groupResources)
-	return NewShortcutExpander(mapper, discoveryClient), typer, nil
+	expander, err := NewShortcutExpander(mapper, discoveryClient)
+	return expander, typer, err
 }
 
 func (f *ring1Factory) ClientForMapping(mapping *meta.RESTMapping) (resource.RESTClient, error) {
@@ -374,25 +369,15 @@ func (f *ring1Factory) PrinterForMapping(cmd *cobra.Command, mapping *meta.RESTM
 
 	// Make sure we output versioned data for generic printers
 	if generic {
-		clientConfig, err := f.clientAccessFactory.ClientConfig()
-		if err != nil {
-			return nil, err
+		if mapping == nil {
+			return nil, fmt.Errorf("no serialization format found")
 		}
-
-		version, err := OutputVersion(cmd, clientConfig.GroupVersion)
-		if err != nil {
-			return nil, err
-		}
-		if version.Empty() && mapping != nil {
-			version = mapping.GroupVersionKind.GroupVersion()
-		}
+		version := mapping.GroupVersionKind.GroupVersion()
 		if version.Empty() {
-			return nil, fmt.Errorf("you must specify an output-version when using this output format")
+			return nil, fmt.Errorf("no serialization format found")
 		}
 
-		if mapping != nil {
-			printer = kubectl.NewVersionedPrinter(printer, mapping.ObjectConvertor, version, mapping.GroupVersionKind.GroupVersion())
-		}
+		printer = kubectl.NewVersionedPrinter(printer, mapping.ObjectConvertor, version, mapping.GroupVersionKind.GroupVersion())
 
 	} else {
 		// Some callers do not have "label-columns" so we can't use the GetFlagStringSlice() helper
