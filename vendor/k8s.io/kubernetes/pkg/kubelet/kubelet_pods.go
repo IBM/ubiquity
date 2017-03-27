@@ -138,10 +138,10 @@ func makeMounts(pod *v1.Pod, podDir string, container *v1.Container, hostName, h
 		// Docker Volume Mounts fail on Windows if it is not of the form C:/
 		containerPath := mount.MountPath
 		if runtime.GOOS == "windows" {
-			if strings.HasPrefix(hostPath, "/") && !strings.Contains(hostPath, ":") {
+			if (strings.HasPrefix(hostPath, "/") || strings.HasPrefix(hostPath, "\\")) && !strings.Contains(hostPath, ":") {
 				hostPath = "c:" + hostPath
 			}
-			if strings.HasPrefix(containerPath, "/") && !strings.Contains(containerPath, ":") {
+			if (strings.HasPrefix(containerPath, "/") || strings.HasPrefix(containerPath, "\\")) && !strings.Contains(containerPath, ":") {
 				containerPath = "c:" + containerPath
 			}
 		}
@@ -645,6 +645,8 @@ func (kl *Kubelet) killPod(pod *v1.Pod, runningPod *kubecontainer.Pod, status *k
 		p = *runningPod
 	} else if status != nil {
 		p = kubecontainer.ConvertPodStatusToRunningPod(kl.GetRuntime().Type(), status)
+	} else {
+		return fmt.Errorf("one of the two arguments must be non-nil: runningPod, status")
 	}
 
 	// cache the pod cgroup Name for reducing the cpu resource limits of the pod cgroup once the pod is killed
@@ -728,6 +730,37 @@ func (kl *Kubelet) podIsTerminated(pod *v1.Pod) bool {
 	}
 
 	return false
+}
+
+// Returns true if all required node-level resources that a pod was consuming have been reclaimed by the kubelet.
+// Reclaiming resources is a prerequisite to deleting a pod from the API server.
+func (kl *Kubelet) OkToDeletePod(pod *v1.Pod) bool {
+	if pod.DeletionTimestamp == nil {
+		// We shouldnt delete pods whose DeletionTimestamp is not set
+		return false
+	}
+	if !notRunning(pod.Status.ContainerStatuses) {
+		// We shouldnt delete pods that still have running containers
+		glog.V(3).Infof("Pod %q is terminated, but some containers are still running", format.Pod(pod))
+		return false
+	}
+	if kl.podVolumesExist(pod.UID) && !kl.kubeletConfiguration.KeepTerminatedPodVolumes {
+		// We shouldnt delete pods whose volumes have not been cleaned up if we are not keeping terminated pod volumes
+		glog.V(3).Infof("Pod %q is terminated, but some volumes have not been cleaned up", format.Pod(pod))
+		return false
+	}
+	return true
+}
+
+// notRunning returns true if every status is terminated or waiting, or the status list
+// is empty.
+func notRunning(statuses []v1.ContainerStatus) bool {
+	for _, status := range statuses {
+		if status.State.Terminated == nil && status.State.Waiting == nil {
+			return false
+		}
+	}
+	return true
 }
 
 // filterOutTerminatedPods returns the given pods which the status manager

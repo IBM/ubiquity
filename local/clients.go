@@ -6,7 +6,6 @@ import (
 	"fmt"
 
 	"github.com/jinzhu/gorm"
-	"github.ibm.com/almaden-containers/ubiquity/local/softlayer"
 	"github.ibm.com/almaden-containers/ubiquity/local/spectrumscale"
 	"github.ibm.com/almaden-containers/ubiquity/resources"
 )
@@ -26,13 +25,6 @@ func GetLocalClients(logger *log.Logger, config resources.UbiquityServerConfig, 
 		logger.Printf("Not enough params to initialize '%s' client", resources.SPECTRUM_SCALE_NFS)
 	} else {
 		clients[resources.SPECTRUM_SCALE_NFS] = spectrumNfsClient
-	}
-
-	softlayerClient, err := softlayer.NewSoftlayerLocalClient(logger, config.SoftlayerConfig, database)
-	if err != nil {
-		logger.Printf("Not enough params to initialize '%s' client", resources.SOFTLAYER_NFS)
-	} else {
-		clients[resources.SOFTLAYER_NFS] = softlayerClient
 	}
 
 	if len(clients) == 0 {

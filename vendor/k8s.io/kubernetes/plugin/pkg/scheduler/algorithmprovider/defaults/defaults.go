@@ -36,9 +36,11 @@ import (
 
 const (
 	// GCE instances can have up to 16 PD volumes attached.
-	DefaultMaxGCEPDVolumes    = 16
-	ClusterAutoscalerProvider = "ClusterAutoscalerProvider"
-	StatefulSetKind           = "StatefulSet"
+	DefaultMaxGCEPDVolumes = 16
+	// Larger Azure VMs can actually have much more disks attached. TODO We should determine the max based on VM size
+	DefaultMaxAzureDiskVolumes = 16
+	ClusterAutoscalerProvider  = "ClusterAutoscalerProvider"
+	StatefulSetKind            = "StatefulSet"
 )
 
 func init() {
@@ -136,6 +138,15 @@ func defaultPredicates() sets.String {
 				return predicates.NewMaxPDVolumeCountPredicate(predicates.GCEPDVolumeFilter, maxVols, args.PVInfo, args.PVCInfo)
 			},
 		),
+		// Fit is determined by whether or not there would be too many Azure Disk volumes attached to the node
+		factory.RegisterFitPredicateFactory(
+			"MaxAzureDiskVolumeCount",
+			func(args factory.PluginFactoryArgs) algorithm.FitPredicate {
+				// TODO: allow for generically parameterized scheduler predicates, because this is a bit ugly
+				maxVols := getMaxVols(DefaultMaxAzureDiskVolumes)
+				return predicates.NewMaxPDVolumeCountPredicate(predicates.AzureDiskVolumeFilter, maxVols, args.PVInfo, args.PVCInfo)
+			},
+		),
 		// Fit is determined by inter-pod affinity.
 		factory.RegisterFitPredicateFactory(
 			"MatchInterPodAffinity",
@@ -180,7 +191,7 @@ func defaultPriorities() sets.String {
 			"InterPodAffinityPriority",
 			factory.PriorityConfigFactory{
 				Function: func(args factory.PluginFactoryArgs) algorithm.PriorityFunction {
-					return priorities.NewInterPodAffinityPriority(args.NodeInfo, args.NodeLister, args.PodLister, args.HardPodAffinitySymmetricWeight, args.FailureDomains)
+					return priorities.NewInterPodAffinityPriority(args.NodeInfo, args.NodeLister, args.PodLister, args.HardPodAffinitySymmetricWeight)
 				},
 				Weight: 1,
 			},

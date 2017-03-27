@@ -108,10 +108,16 @@ var _ = ginkgo.SynchronizedBeforeSuite(func() []byte {
 		glog.Fatal("Error loading client: ", err)
 	}
 
-	// Delete any namespaces except default and kube-system. This ensures no
+	// Delete any namespaces except those created by the system. This ensures no
 	// lingering resources are left over from a previous test run.
 	if framework.TestContext.CleanStart {
-		deleted, err := framework.DeleteNamespaces(c, nil /* deleteFilter */, []string{metav1.NamespaceSystem, metav1.NamespaceDefault, federationapi.FederationNamespaceSystem})
+		deleted, err := framework.DeleteNamespaces(c, nil, /* deleteFilter */
+			[]string{
+				metav1.NamespaceSystem,
+				metav1.NamespaceDefault,
+				metav1.NamespacePublic,
+				federationapi.FederationNamespaceSystem,
+			})
 		if err != nil {
 			framework.Failf("Error deleting orphaned namespaces: %v", err)
 		}
@@ -217,9 +223,11 @@ func RunCleanupActions() {
 // and then the function that only runs on the first Ginkgo node.
 var _ = ginkgo.SynchronizedAfterSuite(func() {
 	// Run on all Ginkgo nodes
+	framework.Logf("Running AfterSuite actions on all node")
 	RunCleanupActions()
 }, func() {
 	// Run only Ginkgo on node 1
+	framework.Logf("Running AfterSuite actions on node 1")
 	if framework.TestContext.ReportDir != "" {
 		framework.CoreDump(framework.TestContext.ReportDir)
 	}

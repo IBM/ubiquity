@@ -462,14 +462,22 @@ items:
     verbs:
     - update
   - apiGroups:
+    - authentication.k8s.io
+    resources:
+    - tokenreviews
+    verbs:
+    - create
+  - apiGroups:
     - ""
     resources:
+    - configmaps
     - namespaces
     - nodes
     - persistentvolumeclaims
     - persistentvolumes
     - pods
     - replicationcontrollers
+    - resourcequotas
     - secrets
     - serviceaccounts
     - services
@@ -518,6 +526,13 @@ items:
     - certificates.k8s.io
     resources:
     - certificatesigningrequests
+    verbs:
+    - list
+    - watch
+  - apiGroups:
+    - storage.k8s.io
+    resources:
+    - storageclasses
     verbs:
     - list
     - watch

@@ -23,9 +23,9 @@ import (
 	"testing"
 
 	"k8s.io/apimachinery/pkg/util/intstr"
+	api "k8s.io/client-go/pkg/api/v1"
 	"k8s.io/kubernetes/cmd/kubeadm/app/apis/kubeadm"
 	kubeadmapi "k8s.io/kubernetes/cmd/kubeadm/app/apis/kubeadm"
-	api "k8s.io/kubernetes/pkg/api/v1"
 )
 
 func TestWriteStaticPodManifests(t *testing.T) {
@@ -383,6 +383,11 @@ func TestGetAPIServerCommand(t *testing.T) {
 				"--allow-privileged",
 				"--storage-backend=etcd3",
 				"--kubelet-preferred-address-types=InternalIP,ExternalIP,Hostname",
+				"--requestheader-username-headers=X-Remote-User",
+				"--requestheader-group-headers=X-Remote-Group",
+				"--requestheader-extra-headers-prefix=X-Remote-Extra-",
+				"--requestheader-client-ca-file=" + kubeadmapi.GlobalEnvParams.HostPKIPath + "/front-proxy-ca.crt",
+				"--requestheader-allowed-names=front-proxy-client",
 				"--etcd-servers=http://127.0.0.1:2379",
 			},
 		},
@@ -407,6 +412,11 @@ func TestGetAPIServerCommand(t *testing.T) {
 				"--allow-privileged",
 				"--storage-backend=etcd3",
 				"--kubelet-preferred-address-types=InternalIP,ExternalIP,Hostname",
+				"--requestheader-username-headers=X-Remote-User",
+				"--requestheader-group-headers=X-Remote-Group",
+				"--requestheader-extra-headers-prefix=X-Remote-Extra-",
+				"--requestheader-client-ca-file=" + kubeadmapi.GlobalEnvParams.HostPKIPath + "/front-proxy-ca.crt",
+				"--requestheader-allowed-names=front-proxy-client",
 				"--advertise-address=foo",
 				"--etcd-servers=http://127.0.0.1:2379",
 			},
@@ -433,6 +443,11 @@ func TestGetAPIServerCommand(t *testing.T) {
 				"--allow-privileged",
 				"--storage-backend=etcd3",
 				"--kubelet-preferred-address-types=InternalIP,ExternalIP,Hostname",
+				"--requestheader-username-headers=X-Remote-User",
+				"--requestheader-group-headers=X-Remote-Group",
+				"--requestheader-extra-headers-prefix=X-Remote-Extra-",
+				"--requestheader-client-ca-file=" + kubeadmapi.GlobalEnvParams.HostPKIPath + "/front-proxy-ca.crt",
+				"--requestheader-allowed-names=front-proxy-client",
 				"--etcd-servers=http://127.0.0.1:2379",
 				"--etcd-certfile=fiz",
 				"--etcd-keyfile=faz",
@@ -466,12 +481,12 @@ func TestGetControllerManagerCommand(t *testing.T) {
 				"--address=127.0.0.1",
 				"--leader-elect",
 				"--master=127.0.0.1:8080",
-				"--cluster-name=" + DefaultClusterName,
 				"--root-ca-file=" + kubeadmapi.GlobalEnvParams.HostPKIPath + "/ca.crt",
 				"--service-account-private-key-file=" + kubeadmapi.GlobalEnvParams.HostPKIPath + "/sa.key",
 				"--cluster-signing-cert-file=" + kubeadmapi.GlobalEnvParams.HostPKIPath + "/ca.crt",
 				"--cluster-signing-key-file=" + kubeadmapi.GlobalEnvParams.HostPKIPath + "/ca.key",
 				"--insecure-experimental-approve-all-kubelet-csrs-for-group=kubeadm:kubelet-bootstrap",
+				"--use-service-account-credentials",
 			},
 		},
 		{
@@ -481,12 +496,12 @@ func TestGetControllerManagerCommand(t *testing.T) {
 				"--address=127.0.0.1",
 				"--leader-elect",
 				"--master=127.0.0.1:8080",
-				"--cluster-name=" + DefaultClusterName,
 				"--root-ca-file=" + kubeadmapi.GlobalEnvParams.HostPKIPath + "/ca.crt",
 				"--service-account-private-key-file=" + kubeadmapi.GlobalEnvParams.HostPKIPath + "/sa.key",
 				"--cluster-signing-cert-file=" + kubeadmapi.GlobalEnvParams.HostPKIPath + "/ca.crt",
 				"--cluster-signing-key-file=" + kubeadmapi.GlobalEnvParams.HostPKIPath + "/ca.key",
 				"--insecure-experimental-approve-all-kubelet-csrs-for-group=kubeadm:kubelet-bootstrap",
+				"--use-service-account-credentials",
 				"--cloud-provider=foo",
 			},
 		},
@@ -497,12 +512,12 @@ func TestGetControllerManagerCommand(t *testing.T) {
 				"--address=127.0.0.1",
 				"--leader-elect",
 				"--master=127.0.0.1:8080",
-				"--cluster-name=" + DefaultClusterName,
 				"--root-ca-file=" + kubeadmapi.GlobalEnvParams.HostPKIPath + "/ca.crt",
 				"--service-account-private-key-file=" + kubeadmapi.GlobalEnvParams.HostPKIPath + "/sa.key",
 				"--cluster-signing-cert-file=" + kubeadmapi.GlobalEnvParams.HostPKIPath + "/ca.crt",
 				"--cluster-signing-key-file=" + kubeadmapi.GlobalEnvParams.HostPKIPath + "/ca.key",
 				"--insecure-experimental-approve-all-kubelet-csrs-for-group=kubeadm:kubelet-bootstrap",
+				"--use-service-account-credentials",
 				"--allocate-node-cidrs=true",
 				"--cluster-cidr=bar",
 			},
