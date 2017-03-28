@@ -231,15 +231,16 @@ func SetupConfigDirectory(logger *log.Logger, executor Executor, configPath stri
 	logger.Println("setupConfigPath start")
 	defer logger.Println("setupConfigPath end")
 	ubiquityConfigPath := path.Join(configPath, ".config")
-	log.Printf("User specified config path: %s", configPath)
+	logger.Printf("User specified config path: %s", configPath)
 
 	if _, err := executor.Stat(ubiquityConfigPath); os.IsNotExist(err) {
 		args := []string{"mkdir", ubiquityConfigPath}
 		_, err := executor.Execute("sudo", args)
 		if err != nil {
 			logger.Printf("Error creating directory")
+			return "", err
 		}
-		return "", err
+
 	}
 	currentUser, err := user.Current()
 	if err != nil {
@@ -253,6 +254,5 @@ func SetupConfigDirectory(logger *log.Logger, executor Executor, configPath stri
 		logger.Printf("Error setting permissions on config directory %s", ubiquityConfigPath)
 		return "", err
 	}
-
 	return ubiquityConfigPath, nil
 }
