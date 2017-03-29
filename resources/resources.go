@@ -28,6 +28,7 @@ type SpectrumScaleConfig struct {
 	NfsServerAddr     string
 	SshConfig         SshConfig
 	RestConfig        RestConfig
+	ForceDelete       bool
 }
 
 type SshConfig struct {
@@ -71,7 +72,7 @@ type UbiquityServerConnectionInfo struct {
 type StorageClient interface {
 	Activate() error
 	CreateVolume(name string, opts map[string]interface{}) error
-	RemoveVolume(name string, forceDelete bool) error
+	RemoveVolume(name string) error
 	ListVolumes() ([]VolumeMetadata, error)
 	GetVolume(name string) (Volume, error)
 	GetVolumeConfig(name string) (map[string]interface{}, error)
@@ -85,8 +86,7 @@ type CreateRequest struct {
 }
 
 type RemoveRequest struct {
-	Name        string
-	ForceDelete bool
+	Name string
 }
 
 type AttachRequest struct {

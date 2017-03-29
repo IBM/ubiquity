@@ -324,7 +324,7 @@ var _ = Describe("local-client", func() {
 	Context(".RemoveVolume", func() {
 		It("should fail when the dbClient fails to check the volume", func() {
 			fakeSpectrumDataModel.GetVolumeReturns(spectrumscale.SpectrumScaleVolume{}, false, fmt.Errorf("failed checking volume"))
-			err = client.RemoveVolume("fake-volume", false)
+			err = client.RemoveVolume("fake-volume")
 			Expect(err).To(HaveOccurred())
 			Expect(err.Error()).To(Equal("failed checking volume"))
 			Expect(fakeSpectrumDataModel.GetVolumeCallCount()).To(Equal(1))
@@ -332,7 +332,7 @@ var _ = Describe("local-client", func() {
 
 		It("should fail when the dbClient does not find the volume", func() {
 			fakeSpectrumDataModel.GetVolumeReturns(spectrumscale.SpectrumScaleVolume{}, false, nil)
-			err = client.RemoveVolume("fake-volume", false)
+			err = client.RemoveVolume("fake-volume")
 			Expect(err).To(HaveOccurred())
 			Expect(err.Error()).To(Equal("Volume not found"))
 			Expect(fakeSpectrumDataModel.GetVolumeCallCount()).To(Equal(1))
@@ -340,7 +340,7 @@ var _ = Describe("local-client", func() {
 
 		It("should fail when the dbClient fails to get the volume", func() {
 			fakeSpectrumDataModel.GetVolumeReturns(spectrumscale.SpectrumScaleVolume{}, false, fmt.Errorf("error getting volume"))
-			err = client.RemoveVolume("fake-volume", false)
+			err = client.RemoveVolume("fake-volume")
 			Expect(err).To(HaveOccurred())
 			Expect(err.Error()).To(Equal("error getting volume"))
 			Expect(fakeSpectrumDataModel.GetVolumeCallCount()).To(Equal(1))
@@ -351,62 +351,98 @@ var _ = Describe("local-client", func() {
 			volume := spectrumscale.SpectrumScaleVolume{Volume: model.Volume{Name: "fake-volume"}, Type: 1}
 			fakeSpectrumDataModel.GetVolumeReturns(volume, true, nil)
 			fakeSpectrumDataModel.DeleteVolumeReturns(fmt.Errorf("error deleting volume"))
-			err = client.RemoveVolume("fake-volume", false)
+			err = client.RemoveVolume("fake-volume")
 			Expect(err).To(HaveOccurred())
 			Expect(err.Error()).To(Equal("error deleting volume"))
 			Expect(fakeSpectrumDataModel.GetVolumeCallCount()).To(Equal(1))
 			Expect(fakeSpectrumDataModel.DeleteVolumeCallCount()).To(Equal(1))
 			Expect(fakeSpectrumScaleConnector.GetFilesystemMountpointCallCount()).To(Equal(0))
 		})
+		Context("When forcedelete is set to true", func() {
+			BeforeEach(func() {
+				fakeConfig = resources.SpectrumScaleConfig{ForceDelete: true}
+				client, err = spectrumscale.NewSpectrumLocalClientWithConnectors(logger, fakeSpectrumScaleConnector, fakeExec, fakeConfig, fakeSpectrumDataModel)
+				Expect(err).ToNot(HaveOccurred())
 
-		It("should fail when type is lightweight and forcedelete is true and spectrumClient fails to get filesystem mountpoint", func() {
-			volume := spectrumscale.SpectrumScaleVolume{Volume: model.Volume{Name: "fake-volume"}, Type: 1}
-			fakeSpectrumDataModel.GetVolumeReturns(volume, true, nil)
-			fakeSpectrumDataModel.DeleteVolumeReturns(nil)
-			fakeSpectrumScaleConnector.GetFilesystemMountpointReturns("", fmt.Errorf("error getting fs mountpoint"))
-			err = client.RemoveVolume("fake-volume", true)
-			Expect(err).To(HaveOccurred())
-			Expect(err.Error()).To(Equal("error getting fs mountpoint"))
-			Expect(fakeSpectrumDataModel.GetVolumeCallCount()).To(Equal(1))
-			Expect(fakeSpectrumDataModel.DeleteVolumeCallCount()).To(Equal(1))
-			Expect(fakeSpectrumScaleConnector.GetFilesystemMountpointCallCount()).To(Equal(1))
-			Expect(fakeExec.RemoveAllCallCount()).To(Equal(0))
+			})
+			It("should fail when type is lightweight and forcedelete is true and spectrumClient fails to get filesystem mountpoint", func() {
+				volume := spectrumscale.SpectrumScaleVolume{Volume: model.Volume{Name: "fake-volume"}, Type: 1}
+				fakeSpectrumDataModel.GetVolumeReturns(volume, true, nil)
+				fakeSpectrumDataModel.DeleteVolumeReturns(nil)
+				fakeSpectrumScaleConnector.GetFilesystemMountpointReturns("", fmt.Errorf("error getting fs mountpoint"))
+				err = client.RemoveVolume("fake-volume")
+				Expect(err).To(HaveOccurred())
+				Expect(err.Error()).To(Equal("error getting fs mountpoint"))
+				Expect(fakeSpectrumDataModel.GetVolumeCallCount()).To(Equal(1))
+				Expect(fakeSpectrumDataModel.DeleteVolumeCallCount()).To(Equal(1))
+				Expect(fakeSpectrumScaleConnector.GetFilesystemMountpointCallCount()).To(Equal(1))
+				Expect(fakeExec.RemoveAllCallCount()).To(Equal(0))
+			})
+
+			It("should fail when type is lightweight and forcedelete is true and executor fails to remove volume folder", func() {
+				volume := spectrumscale.SpectrumScaleVolume{Volume: model.Volume{Name: "fake-volume"}, Type: 1}
+				fakeSpectrumDataModel.GetVolumeReturns(volume, true, nil)
+				fakeSpectrumDataModel.DeleteVolumeReturns(nil)
+				fakeSpectrumScaleConnector.GetFilesystemMountpointReturns("fake-mountpoint", nil)
+				fakeExec.RemoveAllReturns(fmt.Errorf("error removing path"))
+				err = client.RemoveVolume("fake-volume")
+				Expect(err).To(HaveOccurred())
+				Expect(err.Error()).To(Equal("error removing path"))
+				Expect(fakeSpectrumDataModel.GetVolumeCallCount()).To(Equal(1))
+				Expect(fakeSpectrumDataModel.DeleteVolumeCallCount()).To(Equal(1))
+				Expect(fakeSpectrumScaleConnector.GetFilesystemMountpointCallCount()).To(Equal(1))
+				Expect(fakeExec.RemoveAllCallCount()).To(Equal(1))
+			})
+
+			It("should succeed when type is lightweight and forcedelete is true", func() {
+				volume := spectrumscale.SpectrumScaleVolume{Volume: model.Volume{Name: "fake-volume"}, Type: 1}
+				fakeSpectrumDataModel.GetVolumeReturns(volume, true, nil)
+				fakeSpectrumDataModel.DeleteVolumeReturns(nil)
+				fakeSpectrumScaleConnector.GetFilesystemMountpointReturns("fake-mountpoint", nil)
+				fakeExec.RemoveAllReturns(nil)
+				err = client.RemoveVolume("fake-volume")
+				Expect(err).ToNot(HaveOccurred())
+				Expect(fakeSpectrumDataModel.GetVolumeCallCount()).To(Equal(1))
+				Expect(fakeSpectrumDataModel.DeleteVolumeCallCount()).To(Equal(1))
+				Expect(fakeSpectrumScaleConnector.GetFilesystemMountpointCallCount()).To(Equal(1))
+				Expect(fakeExec.RemoveAllCallCount()).To(Equal(1))
+			})
+
+			It("should fail when type is fileset and forceDelete is true and spectrumClient fails to delete fileset", func() {
+				volume := spectrumscale.SpectrumScaleVolume{Volume: model.Volume{Name: "fake-volume"}, FileSystem: "fake-filesystem", Type: 0}
+				fakeSpectrumDataModel.GetVolumeReturns(volume, true, nil)
+				fakeConfig = resources.SpectrumScaleConfig{ForceDelete: true}
+				fakeSpectrumScaleConnector.IsFilesetLinkedReturns(false, nil)
+				fakeSpectrumDataModel.DeleteVolumeReturns(nil)
+				fakeSpectrumScaleConnector.DeleteFilesetReturns(fmt.Errorf("error deleting fileset"))
+				err = client.RemoveVolume("fake-volume")
+				Expect(err).To(HaveOccurred())
+				Expect(err.Error()).To(Equal("error deleting fileset"))
+				Expect(fakeSpectrumDataModel.GetVolumeCallCount()).To(Equal(1))
+				Expect(fakeSpectrumDataModel.DeleteVolumeCallCount()).To(Equal(1))
+				Expect(fakeSpectrumScaleConnector.DeleteFilesetCallCount()).To(Equal(1))
+			})
+
+			It("should succeed when type is fileset and forceDelete is true", func() {
+				volume := spectrumscale.SpectrumScaleVolume{Volume: model.Volume{Name: "fake-volume"}, FileSystem: "fake-filesystem", Type: 0}
+				fakeSpectrumDataModel.GetVolumeReturns(volume, true, nil)
+				fakeConfig = resources.SpectrumScaleConfig{ForceDelete: true}
+				fakeSpectrumScaleConnector.IsFilesetLinkedReturns(false, nil)
+				fakeSpectrumDataModel.DeleteVolumeReturns(nil)
+				fakeSpectrumScaleConnector.DeleteFilesetReturns(nil)
+				err = client.RemoveVolume("fake-volume")
+				Expect(err).ToNot(HaveOccurred())
+				Expect(fakeSpectrumDataModel.GetVolumeCallCount()).To(Equal(1))
+				Expect(fakeSpectrumDataModel.DeleteVolumeCallCount()).To(Equal(1))
+				Expect(fakeSpectrumScaleConnector.DeleteFilesetCallCount()).To(Equal(1))
+			})
+
 		})
-
-		It("should fail when type is lightweight and forcedelete is true and executor fails to remove volume folder", func() {
-			volume := spectrumscale.SpectrumScaleVolume{Volume: model.Volume{Name: "fake-volume"}, Type: 1}
-			fakeSpectrumDataModel.GetVolumeReturns(volume, true, nil)
-			fakeSpectrumDataModel.DeleteVolumeReturns(nil)
-			fakeSpectrumScaleConnector.GetFilesystemMountpointReturns("fake-mountpoint", nil)
-			fakeExec.RemoveAllReturns(fmt.Errorf("error removing path"))
-			err = client.RemoveVolume("fake-volume", true)
-			Expect(err).To(HaveOccurred())
-			Expect(err.Error()).To(Equal("error removing path"))
-			Expect(fakeSpectrumDataModel.GetVolumeCallCount()).To(Equal(1))
-			Expect(fakeSpectrumDataModel.DeleteVolumeCallCount()).To(Equal(1))
-			Expect(fakeSpectrumScaleConnector.GetFilesystemMountpointCallCount()).To(Equal(1))
-			Expect(fakeExec.RemoveAllCallCount()).To(Equal(1))
-		})
-
-		It("should succeed when type is lightweight and forcedelete is true", func() {
-			volume := spectrumscale.SpectrumScaleVolume{Volume: model.Volume{Name: "fake-volume"}, Type: 1}
-			fakeSpectrumDataModel.GetVolumeReturns(volume, true, nil)
-			fakeSpectrumDataModel.DeleteVolumeReturns(nil)
-			fakeSpectrumScaleConnector.GetFilesystemMountpointReturns("fake-mountpoint", nil)
-			fakeExec.RemoveAllReturns(nil)
-			err = client.RemoveVolume("fake-volume", true)
-			Expect(err).ToNot(HaveOccurred())
-			Expect(fakeSpectrumDataModel.GetVolumeCallCount()).To(Equal(1))
-			Expect(fakeSpectrumDataModel.DeleteVolumeCallCount()).To(Equal(1))
-			Expect(fakeSpectrumScaleConnector.GetFilesystemMountpointCallCount()).To(Equal(1))
-			Expect(fakeExec.RemoveAllCallCount()).To(Equal(1))
-		})
-
 		It("should succeed when type is lightweight and forcedelete is false", func() {
 			volume := spectrumscale.SpectrumScaleVolume{Volume: model.Volume{Name: "fake-volume"}, Type: 1}
 			fakeSpectrumDataModel.GetVolumeReturns(volume, true, nil)
 			fakeSpectrumDataModel.DeleteVolumeReturns(nil)
-			err = client.RemoveVolume("fake-volume", false)
+			err = client.RemoveVolume("fake-volume")
 			Expect(err).ToNot(HaveOccurred())
 			Expect(fakeSpectrumDataModel.GetVolumeCallCount()).To(Equal(1))
 			Expect(fakeSpectrumDataModel.DeleteVolumeCallCount()).To(Equal(1))
@@ -418,7 +454,7 @@ var _ = Describe("local-client", func() {
 			volume := spectrumscale.SpectrumScaleVolume{Volume: model.Volume{Name: "fake-volume"}, FileSystem: "fake-filesystem", Type: 0}
 			fakeSpectrumDataModel.GetVolumeReturns(volume, true, nil)
 			fakeSpectrumScaleConnector.IsFilesetLinkedReturns(false, fmt.Errorf("error in IsFilesetLinked"))
-			err = client.RemoveVolume("fake-volume", false)
+			err = client.RemoveVolume("fake-volume")
 			Expect(err).To(HaveOccurred())
 			Expect(err.Error()).To(Equal("error in IsFilesetLinked"))
 			Expect(fakeSpectrumDataModel.GetVolumeCallCount()).To(Equal(1))
@@ -432,7 +468,7 @@ var _ = Describe("local-client", func() {
 			fakeSpectrumDataModel.GetVolumeReturns(volume, true, nil)
 			fakeSpectrumScaleConnector.IsFilesetLinkedReturns(true, nil)
 			fakeSpectrumScaleConnector.UnlinkFilesetReturns(fmt.Errorf("error in UnlinkFileset"))
-			err = client.RemoveVolume("fake-volume", false)
+			err = client.RemoveVolume("fake-volume")
 			Expect(err).To(HaveOccurred())
 			Expect(err.Error()).To(Equal("error in UnlinkFileset"))
 			Expect(fakeSpectrumDataModel.GetVolumeCallCount()).To(Equal(1))
@@ -446,39 +482,12 @@ var _ = Describe("local-client", func() {
 			fakeSpectrumDataModel.GetVolumeReturns(volume, true, nil)
 			fakeSpectrumScaleConnector.IsFilesetLinkedReturns(false, nil)
 			fakeSpectrumDataModel.DeleteVolumeReturns(fmt.Errorf("error deleting volume"))
-			err = client.RemoveVolume("fake-volume", false)
+			err = client.RemoveVolume("fake-volume")
 			Expect(err).To(HaveOccurred())
 			Expect(err.Error()).To(Equal("error deleting volume"))
 			Expect(fakeSpectrumDataModel.GetVolumeCallCount()).To(Equal(1))
 			Expect(fakeSpectrumDataModel.DeleteVolumeCallCount()).To(Equal(1))
 			Expect(fakeSpectrumScaleConnector.DeleteFilesetCallCount()).To(Equal(0))
-		})
-
-		It("should fail when type is fileset and forceDelete is true and spectrumClient fails to delete fileset", func() {
-			volume := spectrumscale.SpectrumScaleVolume{Volume: model.Volume{Name: "fake-volume"}, FileSystem: "fake-filesystem", Type: 0}
-			fakeSpectrumDataModel.GetVolumeReturns(volume, true, nil)
-			fakeSpectrumScaleConnector.IsFilesetLinkedReturns(false, nil)
-			fakeSpectrumDataModel.DeleteVolumeReturns(nil)
-			fakeSpectrumScaleConnector.DeleteFilesetReturns(fmt.Errorf("error deleting fileset"))
-			err = client.RemoveVolume("fake-volume", true)
-			Expect(err).To(HaveOccurred())
-			Expect(err.Error()).To(Equal("error deleting fileset"))
-			Expect(fakeSpectrumDataModel.GetVolumeCallCount()).To(Equal(1))
-			Expect(fakeSpectrumDataModel.DeleteVolumeCallCount()).To(Equal(1))
-			Expect(fakeSpectrumScaleConnector.DeleteFilesetCallCount()).To(Equal(1))
-		})
-
-		It("should succeed when type is fileset and forceDelete is true", func() {
-			volume := spectrumscale.SpectrumScaleVolume{Volume: model.Volume{Name: "fake-volume"}, FileSystem: "fake-filesystem", Type: 0}
-			fakeSpectrumDataModel.GetVolumeReturns(volume, true, nil)
-			fakeSpectrumScaleConnector.IsFilesetLinkedReturns(false, nil)
-			fakeSpectrumDataModel.DeleteVolumeReturns(nil)
-			fakeSpectrumScaleConnector.DeleteFilesetReturns(nil)
-			err = client.RemoveVolume("fake-volume", true)
-			Expect(err).ToNot(HaveOccurred())
-			Expect(fakeSpectrumDataModel.GetVolumeCallCount()).To(Equal(1))
-			Expect(fakeSpectrumDataModel.DeleteVolumeCallCount()).To(Equal(1))
-			Expect(fakeSpectrumScaleConnector.DeleteFilesetCallCount()).To(Equal(1))
 		})
 
 		It("should succeed when type is fileset and forceDelete is false", func() {
@@ -487,7 +496,7 @@ var _ = Describe("local-client", func() {
 			fakeSpectrumScaleConnector.IsFilesetLinkedReturns(false, nil)
 			fakeSpectrumDataModel.DeleteVolumeReturns(nil)
 			fakeSpectrumScaleConnector.DeleteFilesetReturns(nil)
-			err = client.RemoveVolume("fake-volume", false)
+			err = client.RemoveVolume("fake-volume")
 			Expect(err).ToNot(HaveOccurred())
 			Expect(fakeSpectrumDataModel.GetVolumeCallCount()).To(Equal(1))
 			Expect(fakeSpectrumDataModel.DeleteVolumeCallCount()).To(Equal(1))

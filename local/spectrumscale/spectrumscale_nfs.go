@@ -109,24 +109,24 @@ func (s *spectrumNfsLocalClient) CreateVolume(name string, opts map[string]inter
 
 	if _, err := s.spectrumClient.Attach(name); err != nil {
 		s.spectrumClient.logger.Printf("spectrumNfsLocalClient: error attaching volume %#v\n; deleting volume", err)
-		s.spectrumClient.RemoveVolume(name, true)
+		s.spectrumClient.RemoveVolume(name)
 		return err
 	}
 
 	if err := s.spectrumClient.updatePermissions(name); err != nil {
 		s.spectrumClient.logger.Printf("spectrumNfsLocalClient: error updating permissions of volume %#v\n; deleting volume", err)
-		s.spectrumClient.RemoveVolume(name, true)
+		s.spectrumClient.RemoveVolume(name)
 	}
 
 	if err := s.exportNfs(name, nfsClientConfig); err != nil {
 		s.spectrumClient.logger.Printf("spectrumNfsLocalClient: error exporting volume %#v\n; deleting volume", err)
-		s.spectrumClient.RemoveVolume(name, true)
+		s.spectrumClient.RemoveVolume(name)
 		return err
 	}
 	return nil
 }
 
-func (s *spectrumNfsLocalClient) RemoveVolume(name string, forceDelete bool) error {
+func (s *spectrumNfsLocalClient) RemoveVolume(name string) error {
 	s.spectrumClient.logger.Println("spectrumNfsLocalClient: Remove-start")
 	defer s.spectrumClient.logger.Println("spectrumNfsLocalClient: Remove-end")
 
@@ -136,7 +136,7 @@ func (s *spectrumNfsLocalClient) RemoveVolume(name string, forceDelete bool) err
 	if err := s.spectrumClient.Detach(name); err != nil {
 		s.spectrumClient.logger.Printf("spectrumNfsLocalClient: Could not detach volume %s (error=%s)", name, err.Error())
 	}
-	return s.spectrumClient.RemoveVolume(name, forceDelete)
+	return s.spectrumClient.RemoveVolume(name)
 }
 
 func (s *spectrumNfsLocalClient) GetVolumeConfig(name string) (map[string]interface{}, error) {

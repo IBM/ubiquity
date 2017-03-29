@@ -112,7 +112,7 @@ func (h *StorageApiHandler) RemoveVolume() http.HandlerFunc {
 		}
 		h.locker.WriteLock(volume)
 		defer h.locker.WriteUnlock(volume)
-		err = backend.RemoveVolume(volume, removeRequest.ForceDelete)
+		err = backend.RemoveVolume(volume)
 		if err != nil {
 			utils.WriteResponse(w, 409, &resources.GenericResponse{Err: err.Error()})
 			return
