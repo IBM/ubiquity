@@ -23,11 +23,10 @@ type FakeStorageClient struct {
 	createVolumeReturns struct {
 		result1 error
 	}
-	RemoveVolumeStub        func(name string, forceDelete bool) error
+	RemoveVolumeStub        func(name string) error
 	removeVolumeMutex       sync.RWMutex
 	removeVolumeArgsForCall []struct {
-		name        string
-		forceDelete bool
+		name string
 	}
 	removeVolumeReturns struct {
 		result1 error
@@ -135,16 +134,15 @@ func (fake *FakeStorageClient) CreateVolumeReturns(result1 error) {
 	}{result1}
 }
 
-func (fake *FakeStorageClient) RemoveVolume(name string, forceDelete bool) error {
+func (fake *FakeStorageClient) RemoveVolume(name string) error {
 	fake.removeVolumeMutex.Lock()
 	fake.removeVolumeArgsForCall = append(fake.removeVolumeArgsForCall, struct {
-		name        string
-		forceDelete bool
-	}{name, forceDelete})
-	fake.recordInvocation("RemoveVolume", []interface{}{name, forceDelete})
+		name string
+	}{name})
+	fake.recordInvocation("RemoveVolume", []interface{}{name})
 	fake.removeVolumeMutex.Unlock()
 	if fake.RemoveVolumeStub != nil {
-		return fake.RemoveVolumeStub(name, forceDelete)
+		return fake.RemoveVolumeStub(name)
 	}
 	return fake.removeVolumeReturns.result1
 }
@@ -155,10 +153,10 @@ func (fake *FakeStorageClient) RemoveVolumeCallCount() int {
 	return len(fake.removeVolumeArgsForCall)
 }
 
-func (fake *FakeStorageClient) RemoveVolumeArgsForCall(i int) (string, bool) {
+func (fake *FakeStorageClient) RemoveVolumeArgsForCall(i int) string {
 	fake.removeVolumeMutex.RLock()
 	defer fake.removeVolumeMutex.RUnlock()
-	return fake.removeVolumeArgsForCall[i].name, fake.removeVolumeArgsForCall[i].forceDelete
+	return fake.removeVolumeArgsForCall[i].name
 }
 
 func (fake *FakeStorageClient) RemoveVolumeReturns(result1 error) {

@@ -221,7 +221,7 @@ func (s *spectrum_mmcli) DeleteFileset(filesystemName string, filesetName string
 	defer s.logger.Println("spectrumLocalClient: deleteFileset end")
 
 	spectrumCommand := "/usr/lpp/mmfs/bin/mmdelfileset"
-	args := []string{spectrumCommand, filesystemName, filesetName}
+	args := []string{spectrumCommand, filesystemName, filesetName, "-f"}
 	return DeleteFilesetInternal(s.logger, s.executor, filesystemName, filesetName, "sudo", args)
 }
 
