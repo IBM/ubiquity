@@ -57,7 +57,7 @@ Defaults:%ubiquity secure_path = /sbin:/bin:/usr/sbin:/usr/bin:/usr/lpp/mmfs/bin
 mkdir -p $HOME/workspace
 export GOPATH=$HOME/workspace
 ```
-* Configure ssh-keys for github.IBM.com - go tools require password less ssh access to github. If you have not already setup ssh keys for your github.IBM profile, please follow steps in 
+* Configure ssh-keys for github.com - go tools require password less ssh access to github. If you have not already setup ssh keys for your github profile, please follow steps in 
 (https://help.github.com/enterprise/2.7/user/articles/generating-an-ssh-key/) before proceeding further. 
 * Build Ubiquity service from source (can take several minutes based on connectivity)
 ```bash
