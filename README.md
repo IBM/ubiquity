@@ -57,13 +57,13 @@ Defaults:%ubiquity secure_path = /sbin:/bin:/usr/sbin:/usr/bin:/usr/lpp/mmfs/bin
 mkdir -p $HOME/workspace
 export GOPATH=$HOME/workspace
 ```
-* Configure ssh-keys for github.ibm.com - go tools require password less ssh access to github. If you have not already setup ssh keys for your github.ibm profile, please follow steps in 
+* Configure ssh-keys for github.IBM.com - go tools require password less ssh access to github. If you have not already setup ssh keys for your github.IBM profile, please follow steps in 
 (https://help.github.com/enterprise/2.7/user/articles/generating-an-ssh-key/) before proceeding further. 
 * Build Ubiquity service from source (can take several minutes based on connectivity)
 ```bash
-mkdir -p $GOPATH/src/github.com/ibm
-cd $GOPATH/src/github.com/ibm
-git clone git@github.com:ibm/ubiquity.git
+mkdir -p $GOPATH/src/github.com/IBM
+cd $GOPATH/src/github.com/IBM
+git clone git@github.com:IBM/ubiquity.git
 cd ubiquity
 ./scripts/build
 
@@ -96,7 +96,7 @@ nfsServerAddr = "CESClusterHost"  # IP/hostname of Spectrum Scale CES NFS cluste
 Note that the file system chosen for where to store the DB that tracks volumes is important.  Ubiquity uses a sqllite db, and so can support any storage location that sqllite supports.  This can be a local file system such as Ext4, NFS (if exclusive access is ensured from a single host), or a parallel file system such as Spectrum Scale.  In our example above, we are storing the DB in Spectrum Scale to both allow access from multiple hosts (Ubiquity will ensure consistency across hosts to the parallel file system) as well as provide availability and durability of the data.
 
 ### Next Steps
-To use Ubiquity, please install appropriate storage-specific plugin ([docker](https://github.com/ibm/ubiquity-docker-plugin), [kubernetes](https://github.com/ibm/ubiquity-flexvolume))
+To use Ubiquity, please install appropriate storage-specific plugin ([docker](https://github.com/IBM/ubiquity-docker-plugin), [kubernetes](https://github.com/IBM/ubiquity-flexvolume))
 
 ## Additional Considerations
 ### High-Availability

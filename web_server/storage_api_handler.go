@@ -4,13 +4,13 @@ import (
 	"log"
 	"net/http"
 
-	"github.com/ibm/ubiquity/resources"
-	"github.com/ibm/ubiquity/utils"
+	"github.com/IBM/ubiquity/resources"
+	"github.com/IBM/ubiquity/utils"
 
 	"fmt"
 
 	"github.com/jinzhu/gorm"
-	"github.com/ibm/ubiquity/model"
+	"github.com/IBM/ubiquity/model"
 )
 
 type StorageApiHandler struct {

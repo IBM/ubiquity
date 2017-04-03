@@ -5,7 +5,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/ibm/ubiquity/utils"
+	"github.com/IBM/ubiquity/utils"
 )
 
 type FakeHeartbeat struct {

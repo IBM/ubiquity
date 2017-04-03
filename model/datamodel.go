@@ -5,7 +5,7 @@ import (
 
 	"github.com/jinzhu/gorm"
 	_ "github.com/jinzhu/gorm/dialects/sqlite"
-	"github.com/ibm/ubiquity/resources"
+	"github.com/IBM/ubiquity/resources"
 )
 
 type Volume struct {

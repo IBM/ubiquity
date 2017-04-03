@@ -5,8 +5,8 @@ import (
 	"log"
 
 	"github.com/jinzhu/gorm"
-	"github.com/ibm/ubiquity/resources"
-	"github.com/ibm/ubiquity/utils"
+	"github.com/IBM/ubiquity/resources"
+	"github.com/IBM/ubiquity/utils"
 )
 
 type spectrumNfsLocalClient struct {

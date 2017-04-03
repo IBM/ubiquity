@@ -3,7 +3,7 @@ package spectrumscale
 import (
 	"log"
 
-	"github.com/ibm/ubiquity/utils"
+	"github.com/IBM/ubiquity/utils"
 
 	"os"
 	"path"
@@ -11,11 +11,11 @@ import (
 	"fmt"
 
 	"github.com/jinzhu/gorm"
-	"github.com/ibm/ubiquity/local/spectrumscale/connectors"
+	"github.com/IBM/ubiquity/local/spectrumscale/connectors"
 
 	"sync"
 
-	"github.com/ibm/ubiquity/resources"
+	"github.com/IBM/ubiquity/resources"
 )
 
 type spectrumLocalClient struct {

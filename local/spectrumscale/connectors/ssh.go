@@ -5,8 +5,8 @@ import (
 	"log"
 	"path"
 
-	"github.com/ibm/ubiquity/resources"
-	"github.com/ibm/ubiquity/utils"
+	"github.com/IBM/ubiquity/resources"
+	"github.com/IBM/ubiquity/utils"
 )
 
 type spectrum_ssh struct {

@@ -2,7 +2,7 @@ package connectors
 
 import (
 	"log"
-	"github.com/ibm/ubiquity/resources"
+	"github.com/IBM/ubiquity/resources"
 )
 
 //go:generate counterfeiter -o ../../../fakes/fake_spectrum.go . SpectrumScaleConnector

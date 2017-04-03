@@ -4,8 +4,8 @@ package fakes
 import (
 	"sync"
 
-	"github.com/ibm/ubiquity/local/spectrumscale/connectors"
-	"github.com/ibm/ubiquity/resources"
+	"github.com/IBM/ubiquity/local/spectrumscale/connectors"
+	"github.com/IBM/ubiquity/resources"
 )
 
 type FakeSpectrumScaleConnector struct {

@@ -6,12 +6,12 @@ import (
 
 	"net/http"
 
-	"github.com/ibm/ubiquity/resources"
+	"github.com/IBM/ubiquity/resources"
 
 	"reflect"
 
-	"github.com/ibm/ubiquity/remote/mounter"
-	"github.com/ibm/ubiquity/utils"
+	"github.com/IBM/ubiquity/remote/mounter"
+	"github.com/IBM/ubiquity/utils"
 )
 
 type remoteClient struct {

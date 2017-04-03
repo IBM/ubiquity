@@ -5,7 +5,7 @@ import (
 	"sync"
 
 	_ "github.com/mattn/go-sqlite3"
-	"github.com/ibm/ubiquity/local/spectrumscale"
+	"github.com/IBM/ubiquity/local/spectrumscale"
 )
 
 type FakeSpectrumDataModel struct {
