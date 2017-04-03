@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"log"
 
-	"github.ibm.com/almaden-containers/ubiquity/utils"
+	"github.com/ibm/ubiquity/utils"
 )
 
 type spectrumScaleMounter struct {

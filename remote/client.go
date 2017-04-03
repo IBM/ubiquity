@@ -6,12 +6,12 @@ import (
 
 	"net/http"
 
-	"github.ibm.com/almaden-containers/ubiquity/resources"
+	"github.com/ibm/ubiquity/resources"
 
 	"reflect"
 
-	"github.ibm.com/almaden-containers/ubiquity/remote/mounter"
-	"github.ibm.com/almaden-containers/ubiquity/utils"
+	"github.com/ibm/ubiquity/remote/mounter"
+	"github.com/ibm/ubiquity/utils"
 )
 
 type remoteClient struct {
@@ -77,12 +77,12 @@ func (s *remoteClient) CreateVolume(name string, opts map[string]interface{}) (e
 	return nil
 }
 
-func (s *remoteClient) RemoveVolume(name string, forceDelete bool) (err error) {
+func (s *remoteClient) RemoveVolume(name string) (err error) {
 	s.logger.Println("remoteClient: remove start")
 	defer s.logger.Println("remoteClient: remove end")
 
 	removeRemoteURL := utils.FormatURL(s.storageApiURL, "volumes", name)
-	removeRequest := resources.RemoveRequest{Name: name, ForceDelete: forceDelete}
+	removeRequest := resources.RemoveRequest{Name: name}
 
 	response, err := utils.HttpExecute(s.httpClient, s.logger, "DELETE", removeRemoteURL, removeRequest)
 	if err != nil {

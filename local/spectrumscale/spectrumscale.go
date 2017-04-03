@@ -3,7 +3,7 @@ package spectrumscale
 import (
 	"log"
 
-	"github.ibm.com/almaden-containers/ubiquity/utils"
+	"github.com/ibm/ubiquity/utils"
 
 	"os"
 	"path"
@@ -11,11 +11,11 @@ import (
 	"fmt"
 
 	"github.com/jinzhu/gorm"
-	"github.ibm.com/almaden-containers/ubiquity/local/spectrumscale/connectors"
+	"github.com/ibm/ubiquity/local/spectrumscale/connectors"
 
 	"sync"
 
-	"github.ibm.com/almaden-containers/ubiquity/resources"
+	"github.com/ibm/ubiquity/resources"
 )
 
 type spectrumLocalClient struct {
@@ -190,7 +190,7 @@ func (s *spectrumLocalClient) CreateVolume(name string, opts map[string]interfac
 	return fmt.Errorf("Internal error")
 }
 
-func (s *spectrumLocalClient) RemoveVolume(name string, forceDelete bool) (err error) {
+func (s *spectrumLocalClient) RemoveVolume(name string) (err error) {
 	s.logger.Println("spectrumLocalClient: remove start")
 	defer s.logger.Println("spectrumLocalClient: remove end")
 
@@ -212,7 +212,7 @@ func (s *spectrumLocalClient) RemoveVolume(name string, forceDelete bool) (err e
 			return err
 		}
 
-		if forceDelete == true && existingVolume.IsPreexisting == false {
+		if s.config.ForceDelete == true && existingVolume.IsPreexisting == false {
 			mountpoint, err := s.connector.GetFilesystemMountpoint(existingVolume.FileSystem)
 			if err != nil {
 				s.logger.Println(err.Error())
@@ -251,7 +251,7 @@ func (s *spectrumLocalClient) RemoveVolume(name string, forceDelete bool) (err e
 		s.logger.Println(err.Error())
 		return err
 	}
-	if forceDelete == true && existingVolume.IsPreexisting == false {
+	if s.config.ForceDelete == true && existingVolume.IsPreexisting == false {
 		err = s.connector.DeleteFileset(existingVolume.FileSystem, existingVolume.Fileset)
 
 		if err != nil {

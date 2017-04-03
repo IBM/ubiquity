@@ -5,8 +5,8 @@ import (
 	"log"
 	"path"
 
-	"github.ibm.com/almaden-containers/ubiquity/resources"
-	"github.ibm.com/almaden-containers/ubiquity/utils"
+	"github.com/ibm/ubiquity/resources"
+	"github.com/ibm/ubiquity/utils"
 )
 
 type spectrum_ssh struct {
@@ -115,7 +115,7 @@ func (s *spectrum_ssh) DeleteFileset(filesystemName string, filesetName string) 
 
 	spectrumCommand := "/usr/lpp/mmfs/bin/mmdelfileset"
 	userAndHost := fmt.Sprintf("%s@%s", s.user, s.host)
-	args := []string{userAndHost, "-p", s.port, "sudo", spectrumCommand, filesystemName, filesetName}
+	args := []string{userAndHost, "-p", s.port, "sudo", spectrumCommand, filesystemName, filesetName, "-f"}
 	return DeleteFilesetInternal(s.logger, s.executor, filesystemName, filesetName, "ssh", args)
 }
 

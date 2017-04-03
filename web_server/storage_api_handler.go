@@ -4,13 +4,13 @@ import (
 	"log"
 	"net/http"
 
-	"github.ibm.com/almaden-containers/ubiquity/resources"
-	"github.ibm.com/almaden-containers/ubiquity/utils"
+	"github.com/ibm/ubiquity/resources"
+	"github.com/ibm/ubiquity/utils"
 
 	"fmt"
 
 	"github.com/jinzhu/gorm"
-	"github.ibm.com/almaden-containers/ubiquity/model"
+	"github.com/ibm/ubiquity/model"
 )
 
 type StorageApiHandler struct {
@@ -112,7 +112,7 @@ func (h *StorageApiHandler) RemoveVolume() http.HandlerFunc {
 		}
 		h.locker.WriteLock(volume)
 		defer h.locker.WriteUnlock(volume)
-		err = backend.RemoveVolume(volume, removeRequest.ForceDelete)
+		err = backend.RemoveVolume(volume)
 		if err != nil {
 			utils.WriteResponse(w, 409, &resources.GenericResponse{Err: err.Error()})
 			return
