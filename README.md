@@ -61,9 +61,9 @@ export GOPATH=$HOME/workspace
 (https://help.github.com/enterprise/2.7/user/articles/generating-an-ssh-key/) before proceeding further. 
 * Build Ubiquity service from source (can take several minutes based on connectivity)
 ```bash
-mkdir -p $GOPATH/src/github.ibm.com/almaden-containers
-cd $GOPATH/src/github.ibm.com/almaden-containers
-git clone git@github.ibm.com:almaden-containers/ubiquity.git
+mkdir -p $GOPATH/src/github.com/ibm
+cd $GOPATH/src/github.com/ibm
+git clone git@github.com:ibm/ubiquity.git
 cd ubiquity
 ./scripts/build
 
@@ -96,7 +96,7 @@ nfsServerAddr = "CESClusterHost"  # IP/hostname of Spectrum Scale CES NFS cluste
 Note that the file system chosen for where to store the DB that tracks volumes is important.  Ubiquity uses a sqllite db, and so can support any storage location that sqllite supports.  This can be a local file system such as Ext4, NFS (if exclusive access is ensured from a single host), or a parallel file system such as Spectrum Scale.  In our example above, we are storing the DB in Spectrum Scale to both allow access from multiple hosts (Ubiquity will ensure consistency across hosts to the parallel file system) as well as provide availability and durability of the data.
 
 ### Next Steps
-To use Ubiquity, please install appropriate storage-specific plugin ([docker](https://github.ibm.com/almaden-containers/ubiquity-docker-plugin), [kubernetes](https://github.ibm.com/almaden-containers/ubiquity-flexvolume))
+To use Ubiquity, please install appropriate storage-specific plugin ([docker](https://github.com/ibm/ubiquity-docker-plugin), [kubernetes](https://github.com/ibm/ubiquity-flexvolume))
 
 ## Additional Considerations
 ### High-Availability
