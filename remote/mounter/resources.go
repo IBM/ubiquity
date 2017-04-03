@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"log"
 
-	"github.ibm.com/almaden-containers/ubiquity/resources"
+	"github.com/ibm/ubiquity/resources"
 )
 
 //go:generate counterfeiter -o ../../fakes/fake_mounter.go . Mounter

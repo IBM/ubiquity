@@ -1,12 +1,8 @@
-hash: ce402feec1e4979558c6ff9511a60c84c401dab83f817fa67a59baa8e1d04cd7
-updated: 2017-03-27T09:25:20.198145774-07:00
+hash: f1b94a9e09e457aa7ec464dd19fa6e244b5ff0b29f3fb1c0d350857c57bd795f
+updated: 2017-04-03T13:25:04.785375097-07:00
 imports:
-- name: git.openstack.org/openstack/golang-client.git
-  version: 753e96dd4a3983c05c665bc6f7a2abb25ceabd04
-  subpackages:
-  - util
 - name: github.com/BurntSushi/toml
-  version: bbd5bb678321a0d6e58f1099321dfa73391c1b6f
+  version: b26d9c308763d68093482582cea63d69be07a0f0
 - name: github.com/djherbis/times
   version: 95292e44976d1217cf3611dc7c8d9466877d3ed5
 - name: github.com/gorilla/context

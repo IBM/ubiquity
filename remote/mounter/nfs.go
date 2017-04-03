@@ -7,7 +7,7 @@ import (
 	"path"
 	"strings"
 
-	"github.ibm.com/almaden-containers/ubiquity/utils"
+	"github.com/ibm/ubiquity/utils"
 )
 
 type nfsMounter struct {

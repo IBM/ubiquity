@@ -6,8 +6,8 @@ import (
 	"fmt"
 
 	"github.com/jinzhu/gorm"
-	"github.ibm.com/almaden-containers/ubiquity/local/spectrumscale"
-	"github.ibm.com/almaden-containers/ubiquity/resources"
+	"github.com/ibm/ubiquity/local/spectrumscale"
+	"github.com/ibm/ubiquity/resources"
 )
 
 func GetLocalClients(logger *log.Logger, config resources.UbiquityServerConfig, database *gorm.DB) (map[resources.Backend]resources.StorageClient, error) {

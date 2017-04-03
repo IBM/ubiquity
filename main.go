@@ -11,13 +11,13 @@ import (
 	"time"
 
 	"github.com/BurntSushi/toml"
+	"github.com/ibm/ubiquity/local"
+	"github.com/ibm/ubiquity/model"
+	"github.com/ibm/ubiquity/resources"
+	"github.com/ibm/ubiquity/utils"
+	"github.com/ibm/ubiquity/web_server"
 	"github.com/jinzhu/gorm"
 	_ "github.com/jinzhu/gorm/dialects/sqlite"
-	"github.ibm.com/almaden-containers/ubiquity/local"
-	"github.ibm.com/almaden-containers/ubiquity/model"
-	"github.ibm.com/almaden-containers/ubiquity/resources"
-	"github.ibm.com/almaden-containers/ubiquity/utils"
-	"github.ibm.com/almaden-containers/ubiquity/web_server"
 )
 
 var configFile = flag.String(

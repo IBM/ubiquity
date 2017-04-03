@@ -8,11 +8,11 @@ import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 
-	"github.ibm.com/almaden-containers/ubiquity/local/spectrumscale"
-	"github.ibm.com/almaden-containers/ubiquity/model"
+	"github.com/ibm/ubiquity/local/spectrumscale"
+	"github.com/ibm/ubiquity/model"
 
-	"github.ibm.com/almaden-containers/ubiquity/fakes"
-	"github.ibm.com/almaden-containers/ubiquity/resources"
+	"github.com/ibm/ubiquity/fakes"
+	"github.com/ibm/ubiquity/resources"
 )
 
 var _ = Describe("local-client", func() {

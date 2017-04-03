@@ -1,4 +1,4 @@
-package: github.ibm.com/almaden-containers/ubiquity
+package: github.com/ibm/ubiquity
 import:
 - package: github.com/BurntSushi/toml
   version: ^0.2.0

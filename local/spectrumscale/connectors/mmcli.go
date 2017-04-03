@@ -6,8 +6,8 @@ import (
 	"path"
 	"strings"
 
-	"github.ibm.com/almaden-containers/ubiquity/resources"
-	"github.ibm.com/almaden-containers/ubiquity/utils"
+	"github.com/ibm/ubiquity/resources"
+	"github.com/ibm/ubiquity/utils"
 )
 
 type spectrum_mmcli struct {

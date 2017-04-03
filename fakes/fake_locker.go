@@ -4,7 +4,7 @@ package fakes
 import (
 	"sync"
 
-	"github.ibm.com/almaden-containers/ubiquity/utils"
+	"github.com/ibm/ubiquity/utils"
 )
 
 type FakeLocker struct {

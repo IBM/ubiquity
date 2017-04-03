@@ -7,9 +7,9 @@ import (
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
-	"github.ibm.com/almaden-containers/ubiquity/fakes"
-	"github.ibm.com/almaden-containers/ubiquity/local/spectrumscale/connectors"
-	"github.ibm.com/almaden-containers/ubiquity/resources"
+	"github.com/ibm/ubiquity/fakes"
+	"github.com/ibm/ubiquity/local/spectrumscale/connectors"
+	"github.com/ibm/ubiquity/resources"
 )
 
 var _ = Describe("spectrum_mmcli", func() {
