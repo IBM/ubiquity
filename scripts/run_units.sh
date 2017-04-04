@@ -4,6 +4,6 @@ go get github.com/onsi/ginkgo/ginkgo
 go get github.com/onsi/gomega
 
 cd local
-echo "Starting unit tests for local/spectrumscale"
+echo "Starting unit tests for ubiquity/local"
 ginkgo -r
 
