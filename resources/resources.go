@@ -6,6 +6,7 @@ const (
 	SpectrumScale    string = "spectrum-scale"
 	SpectrumScaleNFS string = "spectrum-scale-nfs"
 	SoftlayerNFS     string = "softlayer-nfs"
+	SCBE               Backend = "scbe"
 )
 
 type UbiquityServerConfig struct {
@@ -24,7 +25,10 @@ type SpectrumScaleConfig struct {
 	RestConfig            RestConfig
 	ForceDelete           bool
 }
-
+type ScbeConfig struct {
+	ConfigPath string
+	ScbeURL    string
+}
 type SshConfig struct {
 	User string
 	Host string
