@@ -5,7 +5,7 @@ import (
 	"log"
 	"net/http"
 
-	"github.com/ibm/ubiquity/resources"
+	"github.com/IBM/ubiquity/resources"
 
 	"github.com/gorilla/mux"
 	"github.com/jinzhu/gorm"

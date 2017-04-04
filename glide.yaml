@@ -1,4 +1,4 @@
-package: github.com/ibm/ubiquity
+package: github.com/IBM/ubiquity
 import:
 - package: github.com/BurntSushi/toml
   version: ^0.2.0

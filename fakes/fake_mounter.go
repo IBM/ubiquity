@@ -4,7 +4,7 @@ package fakes
 import (
 	"sync"
 
-	"github.com/ibm/ubiquity/remote/mounter"
+	"github.com/IBM/ubiquity/remote/mounter"
 )
 
 type FakeMounter struct {

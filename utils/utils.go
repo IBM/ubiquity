@@ -9,7 +9,7 @@ import (
 	"os"
 	"os/user"
 
-	"github.com/ibm/ubiquity/resources"
+	"github.com/IBM/ubiquity/resources"
 
 	"path"
 	"strings"

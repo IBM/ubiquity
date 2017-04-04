@@ -11,11 +11,11 @@ import (
 	"time"
 
 	"github.com/BurntSushi/toml"
-	"github.com/ibm/ubiquity/local"
-	"github.com/ibm/ubiquity/model"
-	"github.com/ibm/ubiquity/resources"
-	"github.com/ibm/ubiquity/utils"
-	"github.com/ibm/ubiquity/web_server"
+	"github.com/IBM/ubiquity/local"
+	"github.com/IBM/ubiquity/model"
+	"github.com/IBM/ubiquity/resources"
+	"github.com/IBM/ubiquity/utils"
+	"github.com/IBM/ubiquity/web_server"
 	"github.com/jinzhu/gorm"
 	_ "github.com/jinzhu/gorm/dialects/sqlite"
 )

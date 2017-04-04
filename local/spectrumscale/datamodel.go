@@ -7,8 +7,8 @@ import (
 
 	"github.com/jinzhu/gorm"
 	_ "github.com/mattn/go-sqlite3"
-	"github.com/ibm/ubiquity/model"
-	"github.com/ibm/ubiquity/resources"
+	"github.com/IBM/ubiquity/model"
+	"github.com/IBM/ubiquity/resources"
 )
 
 //go:generate counterfeiter -o ../../fakes/fake_SpectrumDataModel.go . SpectrumDataModel

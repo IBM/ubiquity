@@ -5,7 +5,7 @@ import (
 	"os"
 	"sync"
 
-	"github.com/ibm/ubiquity/utils"
+	"github.com/IBM/ubiquity/utils"
 )
 
 type FakeExecutor struct {

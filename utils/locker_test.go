@@ -9,7 +9,7 @@ import (
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
-	"github.com/ibm/ubiquity/utils"
+	"github.com/IBM/ubiquity/utils"
 )
 
 var _ = Describe("utils - locker", func() {
