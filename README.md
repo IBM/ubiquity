@@ -80,20 +80,39 @@ where:
 Unless otherwise specified by the `configFile` command line parameter, the Ubiquity service will
 look for a file named `ubiquity-server.conf` for its configuration.
 
-The following snippet shows a sample configuration file:
+The following snippet shows a sample configuration file in the case where ubiquity service is deployed on a system with native access (CLI) to the Spectrum Scale Storage system:
 
 ```toml
-port = 9999       # The TCP port to listen on
-logPath = "/var/log/ubiquity"  # The Ubiquity service will write logs to file "ubiquity.log" in this path.  This path must already exist.
+port = 9999                       # The TCP port to listen on
+logPath = "/var/log/ubiquity"     # The Ubiquity service will write logs to file "ubiquity.log" in this path.  This path must already exist.
+defaultBackend = "spectrum-scale" # The "spectrum-scale" backend will be the default backend if none is specified in the request
 
-[SpectrumConfig]             # If this section is specified, the "spectrum-scale" backend will be enabled.
-defaultFilesystem = "gold"   # Default name of Spectrum Scale file system to use if user does not specify one during creation of a volume.  This file system must already exist.
-configPath = "/gpfs/gold/config"    # Path in an existing filesystem where Ubiquity can create/store volume DB.
+[SpectrumScaleConfig]             # If this section is specified, the "spectrum-scale" backend will be enabled.
+defaultFilesystem = "gold"        # Default name of Spectrum Scale file system to use if user does not specify one during creation of a volume.  This file system must already exist.
+configPath = "/gpfs/gold/config"  # Path in an existing filesystem where Ubiquity can create/store volume DB.
 nfsServerAddr = "CESClusterHost"  # IP/hostname of Spectrum Scale CES NFS cluster.  This is the hostname that NFS clients will use to mount NFS volumes. (required for creation of NFS accessible volumes)
-
+forceDelete = true                # if forceDelete is set to true then the provisioned resource in the backend, which is mapped to a newly created volume, will be deleted upon successful deletion of the volume
 ```
 
 Note that the file system chosen for where to store the DB that tracks volumes is important.  Ubiquity uses a sqllite db, and so can support any storage location that sqllite supports.  This can be a local file system such as Ext4, NFS (if exclusive access is ensured from a single host), or a parallel file system such as Spectrum Scale.  In our example above, we are storing the DB in Spectrum Scale to both allow access from multiple hosts (Ubiquity will ensure consistency across hosts to the parallel file system) as well as provide availability and durability of the data.
+
+The following snippet shows a sample configuration file in the case where ubiquity service is deployed on a system with password-less SSH access to the Spectrum Scale Storage system:
+
+```toml
+port = 9999                       # The TCP port to listen on
+logPath = "/tmp"                  # The Ubiquity service will write logs to file "ubiquity.log" in this path.  This path must already exist.
+
+[SpectrumScaleConfig]             # If this section is specified, the "spectrum-scale" backend will be enabled.
+defaultFilesystem = "gold"        # Default name of Spectrum Scale file system to use if user does not specify one during creation of a volume.  This file system must already exist.
+configPath = "/gpfs/gold/config"  # Path in an existing filesystem where Ubiquity can create/store volume DB.
+nfsServerAddr = "CESClusterHost"  # IP/hostname of Spectrum Scale CES NFS cluster.  This is the hostname that NFS clients will use to mount NFS volumes. (required for creation of NFS accessible volumes)
+forceDelete = true                # if forceDelete is set to true then provsioned resources in the backend mapped to newly created volumes using ubiquity will be deleted upon successful deletion of volumes.
+[SpectrumScaleConfig.SshConfig]   # If this section is specified, then the "spectrum-scale" backend will be accessed via SSH connection
+user = "ubiquity"                 # username to login as on the Spectrum Scale storage system
+host = "localhost"                # hostname of the Spectrum Scale storage system
+port = "22"                       # port to connect to on the Spectrum Scale storage system
+
+```
 
 ### Next Steps
 To use Ubiquity, please install appropriate storage-specific plugin ([docker](https://github.com/IBM/ubiquity-docker-plugin), [kubernetes](https://github.com/IBM/ubiquity-flexvolume))
