@@ -1,0 +1,21 @@
+#!/bin/bash
+
+set -e 
+scripts=$(dirname $0)
+
+mkdir -p /etc/ubiquity
+
+cp $scripts/../bin/ubiquity /usr/bin/ubiquity
+
+cp $scripts/../ubiquity-server.conf \
+/etc/ubiquity/ubiquity-server.conf 
+
+cp $scripts/ubiquity-server.env /etc/ubiquity/ubiquity-server.env
+
+dist=`lsb_release -a 2>/dev/null |grep "Distributor ID" |cut -d: -f2 |xargs`
+if [ "$dist" == "Ubuntu" ]; then
+	cp $scripts/ubiquity.service /lib/systemd/system/
+else
+	cp $scripts/ubiquity.service /usr/lib/systemd/system/
+fi
+systemctl enable ubiquity.service
