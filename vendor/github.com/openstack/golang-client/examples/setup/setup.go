@@ -17,14 +17,14 @@
 // The acceptance package is a set of acceptance tests showcasing how the
 // contents of the package are meant to be used. This is setup in a similar
 // manner to a consuming application.
-package main
+package setup
 
 import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
 
-	"git.openstack.org/openstack/golang-client.git/openstack"
+	"git.openstack.org/openstack/golang-client/openstack"
 )
 
 // testconfig contains the user information needed by the acceptance and
@@ -41,7 +41,7 @@ type testconfig struct {
 }
 
 // getConfig provides access to credentials in other tests and examples.
-func getConfig() *testconfig {
+func GetConfig() *testconfig {
 	config := &testconfig{}
 	userJSON, err := ioutil.ReadFile("config.json")
 	if err != nil {

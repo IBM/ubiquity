@@ -10,6 +10,7 @@ const (
 	SPECTRUM_SCALE     Backend = "spectrum-scale"
 	SPECTRUM_SCALE_NFS Backend = "spectrum-scale-nfs"
 	SOFTLAYER_NFS      Backend = "softlayer-nfs"
+	SCBE               Backend = "scbe"
 )
 
 type Backend string
@@ -30,7 +31,10 @@ type SpectrumScaleConfig struct {
 	RestConfig        RestConfig
 	ForceDelete       bool
 }
-
+type ScbeConfig struct {
+	ConfigPath string
+	ScbeURL    string
+}
 type SshConfig struct {
 	User string
 	Host string

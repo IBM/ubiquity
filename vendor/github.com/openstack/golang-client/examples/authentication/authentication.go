@@ -18,15 +18,16 @@ package main
 
 import (
 	"fmt"
-	// "git.openstack.org/openstack/golang-client.git/identity/v2"
+	// "git.openstack.org/openstack/golang-client/identity/v2"
 	"time"
 
-	"git.openstack.org/openstack/golang-client.git/openstack"
+	"git.openstack.org/openstack/golang-client/examples/setup"
+	"git.openstack.org/openstack/golang-client/openstack"
 )
 
 // Authentication examples.
 func main() {
-	config := getConfig()
+	config := setup.GetConfig()
 
 	// Authenticate with just a username and password. The returned token is
 	// unscoped to a tenant.

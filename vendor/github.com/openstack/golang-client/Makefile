@@ -5,6 +5,7 @@
 #REPO_VERSION?=$(shell git describe --tags)
 
 GIT_HOST = git.openstack.org
+SHELL := /bin/bash
 
 PWD := $(shell pwd)
 BASE_DIR := $(shell basename $(PWD))
@@ -12,21 +13,54 @@ BASE_DIR := $(shell basename $(PWD))
 GOPATH_DEFAULT := $(PWD)/.go
 export GOPATH ?= $(GOPATH_DEFAULT)
 PKG := $(shell awk  '/^package: / { print $$2 }' glide.yaml)
-DEST := $(GOPATH)/src/$(GIT_HOST)/openstack/$(BASE_DIR).git
 DEST := $(GOPATH)/src/$(PKG)
+
+GOFLAGS :=
+TAGS :=
+LDFLAGS :=
+
+# Default target
+.PHONY: all
+all: build
 
 # CTI targets
 
+.PHONY: depend
 depend: work
 	cd $(DEST) && glide install
 
-test: depend
-	cd $(DEST) && go test -tags=unit ./...
+.PHONY: depend-update
+depend-update: work
+	cd $(DEST) && glide update
 
-functional:
-	@echo "$@ not yet implemented"
+.PHONY: build
+build: depend
+	cd $(DEST) && go build $(GOFLAGS) -tags '$(TAGS)' -ldflags '$(LDFLAGS)'' ./...
 
+.PHONY: install
+install: depend
+	cd $(DEST) && go install $(GOFLAGS) -tags '$(TAGS)' -ldflags '$(LDFLAGS)'' ./...
+
+.PHONY: test
+test: test-unit
+
+.PHONY: test-unit
+test-unit: depend
+test-unit: TAGS += unit
+test-unit: test-flags
+
+.PHONY: test-flags
+test-flags:
+	cd $(DEST) && go test $(GOFLAGS) -tags '$(TAGS)' ./...
+
+# The above pipeline is required because gofmt always returns 0 and we need
+# to detect if any files are listed as having format problems.
+.PHONY: fmt
 fmt: work
+	files=$$(cd $(DEST) && gofmt -l . | tee >(cat - >&2)); [ -z "$$files" ]
+
+.PHONY: fmtfix
+fmtfix: work
 	cd $(DEST) && go fmt ./...
 
 lint:
@@ -38,7 +72,10 @@ cover:
 docs:
 	@echo "$@ not yet implemented"
 
-relnotes:
+godoc:
+	@echo "$@ not yet implemented"
+
+releasenotes:
 	@echo "Reno not yet implemented for this repo"
 
 translation:

@@ -21,13 +21,14 @@ import (
 	"net/http"
 	"time"
 
-	"git.openstack.org/openstack/golang-client.git/image/v1"
-	"git.openstack.org/openstack/golang-client.git/openstack"
+	"git.openstack.org/openstack/golang-client/examples/setup"
+	"git.openstack.org/openstack/golang-client/openstack"
+	"git.openstack.org/openstack/golang-client/volume/v2"
 )
 
-// Image examples.
+// Volume examples.
 func main() {
-	config := getConfig()
+	config := setup.GetConfig()
 
 	// Authenticate with a username, password, tenant id.
 	creds := openstack.AuthOpts{
@@ -45,10 +46,10 @@ func main() {
 		panic("There was an error. The auth token has an invalid expiration.")
 	}
 
-	// Find the endpoint for the image service.
-	url, err := auth.GetEndpoint("image", "")
+	// Find the endpoint for the volume v2 service.
+	url, err := auth.GetEndpoint("volumev2", "")
 	if url == "" || err != nil {
-		panic("v1 image service url not found during authentication")
+		panic("v2 volume service url not found during authentication")
 	}
 
 	// Make a new client with these creds
@@ -58,24 +59,24 @@ func main() {
 		panic(panicString)
 	}
 
-	imageService := image.Service{
+	volumeService := v2.Service{
 		Session: *sess,
 		Client:  *http.DefaultClient,
-		URL:     url + "/v1", // We're forcing Image v1 for now
+		URL:     url, // We're forcing Volume v2 for now
 	}
-	imagesDetails, err := imageService.ImagesDetail()
+	volumesDetails, err := volumeService.VolumesDetail()
 	if err != nil {
-		panicString := fmt.Sprint("Cannot access images:", err)
+		panicString := fmt.Sprint("Cannot access volumes:", err)
 		panic(panicString)
 	}
 
-	var imageIDs = make([]string, 0)
-	for _, element := range imagesDetails {
-		imageIDs = append(imageIDs, element.ID)
+	var volumeIDs = make([]string, 0)
+	for _, element := range volumesDetails {
+		volumeIDs = append(volumeIDs, element.ID)
 	}
 
-	if len(imageIDs) == 0 {
-		panicString := fmt.Sprint("No images found, check to make sure access is correct")
+	if len(volumeIDs) == 0 {
+		panicString := fmt.Sprint("No volumes found, check to make sure access is correct")
 		panic(panicString)
 	}
 }

@@ -24,12 +24,13 @@ import (
 	"net/http"
 	"time"
 
-	"git.openstack.org/openstack/golang-client.git/objectstorage/v1"
-	"git.openstack.org/openstack/golang-client.git/openstack"
+	"git.openstack.org/openstack/golang-client/examples/setup"
+	"git.openstack.org/openstack/golang-client/objectstorage/v1"
+	"git.openstack.org/openstack/golang-client/openstack"
 )
 
 func main() {
-	config := getConfig()
+	config := setup.GetConfig()
 
 	// Before working with object storage we need to authenticate with a project
 	// that has active object storage.

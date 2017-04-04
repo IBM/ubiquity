@@ -1,12 +1,12 @@
-hash: 64b985a537050053119f5ecf0647475d3a50286a1b14bd88cfa5a1d5f4779c99
-updated: 2017-04-03T15:24:18.821637561-07:00
+hash: 4c6026d52308d51853311abe929b994f44d356aab466bcbc8dfd8bd69270c9c2
+updated: 2017-04-04T11:45:37.78279491-07:00
 imports:
 - name: github.com/BurntSushi/toml
   version: b26d9c308763d68093482582cea63d69be07a0f0
 - name: github.com/djherbis/times
   version: 95292e44976d1217cf3611dc7c8d9466877d3ed5
 - name: github.com/gorilla/context
-  version: 215affda49addc4c8ef7e2534915df2c8c35c6cd
+  version: 08b5f424b9271eedf6f9f0ce86cb9396ed337a42
 - name: github.com/gorilla/mux
   version: 392c28fe23e1c45ddba891b0320b3b5df220beea
 - name: github.com/jinzhu/gorm
@@ -18,7 +18,7 @@ imports:
 - name: github.com/mattn/go-sqlite3
   version: ca5e3819723d8eeaf170ad510e7da1d6d2e94a08
 - name: github.com/openstack/golang-client
-  version: 753e96dd4a3983c05c665bc6f7a2abb25ceabd04
+  version: f8471e433432b26dd29aa1c1cd42317a9d79a551
   subpackages:
   - openstack
 - name: golang.org/x/net
@@ -67,5 +67,7 @@ testImports:
   version: 8f0908ab3b2457e2e15403d3697c9ef5cb4b57a9
   subpackages:
   - unix
+- name: gopkg.in/jarcoal/httpmock.v1
+  version: abbf1543e32e3d8a74ab639e37d9b097178a6924
 - name: gopkg.in/yaml.v2
   version: 53feefa2559fb8dfa8d81baad31be332c97d6c77

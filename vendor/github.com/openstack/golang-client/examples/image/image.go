@@ -21,13 +21,14 @@ import (
 	"net/http"
 	"time"
 
-	"git.openstack.org/openstack/golang-client.git/openstack"
-	"git.openstack.org/openstack/golang-client.git/volume/v2"
+	"git.openstack.org/openstack/golang-client/examples/setup"
+	"git.openstack.org/openstack/golang-client/image/v1"
+	"git.openstack.org/openstack/golang-client/openstack"
 )
 
-// Volume examples.
+// Image examples.
 func main() {
-	config := getConfig()
+	config := setup.GetConfig()
 
 	// Authenticate with a username, password, tenant id.
 	creds := openstack.AuthOpts{
@@ -45,10 +46,10 @@ func main() {
 		panic("There was an error. The auth token has an invalid expiration.")
 	}
 
-	// Find the endpoint for the volume v2 service.
-	url, err := auth.GetEndpoint("volumev2", "")
+	// Find the endpoint for the image service.
+	url, err := auth.GetEndpoint("image", "")
 	if url == "" || err != nil {
-		panic("v2 volume service url not found during authentication")
+		panic("v1 image service url not found during authentication")
 	}
 
 	// Make a new client with these creds
@@ -58,24 +59,24 @@ func main() {
 		panic(panicString)
 	}
 
-	volumeService := volume.Service{
+	imageService := v1.Service{
 		Session: *sess,
 		Client:  *http.DefaultClient,
-		URL:     url, // We're forcing Volume v2 for now
+		URL:     url + "/v1", // We're forcing Image v1 for now
 	}
-	volumesDetails, err := volumeService.VolumesDetail()
+	imagesDetails, err := imageService.ImagesDetail()
 	if err != nil {
-		panicString := fmt.Sprint("Cannot access volumes:", err)
+		panicString := fmt.Sprint("Cannot access images:", err)
 		panic(panicString)
 	}
 
-	var volumeIDs = make([]string, 0)
-	for _, element := range volumesDetails {
-		volumeIDs = append(volumeIDs, element.ID)
+	var imageIDs = make([]string, 0)
+	for _, element := range imagesDetails {
+		imageIDs = append(imageIDs, element.ID)
 	}
 
-	if len(volumeIDs) == 0 {
-		panicString := fmt.Sprint("No volumes found, check to make sure access is correct")
+	if len(imageIDs) == 0 {
+		panicString := fmt.Sprint("No images found, check to make sure access is correct")
 		panic(panicString)
 	}
 }
