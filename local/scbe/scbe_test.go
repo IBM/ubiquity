@@ -27,14 +27,14 @@ var _ = Describe("scbe-local-client", func() {
 	BeforeEach(func() {
 		logger = log.New(os.Stdout, "ubiquity scbe: ", log.Lshortfile|log.LstdFlags)
 		fakeScbeDataModel = new(fakes.FakeScbeDataModel)
-		fakeConfig = resources.ScbeConfig{ScbeURL: "http://scbe.com"}
+		fakeConfig = resources.ScbeConfig{ConfigPath: "/tmp", ScbeURL: "http://scbe.com"}
 		client, err = scbe.NewScbeLocalClientWithHTTPClientAndDataModel(logger, fakeConfig, fakeScbeDataModel, &http.Client{})
 		Expect(err).ToNot(HaveOccurred())
 
 	})
 
 	Context(".Activate", func() {
-		It("should fail when spectrum client IsFilesystemMounted errors", func() {
+		It("should succeed when httpClient returns statusAccepted", func() {
 			httpmock.RegisterResponder("POST", "http://scbe.com/activate",
 				httpmock.NewStringResponder(http.StatusAccepted, `[]`))
 
