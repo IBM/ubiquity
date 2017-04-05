@@ -16,7 +16,7 @@ import (
 	"github.com/IBM/ubiquity/local/scbe"
 )
 
-var _ = Describe("scbe-local-client", func() {
+var _ = Describe("scbeLocalClient", func() {
 	var (
 		client            resources.StorageClient
 		logger            *log.Logger
@@ -42,6 +42,13 @@ var _ = Describe("scbe-local-client", func() {
 			Expect(err).ToNot(HaveOccurred())
 		})
 
+		It("should fail when httpClient returns http.StatusNotAcceptable", func() {
+			httpmock.RegisterResponder("POST", "http://scbe.com/activate",
+				httpmock.NewStringResponder(http.StatusNotAcceptable, `[]`))
+
+			err = client.Activate()
+			Expect(err).To(HaveOccurred())
+		})
 	})
 
 })
