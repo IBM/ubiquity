@@ -111,7 +111,7 @@ port = "22"                       # port to connect to on the Spectrum Scale sto
 ### Two Options to Install and Run
 
 #### Option 1: systemd
-This option assumes that the system that you are using has support for systemd (e.g., ubuntu 14.04 does not have native support to systems, ubuntu 16.04 does.)
+This option assumes that the system that you are using has support for systemd (e.g., ubuntu 14.04 does not have native support to systemd, ubuntu 16.04 does.)
 
 1)  Inside the almaden-containers/ubiquity/scripts directory, execute the following command
 ```bash
@@ -138,7 +138,7 @@ where:
 
 
 ### Next Steps - Install a plugin for Docker or Kubernetes
-To use Ubiquity, please install appropriate storage-specific plugin ([docker](https://github.com/IBM/ubiquity-docker-plugin), [kubernetes](https://github.com/IBM/ubiquity-flexvolume))
+To use Ubiquity, please install appropriate storage-specific plugin ([docker](https://github.com/IBM/ubiquity-docker-plugin), [kubernetes](https://github.com/IBM/ubiquity-k8s))
 
 ## Available Storage Systems
 
