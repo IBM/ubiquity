@@ -101,7 +101,7 @@ func (s *scbeLocalClient) CreateVolume(name string, opts map[string]interface{})
 	s.logger.Printf("Opts for create: %#v\n", opts)
 
 	if len(opts) == 0 {
-		//fileset
+
 		return s.createVolume(name, opts)
 	}
 	return fmt.Errorf("Internal error")
