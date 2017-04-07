@@ -182,11 +182,13 @@ func (s *remoteClient) Attach(name string) (string, error) {
 	if err != nil {
 		return "", fmt.Errorf("Error determining mounter for volume: %s", err.Error())
 	}
-	err = mounter.Mount(mountResponse.Mountpoint, volumeConfig)
+	mountpoint, err := mounter.Mount(mountResponse.Mountpoint, volumeConfig)
 	if err != nil {
 		return "", err
 	}
-	return mountResponse.Mountpoint, nil
+	//needs to return actual client mounted path
+
+	return mountpoint, nil
 }
 
 func (s *remoteClient) Detach(name string) error {

@@ -10,8 +10,8 @@ import (
 
 	"fmt"
 
-	"github.com/jinzhu/gorm"
 	"github.com/IBM/ubiquity/local/spectrumscale/connectors"
+	"github.com/jinzhu/gorm"
 
 	"sync"
 
@@ -773,7 +773,7 @@ func (s *spectrumLocalClient) updatePermissions(name string) error {
 	if err != nil {
 		return err
 	}
-	filesystem, exists := volumeConfig["filesystem"]
+	filesystem, exists := volumeConfig[FILESYSTEM]
 	if exists == false {
 		return fmt.Errorf("Cannot determine filesystem for volume: %s", name)
 	}
@@ -781,11 +781,11 @@ func (s *spectrumLocalClient) updatePermissions(name string) error {
 	if err != nil {
 		return err
 	}
-	volumeType, exists := volumeConfig["type"]
+	volumeType, exists := volumeConfig[TYPE]
 	if exists == false {
 		return fmt.Errorf("Cannot determine type for volume: %s", name)
 	}
-	fileset, exists := volumeConfig["filesetId"]
+	fileset, exists := volumeConfig[FILESETID]
 	if exists == false {
 		return fmt.Errorf("Cannot determine filesetId for volume: %s", name)
 	}
@@ -799,7 +799,7 @@ func (s *spectrumLocalClient) updatePermissions(name string) error {
 		return err
 	}
 	if volumeType == LIGHTWEIGHT {
-		directory, exists := volumeConfig["directory"]
+		directory, exists := volumeConfig[DIRECTORY]
 		if exists == false {
 			return fmt.Errorf("Cannot determine directory for volume: %s", name)
 		}

@@ -18,14 +18,14 @@ func NewNfsMounter(logger *log.Logger) Mounter {
 	return &nfsMounter{logger: logger}
 }
 
-func (s *nfsMounter) Mount(mountpoint string, volumeConfig map[string]interface{}) error {
+func (s *nfsMounter) Mount(mountpoint string, volumeConfig map[string]interface{}) (string, error) {
 	s.logger.Println("nfsMounter: Mount start")
 	defer s.logger.Println("nfsMounter: Mount end")
 
 	remoteMountpoint := path.Join("/mnt/", strings.Split(mountpoint, ":")[1])
 	if s.isMounted(mountpoint, remoteMountpoint) {
 		s.logger.Printf("nfsMounter: - mount: %s is already mounted at %s\n", mountpoint, remoteMountpoint)
-		return nil
+		return remoteMountpoint, nil
 	}
 
 	s.logger.Printf("nfsMounter: mkdir -p %s\n", remoteMountpoint)
@@ -34,7 +34,7 @@ func (s *nfsMounter) Mount(mountpoint string, volumeConfig map[string]interface{
 	executor := utils.NewExecutor(s.logger)
 	_, err := executor.Execute("sudo", args)
 	if err != nil {
-		return fmt.Errorf("nfsMounter: Failed to mkdir for remote mountpoint %s (share %s, error '%s')\n", remoteMountpoint, mountpoint, err.Error())
+		return "", fmt.Errorf("nfsMounter: Failed to mkdir for remote mountpoint %s (share %s, error '%s')\n", remoteMountpoint, mountpoint, err.Error())
 	}
 
 	isPreexisting, isPreexistingSpecified := volumeConfig["isPreexisting"]
@@ -47,14 +47,14 @@ func (s *nfsMounter) Mount(mountpoint string, volumeConfig map[string]interface{
 			_, err = executor.Execute("sudo", args)
 			if err != nil {
 				s.logger.Printf("Failed to change permissions of mountpoint %s: %s", mountpoint, err.Error())
-				return err
+				return "", err
 			}
 			//set permissions to specific user
 			args = []string{"chmod", "og-rw", remoteMountpoint}
 			_, err = executor.Execute("sudo", args)
 			if err != nil {
 				s.logger.Printf("Failed to set user permissions of mountpoint %s: %s", mountpoint, err.Error())
-				return err
+				return "", err
 			}
 
 		} else {
@@ -63,7 +63,7 @@ func (s *nfsMounter) Mount(mountpoint string, volumeConfig map[string]interface{
 			_, err = executor.Execute("sudo", args)
 			if err != nil {
 				s.logger.Printf("Failed to change permissions of mountpoint %s: %s", mountpoint, err.Error())
-				return err
+				return "", err
 			}
 		}
 	}
@@ -82,7 +82,7 @@ func (s *nfsMounter) Unmount(volumeConfig map[string]interface{}) error {
 	return s.unmount(remoteMountpoint)
 
 }
-func (s *nfsMounter) mount(nfsShare, remoteMountpoint string) error {
+func (s *nfsMounter) mount(nfsShare, remoteMountpoint string) (string, error) {
 	s.logger.Printf("nfsMounter: - mount start nfsShare=%s\n", nfsShare)
 	defer s.logger.Printf("nfsMounter: - mount end nfsShare=%s\n", nfsShare)
 
@@ -90,11 +90,11 @@ func (s *nfsMounter) mount(nfsShare, remoteMountpoint string) error {
 	args := []string{"mount", "-t", "nfs", nfsShare, remoteMountpoint}
 	output, err := executor.Execute("sudo", args)
 	if err != nil {
-		return fmt.Errorf("nfsMounter: Failed to mount share %s to remote mountpoint %s (error '%s', output '%s')\n", nfsShare, remoteMountpoint, err.Error(), output)
+		return "", fmt.Errorf("nfsMounter: Failed to mount share %s to remote mountpoint %s (error '%s', output '%s')\n", nfsShare, remoteMountpoint, err.Error(), output)
 	}
 	s.logger.Printf("nfsMounter:  mount output: %s\n", string(output))
 
-	return nil
+	return remoteMountpoint, nil
 }
 
 func (s *nfsMounter) isMounted(nfsShare, remoteMountpoint string) bool {

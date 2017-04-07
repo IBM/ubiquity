@@ -173,8 +173,14 @@ func GetFilesystemMountpointInternal(logger *log.Logger, executor utils.Executor
 	if len(tokens) > 8 {
 		if strings.TrimSpace(tokens[6]) == filesystemName {
 			mountpoint := strings.TrimSpace(tokens[8])
-			mountpoint = strings.Replace(mountpoint, "%2F", "/", 10)
-			logger.Printf("Returning mountpoint: %s\n", mountpoint)
+
+			//Todo this should be changed to url.PathUnescape when available
+			mountpoint, err := utils.PathUnescape(mountpoint)
+			if err != nil {
+				logger.Printf("Error decoding mountpoint: %s\n", err)
+			} else {
+				logger.Printf("Returning mountpoint: %s\n", mountpoint)
+			}
 			return mountpoint, nil
 		}
 	}
