@@ -16,12 +16,20 @@ type FakeSpectrumScaleConnector struct {
 		result1 string
 		result2 error
 	}
+	getClusterIdReturnsOnCall map[int]struct {
+		result1 string
+		result2 error
+	}
 	IsFilesystemMountedStub        func(filesystemName string) (bool, error)
 	isFilesystemMountedMutex       sync.RWMutex
 	isFilesystemMountedArgsForCall []struct {
 		filesystemName string
 	}
 	isFilesystemMountedReturns struct {
+		result1 bool
+		result2 error
+	}
+	isFilesystemMountedReturnsOnCall map[int]struct {
 		result1 bool
 		result2 error
 	}
@@ -33,10 +41,17 @@ type FakeSpectrumScaleConnector struct {
 	mountFileSystemReturns struct {
 		result1 error
 	}
+	mountFileSystemReturnsOnCall map[int]struct {
+		result1 error
+	}
 	ListFilesystemsStub        func() ([]string, error)
 	listFilesystemsMutex       sync.RWMutex
 	listFilesystemsArgsForCall []struct{}
 	listFilesystemsReturns     struct {
+		result1 []string
+		result2 error
+	}
+	listFilesystemsReturnsOnCall map[int]struct {
 		result1 []string
 		result2 error
 	}
@@ -46,6 +61,10 @@ type FakeSpectrumScaleConnector struct {
 		filesystemName string
 	}
 	getFilesystemMountpointReturns struct {
+		result1 string
+		result2 error
+	}
+	getFilesystemMountpointReturnsOnCall map[int]struct {
 		result1 string
 		result2 error
 	}
@@ -59,6 +78,9 @@ type FakeSpectrumScaleConnector struct {
 	createFilesetReturns struct {
 		result1 error
 	}
+	createFilesetReturnsOnCall map[int]struct {
+		result1 error
+	}
 	DeleteFilesetStub        func(filesystemName string, filesetName string) error
 	deleteFilesetMutex       sync.RWMutex
 	deleteFilesetArgsForCall []struct {
@@ -66,6 +88,9 @@ type FakeSpectrumScaleConnector struct {
 		filesetName    string
 	}
 	deleteFilesetReturns struct {
+		result1 error
+	}
+	deleteFilesetReturnsOnCall map[int]struct {
 		result1 error
 	}
 	LinkFilesetStub        func(filesystemName string, filesetName string) error
@@ -77,6 +102,9 @@ type FakeSpectrumScaleConnector struct {
 	linkFilesetReturns struct {
 		result1 error
 	}
+	linkFilesetReturnsOnCall map[int]struct {
+		result1 error
+	}
 	UnlinkFilesetStub        func(filesystemName string, filesetName string) error
 	unlinkFilesetMutex       sync.RWMutex
 	unlinkFilesetArgsForCall []struct {
@@ -86,12 +114,19 @@ type FakeSpectrumScaleConnector struct {
 	unlinkFilesetReturns struct {
 		result1 error
 	}
+	unlinkFilesetReturnsOnCall map[int]struct {
+		result1 error
+	}
 	ListFilesetsStub        func(filesystemName string) ([]resources.VolumeMetadata, error)
 	listFilesetsMutex       sync.RWMutex
 	listFilesetsArgsForCall []struct {
 		filesystemName string
 	}
 	listFilesetsReturns struct {
+		result1 []resources.VolumeMetadata
+		result2 error
+	}
+	listFilesetsReturnsOnCall map[int]struct {
 		result1 []resources.VolumeMetadata
 		result2 error
 	}
@@ -105,6 +140,10 @@ type FakeSpectrumScaleConnector struct {
 		result1 resources.VolumeMetadata
 		result2 error
 	}
+	listFilesetReturnsOnCall map[int]struct {
+		result1 resources.VolumeMetadata
+		result2 error
+	}
 	IsFilesetLinkedStub        func(filesystemName string, filesetName string) (bool, error)
 	isFilesetLinkedMutex       sync.RWMutex
 	isFilesetLinkedArgsForCall []struct {
@@ -112,6 +151,10 @@ type FakeSpectrumScaleConnector struct {
 		filesetName    string
 	}
 	isFilesetLinkedReturns struct {
+		result1 bool
+		result2 error
+	}
+	isFilesetLinkedReturnsOnCall map[int]struct {
 		result1 bool
 		result2 error
 	}
@@ -125,6 +168,10 @@ type FakeSpectrumScaleConnector struct {
 		result1 string
 		result2 error
 	}
+	listFilesetQuotaReturnsOnCall map[int]struct {
+		result1 string
+		result2 error
+	}
 	SetFilesetQuotaStub        func(filesystemName string, filesetName string, quota string) error
 	setFilesetQuotaMutex       sync.RWMutex
 	setFilesetQuotaArgsForCall []struct {
@@ -135,17 +182,24 @@ type FakeSpectrumScaleConnector struct {
 	setFilesetQuotaReturns struct {
 		result1 error
 	}
+	setFilesetQuotaReturnsOnCall map[int]struct {
+		result1 error
+	}
 	invocations      map[string][][]interface{}
 	invocationsMutex sync.RWMutex
 }
 
 func (fake *FakeSpectrumScaleConnector) GetClusterId() (string, error) {
 	fake.getClusterIdMutex.Lock()
+	ret, specificReturn := fake.getClusterIdReturnsOnCall[len(fake.getClusterIdArgsForCall)]
 	fake.getClusterIdArgsForCall = append(fake.getClusterIdArgsForCall, struct{}{})
 	fake.recordInvocation("GetClusterId", []interface{}{})
 	fake.getClusterIdMutex.Unlock()
 	if fake.GetClusterIdStub != nil {
 		return fake.GetClusterIdStub()
+	}
+	if specificReturn {
+		return ret.result1, ret.result2
 	}
 	return fake.getClusterIdReturns.result1, fake.getClusterIdReturns.result2
 }
@@ -164,8 +218,23 @@ func (fake *FakeSpectrumScaleConnector) GetClusterIdReturns(result1 string, resu
 	}{result1, result2}
 }
 
+func (fake *FakeSpectrumScaleConnector) GetClusterIdReturnsOnCall(i int, result1 string, result2 error) {
+	fake.GetClusterIdStub = nil
+	if fake.getClusterIdReturnsOnCall == nil {
+		fake.getClusterIdReturnsOnCall = make(map[int]struct {
+			result1 string
+			result2 error
+		})
+	}
+	fake.getClusterIdReturnsOnCall[i] = struct {
+		result1 string
+		result2 error
+	}{result1, result2}
+}
+
 func (fake *FakeSpectrumScaleConnector) IsFilesystemMounted(filesystemName string) (bool, error) {
 	fake.isFilesystemMountedMutex.Lock()
+	ret, specificReturn := fake.isFilesystemMountedReturnsOnCall[len(fake.isFilesystemMountedArgsForCall)]
 	fake.isFilesystemMountedArgsForCall = append(fake.isFilesystemMountedArgsForCall, struct {
 		filesystemName string
 	}{filesystemName})
@@ -173,6 +242,9 @@ func (fake *FakeSpectrumScaleConnector) IsFilesystemMounted(filesystemName strin
 	fake.isFilesystemMountedMutex.Unlock()
 	if fake.IsFilesystemMountedStub != nil {
 		return fake.IsFilesystemMountedStub(filesystemName)
+	}
+	if specificReturn {
+		return ret.result1, ret.result2
 	}
 	return fake.isFilesystemMountedReturns.result1, fake.isFilesystemMountedReturns.result2
 }
@@ -197,8 +269,23 @@ func (fake *FakeSpectrumScaleConnector) IsFilesystemMountedReturns(result1 bool,
 	}{result1, result2}
 }
 
+func (fake *FakeSpectrumScaleConnector) IsFilesystemMountedReturnsOnCall(i int, result1 bool, result2 error) {
+	fake.IsFilesystemMountedStub = nil
+	if fake.isFilesystemMountedReturnsOnCall == nil {
+		fake.isFilesystemMountedReturnsOnCall = make(map[int]struct {
+			result1 bool
+			result2 error
+		})
+	}
+	fake.isFilesystemMountedReturnsOnCall[i] = struct {
+		result1 bool
+		result2 error
+	}{result1, result2}
+}
+
 func (fake *FakeSpectrumScaleConnector) MountFileSystem(filesystemName string) error {
 	fake.mountFileSystemMutex.Lock()
+	ret, specificReturn := fake.mountFileSystemReturnsOnCall[len(fake.mountFileSystemArgsForCall)]
 	fake.mountFileSystemArgsForCall = append(fake.mountFileSystemArgsForCall, struct {
 		filesystemName string
 	}{filesystemName})
@@ -206,6 +293,9 @@ func (fake *FakeSpectrumScaleConnector) MountFileSystem(filesystemName string) e
 	fake.mountFileSystemMutex.Unlock()
 	if fake.MountFileSystemStub != nil {
 		return fake.MountFileSystemStub(filesystemName)
+	}
+	if specificReturn {
+		return ret.result1
 	}
 	return fake.mountFileSystemReturns.result1
 }
@@ -229,13 +319,29 @@ func (fake *FakeSpectrumScaleConnector) MountFileSystemReturns(result1 error) {
 	}{result1}
 }
 
+func (fake *FakeSpectrumScaleConnector) MountFileSystemReturnsOnCall(i int, result1 error) {
+	fake.MountFileSystemStub = nil
+	if fake.mountFileSystemReturnsOnCall == nil {
+		fake.mountFileSystemReturnsOnCall = make(map[int]struct {
+			result1 error
+		})
+	}
+	fake.mountFileSystemReturnsOnCall[i] = struct {
+		result1 error
+	}{result1}
+}
+
 func (fake *FakeSpectrumScaleConnector) ListFilesystems() ([]string, error) {
 	fake.listFilesystemsMutex.Lock()
+	ret, specificReturn := fake.listFilesystemsReturnsOnCall[len(fake.listFilesystemsArgsForCall)]
 	fake.listFilesystemsArgsForCall = append(fake.listFilesystemsArgsForCall, struct{}{})
 	fake.recordInvocation("ListFilesystems", []interface{}{})
 	fake.listFilesystemsMutex.Unlock()
 	if fake.ListFilesystemsStub != nil {
 		return fake.ListFilesystemsStub()
+	}
+	if specificReturn {
+		return ret.result1, ret.result2
 	}
 	return fake.listFilesystemsReturns.result1, fake.listFilesystemsReturns.result2
 }
@@ -254,8 +360,23 @@ func (fake *FakeSpectrumScaleConnector) ListFilesystemsReturns(result1 []string,
 	}{result1, result2}
 }
 
+func (fake *FakeSpectrumScaleConnector) ListFilesystemsReturnsOnCall(i int, result1 []string, result2 error) {
+	fake.ListFilesystemsStub = nil
+	if fake.listFilesystemsReturnsOnCall == nil {
+		fake.listFilesystemsReturnsOnCall = make(map[int]struct {
+			result1 []string
+			result2 error
+		})
+	}
+	fake.listFilesystemsReturnsOnCall[i] = struct {
+		result1 []string
+		result2 error
+	}{result1, result2}
+}
+
 func (fake *FakeSpectrumScaleConnector) GetFilesystemMountpoint(filesystemName string) (string, error) {
 	fake.getFilesystemMountpointMutex.Lock()
+	ret, specificReturn := fake.getFilesystemMountpointReturnsOnCall[len(fake.getFilesystemMountpointArgsForCall)]
 	fake.getFilesystemMountpointArgsForCall = append(fake.getFilesystemMountpointArgsForCall, struct {
 		filesystemName string
 	}{filesystemName})
@@ -263,6 +384,9 @@ func (fake *FakeSpectrumScaleConnector) GetFilesystemMountpoint(filesystemName s
 	fake.getFilesystemMountpointMutex.Unlock()
 	if fake.GetFilesystemMountpointStub != nil {
 		return fake.GetFilesystemMountpointStub(filesystemName)
+	}
+	if specificReturn {
+		return ret.result1, ret.result2
 	}
 	return fake.getFilesystemMountpointReturns.result1, fake.getFilesystemMountpointReturns.result2
 }
@@ -287,8 +411,23 @@ func (fake *FakeSpectrumScaleConnector) GetFilesystemMountpointReturns(result1 s
 	}{result1, result2}
 }
 
+func (fake *FakeSpectrumScaleConnector) GetFilesystemMountpointReturnsOnCall(i int, result1 string, result2 error) {
+	fake.GetFilesystemMountpointStub = nil
+	if fake.getFilesystemMountpointReturnsOnCall == nil {
+		fake.getFilesystemMountpointReturnsOnCall = make(map[int]struct {
+			result1 string
+			result2 error
+		})
+	}
+	fake.getFilesystemMountpointReturnsOnCall[i] = struct {
+		result1 string
+		result2 error
+	}{result1, result2}
+}
+
 func (fake *FakeSpectrumScaleConnector) CreateFileset(filesystemName string, filesetName string, opts map[string]interface{}) error {
 	fake.createFilesetMutex.Lock()
+	ret, specificReturn := fake.createFilesetReturnsOnCall[len(fake.createFilesetArgsForCall)]
 	fake.createFilesetArgsForCall = append(fake.createFilesetArgsForCall, struct {
 		filesystemName string
 		filesetName    string
@@ -298,6 +437,9 @@ func (fake *FakeSpectrumScaleConnector) CreateFileset(filesystemName string, fil
 	fake.createFilesetMutex.Unlock()
 	if fake.CreateFilesetStub != nil {
 		return fake.CreateFilesetStub(filesystemName, filesetName, opts)
+	}
+	if specificReturn {
+		return ret.result1
 	}
 	return fake.createFilesetReturns.result1
 }
@@ -321,8 +463,21 @@ func (fake *FakeSpectrumScaleConnector) CreateFilesetReturns(result1 error) {
 	}{result1}
 }
 
+func (fake *FakeSpectrumScaleConnector) CreateFilesetReturnsOnCall(i int, result1 error) {
+	fake.CreateFilesetStub = nil
+	if fake.createFilesetReturnsOnCall == nil {
+		fake.createFilesetReturnsOnCall = make(map[int]struct {
+			result1 error
+		})
+	}
+	fake.createFilesetReturnsOnCall[i] = struct {
+		result1 error
+	}{result1}
+}
+
 func (fake *FakeSpectrumScaleConnector) DeleteFileset(filesystemName string, filesetName string) error {
 	fake.deleteFilesetMutex.Lock()
+	ret, specificReturn := fake.deleteFilesetReturnsOnCall[len(fake.deleteFilesetArgsForCall)]
 	fake.deleteFilesetArgsForCall = append(fake.deleteFilesetArgsForCall, struct {
 		filesystemName string
 		filesetName    string
@@ -331,6 +486,9 @@ func (fake *FakeSpectrumScaleConnector) DeleteFileset(filesystemName string, fil
 	fake.deleteFilesetMutex.Unlock()
 	if fake.DeleteFilesetStub != nil {
 		return fake.DeleteFilesetStub(filesystemName, filesetName)
+	}
+	if specificReturn {
+		return ret.result1
 	}
 	return fake.deleteFilesetReturns.result1
 }
@@ -354,8 +512,21 @@ func (fake *FakeSpectrumScaleConnector) DeleteFilesetReturns(result1 error) {
 	}{result1}
 }
 
+func (fake *FakeSpectrumScaleConnector) DeleteFilesetReturnsOnCall(i int, result1 error) {
+	fake.DeleteFilesetStub = nil
+	if fake.deleteFilesetReturnsOnCall == nil {
+		fake.deleteFilesetReturnsOnCall = make(map[int]struct {
+			result1 error
+		})
+	}
+	fake.deleteFilesetReturnsOnCall[i] = struct {
+		result1 error
+	}{result1}
+}
+
 func (fake *FakeSpectrumScaleConnector) LinkFileset(filesystemName string, filesetName string) error {
 	fake.linkFilesetMutex.Lock()
+	ret, specificReturn := fake.linkFilesetReturnsOnCall[len(fake.linkFilesetArgsForCall)]
 	fake.linkFilesetArgsForCall = append(fake.linkFilesetArgsForCall, struct {
 		filesystemName string
 		filesetName    string
@@ -364,6 +535,9 @@ func (fake *FakeSpectrumScaleConnector) LinkFileset(filesystemName string, files
 	fake.linkFilesetMutex.Unlock()
 	if fake.LinkFilesetStub != nil {
 		return fake.LinkFilesetStub(filesystemName, filesetName)
+	}
+	if specificReturn {
+		return ret.result1
 	}
 	return fake.linkFilesetReturns.result1
 }
@@ -387,8 +561,21 @@ func (fake *FakeSpectrumScaleConnector) LinkFilesetReturns(result1 error) {
 	}{result1}
 }
 
+func (fake *FakeSpectrumScaleConnector) LinkFilesetReturnsOnCall(i int, result1 error) {
+	fake.LinkFilesetStub = nil
+	if fake.linkFilesetReturnsOnCall == nil {
+		fake.linkFilesetReturnsOnCall = make(map[int]struct {
+			result1 error
+		})
+	}
+	fake.linkFilesetReturnsOnCall[i] = struct {
+		result1 error
+	}{result1}
+}
+
 func (fake *FakeSpectrumScaleConnector) UnlinkFileset(filesystemName string, filesetName string) error {
 	fake.unlinkFilesetMutex.Lock()
+	ret, specificReturn := fake.unlinkFilesetReturnsOnCall[len(fake.unlinkFilesetArgsForCall)]
 	fake.unlinkFilesetArgsForCall = append(fake.unlinkFilesetArgsForCall, struct {
 		filesystemName string
 		filesetName    string
@@ -397,6 +584,9 @@ func (fake *FakeSpectrumScaleConnector) UnlinkFileset(filesystemName string, fil
 	fake.unlinkFilesetMutex.Unlock()
 	if fake.UnlinkFilesetStub != nil {
 		return fake.UnlinkFilesetStub(filesystemName, filesetName)
+	}
+	if specificReturn {
+		return ret.result1
 	}
 	return fake.unlinkFilesetReturns.result1
 }
@@ -420,8 +610,21 @@ func (fake *FakeSpectrumScaleConnector) UnlinkFilesetReturns(result1 error) {
 	}{result1}
 }
 
+func (fake *FakeSpectrumScaleConnector) UnlinkFilesetReturnsOnCall(i int, result1 error) {
+	fake.UnlinkFilesetStub = nil
+	if fake.unlinkFilesetReturnsOnCall == nil {
+		fake.unlinkFilesetReturnsOnCall = make(map[int]struct {
+			result1 error
+		})
+	}
+	fake.unlinkFilesetReturnsOnCall[i] = struct {
+		result1 error
+	}{result1}
+}
+
 func (fake *FakeSpectrumScaleConnector) ListFilesets(filesystemName string) ([]resources.VolumeMetadata, error) {
 	fake.listFilesetsMutex.Lock()
+	ret, specificReturn := fake.listFilesetsReturnsOnCall[len(fake.listFilesetsArgsForCall)]
 	fake.listFilesetsArgsForCall = append(fake.listFilesetsArgsForCall, struct {
 		filesystemName string
 	}{filesystemName})
@@ -429,6 +632,9 @@ func (fake *FakeSpectrumScaleConnector) ListFilesets(filesystemName string) ([]r
 	fake.listFilesetsMutex.Unlock()
 	if fake.ListFilesetsStub != nil {
 		return fake.ListFilesetsStub(filesystemName)
+	}
+	if specificReturn {
+		return ret.result1, ret.result2
 	}
 	return fake.listFilesetsReturns.result1, fake.listFilesetsReturns.result2
 }
@@ -453,8 +659,23 @@ func (fake *FakeSpectrumScaleConnector) ListFilesetsReturns(result1 []resources.
 	}{result1, result2}
 }
 
+func (fake *FakeSpectrumScaleConnector) ListFilesetsReturnsOnCall(i int, result1 []resources.VolumeMetadata, result2 error) {
+	fake.ListFilesetsStub = nil
+	if fake.listFilesetsReturnsOnCall == nil {
+		fake.listFilesetsReturnsOnCall = make(map[int]struct {
+			result1 []resources.VolumeMetadata
+			result2 error
+		})
+	}
+	fake.listFilesetsReturnsOnCall[i] = struct {
+		result1 []resources.VolumeMetadata
+		result2 error
+	}{result1, result2}
+}
+
 func (fake *FakeSpectrumScaleConnector) ListFileset(filesystemName string, filesetName string) (resources.VolumeMetadata, error) {
 	fake.listFilesetMutex.Lock()
+	ret, specificReturn := fake.listFilesetReturnsOnCall[len(fake.listFilesetArgsForCall)]
 	fake.listFilesetArgsForCall = append(fake.listFilesetArgsForCall, struct {
 		filesystemName string
 		filesetName    string
@@ -463,6 +684,9 @@ func (fake *FakeSpectrumScaleConnector) ListFileset(filesystemName string, files
 	fake.listFilesetMutex.Unlock()
 	if fake.ListFilesetStub != nil {
 		return fake.ListFilesetStub(filesystemName, filesetName)
+	}
+	if specificReturn {
+		return ret.result1, ret.result2
 	}
 	return fake.listFilesetReturns.result1, fake.listFilesetReturns.result2
 }
@@ -487,8 +711,23 @@ func (fake *FakeSpectrumScaleConnector) ListFilesetReturns(result1 resources.Vol
 	}{result1, result2}
 }
 
+func (fake *FakeSpectrumScaleConnector) ListFilesetReturnsOnCall(i int, result1 resources.VolumeMetadata, result2 error) {
+	fake.ListFilesetStub = nil
+	if fake.listFilesetReturnsOnCall == nil {
+		fake.listFilesetReturnsOnCall = make(map[int]struct {
+			result1 resources.VolumeMetadata
+			result2 error
+		})
+	}
+	fake.listFilesetReturnsOnCall[i] = struct {
+		result1 resources.VolumeMetadata
+		result2 error
+	}{result1, result2}
+}
+
 func (fake *FakeSpectrumScaleConnector) IsFilesetLinked(filesystemName string, filesetName string) (bool, error) {
 	fake.isFilesetLinkedMutex.Lock()
+	ret, specificReturn := fake.isFilesetLinkedReturnsOnCall[len(fake.isFilesetLinkedArgsForCall)]
 	fake.isFilesetLinkedArgsForCall = append(fake.isFilesetLinkedArgsForCall, struct {
 		filesystemName string
 		filesetName    string
@@ -497,6 +736,9 @@ func (fake *FakeSpectrumScaleConnector) IsFilesetLinked(filesystemName string, f
 	fake.isFilesetLinkedMutex.Unlock()
 	if fake.IsFilesetLinkedStub != nil {
 		return fake.IsFilesetLinkedStub(filesystemName, filesetName)
+	}
+	if specificReturn {
+		return ret.result1, ret.result2
 	}
 	return fake.isFilesetLinkedReturns.result1, fake.isFilesetLinkedReturns.result2
 }
@@ -521,8 +763,23 @@ func (fake *FakeSpectrumScaleConnector) IsFilesetLinkedReturns(result1 bool, res
 	}{result1, result2}
 }
 
+func (fake *FakeSpectrumScaleConnector) IsFilesetLinkedReturnsOnCall(i int, result1 bool, result2 error) {
+	fake.IsFilesetLinkedStub = nil
+	if fake.isFilesetLinkedReturnsOnCall == nil {
+		fake.isFilesetLinkedReturnsOnCall = make(map[int]struct {
+			result1 bool
+			result2 error
+		})
+	}
+	fake.isFilesetLinkedReturnsOnCall[i] = struct {
+		result1 bool
+		result2 error
+	}{result1, result2}
+}
+
 func (fake *FakeSpectrumScaleConnector) ListFilesetQuota(filesystemName string, filesetName string) (string, error) {
 	fake.listFilesetQuotaMutex.Lock()
+	ret, specificReturn := fake.listFilesetQuotaReturnsOnCall[len(fake.listFilesetQuotaArgsForCall)]
 	fake.listFilesetQuotaArgsForCall = append(fake.listFilesetQuotaArgsForCall, struct {
 		filesystemName string
 		filesetName    string
@@ -531,6 +788,9 @@ func (fake *FakeSpectrumScaleConnector) ListFilesetQuota(filesystemName string, 
 	fake.listFilesetQuotaMutex.Unlock()
 	if fake.ListFilesetQuotaStub != nil {
 		return fake.ListFilesetQuotaStub(filesystemName, filesetName)
+	}
+	if specificReturn {
+		return ret.result1, ret.result2
 	}
 	return fake.listFilesetQuotaReturns.result1, fake.listFilesetQuotaReturns.result2
 }
@@ -555,8 +815,23 @@ func (fake *FakeSpectrumScaleConnector) ListFilesetQuotaReturns(result1 string, 
 	}{result1, result2}
 }
 
+func (fake *FakeSpectrumScaleConnector) ListFilesetQuotaReturnsOnCall(i int, result1 string, result2 error) {
+	fake.ListFilesetQuotaStub = nil
+	if fake.listFilesetQuotaReturnsOnCall == nil {
+		fake.listFilesetQuotaReturnsOnCall = make(map[int]struct {
+			result1 string
+			result2 error
+		})
+	}
+	fake.listFilesetQuotaReturnsOnCall[i] = struct {
+		result1 string
+		result2 error
+	}{result1, result2}
+}
+
 func (fake *FakeSpectrumScaleConnector) SetFilesetQuota(filesystemName string, filesetName string, quota string) error {
 	fake.setFilesetQuotaMutex.Lock()
+	ret, specificReturn := fake.setFilesetQuotaReturnsOnCall[len(fake.setFilesetQuotaArgsForCall)]
 	fake.setFilesetQuotaArgsForCall = append(fake.setFilesetQuotaArgsForCall, struct {
 		filesystemName string
 		filesetName    string
@@ -566,6 +841,9 @@ func (fake *FakeSpectrumScaleConnector) SetFilesetQuota(filesystemName string, f
 	fake.setFilesetQuotaMutex.Unlock()
 	if fake.SetFilesetQuotaStub != nil {
 		return fake.SetFilesetQuotaStub(filesystemName, filesetName, quota)
+	}
+	if specificReturn {
+		return ret.result1
 	}
 	return fake.setFilesetQuotaReturns.result1
 }
@@ -585,6 +863,18 @@ func (fake *FakeSpectrumScaleConnector) SetFilesetQuotaArgsForCall(i int) (strin
 func (fake *FakeSpectrumScaleConnector) SetFilesetQuotaReturns(result1 error) {
 	fake.SetFilesetQuotaStub = nil
 	fake.setFilesetQuotaReturns = struct {
+		result1 error
+	}{result1}
+}
+
+func (fake *FakeSpectrumScaleConnector) SetFilesetQuotaReturnsOnCall(i int, result1 error) {
+	fake.SetFilesetQuotaStub = nil
+	if fake.setFilesetQuotaReturnsOnCall == nil {
+		fake.setFilesetQuotaReturnsOnCall = make(map[int]struct {
+			result1 error
+		})
+	}
+	fake.setFilesetQuotaReturnsOnCall[i] = struct {
 		result1 error
 	}{result1}
 }
