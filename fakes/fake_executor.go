@@ -19,12 +19,20 @@ type FakeExecutor struct {
 		result1 []byte
 		result2 error
 	}
+	executeReturnsOnCall map[int]struct {
+		result1 []byte
+		result2 error
+	}
 	StatStub        func(string) (os.FileInfo, error)
 	statMutex       sync.RWMutex
 	statArgsForCall []struct {
 		arg1 string
 	}
 	statReturns struct {
+		result1 os.FileInfo
+		result2 error
+	}
+	statReturnsOnCall map[int]struct {
 		result1 os.FileInfo
 		result2 error
 	}
@@ -37,6 +45,9 @@ type FakeExecutor struct {
 	mkdirReturns struct {
 		result1 error
 	}
+	mkdirReturnsOnCall map[int]struct {
+		result1 error
+	}
 	RemoveAllStub        func(string) error
 	removeAllMutex       sync.RWMutex
 	removeAllArgsForCall []struct {
@@ -45,10 +56,17 @@ type FakeExecutor struct {
 	removeAllReturns struct {
 		result1 error
 	}
+	removeAllReturnsOnCall map[int]struct {
+		result1 error
+	}
 	HostnameStub        func() (string, error)
 	hostnameMutex       sync.RWMutex
 	hostnameArgsForCall []struct{}
 	hostnameReturns     struct {
+		result1 string
+		result2 error
+	}
+	hostnameReturnsOnCall map[int]struct {
 		result1 string
 		result2 error
 	}
@@ -63,6 +81,7 @@ func (fake *FakeExecutor) Execute(command string, args []string) ([]byte, error)
 		copy(argsCopy, args)
 	}
 	fake.executeMutex.Lock()
+	ret, specificReturn := fake.executeReturnsOnCall[len(fake.executeArgsForCall)]
 	fake.executeArgsForCall = append(fake.executeArgsForCall, struct {
 		command string
 		args    []string
@@ -71,6 +90,9 @@ func (fake *FakeExecutor) Execute(command string, args []string) ([]byte, error)
 	fake.executeMutex.Unlock()
 	if fake.ExecuteStub != nil {
 		return fake.ExecuteStub(command, args)
+	}
+	if specificReturn {
+		return ret.result1, ret.result2
 	}
 	return fake.executeReturns.result1, fake.executeReturns.result2
 }
@@ -95,8 +117,23 @@ func (fake *FakeExecutor) ExecuteReturns(result1 []byte, result2 error) {
 	}{result1, result2}
 }
 
+func (fake *FakeExecutor) ExecuteReturnsOnCall(i int, result1 []byte, result2 error) {
+	fake.ExecuteStub = nil
+	if fake.executeReturnsOnCall == nil {
+		fake.executeReturnsOnCall = make(map[int]struct {
+			result1 []byte
+			result2 error
+		})
+	}
+	fake.executeReturnsOnCall[i] = struct {
+		result1 []byte
+		result2 error
+	}{result1, result2}
+}
+
 func (fake *FakeExecutor) Stat(arg1 string) (os.FileInfo, error) {
 	fake.statMutex.Lock()
+	ret, specificReturn := fake.statReturnsOnCall[len(fake.statArgsForCall)]
 	fake.statArgsForCall = append(fake.statArgsForCall, struct {
 		arg1 string
 	}{arg1})
@@ -104,6 +141,9 @@ func (fake *FakeExecutor) Stat(arg1 string) (os.FileInfo, error) {
 	fake.statMutex.Unlock()
 	if fake.StatStub != nil {
 		return fake.StatStub(arg1)
+	}
+	if specificReturn {
+		return ret.result1, ret.result2
 	}
 	return fake.statReturns.result1, fake.statReturns.result2
 }
@@ -128,8 +168,23 @@ func (fake *FakeExecutor) StatReturns(result1 os.FileInfo, result2 error) {
 	}{result1, result2}
 }
 
+func (fake *FakeExecutor) StatReturnsOnCall(i int, result1 os.FileInfo, result2 error) {
+	fake.StatStub = nil
+	if fake.statReturnsOnCall == nil {
+		fake.statReturnsOnCall = make(map[int]struct {
+			result1 os.FileInfo
+			result2 error
+		})
+	}
+	fake.statReturnsOnCall[i] = struct {
+		result1 os.FileInfo
+		result2 error
+	}{result1, result2}
+}
+
 func (fake *FakeExecutor) Mkdir(arg1 string, arg2 os.FileMode) error {
 	fake.mkdirMutex.Lock()
+	ret, specificReturn := fake.mkdirReturnsOnCall[len(fake.mkdirArgsForCall)]
 	fake.mkdirArgsForCall = append(fake.mkdirArgsForCall, struct {
 		arg1 string
 		arg2 os.FileMode
@@ -138,6 +193,9 @@ func (fake *FakeExecutor) Mkdir(arg1 string, arg2 os.FileMode) error {
 	fake.mkdirMutex.Unlock()
 	if fake.MkdirStub != nil {
 		return fake.MkdirStub(arg1, arg2)
+	}
+	if specificReturn {
+		return ret.result1
 	}
 	return fake.mkdirReturns.result1
 }
@@ -161,8 +219,21 @@ func (fake *FakeExecutor) MkdirReturns(result1 error) {
 	}{result1}
 }
 
+func (fake *FakeExecutor) MkdirReturnsOnCall(i int, result1 error) {
+	fake.MkdirStub = nil
+	if fake.mkdirReturnsOnCall == nil {
+		fake.mkdirReturnsOnCall = make(map[int]struct {
+			result1 error
+		})
+	}
+	fake.mkdirReturnsOnCall[i] = struct {
+		result1 error
+	}{result1}
+}
+
 func (fake *FakeExecutor) RemoveAll(arg1 string) error {
 	fake.removeAllMutex.Lock()
+	ret, specificReturn := fake.removeAllReturnsOnCall[len(fake.removeAllArgsForCall)]
 	fake.removeAllArgsForCall = append(fake.removeAllArgsForCall, struct {
 		arg1 string
 	}{arg1})
@@ -170,6 +241,9 @@ func (fake *FakeExecutor) RemoveAll(arg1 string) error {
 	fake.removeAllMutex.Unlock()
 	if fake.RemoveAllStub != nil {
 		return fake.RemoveAllStub(arg1)
+	}
+	if specificReturn {
+		return ret.result1
 	}
 	return fake.removeAllReturns.result1
 }
@@ -193,13 +267,29 @@ func (fake *FakeExecutor) RemoveAllReturns(result1 error) {
 	}{result1}
 }
 
+func (fake *FakeExecutor) RemoveAllReturnsOnCall(i int, result1 error) {
+	fake.RemoveAllStub = nil
+	if fake.removeAllReturnsOnCall == nil {
+		fake.removeAllReturnsOnCall = make(map[int]struct {
+			result1 error
+		})
+	}
+	fake.removeAllReturnsOnCall[i] = struct {
+		result1 error
+	}{result1}
+}
+
 func (fake *FakeExecutor) Hostname() (string, error) {
 	fake.hostnameMutex.Lock()
+	ret, specificReturn := fake.hostnameReturnsOnCall[len(fake.hostnameArgsForCall)]
 	fake.hostnameArgsForCall = append(fake.hostnameArgsForCall, struct{}{})
 	fake.recordInvocation("Hostname", []interface{}{})
 	fake.hostnameMutex.Unlock()
 	if fake.HostnameStub != nil {
 		return fake.HostnameStub()
+	}
+	if specificReturn {
+		return ret.result1, ret.result2
 	}
 	return fake.hostnameReturns.result1, fake.hostnameReturns.result2
 }
@@ -213,6 +303,20 @@ func (fake *FakeExecutor) HostnameCallCount() int {
 func (fake *FakeExecutor) HostnameReturns(result1 string, result2 error) {
 	fake.HostnameStub = nil
 	fake.hostnameReturns = struct {
+		result1 string
+		result2 error
+	}{result1, result2}
+}
+
+func (fake *FakeExecutor) HostnameReturnsOnCall(i int, result1 string, result2 error) {
+	fake.HostnameStub = nil
+	if fake.hostnameReturnsOnCall == nil {
+		fake.hostnameReturnsOnCall = make(map[int]struct {
+			result1 string
+			result2 error
+		})
+	}
+	fake.hostnameReturnsOnCall[i] = struct {
 		result1 string
 		result2 error
 	}{result1, result2}

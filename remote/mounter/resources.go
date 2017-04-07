@@ -10,7 +10,7 @@ import (
 //go:generate counterfeiter -o ../../fakes/fake_mounter.go . Mounter
 
 type Mounter interface {
-	Mount(mountpoint string, volumeConfig map[string]interface{}) error
+	Mount(mountpoint string, volumeConfig map[string]interface{}) (string, error)
 	Unmount(volumeConfig map[string]interface{}) error
 }
 
