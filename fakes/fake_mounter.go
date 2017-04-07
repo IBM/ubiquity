@@ -73,18 +73,6 @@ func (fake *FakeMounter) MountReturns(result1 string, result2 error) {
 	}{result1, result2}
 }
 
-func (fake *FakeMounter) MountReturnsOnCall(i int, result1 error) {
-	fake.MountStub = nil
-	if fake.mountReturnsOnCall == nil {
-		fake.mountReturnsOnCall = make(map[int]struct {
-			result1 error
-		})
-	}
-	fake.mountReturnsOnCall[i] = struct {
-		result1 error
-	}{result1}
-}
-
 func (fake *FakeMounter) MountReturnsOnCall(i int, result1 string, result2 error) {
 	fake.MountStub = nil
 	if fake.mountReturnsOnCall == nil {
