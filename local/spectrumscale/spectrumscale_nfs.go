@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/jinzhu/gorm"
 	"github.com/IBM/ubiquity/resources"
 	"github.com/IBM/ubiquity/utils"
+	"github.com/jinzhu/gorm"
 )
 
 type spectrumNfsLocalClient struct {
@@ -116,6 +116,7 @@ func (s *spectrumNfsLocalClient) CreateVolume(name string, opts map[string]inter
 	if err := s.spectrumClient.updatePermissions(name); err != nil {
 		s.spectrumClient.logger.Printf("spectrumNfsLocalClient: error updating permissions of volume %#v\n; deleting volume", err)
 		s.spectrumClient.RemoveVolume(name)
+		return err
 	}
 
 	if err := s.exportNfs(name, nfsClientConfig); err != nil {
