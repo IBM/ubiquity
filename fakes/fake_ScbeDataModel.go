@@ -4,7 +4,7 @@ package fakes
 import (
 	"sync"
 
-	spectrumscale "github.com/IBM/ubiquity/local/scbe"
+	"github.com/IBM/ubiquity/local/scbe"
 	_ "github.com/mattn/go-sqlite3"
 )
 
@@ -41,30 +41,30 @@ type FakeScbeDataModel struct {
 	insertVolumeReturnsOnCall map[int]struct {
 		result1 error
 	}
-	GetVolumeStub        func(name string) (spectrumscale.ScbeVolume, bool, error)
+	GetVolumeStub        func(name string) (scbe.ScbeVolume, bool, error)
 	getVolumeMutex       sync.RWMutex
 	getVolumeArgsForCall []struct {
 		name string
 	}
 	getVolumeReturns struct {
-		result1 spectrumscale.ScbeVolume
+		result1 scbe.ScbeVolume
 		result2 bool
 		result3 error
 	}
 	getVolumeReturnsOnCall map[int]struct {
-		result1 spectrumscale.ScbeVolume
+		result1 scbe.ScbeVolume
 		result2 bool
 		result3 error
 	}
-	ListVolumesStub        func() ([]spectrumscale.ScbeVolume, error)
+	ListVolumesStub        func() ([]scbe.ScbeVolume, error)
 	listVolumesMutex       sync.RWMutex
 	listVolumesArgsForCall []struct{}
 	listVolumesReturns     struct {
-		result1 []spectrumscale.ScbeVolume
+		result1 []scbe.ScbeVolume
 		result2 error
 	}
 	listVolumesReturnsOnCall map[int]struct {
-		result1 []spectrumscale.ScbeVolume
+		result1 []scbe.ScbeVolume
 		result2 error
 	}
 	invocations      map[string][][]interface{}
@@ -208,7 +208,7 @@ func (fake *FakeScbeDataModel) InsertVolumeReturnsOnCall(i int, result1 error) {
 	}{result1}
 }
 
-func (fake *FakeScbeDataModel) GetVolume(name string) (spectrumscale.ScbeVolume, bool, error) {
+func (fake *FakeScbeDataModel) GetVolume(name string) (scbe.ScbeVolume, bool, error) {
 	fake.getVolumeMutex.Lock()
 	ret, specificReturn := fake.getVolumeReturnsOnCall[len(fake.getVolumeArgsForCall)]
 	fake.getVolumeArgsForCall = append(fake.getVolumeArgsForCall, struct {
@@ -237,32 +237,32 @@ func (fake *FakeScbeDataModel) GetVolumeArgsForCall(i int) string {
 	return fake.getVolumeArgsForCall[i].name
 }
 
-func (fake *FakeScbeDataModel) GetVolumeReturns(result1 spectrumscale.ScbeVolume, result2 bool, result3 error) {
+func (fake *FakeScbeDataModel) GetVolumeReturns(result1 scbe.ScbeVolume, result2 bool, result3 error) {
 	fake.GetVolumeStub = nil
 	fake.getVolumeReturns = struct {
-		result1 spectrumscale.ScbeVolume
+		result1 scbe.ScbeVolume
 		result2 bool
 		result3 error
 	}{result1, result2, result3}
 }
 
-func (fake *FakeScbeDataModel) GetVolumeReturnsOnCall(i int, result1 spectrumscale.ScbeVolume, result2 bool, result3 error) {
+func (fake *FakeScbeDataModel) GetVolumeReturnsOnCall(i int, result1 scbe.ScbeVolume, result2 bool, result3 error) {
 	fake.GetVolumeStub = nil
 	if fake.getVolumeReturnsOnCall == nil {
 		fake.getVolumeReturnsOnCall = make(map[int]struct {
-			result1 spectrumscale.ScbeVolume
+			result1 scbe.ScbeVolume
 			result2 bool
 			result3 error
 		})
 	}
 	fake.getVolumeReturnsOnCall[i] = struct {
-		result1 spectrumscale.ScbeVolume
+		result1 scbe.ScbeVolume
 		result2 bool
 		result3 error
 	}{result1, result2, result3}
 }
 
-func (fake *FakeScbeDataModel) ListVolumes() ([]spectrumscale.ScbeVolume, error) {
+func (fake *FakeScbeDataModel) ListVolumes() ([]scbe.ScbeVolume, error) {
 	fake.listVolumesMutex.Lock()
 	ret, specificReturn := fake.listVolumesReturnsOnCall[len(fake.listVolumesArgsForCall)]
 	fake.listVolumesArgsForCall = append(fake.listVolumesArgsForCall, struct{}{})
@@ -283,24 +283,24 @@ func (fake *FakeScbeDataModel) ListVolumesCallCount() int {
 	return len(fake.listVolumesArgsForCall)
 }
 
-func (fake *FakeScbeDataModel) ListVolumesReturns(result1 []spectrumscale.ScbeVolume, result2 error) {
+func (fake *FakeScbeDataModel) ListVolumesReturns(result1 []scbe.ScbeVolume, result2 error) {
 	fake.ListVolumesStub = nil
 	fake.listVolumesReturns = struct {
-		result1 []spectrumscale.ScbeVolume
+		result1 []scbe.ScbeVolume
 		result2 error
 	}{result1, result2}
 }
 
-func (fake *FakeScbeDataModel) ListVolumesReturnsOnCall(i int, result1 []spectrumscale.ScbeVolume, result2 error) {
+func (fake *FakeScbeDataModel) ListVolumesReturnsOnCall(i int, result1 []scbe.ScbeVolume, result2 error) {
 	fake.ListVolumesStub = nil
 	if fake.listVolumesReturnsOnCall == nil {
 		fake.listVolumesReturnsOnCall = make(map[int]struct {
-			result1 []spectrumscale.ScbeVolume
+			result1 []scbe.ScbeVolume
 			result2 error
 		})
 	}
 	fake.listVolumesReturnsOnCall[i] = struct {
-		result1 []spectrumscale.ScbeVolume
+		result1 []scbe.ScbeVolume
 		result2 error
 	}{result1, result2}
 }
@@ -333,4 +333,4 @@ func (fake *FakeScbeDataModel) recordInvocation(key string, args []interface{}) 
 	fake.invocations[key] = append(fake.invocations[key], args)
 }
 
-var _ spectrumscale.ScbeDataModel = new(FakeScbeDataModel)
+var _ scbe.ScbeDataModel = new(FakeScbeDataModel)
