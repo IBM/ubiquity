@@ -3,6 +3,7 @@ package connectors
 import (
 	"fmt"
 	"log"
+	"net/url"
 	"path"
 	"strings"
 
@@ -173,8 +174,12 @@ func GetFilesystemMountpointInternal(logger *log.Logger, executor utils.Executor
 	if len(tokens) > 8 {
 		if strings.TrimSpace(tokens[6]) == filesystemName {
 			mountpoint := strings.TrimSpace(tokens[8])
-			mountpoint = strings.Replace(mountpoint, "%2F", "/", 10)
-			logger.Printf("Returning mountpoint: %s\n", mountpoint)
+			mountpoint, err := url.PathUnescape(mountpoint)
+			if err != nil {
+				logger.Printf("Error decoding mountpoint: %s\n", err)
+			} else {
+				logger.Printf("Returning mountpoint: %s\n", mountpoint)
+			}
 			return mountpoint, nil
 		}
 	}
