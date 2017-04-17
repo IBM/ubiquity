@@ -1,19 +1,17 @@
 package scbe
 
 // go standard for all the structures in the project.
-const (
-	ErrorMarshallingCredentialInfo = "Internal error marshalling credentialInfo"
-)
 
 type CredentialInfo struct {
-	userName string `json:"username"`
-	password string `json:"password"`
+	UserName string `json:"username"`
+	Password string `json:"password"`
+	Group    string `json:"group"`
 }
 type ConnectionInfo struct {
-	credentialInfo CredentialInfo
-	port           string
-	managementIP   string
-	verifySSL      bool
+	CredentialInfo CredentialInfo
+	Port           string
+	ManagementIP   string
+	VerifySSL      bool
 }
 
 type LoginResponse struct {
