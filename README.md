@@ -1,7 +1,15 @@
 # Ubiquity Storage Service for Container Ecosystems
-Ubiquity provides access to persistent storage for Docker containers in Docker or Kubernetes ecosystems. The REST service can be run on one or more nodes in the cluster to create, manage, and delete storage volumes.  
+The Ubiquity project implements a service that manages access to persistent storage for containers orchestrated by container frameworks such as Kubernetes or Docker Swarm where scale, velocity and access privileges makes manual mounting of volumes into containers unpractical. 
 
-Ubiquity is a pluggable framework that can support a variety of storage backends.  See 'Available Storage Systems' for more details.
+Ubiquity is a pluggable framework that can support a variety of storage backends and can be complemented by container framework adapters that map the different ways container frameworks deal with storage management into ReST calls to the Ubiquity service. Currently, the following frameworks are supported:
+
+- [Kubernetes](https://github.com/IBM/ubiquity-k8s)
+- [Docker](https://github.com/IBM/ubiquity-docker-plugin)
+
+The Ubiquity service can be run on one or more nodes in the cluster to create, manage, and delete storage volumes.  
+
+See 'Available Storage Systems' for more details on the storage backends supported.
+
 
 This code is provided "AS IS" and without warranty of any kind.  Any issues will be handled on a best effort basis.
 
