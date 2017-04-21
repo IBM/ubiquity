@@ -1,7 +1,7 @@
 
 # Supported Storage Systems 
 
-### IBM Spectrum Scale
+## IBM Spectrum Scale
 With IBM Spectrum Scale, containers can have shared file system access to any number of containers from small clusters of a few hosts up to very large clusters with thousands of hosts.
 
 The current plugin supports the following protocols:
@@ -15,7 +15,7 @@ Spectrum Scale supports the following options for creating a volume.  ther the n
 Note that POSIX volumes are not accessible via NFS, but NFS volumes are accessible via POSIX.  This is because NFS requires the additional step of exporting the dataset on the storage server.  To make a POSIX volume accessible via NFS, simply create the volume using the 'spectrum-scale-nfs' backend using the same path or fileset name. 
 
 
-#### Supported Volume Types
+### Supported Volume Types
 
 The volume driver supports creation of two types of volumes in Spectrum Scale:
 
@@ -41,7 +41,7 @@ To use Lightweight volumes, but take advantage of Spectrum Scale features such a
 
 Usage: type=lightweight
 
-#### Supported Volume Creation Options
+### Supported Volume Creation Options
 
 **Features**
  * Quotas (optional) - Fileset Volumes can have a max quota limit set. Quota support for filesets must be already enabled on the file system.
@@ -59,3 +59,8 @@ Usage: type=lightweight
  * Directory (lightweight volumes only): This option sets the name of the directory to be created for a lightweight volume.  This can also be used to create a lighweight volume from an existing directory.  The directory can be a relative path starting at the root of the path at which the fileset is linked in the file system namespace.
     * Usage: directory=dir1
   
+
+## Ubiquity Service Access to IBM Spectrum Scale CLI
+Currently there are 2 different ways for Ubiquity to manage volumes in IBM Spectrum Scale.
+ * Direct access - In this setup, Ubiquity will directly call the IBM Spectrum Scale CLI (e.g., 'mm' commands).  This means that Ubiquity must be deployed on a node that can directly call the CLI.
+ * ssh - In this setup, Ubiquity uses ssh to call the IBM Spectrum Scale CLI that is deployed on another node.  This avoids the need to run Ubiquity on a node that is part of the IBM Spectrum Scale cluster.  For example, this would also allow Ubiquity to run in a container.
