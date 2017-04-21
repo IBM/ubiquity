@@ -60,7 +60,7 @@ Usage: type=lightweight
     * Usage: directory=dir1
   
 
-## Ubiquity Service Access to IBM Spectrum Scale CLI
+### Ubiquity Service Access to IBM Spectrum Scale CLI
 Currently there are 2 different ways for Ubiquity to manage volumes in IBM Spectrum Scale.
  * Direct access - In this setup, Ubiquity will directly call the IBM Spectrum Scale CLI (e.g., 'mm' commands).  This means that Ubiquity must be deployed on a node that can directly call the CLI.
  * ssh - In this setup, Ubiquity uses ssh to call the IBM Spectrum Scale CLI that is deployed on another node.  This avoids the need to run Ubiquity on a node that is part of the IBM Spectrum Scale cluster.  For example, this would also allow Ubiquity to run in a container.
