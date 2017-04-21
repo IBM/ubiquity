@@ -11,7 +11,6 @@ import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega" // including the whole package inside the file
 	// httpmock is the referrer for this module
-	"fmt"
 	"gopkg.in/jarcoal/httpmock.v1"
 )
 
@@ -30,46 +29,36 @@ var _ = Describe("restClient", func() {
 	})
 
 	Context(".Login", func() {
-		It("should fail when httpClient returns http.StatusNotAcceptable", func() {
+		It("should succeed when httpClient succeed and return a token", func() {
 			loginResponse := scbe.LoginResponse{Token: "fake-token"}
 			marshalledResponse, err := json.Marshal(loginResponse)
 			Expect(err).ToNot(HaveOccurred())
-			httpmock.RegisterResponder("POST", "http://scbe.fake.com/users/get-auth-token", httpmock.NewStringResponder(http.StatusAccepted, string(marshalledResponse)))
-			token, err := client.Login()
+			httpmock.RegisterResponder("POST", "http://scbe.fake.com/users/get-auth-token", httpmock.NewStringResponder(http.StatusOK, string(marshalledResponse)))
+			err = client.Login()
 			Expect(err).ToNot(HaveOccurred())
-			Expect(token).To(Equal("fake-token"))
-
 		})
-	})
-
-})
-
-var _ = Describe("restClient integration", func() {
-	var (
-		logger         *log.Logger
-		conInfo        scbe.ConnectionInfo
-		client         scbe.RestClient
-		err            error
-		credentialInfo scbe.CredentialInfo
-	)
-	BeforeEach(func() {
-		logger = log.New(os.Stdout, "ubiquity scbe: ", log.Lshortfile|log.LstdFlags)
-		//conInfo = scbe.ConnectionInfo{}
-		credentialInfo = scbe.CredentialInfo{"user", "password", "flocker"}
-		conInfo = scbe.ConnectionInfo{credentialInfo, "8440", "9.151.162.17", false}
-		//client, err = scbe.NewRestClient(logger, conInfo, "http://scbe.fake.com", "users/get-auth-token", "https://{scbe_ip}:{scbe_port}/")
-		client, err = scbe.NewRestClient(logger, conInfo, "https://9.151.162.17:8440/api/v1", "users/get-auth-token", "https://9.151.162.17:8440/")
-		Expect(err).ToNot(HaveOccurred())
-	})
-
-	Context(".Login", func() {
-		It("Integration testing", func() {
-			token, err := client.Login()
-			fmt.Println("response %#s", err)
+		It("should fail when httpClient succeed and return an empty token", func() {
+			loginResponse := scbe.LoginResponse{Token: ""}
+			marshalledResponse, err := json.Marshal(loginResponse)
 			Expect(err).ToNot(HaveOccurred())
-			Expect(token).To(Equal("real-token"))
-
+			httpmock.RegisterResponder("POST", "http://scbe.fake.com/users/get-auth-token", httpmock.NewStringResponder(http.StatusOK, string(marshalledResponse)))
+			err = client.Login()
+			Expect(err).To(HaveOccurred())
+			Expect(err.Error()).To(Equal("Error, token is empty"))
 		})
+		It("should fail when httpClient fails to login due to bad status of response", func() {
+			httpmock.RegisterResponder("POST", "http://scbe.fake.com/users/get-auth-token", httpmock.NewStringResponder(http.StatusBadRequest, "{}"))
+			err = client.Login()
+			Expect(err).To(HaveOccurred())
+			Expect(err.Error()).To(Equal("Error, bad status code of http response"))
+		})
+		It("should fail when httpClient.post return bad structure that marshaling cannot work with", func() {
+			httpmock.RegisterResponder("POST", "http://scbe.fake.com/users/get-auth-token", httpmock.NewStringResponder(http.StatusOK, "yyy"))
+			err = client.Login()
+			Expect(err).To(HaveOccurred())
+			Expect(err.Error()).To(Equal("Error in unmarshalling response"))
+		})
+
 	})
 
 })

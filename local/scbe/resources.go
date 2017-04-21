@@ -7,6 +7,7 @@ type CredentialInfo struct {
 	Password string `json:"password"`
 	Group    string `json:"group"`
 }
+
 type ConnectionInfo struct {
 	CredentialInfo CredentialInfo
 	Port           string
