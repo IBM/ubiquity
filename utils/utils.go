@@ -141,3 +141,4 @@ func SetupConfigDirectory(logger *log.Logger, executor Executor, configPath stri
 	}
 	return ubiquityConfigPath, nil
 }
+

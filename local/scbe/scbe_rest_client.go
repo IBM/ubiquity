@@ -1,32 +1,28 @@
 package scbe
 
 import (
+	"bytes"
+	"crypto/tls"
 	"encoding/json"
 	"fmt"
+	"github.com/IBM/ubiquity/utils"
 	"io/ioutil"
 	"log"
 	"net/http"
-
-	"bytes"
-
-	"github.com/IBM/ubiquity/utils"
 )
 
 // TODO change _ to camel case
 /// Wrapper for http requests to provide easy REST API operations, help with parsing, exist status and token handling
 type RestClient interface {
 	// Authenticate the server, prepare headers and save the token
-	Login() (string, error)
-	// Obtain a new token and return it as string
-	GetToken() (string, error)
+	Login() error
+
 	// Paper the payload, send post request and check expected status response and returned parsed response
-	Post(resource_url string, payload map[string]string, exit_status int) ([]byte, error)
+	Post(resource_url string, payload []byte, exit_status int) (*http.Response, error)
 	// Paper the payload, send get request and check expected status response and returned parsed response
-	Get(resource_url string, payload map[string]string, exit_status int) ([]byte, error)
-	// Paper the payload, send delete request and check expected status response and returned parsed response
-	Delete(resource_url string, payload map[string]string, exit_status int) ([]byte, error)
-	// check that the status code of the response is as expected
-	verifyStatusCode(response http.Response, expected_status_code int, action_name string) error
+	Get(resource_url string, payload []byte, exit_status int) (*http.Response, error)
+	// Paper the payload, send delete request and check expected status respon		se and returned parsed response
+	Delete(resource_url string, payload []byte, exit_status int) (*http.Response, error)
 }
 
 type restClient struct {
@@ -44,24 +40,47 @@ func NewRestClient(logger *log.Logger, conInfo ConnectionInfo, baseURL string, a
 	headers := make(map[string]string)
 	headers["Content-Type"] = "application/json"
 	headers["referer"] = referrer
-
-	return &restClient{logger: logger, connectionInfo: conInfo, baseURL: baseURL, authURL: authURL, referrer: referrer, httpClient: &http.Client{}, headers: headers}, nil
+	transCfg := &http.Transport{
+		TLSClientConfig: &tls.Config{InsecureSkipVerify: true}, // ignore expired SSL certificates
+	}
+	client := &http.Client{Transport: transCfg}
+	return &restClient{logger: logger, connectionInfo: conInfo, baseURL: baseURL, authURL: authURL, referrer: referrer, httpClient: client, headers: headers}, nil
 }
 
 const HTTP_AUTH_KEY = "Authorization"
 
-func (s *restClient) Login() (string, error) {
-	token, err := s.GetToken()
+func (s *restClient) Login() error {
+	token, err := s.getToken()
 	if err != nil {
 		s.logger.Printf("Error in getting token %#v", err)
-		return "", fmt.Errorf("Error in getting token")
+		return err
+	}
+	if token == "" {
+		s.logger.Printf("Error, token is empty")
+		return fmt.Errorf("Error, token is empty")
 	}
 	s.headers[HTTP_AUTH_KEY] = "Token " + token
+
+	return nil
 }
 
-func (s *restClient) GetToken() (string, error) {
+func (s *restClient) getToken() (string, error) {
 	delete(s.headers, HTTP_AUTH_KEY) // because no need token to get the token only user\password
-	response, err := s.Post(s.authURL, s.connectionInfo.CredentialInfo, 200)
+
+	fmt.Printf("========> cred%#v", s.connectionInfo)
+	credentials, err := json.Marshal(s.connectionInfo.CredentialInfo)
+	fmt.Printf("\n ---------> %s", string(credentials))
+	if err != nil {
+		s.logger.Printf("Error in marshalling CredentialInfo %#v", err)
+		return "", fmt.Errorf("Error in marshalling CredentialInfo")
+	}
+
+	response, err := s.Post(s.authURL, credentials, 200)
+	if err != nil {
+		s.logger.Printf("Error posting to url %#v to get a token %#v", s.authURL, err)
+		return "", err
+	}
+
 	var loginResponse = LoginResponse{}
 	err = utils.UnmarshalResponse(response, &loginResponse)
 	if err != nil {
@@ -71,18 +90,20 @@ func (s *restClient) GetToken() (string, error) {
 	return loginResponse.Token, nil
 }
 
-func (s *restClient) Post(resource_url string, payload map[string]string, exit_status int) ([]byte, error) {
+func (s *restClient) Post(resource_url string, payload []byte, exitStatus int) (*http.Response, error) {
 	// TODO not sure about the payload type
 	url := utils.FormatURL(s.baseURL, resource_url)
 
-	payload, err := json.MarshalIndent(payload, "", " ")
+	payload, err := json.Marshal(payload)
 	if err != nil {
 
 		s.logger.Printf(fmt.Sprintf("Internal error marshalling credentialInfo %#v", err))
 		return nil, fmt.Errorf("Internal error marshalling credentialInfo")
 	}
-
-	request, err := http.NewRequest("POST", url, bytes.NewBuffer(payload))
+	fmt.Printf("---------------> payload %#v", string(payload))
+	reader := bytes.NewReader(payload)
+	fmt.Printf("------->reader %#v", reader)
+	request, err := http.NewRequest("POST", url, reader)
 	if err != nil {
 		s.logger.Printf("Error in creating request %#v", err)
 		return nil, fmt.Errorf("Error in creating request")
@@ -93,28 +114,35 @@ func (s *restClient) Post(resource_url string, payload map[string]string, exit_s
 	}
 
 	response, err := s.httpClient.Do(request)
-	fmt.Printf("response %#v", response)
+	defer response.Body.Close()
+	data, err := ioutil.ReadAll(response.Body)
 	if err != nil {
-		s.logger.Printf("Error in executing remote call %#v", err)
-		return nil, fmt.Errorf("Error in executing remote call")
+		//TODO logging
+		return nil, err
 	}
-	// TODO need to pars the json respons
-	jsonDataFromHttp, err := ioutil.ReadAll(response.Body)
+
+	err = s.verifyStatusCode(*response, exitStatus) // &dereference
 	if err != nil {
-		s.logger.Printf("Error reading the response %#v", err)
-		return "", fmt.Errorf("Error reading the response")
+		//TODO logging
+		return nil, err
 	}
-	return jsonDataFromHttp, nil
+	fmt.Printf("===-=-=- data %#v", data)
+	return response, nil
 }
 
-func (s *restClient) Get(resource_url string, payload map[string]string, exit_status int) (map[string]string, error) {
+func (s *restClient) Get(resource_url string, payload []byte, exit_status int) (*http.Response, error) {
 	return nil, nil
 }
 
-func (s *restClient) Delete(resource_url string, payload map[string]string, exit_status int) (map[string]string, error) {
+func (s *restClient) Delete(resource_url string, payload []byte, exit_status int) (*http.Response, error) {
 	return nil, nil
 }
-func (s *restClient) verifyStatusCode(response http.Response, expected_status_code int, action_name string) error {
+func (s *restClient) verifyStatusCode(response http.Response, expected_status_code int) error {
+	if response.StatusCode != expected_status_code {
+		fmt.Printf("------->response statuc code, %#v", response)
+		s.logger.Printf("Error, bad status code of http response %#v", response.StatusCode)
+		return fmt.Errorf("Error, bad status code of http response")
+	}
 	return nil
 }
 
@@ -126,24 +154,21 @@ type ScbeVolumeInfo struct {
 
 /// SCBE rest client
 type ScbeRestClient interface {
-	Login() (string, error)
-
+	Login() error
 	CreateVolume(volName string, serviceName string, size_byte int) (ScbeVolumeInfo, error)
 	GetAllVolumes() ([]ScbeVolumeInfo, error)
 	GetVolume(wwn string) (ScbeVolumeInfo, error)
 	DeleteVolume(wwn string) error
-
 	MapVolume(wwn string, host string) error
 	UnmapVolume(wwn string, host string) error
 	GetVolMapping(wwn string) (string, error)
-
 	ServiceExist(serviceName string) bool
 }
 
 type scbeRestClient struct {
 	logger         *log.Logger
 	connectionInfo ConnectionInfo
-	client         *restClient // TODO does it have to be * or not?
+	client         RestClient
 }
 
 const DEFAULT_SCBE_PORT = 8440
@@ -165,4 +190,37 @@ func NewScbeRestClient(logger *log.Logger, conInfo ConnectionInfo) (ScbeRestClie
 	client, _ := NewRestClient(logger, conInfo, baseUrl, URL_SCBE_RESOURCE_GET_AUTH, referrer)
 
 	return &scbeRestClient{logger, conInfo, client}, nil
+}
+
+func (s *scbeRestClient) Login() error {
+	return nil
+}
+
+func (s *scbeRestClient) CreateVolume(volName string, serviceName string, size_byte int) (ScbeVolumeInfo, error) {
+	return ScbeVolumeInfo{}, nil
+}
+func (s *scbeRestClient) GetAllVolumes() ([]ScbeVolumeInfo, error) {
+	return nil, nil
+}
+func (s *scbeRestClient) GetVolume(wwn string) (ScbeVolumeInfo, error) {
+	return ScbeVolumeInfo{}, nil
+}
+func (s *scbeRestClient) DeleteVolume(wwn string) error {
+	return nil
+}
+
+func (s *scbeRestClient) MapVolume(wwn string, host string) error {
+	return nil
+
+}
+func (s *scbeRestClient) UnmapVolume(wwn string, host string) error {
+	return nil
+
+}
+func (s *scbeRestClient) GetVolMapping(wwn string) (string, error) {
+	return "", nil
+}
+
+func (s *scbeRestClient) ServiceExist(serviceName string) bool {
+	return true
 }
