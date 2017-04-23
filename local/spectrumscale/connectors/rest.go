@@ -38,7 +38,7 @@ func (s *spectrum_rest) GetClusterId() (string, error) {
 
 	getClusterResponse = cidResponse.(GetClusterResponse)
 
-	return getClusterResponse.Cluster.ClusterSummary.ClusterID, nil
+	return fmt.Sprintf("%v",getClusterResponse.Cluster.ClusterSummary.ClusterID), nil
 }
 
 func (s *spectrum_rest) IsFilesystemMounted(filesystemName string) (bool, error) {
@@ -130,7 +130,7 @@ func (s *spectrum_rest) CreateFileset(filesystemName string, filesetName string,
 	}
 	createFilesetResponse = response.(CreateFilesetResponse)
 	//TODO check the response message content and code
-	if createFilesetResponse.Status.Code != "0" {
+	if createFilesetResponse.Status.Code != 0 {
 		return fmt.Errorf("error creating fileset %v", createFilesetResponse)
 	}
 	return nil
@@ -146,7 +146,7 @@ func (s *spectrum_rest) DeleteFileset(filesystemName string, filesetName string)
 	}
 
 	deleteFilesetResponse = response.(DeleteFilesetResponse)
-	if deleteFilesetResponse.Status.Code != "0" {
+	if deleteFilesetResponse.Status.Code != 0 {
 		return fmt.Errorf("error deleting fileset %v", deleteFilesetResponse)
 	}
 
@@ -173,7 +173,7 @@ func (s *spectrum_rest) LinkFileset(filesystemName string, filesetName string) e
 	}
 
 	linkFilesetResponse = response.(CreateFilesetResponse)
-	if linkFilesetResponse.Status.Code != "0" {
+	if linkFilesetResponse.Status.Code != 0 {
 		return fmt.Errorf("error linking fileset %v", linkFilesetResponse)
 	}
 	return nil
@@ -195,7 +195,7 @@ func (s *spectrum_rest) UnlinkFileset(filesystemName string, filesetName string)
 	}
 
 	linkFilesetResponse = response.(CreateFilesetResponse)
-	if linkFilesetResponse.Status.Code != "0" {
+	if linkFilesetResponse.Status.Code != 0 {
 		return fmt.Errorf("error unlinking fileset %v", linkFilesetResponse)
 	}
 	return nil
@@ -282,14 +282,16 @@ func (s *spectrum_rest) SetFilesetQuota(filesystemName string, filesetName strin
 		return err
 	}
 	setQuotaResponse = sqResponse.(SetQuotaResponse)
-	if setQuotaResponse.Status.Code != "0" {
+	if setQuotaResponse.Status.Code != 0 {
 		return fmt.Errorf("error unlinking fileset %v", setQuotaResponse)
 	}
 	return nil
 }
 
 func (s *spectrum_rest) doHTTP(endpoint string, method string, responseObject interface{}, param interface{}) (interface{}, error) {
-	response, err := utils.HttpExecute(s.httpClient, s.logger, method, endpoint, param)
+	var dummy string
+	dummy = ""
+	response, err := utils.HttpExecute(s.httpClient, s.logger, method, endpoint,dummy,dummy, param)
 	if err != nil {
 		s.logger.Printf("Error in %s: %s remote call %#v", method, endpoint, err)
 		return nil, fmt.Errorf("Error in get filesystem remote call")

@@ -36,7 +36,7 @@ func FormatURL(url string, entries ...string) string {
 	return fmt.Sprintf("%s%s", base, suffix)
 }
 
-func HttpExecute(httpClient *http.Client, logger *log.Logger, requestType string, requestURL string, rawPayload interface{}) (*http.Response, error) {
+func HttpExecute(httpClient *http.Client, logger *log.Logger, requestType string, requestURL string, user string, password string, rawPayload interface{}) (*http.Response, error) {
 	payload, err := json.MarshalIndent(rawPayload, "", " ")
 	if err != nil {
 		logger.Printf("Internal error marshalling params %#v", err)
@@ -49,6 +49,10 @@ func HttpExecute(httpClient *http.Client, logger *log.Logger, requestType string
 		return nil, fmt.Errorf("Error in creating request")
 	}
 
+        request.Header.Add("Content-Type","application/json")
+        request.Header.Add("Accept","application/json")
+
+        request.SetBasicAuth(user,password)
 	return httpClient.Do(request)
 }
 
