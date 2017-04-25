@@ -1,4 +1,6 @@
-# Ubiquity Storage Service for Container Ecosystems [![Build Status](https://travis-ci.org/IBM/ubiquity.svg?branch=master)](https://travis-ci.org/IBM/ubiquity)
+# Ubiquity Storage Service for Container Ecosystems 
+[![Build Status](https://travis-ci.org/IBM/ubiquity.svg?branch=master)](https://travis-ci.org/IBM/ubiquity)[![GoDoc](https://godoc.org/github.com/IBM/ubiquity?status.svg)](https://godoc.org/github.com/IBM/ubiquity)[![License](https://img.shields.io/badge/license-Apache--2.0-blue.svg)](http://www.apache.org/licenses/LICENSE-2.0)[![Go Report Card](https://goreportcard.com/badge/github.com/IBM/ubiquity)](https://goreportcard.com/report/github.com/IBM/ubiquity)
+
 The Ubiquity project implements a service that manages access to persistent storage for containers orchestrated by container frameworks such as Kubernetes or Docker Swarm where scale, velocity and access privileges makes manual mounting of volumes into containers unpractical. 
 
 Ubiquity is a pluggable framework that can support a variety of storage backends and can be complemented by container framework adapters that map the different ways container frameworks deal with storage management into REST calls to the Ubiquity service. 
