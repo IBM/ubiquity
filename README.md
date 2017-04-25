@@ -1,7 +1,7 @@
-# Ubiquity Storage Service for Container Ecosystems
+# Ubiquity Storage Service for Container Ecosystems [![Build Status](https://travis-ci.org/IBM/ubiquity.svg?branch=master)](https://travis-ci.org/IBM/ubiquity)
 The Ubiquity project implements a service that manages access to persistent storage for containers orchestrated by container frameworks such as Kubernetes or Docker Swarm where scale, velocity and access privileges makes manual mounting of volumes into containers unpractical. 
 
-Ubiquity is a pluggable framework that can support a variety of storage backends and can be complemented by container framework adapters that map the different ways container frameworks deal with storage management into ReST calls to the Ubiquity service. 
+Ubiquity is a pluggable framework that can support a variety of storage backends and can be complemented by container framework adapters that map the different ways container frameworks deal with storage management into REST calls to the Ubiquity service. 
 
 ![Ubiquity Overview](images/UbiquityOverview.jpg)
 
@@ -20,7 +20,7 @@ This code is provided "AS IS" and without warranty of any kind.  Any issues will
 
 ## Sample Deployment Options
 The service can be deployed in a variety of ways.  In all options though, Ubiquity must be
-deployed on a system that has access (e.g., CLI, REST, ssh) to the supported storage system. We use use the IBM SpectrumScale file system as an example.
+deployed on a system that has access (e.g., CLI, REST, ssh) to the supported storage system. We use the IBM SpectrumScale file system as an example.
 
 #### Single Node (All in One)
 ![Single node](images/singleNode.jpg)
@@ -166,7 +166,7 @@ Moving forward, we will leverage Docker or K8s specific mechanisms to achieving 
  * Support OpenStack Manila storage back-end
  * Add explicit instructions on use of certificates to secure communication between plugins and Ubiquity service
  * API for updating volumes
- * Additional options to expore more features of Spectrum Scale, including use of the Spectrum Scale REST API.
+ * Additional options to explore more features of Spectrum Scale, including use of the Spectrum Scale REST API.
  * Containerization of Ubiquity for Docker and Kubernetes
  * Support for additional IBM storage systems
  * Support for CloudFoundry
