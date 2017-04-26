@@ -20,15 +20,6 @@ type spectrum_rest_v2 struct {
 }
 
 
-
-type http_data_v2 struct {
-        endpoint string
-        user    string
-        password string
-}
-
-
-
 func IsStatusOK(StatusCode int) bool {
 
 	if ((StatusCode == http.StatusOK) ||
@@ -52,15 +43,10 @@ func NewSpectrumRest_v2(logger *log.Logger, restConfig resources.RestConfig) (Sp
 
 
 func (s *spectrum_rest_v2) GetClusterId() (string, error) {
-	http_det := http_data_v2{}
 	getClusterURL := utils.FormatURL(s.endpoint, "scalemgmt/v2/cluster")
 
-        http_det.endpoint = getClusterURL
-        http_det.user = s.user
-        http_det.password = s.password
-
         getClusterResponse := GetClusterResponse{}
-        err := s.doHTTP(http_det, "GET", &getClusterResponse, nil)
+        err := s.doHTTP(getClusterURL, "GET", &getClusterResponse, nil)
         if err != nil {
                 s.logger.Printf("error in executing remote call: %v", err)
                 return "", err
@@ -71,16 +57,11 @@ func (s *spectrum_rest_v2) GetClusterId() (string, error) {
 
 
 func (s *spectrum_rest_v2) IsFilesystemMounted(filesystemName string) (bool, error) {
-        http_det := http_data_v2{}
         getNodesURL := utils.FormatURL(s.endpoint, "scalemgmt/v2/nodes")
         getNodesResponse := GetNodesResponse_v2{}
 
-        http_det.endpoint = getNodesURL
-        http_det.user = s.user
-        http_det.password = s.password
-
         for {
-	        err := s.doHTTP(http_det, "GET", &getNodesResponse, nil)
+	        err := s.doHTTP(getNodesURL, "GET", &getNodesResponse, nil)
                 if err != nil {
                 	s.logger.Printf("error in executing remote call: %v", err)
                         return false, err
@@ -95,7 +76,7 @@ func (s *spectrum_rest_v2) IsFilesystemMounted(filesystemName string) (bool, err
                 if (getNodesResponse.Paging.Next == "") {
                         break
                 } else {
-                        http_det.endpoint = getNodesResponse.Paging.Next
+                        getNodesURL = getNodesResponse.Paging.Next
                 }
         }
         return false, nil
@@ -107,14 +88,9 @@ func (s *spectrum_rest_v2) MountFileSystem(filesystemName string) error {
 }
 
 func (s *spectrum_rest_v2) ListFilesystems() ([]string, error) {
-        http_det := http_data_v2{}
         listFilesystemsURL := utils.FormatURL(s.endpoint, "scalemgmt/v2/filesystems")
-        http_det.endpoint = listFilesystemsURL
-        http_det.user = s.user
-        http_det.password = s.password
-
         getFilesystemResponse := GetFilesystemResponse_v2{}
-        err := s.doHTTP(http_det, "GET", &getFilesystemResponse, nil)
+        err := s.doHTTP(listFilesystemsURL, "GET", &getFilesystemResponse, nil)
         if err != nil {
                 s.logger.Printf("error in executing remote call: %v", err)
                 return nil, err
@@ -128,15 +104,11 @@ func (s *spectrum_rest_v2) ListFilesystems() ([]string, error) {
 }
 
 func (s *spectrum_rest_v2) GetFilesystemMountpoint(filesystemName string) (string, error) {
-        http_det := http_data_v2{}
         getFilesystemURL := utils.FormatURL(s.endpoint, fmt.Sprintf("scalemgmt/v2/filesystems/%s", filesystemName))
-        http_det.endpoint = getFilesystemURL
-        http_det.user = s.user
-        http_det.password = s.password
 
         getFilesystemResponse := GetFilesystemResponse_v2{}
 
-        err := s.doHTTP(http_det, "GET", &getFilesystemResponse, nil)
+        err := s.doHTTP(getFilesystemURL, "GET", &getFilesystemResponse, nil)
         if err != nil {
                 s.logger.Printf("error in executing remote call: %v", err)
                 return "", err
@@ -147,7 +119,6 @@ func (s *spectrum_rest_v2) GetFilesystemMountpoint(filesystemName string) (strin
 
 func (s *spectrum_rest_v2) CreateFileset(filesystemName string, filesetName string, opts map[string]interface{}) error {
 
-        http_det := http_data_v2{}
         filesetreq := CreateFilesetRequest{}
         filesetreq.FilesetName = filesetName
         filesetType, filesetTypeSpecified := opts[USER_SPECIFIED_FILESET_TYPE]
@@ -159,12 +130,9 @@ func (s *spectrum_rest_v2) CreateFileset(filesystemName string, filesetName stri
                 }
         }
         createFilesetURL := utils.FormatURL(s.endpoint, fmt.Sprintf("scalemgmt/v2/filesystems/%s/filesets",filesystemName))
-        http_det.endpoint = createFilesetURL
-        http_det.user = s.user
-        http_det.password = s.password
 
         createFilesetResponse := CreateFilesetResponse{}
-        err := s.doHTTP(http_det, "POST", &createFilesetResponse, filesetreq)
+        err := s.doHTTP(createFilesetURL, "POST", &createFilesetResponse, filesetreq)
         if err != nil {
                 s.logger.Printf("error in remote call %v", err)
                 return err
@@ -189,12 +157,8 @@ func (s *spectrum_rest_v2) CreateFileset(filesystemName string, filesetName stri
 func (s *spectrum_rest_v2) DeleteFileset(filesystemName string, filesetName string) error {
 
         deleteFilesetURL := utils.FormatURL(s.endpoint, fmt.Sprintf("scalemgmt/v2/filesystems/%s/filesets/%s", filesystemName, filesetName))
-        http_det := http_data_v2{}
         deleteFilesetResponse := DeleteFilesetResponse{}
-        http_det.endpoint = deleteFilesetURL
-        http_det.user = s.user
-        http_det.password = s.password
-        err := s.doHTTP(http_det, "DELETE", &deleteFilesetResponse, nil)
+        err := s.doHTTP(deleteFilesetURL, "DELETE", &deleteFilesetResponse, nil)
         if err != nil {
                 s.logger.Printf("Error in delete remote call")
                 return err
@@ -209,7 +173,6 @@ func (s *spectrum_rest_v2) DeleteFileset(filesystemName string, filesetName stri
 
 
 func (s *spectrum_rest_v2) LinkFileset(filesystemName string, filesetName string) error {
-        http_det := http_data_v2{}
         LinkReq := LinkFilesetRequest{}
         fsMountpoint, err := s.GetFilesystemMountpoint(filesystemName)
         if err != nil {
@@ -220,11 +183,8 @@ func (s *spectrum_rest_v2) LinkFileset(filesystemName string, filesetName string
         LinkReq.Path = fmt.Sprintf("%s/%s",fsMountpoint,filesetName)
         linkFilesetURL := utils.FormatURL(s.endpoint, fmt.Sprintf("scalemgmt/v2/filesystems/%s/filesets/%s/link",filesystemName, filesetName))
         linkFilesetResponse := CreateFilesetResponse{}
-        http_det.endpoint = linkFilesetURL
-        http_det.user = s.user
-        http_det.password = s.password
 
-        err = s.doHTTP(http_det, "POST", &linkFilesetResponse, LinkReq)
+        err = s.doHTTP(linkFilesetURL, "POST", &linkFilesetResponse, LinkReq)
         if err != nil {
                 s.logger.Printf("error in remote call %v", err)
                 return err
@@ -238,17 +198,14 @@ func (s *spectrum_rest_v2) LinkFileset(filesystemName string, filesetName string
 
 
 func (s *spectrum_rest_v2) UnlinkFileset(filesystemName string, filesetName string) error {
+
 	UnlinkReq := UnlinkFilesetRequest{}
 	UnlinkReq.Force = true
 
-	http_det := http_data_v2{}
 	linkFilesetURL := utils.FormatURL(s.endpoint, fmt.Sprintf("scalemgmt/v2/filesystems/%s/filesets/%s/link",filesystemName,filesetName))
-	http_det.endpoint = linkFilesetURL
-	http_det.user = s.user
-	http_det.password = s.password
 	linkFilesetResponse := CreateFilesetResponse{}
 
-	err := s.doHTTP(http_det, "DELETE", &linkFilesetResponse, UnlinkReq)
+	err := s.doHTTP(linkFilesetURL, "DELETE", &linkFilesetResponse, UnlinkReq)
 
         if err != nil {
                 s.logger.Printf("error in remote call %v", err)
@@ -262,15 +219,10 @@ func (s *spectrum_rest_v2) UnlinkFileset(filesystemName string, filesetName stri
 }
 
 func (s *spectrum_rest_v2) ListFileset(filesystemName string, filesetName string) (resources.VolumeMetadata, error) {
-        http_det := http_data_v2{}
         getFilesetURL := utils.FormatURL(s.endpoint, fmt.Sprintf("scalemgmt/v2/filesystems/%s/filesets/%s", filesystemName,filesetName))
-        http_det.endpoint = getFilesetURL
-        http_det.user = s.user
-        http_det.password = s.password
-
 
         getFilesetResponse := GetFilesetResponse_v2{}
-        err := s.doHTTP(http_det, "GET", &getFilesetResponse, nil)
+        err := s.doHTTP(getFilesetURL, "GET", &getFilesetResponse, nil)
         if err != nil {
                 s.logger.Printf("error in processing remote call %v", err)
                 return resources.VolumeMetadata{}, err
@@ -284,17 +236,13 @@ func (s *spectrum_rest_v2) ListFileset(filesystemName string, filesetName string
 }
 
 func (s *spectrum_rest_v2) ListFilesets(filesystemName string) ([]resources.VolumeMetadata, error) {
-	http_det := http_data_v2{}
 	listFilesetURL := utils.FormatURL(s.endpoint, "scalemgmt/v2/filesystems/%s/filesets",filesystemName)
 	listFilesetResponse := GetFilesetResponse_v2{}
 
-        http_det.endpoint = listFilesetURL
-        http_det.user = s.user
-        http_det.password = s.password
 	var response []resources.VolumeMetadata 	
 	var responseSize int
 	for {
-	        err := s.doHTTP(http_det, "GET", &listFilesetResponse, nil)
+	        err := s.doHTTP(listFilesetURL, "GET", &listFilesetResponse, nil)
 	        if err != nil {
 	                s.logger.Printf("error in processing remote call %v", err)
 	                return nil, err
@@ -309,7 +257,7 @@ func (s *spectrum_rest_v2) ListFilesets(filesystemName string) ([]resources.Volu
 		if (listFilesetResponse.Paging.Next == "") {
 			break;
 		} else {
-			http_det.endpoint = listFilesetResponse.Paging.Next
+			listFilesetURL = listFilesetResponse.Paging.Next
 		}
 	}
 	return response, nil
@@ -331,7 +279,6 @@ func (s *spectrum_rest_v2) IsFilesetLinked(filesystemName string, filesetName st
 
 func (s *spectrum_rest_v2) SetFilesetQuota(filesystemName string, filesetName string, quota string) error {
 
-	http_det := http_data_v2{}
 	setQuotaURL := utils.FormatURL(s.endpoint, fmt.Sprintf("scalemgmt/v2/filesystems/%s/filesets/%s/quotas",filesystemName,filesetName))
 	quotaRequest := SetQuotaRequest_v2{}	
 
@@ -342,11 +289,7 @@ func (s *spectrum_rest_v2) SetFilesetQuota(filesystemName string, filesetName st
 
 	setQuotaResponse := SetQuotaResponse{}
 
-        http_det.endpoint = setQuotaURL
-        http_det.user = s.user
-        http_det.password = s.password
-
-        err := s.doHTTP(http_det, "POST", &setQuotaResponse, quotaRequest)
+        err := s.doHTTP(setQuotaURL, "POST", &setQuotaResponse, quotaRequest)
         if err != nil {
                 s.logger.Printf("error setting quota for fileset %v", err)
                 return err
@@ -359,16 +302,12 @@ func (s *spectrum_rest_v2) SetFilesetQuota(filesystemName string, filesetName st
 
 
 func (s *spectrum_rest_v2) ListFilesetQuota(filesystemName string, filesetName string) (string, error) {
-        http_det := http_data_v2{}
 
 	listQuotaURL := utils.FormatURL(s.endpoint, fmt.Sprintf("scalemgmt/v2/filesystems/%s/filesets/%s/quotas",filesystemName,filesetName))
 	listQuotaResponse := GetQuotaResponse_v2{}
 
-        http_det.endpoint = listQuotaURL
-        http_det.user = s.user
-        http_det.password = s.password
 
-        err := s.doHTTP(http_det, "GET", &listQuotaResponse, nil)
+        err := s.doHTTP(listQuotaURL, "GET", &listQuotaResponse, nil)
         if err != nil {
                 s.logger.Printf("error in processing remote call %v", err)
                 return "", err
@@ -378,10 +317,10 @@ func (s *spectrum_rest_v2) ListFilesetQuota(filesystemName string, filesetName s
         return listQuotaResponse.Quotas[0].BlockQuota, nil
 }
 
-func (s *spectrum_rest_v2) doHTTP(http_det http_data_v2, method string, responseObject interface{}, param interface{}) (error) {
-        response, err := utils.HttpExecute(s.httpClient, s.logger, method, http_det.endpoint,http_det.user, http_det.password, param)
+func (s *spectrum_rest_v2) doHTTP(endpoint string, method string, responseObject interface{}, param interface{}) (error) {
+        response, err := utils.HttpExecute(s.httpClient, s.logger, method, endpoint, s.user, s.password, param)
         if err != nil {
-                s.logger.Printf("Error in %s: %s remote call %#v", method, http_det.endpoint, err)
+                s.logger.Printf("Error in %s: %s remote call %#v", method, endpoint, err)
 
                 return err
         }
