@@ -6,7 +6,7 @@ import (
 	"net/http"
 	"os"
 	"path"
-
+        "crypto/tls"
 	"github.com/IBM/ubiquity/resources"
 	"github.com/IBM/ubiquity/utils"
 )
@@ -15,11 +15,21 @@ type spectrum_rest struct {
 	logger     *log.Logger
 	httpClient *http.Client
 	endpoint   string
+        user       string
+        password   string
 }
+
 
 func NewSpectrumRest(logger *log.Logger, restConfig resources.RestConfig) (SpectrumScaleConnector, error) {
 	endpoint := restConfig.Endpoint
-	return &spectrum_rest{logger: logger, httpClient: &http.Client{}, endpoint: endpoint}, nil
+        user := restConfig.User
+        password := restConfig.Password
+
+        tr := &http.Transport{
+                TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
+        }
+
+	return &spectrum_rest{logger: logger, httpClient: &http.Client{Transport: tr}, endpoint: endpoint, user: user, password: password}, nil
 }
 
 func NewSpectrumRestWithClient(logger *log.Logger, restConfig resources.RestConfig, client *http.Client) (SpectrumScaleConnector, error) {
@@ -289,9 +299,7 @@ func (s *spectrum_rest) SetFilesetQuota(filesystemName string, filesetName strin
 }
 
 func (s *spectrum_rest) doHTTP(endpoint string, method string, responseObject interface{}, param interface{}) (interface{}, error) {
-	var dummy string
-	dummy = ""
-	response, err := utils.HttpExecute(s.httpClient, s.logger, method, endpoint,dummy,dummy, param)
+	response, err := utils.HttpExecute(s.httpClient, s.logger, method, endpoint, s.user, s.password, param)
 	if err != nil {
 		s.logger.Printf("Error in %s: %s remote call %#v", method, endpoint, err)
 		return nil, fmt.Errorf("Error in get filesystem remote call")
