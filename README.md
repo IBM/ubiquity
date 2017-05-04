@@ -173,7 +173,9 @@ Moving forward, we will leverage Docker or K8s specific mechanisms to achieving 
  * Support for additional IBM storage systems
  * Support for CloudFoundry
 
-
+## Contribution:
+Our team welcoms any contribution or bug fixes ...
+To contribute please follow the guidelines in [Contribution guide](contributor-guide.md)
 ## Suggestions and Questions
 For any questions, suggestions, or issues, please use github.
 
