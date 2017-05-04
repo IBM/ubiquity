@@ -5,4 +5,4 @@ go get github.com/onsi/gomega
 
 cd local/spectrumscale
 echo "Starting unit tests for local/spectrumscale"
-ginkgo
+ginkgo -cover
