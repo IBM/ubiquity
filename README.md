@@ -1,15 +1,28 @@
-# Ubiquity Storage Service for Container Ecosystems
-Ubiquity provides access to persistent storage for Docker containers in Docker or Kubernetes ecosystems. The REST service can be run on one or more nodes in the cluster to create, manage, and delete storage volumes.  
+# Ubiquity Storage Service for Container Ecosystems 
+[![Build Status](https://travis-ci.org/IBM/ubiquity.svg?branch=master)](https://travis-ci.org/IBM/ubiquity)[![GoDoc](https://godoc.org/github.com/IBM/ubiquity?status.svg)](https://godoc.org/github.com/IBM/ubiquity)[![License](https://img.shields.io/badge/license-Apache--2.0-blue.svg)](http://www.apache.org/licenses/LICENSE-2.0)[![Go Report Card](https://goreportcard.com/badge/github.com/IBM/ubiquity)](https://goreportcard.com/report/github.com/IBM/ubiquity)
 
-Ubiquity is a pluggable framework that can support a variety of storage backends.  See 'Available Storage Systems' for more details.
+The Ubiquity project implements a service that manages access to persistent storage for containers orchestrated by container frameworks such as Kubernetes or Docker Swarm where scale, velocity and access privileges makes manual mounting of volumes into containers unpractical. 
+
+Ubiquity is a pluggable framework that can support a variety of storage backends and can be complemented by container framework adapters that map the different ways container frameworks deal with storage management into REST calls to the Ubiquity service. 
+
+![Ubiquity Overview](images/UbiquityOverview.jpg)
+
+Different container frameworks can use the service concurrently and allow access to different kinds of storage systems. Currently, the following frameworks are supported:
+
+- [Kubernetes](https://github.com/IBM/ubiquity-k8s)
+- [Docker](https://github.com/IBM/ubiquity-docker-plugin)
+
+This repository contains the storage service code. The individual container framework adapters are in separated projects pointed to by the links. 
+
+See [Available Storage Systems](supportedStorage.md) for more details on the storage backends supported and their configuration.
+
+The Ubiquity service can be run on one or more nodes in the cluster to create, manage, and delete storage volumes.  
 
 This code is provided "AS IS" and without warranty of any kind.  Any issues will be handled on a best effort basis.
 
 ## Sample Deployment Options
 The service can be deployed in a variety of ways.  In all options though, Ubiquity must be
-deployed on a system that has access (e.g., CLI, REST, ssh) to the supported storage system.
-
-Note that in each diagram, this repository contains code for running only the Ubiquity service.  The Docker or Kubernetes plugins are available in the associated repositories.
+deployed on a system that has access (e.g., CLI, REST, ssh) to the supported storage system. We use the IBM SpectrumScale file system as an example.
 
 #### Single Node (All in One)
 ![Single node](images/singleNode.jpg)
@@ -140,67 +153,6 @@ where:
 ### Next Steps - Install a plugin for Docker or Kubernetes
 To use Ubiquity, please install appropriate storage-specific plugin ([docker](https://github.com/IBM/ubiquity-docker-plugin), [kubernetes](https://github.com/IBM/ubiquity-k8s))
 
-## Available Storage Systems
-
-### IBM Spectrum Scale
-With IBM Spectrum Scale, containers can have shared file system access to any number of containers from small clusters of a few hosts up to very large clusters with thousands of hosts.
-
-The current plugin supports the following protocols:
- * Native POSIX Client (backend=spectrum-scale)
- * CES NFS (Scalable and Clustered NFS Exports) (backend=spectrum-scale-nfs)
- 
-**Note** that if option backend is not specified to Docker as an opt parameter, or to Kubernetes in the yaml file, the backend defaults to server side default specification.
-
-Spectrum Scale supports the following options for creating a volume.  ther the native or NFS driver is used, the set of options is exactly the same.  They are passed to Docker via the 'opt' option on the command line as a set of key-value pairs.  
-
-Note that POSIX volumes are not accessible via NFS, but NFS volumes are accessible via POSIX.  This is because NFS requires the additional step of exporting the dataset on the storage server.  To make a POSIX volume accessible via NFS, simply create the volume using the 'spectrum-scale-nfs' backend using the same path or fileset name. 
-
-
-#### Supported Volume Types
-
-The volume driver supports creation of two types of volumes in Spectrum Scale:
-
-***1. Fileset Volume (Default)***
-
-Fileset Volume is a volume which maps to a fileset in Spectrum Scale. By default, this will create a dependent Spectrum Scale fileset, which supports Quota and other Policies, but does not support snapshots.  If snapshots are required, then a independent volume can also be requested.  Note that there are limits to the number of filesets that can be created, please see Spectrum Scale docs for more info.
-
-Usage: type=fileset
-
-***2. Independent Fileset Volume***
-
-Independent Fileset Volume is a volume which maps to an independent fileset, with its own inode space, in Spectrum Scale.
-
-Usage:  type=fileset, fileset-type=independent
-
-***3. Lightweight Volume***
-
-Lightweight Volume is a volume which maps to a sub-directory within an existing fileset in Spectrum Scale.  The fileset could be a previously created 'Fileset Volume'.  Lightweight volumes allow users to create unlimited numbers of volumes, but lack the ability to set quotas, perform individual volume snapshots, etc.
-
-To use Lightweight volumes, but take advantage of Spectrum Scale features such a encryption, simply create the Lightweight volume in a Spectrum Scale fileset that has the desired features enabled.
-
-[**Note**: Support for Lightweight volume with NFS is experimental]
-
-Usage: type=lightweight
-
-#### Supported Volume Creation Options
-
-**Features**
- * Quotas (optional) - Fileset Volumes can have a max quota limit set. Quota support for filesets must be already enabled on the file system.
-    * Usage: quota=(numeric value)
-    * Docker usage example: --opt quota=100M
- * Ownership (optional) - Specify the userid and groupid that should be the owner of the volume.  Note that this only controls Linux permissions at this time, ACLs are not currently set (but could be set manually by the admin).
-    * Usage uid=(userid), gid=(groupid)
-    * Docker usage example: --opt uid=1002 --opt gid=1002
- 
-**Type and Location** 
- * File System (optional) - Select a file system in which the volume will exist.  By default the file system set in  ubiquity-server.conf is used.
-    * Usage: filesystem=(name)
- * Fileset - This option selects the fileset that will be used for the volume.  This can be used to create a volume from an existing fileset, or choose the fileset in which a lightweight volume will be created.
-    * Usage: fileset=modelingData
- * Directory (lightweight volumes only): This option sets the name of the directory to be created for a lightweight volume.  This can also be used to create a lighweight volume from an existing directory.  The directory can be a relative path starting at the root of the path at which the fileset is linked in the file system namespace.
-    * Usage: directory=dir1
-  
-
 
 ## Additional Considerations
 ### High-Availability
@@ -211,18 +163,12 @@ The Ubiquity service can be safely run on multiple nodes in an active-passive ma
 Moving forward, we will leverage Docker or K8s specific mechanisms to achieving high-availability by running the Ubiquity service in containers or a pod.
 
 
-
-### Ubiquity Service Access to IBM Spectrum Scale CLI
-Currently there are 2 different ways for Ubiquity to manage volumes in IBM Spectrum Scale.
- * Direct access - In this setup, Ubiquity will directly call the IBM Spectrum Scale CLI (e.g., 'mm' commands).  This means that Ubiquity must be deployed on a node that can directly call the CLI.
- * ssh - In this setup, Ubiquity uses ssh to call the IBM Spectrum Scale CLI that is deployed on another node.  This avoids the need to run Ubiquity on a node that is part of the IBM Spectrum Scale cluster.  For example, this would also allow Ubiquity to run in a container.
-
 ## Roadmap
 
  * Support OpenStack Manila storage back-end
  * Add explicit instructions on use of certificates to secure communication between plugins and Ubiquity service
  * API for updating volumes
- * Additional options to expore more features of Spectrum Scale, including use of the Spectrum Scale REST API.
+ * Additional options to explore more features of Spectrum Scale, including use of the Spectrum Scale REST API.
  * Containerization of Ubiquity for Docker and Kubernetes
  * Support for additional IBM storage systems
  * Support for CloudFoundry

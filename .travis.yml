@@ -8,3 +8,6 @@ install:
 
 script:
   - sh scripts/run_units.sh
+
+notifications:
+          slack: ibm-ubiquity:gb1UFkvWWjprPqokiklRRP1p
