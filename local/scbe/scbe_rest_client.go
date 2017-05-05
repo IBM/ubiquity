@@ -18,11 +18,11 @@ type RestClient interface {
 	Login() error
 
 	// Paper the payload, send post request and check expected status response and returned parsed response
-	Post(resource_url string, payload []byte, exit_status int) (*http.Response, error)
+	Post(resource_url string, payload []byte, exit_status int) ([]byte, error)
 	// Paper the payload, send get request and check expected status response and returned parsed response
-	Get(resource_url string, payload []byte, exit_status int) (*http.Response, error)
+	Get(resource_url string, payload []byte, exit_status int) ([]byte, error)
 	// Paper the payload, send delete request and check expected status respon		se and returned parsed response
-	Delete(resource_url string, payload []byte, exit_status int) (*http.Response, error)
+	Delete(resource_url string, payload []byte, exit_status int) ([]byte, error)
 }
 
 type restClient struct {
@@ -37,11 +37,12 @@ type restClient struct {
 }
 
 func NewRestClient(logger *log.Logger, conInfo ConnectionInfo, baseURL string, authURL string, referrer string) (RestClient, error) {
-	headers := make(map[string]string)
-	headers["Content-Type"] = "application/json"
-	headers["referer"] = referrer
+	headers := map[string]string{
+		"Content-Type": "application/json",
+		"referer":      referrer,
+	}
 	transCfg := &http.Transport{
-		TLSClientConfig: &tls.Config{InsecureSkipVerify: true}, // ignore expired SSL certificates
+		TLSClientConfig: &tls.Config{InsecureSkipVerify: true}, // ignore expired SSL certificates TODO to use
 	}
 	client := &http.Client{Transport: transCfg}
 	return &restClient{logger: logger, connectionInfo: conInfo, baseURL: baseURL, authURL: authURL, referrer: referrer, httpClient: client, headers: headers}, nil
@@ -67,42 +68,35 @@ func (s *restClient) Login() error {
 func (s *restClient) getToken() (string, error) {
 	delete(s.headers, HTTP_AUTH_KEY) // because no need token to get the token only user\password
 
-	fmt.Printf("========> cred%#v", s.connectionInfo)
 	credentials, err := json.Marshal(s.connectionInfo.CredentialInfo)
-	fmt.Printf("\n ---------> %s", string(credentials))
 	if err != nil {
 		s.logger.Printf("Error in marshalling CredentialInfo %#v", err)
 		return "", fmt.Errorf("Error in marshalling CredentialInfo")
 	}
 
-	response, err := s.Post(s.authURL, credentials, 200)
+	responseBody, err := s.Post(s.authURL, credentials, 200)
 	if err != nil {
 		s.logger.Printf("Error posting to url %#v to get a token %#v", s.authURL, err)
 		return "", err
 	}
 
 	var loginResponse = LoginResponse{}
-	err = utils.UnmarshalResponse(response, &loginResponse)
+	err = json.Unmarshal(responseBody, &loginResponse)
 	if err != nil {
-		s.logger.Printf("Error in unmarshalling response %#v", err)
-		return "", fmt.Errorf("Error in unmarshalling response")
+		return "", err
 	}
+
+	if loginResponse.Token == "" {
+		return "", fmt.Errorf("Token is empty")
+	}
+
 	return loginResponse.Token, nil
 }
 
-func (s *restClient) Post(resource_url string, payload []byte, exitStatus int) (*http.Response, error) {
-	// TODO not sure about the payload type
+func (s *restClient) Post(resource_url string, payload []byte, exitStatus int) ([]byte, error) {
 	url := utils.FormatURL(s.baseURL, resource_url)
 
-	payload, err := json.Marshal(payload)
-	if err != nil {
-
-		s.logger.Printf(fmt.Sprintf("Internal error marshalling credentialInfo %#v", err))
-		return nil, fmt.Errorf("Internal error marshalling credentialInfo")
-	}
-	fmt.Printf("---------------> payload %#v", string(payload))
 	reader := bytes.NewReader(payload)
-	fmt.Printf("------->reader %#v", reader)
 	request, err := http.NewRequest("POST", url, reader)
 	if err != nil {
 		s.logger.Printf("Error in creating request %#v", err)
@@ -114,7 +108,7 @@ func (s *restClient) Post(resource_url string, payload []byte, exitStatus int) (
 	}
 
 	response, err := s.httpClient.Do(request)
-	defer response.Body.Close()
+	//defer response.Body.Close()
 	data, err := ioutil.ReadAll(response.Body)
 	if err != nil {
 		//TODO logging
@@ -126,15 +120,14 @@ func (s *restClient) Post(resource_url string, payload []byte, exitStatus int) (
 		//TODO logging
 		return nil, err
 	}
-	fmt.Printf("===-=-=- data %#v", data)
-	return response, nil
+	return data, nil
 }
 
-func (s *restClient) Get(resource_url string, payload []byte, exit_status int) (*http.Response, error) {
+func (s *restClient) Get(resource_url string, payload []byte, exit_status int) ([]byte, error) {
 	return nil, nil
 }
 
-func (s *restClient) Delete(resource_url string, payload []byte, exit_status int) (*http.Response, error) {
+func (s *restClient) Delete(resource_url string, payload []byte, exit_status int) ([]byte, error) {
 	return nil, nil
 }
 func (s *restClient) verifyStatusCode(response http.Response, expected_status_code int) error {

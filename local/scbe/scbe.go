@@ -23,7 +23,6 @@ type scbeLocalClient struct {
 	activationLock *sync.RWMutex
 }
 
-const ()
 
 func NewScbeLocalClient(logger *log.Logger, config resources.ScbeConfig, database *gorm.DB) (resources.StorageClient, error) {
 	if config.ConfigPath == "" {
