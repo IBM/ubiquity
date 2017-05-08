@@ -4,6 +4,8 @@ import (
 	"log"
 	"os"
 	"os/exec"
+	"bytes"
+	"fmt"
 )
 
 //go:generate counterfeiter -o ../fakes/fake_executor.go . Executor
@@ -25,12 +27,18 @@ func NewExecutor(logger *log.Logger) Executor {
 
 func (e *executor) Execute(command string, args []string) ([]byte, error) {
 	cmd := exec.Command(command, args...)
-	output, err := cmd.Output()
+	var stdout bytes.Buffer
+	var stderr bytes.Buffer
+
+	cmd.Stdout = &stdout
+	cmd.Stderr = &stderr
+	err := cmd.Run()
 	if err != nil {
-		e.logger.Printf("Error executing command %v", err)
+		e.logger.Printf("Error executing command: %#v, err: %s", cmd.Args,
+			fmt.Sprint(err) + ": " + stderr.String())
 		return nil, err
 	}
-	return output, err
+	return stdout.Bytes(), err
 }
 func (e *executor) Stat(path string) (os.FileInfo, error) {
 	return os.Stat(path)

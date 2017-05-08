@@ -789,11 +789,11 @@ func (s *spectrumLocalClient) updatePermissions(name string) error {
 	if exists == false {
 		return fmt.Errorf("Cannot determine filesetId for volume: %s", name)
 	}
-	executor := utils.NewExecutor(s.logger)
+
 	filesetPath := path.Join(fsMountpoint, fileset.(string))
 	//chmod 777 mountpoint
 	args := []string{"chmod", "777", filesetPath}
-	_, err = executor.Execute("sudo", args)
+	_, err = s.executor.Execute("sudo", args)
 	if err != nil {
 		s.logger.Printf("Failed to change permissions of filesetpath %s: %s", filesetPath, err.Error())
 		return err
@@ -805,7 +805,7 @@ func (s *spectrumLocalClient) updatePermissions(name string) error {
 		}
 		directoryPath := path.Join(filesetPath, directory.(string))
 		args := []string{"chmod", "777", directoryPath}
-		_, err = executor.Execute("sudo", args)
+		_, err = s.executor.Execute("sudo", args)
 		if err != nil {
 			s.logger.Printf("Failed to change permissions of directorypath %s: %s", directoryPath, err.Error())
 			return err
