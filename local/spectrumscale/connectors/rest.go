@@ -132,13 +132,13 @@ func (s *spectrum_rest) CreateFileset(filesystemName string, filesetName string,
 
 	fileset := Fileset{Config: filesetConfig}
 	createFilesetURL := utils.FormatURL(s.endpoint, "scalemgmt/v1/filesets")
-	createFilesetResponse := CreateFilesetResponse{}
+	createFilesetResponse := GenericResponse{}
 	response, err := s.doHTTP(createFilesetURL, "POST", createFilesetResponse, fileset)
 	if err != nil {
 		s.logger.Printf("error in remote call %v", err)
 		return err
 	}
-	createFilesetResponse = response.(CreateFilesetResponse)
+	createFilesetResponse = response.(GenericResponse)
 	//TODO check the response message content and code
 	if createFilesetResponse.Status.Code != 0 {
 		return fmt.Errorf("error creating fileset %v", createFilesetResponse)
@@ -148,14 +148,14 @@ func (s *spectrum_rest) CreateFileset(filesystemName string, filesetName string,
 
 func (s *spectrum_rest) DeleteFileset(filesystemName string, filesetName string) error {
 	deleteFilesetURL := utils.FormatURL(s.endpoint, fmt.Sprintf("scalemgmt/v1/filesets/%s/filesystemName=%s&qosClass=other", filesetName, filesystemName))
-	deleteFilesetResponse := DeleteFilesetResponse{}
+	deleteFilesetResponse := GenericResponse{}
 	response, err := s.doHTTP(deleteFilesetURL, "DELETE", deleteFilesetResponse, nil)
 	if err != nil {
 		s.logger.Printf("Error in delete remote call")
 		return err
 	}
 
-	deleteFilesetResponse = response.(DeleteFilesetResponse)
+	deleteFilesetResponse = response.(GenericResponse)
 	if deleteFilesetResponse.Status.Code != 0 {
 		return fmt.Errorf("error deleting fileset %v", deleteFilesetResponse)
 	}
@@ -175,14 +175,14 @@ func (s *spectrum_rest) LinkFileset(filesystemName string, filesetName string) e
 	filesetConfig.Path = path.Join(fsMountpoint, filesetName)
 	fileset := Fileset{Config: filesetConfig}
 	linkFilesetURL := utils.FormatURL(s.endpoint, fmt.Sprintf("scalemgmt/v1/filesets/%s", filesetName))
-	linkFilesetResponse := CreateFilesetResponse{}
+	linkFilesetResponse := GenericResponse{}
 	response, err := s.doHTTP(linkFilesetURL, "PUT", linkFilesetResponse, fileset)
 	if err != nil {
 		s.logger.Printf("error in remote call %v", err)
 		return err
 	}
 
-	linkFilesetResponse = response.(CreateFilesetResponse)
+	linkFilesetResponse = response.(GenericResponse)
 	if linkFilesetResponse.Status.Code != 0 {
 		return fmt.Errorf("error linking fileset %v", linkFilesetResponse)
 	}
@@ -197,14 +197,14 @@ func (s *spectrum_rest) UnlinkFileset(filesystemName string, filesetName string)
 	filesetConfig.Path = ""
 	fileset := Fileset{Config: filesetConfig}
 	linkFilesetURL := utils.FormatURL(s.endpoint, fmt.Sprintf("scalemgmt/v1/filesets/%s", filesetName))
-	linkFilesetResponse := CreateFilesetResponse{}
+	linkFilesetResponse := GenericResponse{}
 	response, err := s.doHTTP(linkFilesetURL, "PUT", linkFilesetResponse, fileset)
 	if err != nil {
 		s.logger.Printf("error in remote call %v", err)
 		return err
 	}
 
-	linkFilesetResponse = response.(CreateFilesetResponse)
+	linkFilesetResponse = response.(GenericResponse)
 	if linkFilesetResponse.Status.Code != 0 {
 		return fmt.Errorf("error unlinking fileset %v", linkFilesetResponse)
 	}
@@ -285,13 +285,13 @@ func (s *spectrum_rest) SetFilesetQuota(filesystemName string, filesetName strin
 	quotaRequest.BlockSoftLimit = quota
 	quotaRequest.OperationType = "setQuota"
 	quotaRequest.QuotaType = "fileset"
-	setQuotaResponse := SetQuotaResponse{}
+	setQuotaResponse := GenericResponse{}
 	sqResponse, err := s.doHTTP(setQuotaURL, "POST", setQuotaResponse, quotaRequest)
 	if err != nil {
 		s.logger.Printf("error setting quota for fileset %v", err)
 		return err
 	}
-	setQuotaResponse = sqResponse.(SetQuotaResponse)
+	setQuotaResponse = sqResponse.(GenericResponse)
 	if setQuotaResponse.Status.Code != 0 {
 		return fmt.Errorf("error unlinking fileset %v", setQuotaResponse)
 	}
