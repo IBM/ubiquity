@@ -6,7 +6,7 @@ import (
 	"net/http"
 	"os"
 	"path"
-
+        "crypto/tls"
 	"github.com/IBM/ubiquity/resources"
 	"github.com/IBM/ubiquity/utils"
 )
@@ -15,11 +15,21 @@ type spectrum_rest struct {
 	logger     *log.Logger
 	httpClient *http.Client
 	endpoint   string
+        user       string
+        password   string
 }
+
 
 func NewSpectrumRest(logger *log.Logger, restConfig resources.RestConfig) (SpectrumScaleConnector, error) {
 	endpoint := restConfig.Endpoint
-	return &spectrum_rest{logger: logger, httpClient: &http.Client{}, endpoint: endpoint}, nil
+        user := restConfig.User
+        password := restConfig.Password
+
+        tr := &http.Transport{
+                TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
+        }
+
+	return &spectrum_rest{logger: logger, httpClient: &http.Client{Transport: tr}, endpoint: endpoint, user: user, password: password}, nil
 }
 
 func NewSpectrumRestWithClient(logger *log.Logger, restConfig resources.RestConfig, client *http.Client) (SpectrumScaleConnector, error) {
@@ -38,7 +48,7 @@ func (s *spectrum_rest) GetClusterId() (string, error) {
 
 	getClusterResponse = cidResponse.(GetClusterResponse)
 
-	return getClusterResponse.Cluster.ClusterSummary.ClusterID, nil
+	return fmt.Sprintf("%v",getClusterResponse.Cluster.ClusterSummary.ClusterID), nil
 }
 
 func (s *spectrum_rest) IsFilesystemMounted(filesystemName string) (bool, error) {
@@ -130,7 +140,7 @@ func (s *spectrum_rest) CreateFileset(filesystemName string, filesetName string,
 	}
 	createFilesetResponse = response.(CreateFilesetResponse)
 	//TODO check the response message content and code
-	if createFilesetResponse.Status.Code != "0" {
+	if createFilesetResponse.Status.Code != 0 {
 		return fmt.Errorf("error creating fileset %v", createFilesetResponse)
 	}
 	return nil
@@ -146,7 +156,7 @@ func (s *spectrum_rest) DeleteFileset(filesystemName string, filesetName string)
 	}
 
 	deleteFilesetResponse = response.(DeleteFilesetResponse)
-	if deleteFilesetResponse.Status.Code != "0" {
+	if deleteFilesetResponse.Status.Code != 0 {
 		return fmt.Errorf("error deleting fileset %v", deleteFilesetResponse)
 	}
 
@@ -173,7 +183,7 @@ func (s *spectrum_rest) LinkFileset(filesystemName string, filesetName string) e
 	}
 
 	linkFilesetResponse = response.(CreateFilesetResponse)
-	if linkFilesetResponse.Status.Code != "0" {
+	if linkFilesetResponse.Status.Code != 0 {
 		return fmt.Errorf("error linking fileset %v", linkFilesetResponse)
 	}
 	return nil
@@ -195,7 +205,7 @@ func (s *spectrum_rest) UnlinkFileset(filesystemName string, filesetName string)
 	}
 
 	linkFilesetResponse = response.(CreateFilesetResponse)
-	if linkFilesetResponse.Status.Code != "0" {
+	if linkFilesetResponse.Status.Code != 0 {
 		return fmt.Errorf("error unlinking fileset %v", linkFilesetResponse)
 	}
 	return nil
@@ -282,14 +292,14 @@ func (s *spectrum_rest) SetFilesetQuota(filesystemName string, filesetName strin
 		return err
 	}
 	setQuotaResponse = sqResponse.(SetQuotaResponse)
-	if setQuotaResponse.Status.Code != "0" {
+	if setQuotaResponse.Status.Code != 0 {
 		return fmt.Errorf("error unlinking fileset %v", setQuotaResponse)
 	}
 	return nil
 }
 
 func (s *spectrum_rest) doHTTP(endpoint string, method string, responseObject interface{}, param interface{}) (interface{}, error) {
-	response, err := utils.HttpExecute(s.httpClient, s.logger, method, endpoint, param)
+	response, err := utils.HttpExecute(s.httpClient, s.logger, method, endpoint, s.user, s.password, param)
 	if err != nil {
 		s.logger.Printf("Error in %s: %s remote call %#v", method, endpoint, err)
 		return nil, fmt.Errorf("Error in get filesystem remote call")
