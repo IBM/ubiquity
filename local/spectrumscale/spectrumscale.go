@@ -49,7 +49,7 @@ func NewSpectrumLocalClient(logger *log.Logger, config resources.SpectrumScaleCo
 	if config.ConfigPath == "" {
 		return nil, fmt.Errorf("spectrumLocalClient: init: missing required parameter 'spectrumConfigPath'")
 	}
-	if config.DefaultFilesystem == "" {
+	if config.DefaultFilesystemName == "" {
 		return nil, fmt.Errorf("spectrumLocalClient: init: missing required parameter 'spectrumDefaultFileSystem'")
 	}
 	return newSpectrumLocalClient(logger, config, database, resources.SPECTRUM_SCALE)
@@ -94,7 +94,7 @@ func (s *spectrumLocalClient) Activate() (err error) {
 	defer s.activationLock.Unlock()
 
 	//check if filesystem is mounted
-	mounted, err := s.connector.IsFilesystemMounted(s.config.DefaultFilesystem)
+	mounted, err := s.connector.IsFilesystemMounted(s.config.DefaultFilesystemName)
 
 	if err != nil {
 		s.logger.Println(err.Error())
@@ -102,7 +102,7 @@ func (s *spectrumLocalClient) Activate() (err error) {
 	}
 
 	if mounted == false {
-		err = s.connector.MountFileSystem(s.config.DefaultFilesystem)
+		err = s.connector.MountFileSystem(s.config.DefaultFilesystemName)
 
 		if err != nil {
 			s.logger.Println(err.Error())
@@ -148,7 +148,7 @@ func (s *spectrumLocalClient) CreateVolume(name string, opts map[string]interfac
 
 	if len(opts) == 0 {
 		//fileset
-		return s.createFilesetVolume(s.config.DefaultFilesystem, name, opts)
+		return s.createFilesetVolume(s.config.DefaultFilesystemName, name, opts)
 	}
 	s.logger.Printf("Trying to determine type for request\n")
 	userSpecifiedType, err := determineTypeFromRequest(s.logger, opts)
@@ -735,7 +735,7 @@ func (s *spectrumLocalClient) validateAndParseParams(logger *log.Logger, opts ma
 		}
 		return false, "", "", "", fmt.Errorf("'filesystem' and 'fileset' are required opts for using lightweight volumes")
 	} else if filesystemSpecified == false {
-		return false, s.config.DefaultFilesystem, "", "", nil
+		return false, s.config.DefaultFilesystemName, "", "", nil
 
 	} else {
 		return false, filesystem.(string), "", "", nil
