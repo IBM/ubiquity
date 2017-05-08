@@ -68,6 +68,30 @@ type Status struct {
 	Message string `json:"message,omitempty"`
 }
 
+type Job struct {
+	Result    Respresult  `json:"result,omitempty"`
+	Request   Resprequest `json:"request,omitempty"`
+	JobID     uint64      `json:"jobid,omitempty"`
+        Submitted string      `json:"submitted,omitempty"`
+	Completed string      `json:"completed,omitempty"`
+	Status    string      `json:"status,omitempty"` 
+}
+
+
+type Respresult struct {
+	Commands string `json:"commands,omitempty"`
+        Progress string `json:"progress,omitempty"`
+	ExitCode int    `json:"exitCode,omitempty"`
+	Stderr   string `json:"stderr,omitempty"`
+	Stdout   string `json:"stdout,omitempty"`
+}
+
+type Resprequest struct {
+	Type string     `json:"type,omitempty"`
+	Url  string     `json:"url,omitempty"`
+	Data map[string]interface{}     `json:"data,omitempty"`
+}
+
 type GetFilesystemResponse struct {
 	FileSystems []FileSystem `json:"filesystems,omitempty"`
 	Status      Status       `json:"status,omitempty"`
@@ -189,12 +213,9 @@ type CreateFilesetResquest struct {
 	AFM    AFM           `json:"afm,omitempty"`
 	Config FilesetConfig `json:"config,omitempty"`
 }
-type CreateFilesetResponse struct {
+type GenericResponse struct {
 	Status Status `json:"status,omitempty"`
-}
-
-type DeleteFilesetResponse struct {
-	Status Status `json:"status,omitempty"`
+        Jobs   []Job  `json:"jobs,omitempty"`
 }
 
 type GetQuotaResponse struct {
@@ -216,9 +237,6 @@ type SetQuotaRequest struct {
 	QuotaType        string `json:"quotaType,omitempty"`
 }
 
-type SetQuotaResponse struct {
-	Status Status `json:"status,omitempty"`
-}
 type Quota struct {
 	BlockGrace     string `json:"blockGrace,omitempty"`
 	BlockInDoubt   string `json:"blockInDoubt,omitempty"`
