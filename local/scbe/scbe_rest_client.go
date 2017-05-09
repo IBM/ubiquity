@@ -16,14 +16,19 @@ import (
 type RestClient interface {
 	// Authenticate the server, prepare headers and save the token
 	Login() error
-
 	// Paper the payload, send post request and check expected status response and returned parsed response
-	Post(resource_url string, payload []byte, exit_status int) ([]byte, error)
+	Post(resource_url string, payload []byte, exitStatus int) ([]byte, error)
 	// Paper the payload, send get request and check expected status response and returned parsed response
-	Get(resource_url string, payload []byte, exit_status int) ([]byte, error)
+	Get(resource_url string, params map[string]string, exitStatus int) ([]byte, error)
 	// Paper the payload, send delete request and check expected status respon		se and returned parsed response
-	Delete(resource_url string, payload []byte, exit_status int) ([]byte, error)
+	Delete(resource_url string, payload []byte, exitStatus int) ([]byte, error)
 }
+
+const (
+	HTTP_SUCCEED         = 200
+	HTTP_SUCCEED_POST    = 201
+	HTTP_SUCCEED_DELETED = 204
+)
 
 type restClient struct {
 	logger         *log.Logger
@@ -74,7 +79,7 @@ func (s *restClient) getToken() (string, error) {
 		return "", fmt.Errorf("Error in marshalling CredentialInfo")
 	}
 
-	responseBody, err := s.Post(s.authURL, credentials, 200)
+	responseBody, err := s.Post(s.authURL, credentials, HTTP_SUCCEED)
 	if err != nil {
 		s.logger.Printf("Error posting to url %#v to get a token %#v", s.authURL, err)
 		return "", err
@@ -93,13 +98,13 @@ func (s *restClient) getToken() (string, error) {
 	return loginResponse.Token, nil
 }
 
-func (s *restClient) Post(resource_url string, payload []byte, exitStatus int) ([]byte, error) {
+func (s *restClient) genericAction(actionName string, resource_url string, payload []byte, exitStatus int) ([]byte, error) {
 	url := utils.FormatURL(s.baseURL, resource_url)
 
 	reader := bytes.NewReader(payload)
-	request, err := http.NewRequest("POST", url, reader)
+	request, err := http.NewRequest(actionName, url, reader)
 	if err != nil {
-		s.logger.Printf("Error in creating request %#v", err)
+		s.logger.Printf("Error in creating %s request %#v", actionName, err)
 		return nil, fmt.Errorf("Error in creating request")
 	}
 	// append all the headers to the request
@@ -108,7 +113,12 @@ func (s *restClient) Post(resource_url string, payload []byte, exitStatus int) (
 	}
 
 	response, err := s.httpClient.Do(request)
-	//defer response.Body.Close()
+	if err != nil {
+		s.logger.Printf("Error sending %s request : %#v", actionName, err)
+		return nil, err
+	}
+
+	defer response.Body.Close()
 	data, err := ioutil.ReadAll(response.Body)
 	if err != nil {
 		//TODO logging
@@ -123,13 +133,60 @@ func (s *restClient) Post(resource_url string, payload []byte, exitStatus int) (
 	return data, nil
 }
 
-func (s *restClient) Get(resource_url string, payload []byte, exit_status int) ([]byte, error) {
-	return nil, nil
+func (s *restClient) Post(resource_url string, payload []byte, exitStatus int) ([]byte, error) {
+	if exitStatus < 0 {
+		exitStatus = HTTP_SUCCEED_POST // Default value
+	}
+	return s.genericAction("POST", resource_url, payload, exitStatus)
 }
 
-func (s *restClient) Delete(resource_url string, payload []byte, exit_status int) ([]byte, error) {
-	return nil, nil
+func (s *restClient) Get(resource_url string, params map[string]string, exitStatus int) ([]byte, error) {
+	if exitStatus < 0 {
+		exitStatus = HTTP_SUCCEED // Default value
+	}
+	url := utils.FormatURL(s.baseURL, resource_url)
+
+	request, err := http.NewRequest("GET", url, nil)
+	if err != nil {
+		s.logger.Printf("Error in creating GET request %#v", err)
+		return nil, fmt.Errorf("Error in creating request")
+	}
+
+	// append all the headers to the request
+	for key, value := range s.headers {
+		request.Header.Add(key, value)
+	}
+
+	// append all the params into the request
+	q := request.URL.Query()
+	for key, value := range params {
+		q.Add(key, value)
+	}
+	request.URL.RawQuery = q.Encode()
+
+	response, err := s.httpClient.Do(request)
+	defer response.Body.Close()
+	data, err := ioutil.ReadAll(response.Body)
+	if err != nil {
+		//TODO logging
+		return nil, err
+	}
+
+	err = s.verifyStatusCode(*response, exitStatus) // &dereference
+	if err != nil {
+		//TODO logging
+		return nil, err
+	}
+	return data, nil
 }
+
+func (s *restClient) Delete(resource_url string, payload []byte, exitStatus int) ([]byte, error) {
+	if exitStatus < 0 {
+		exitStatus = HTTP_SUCCEED_DELETED // Default value
+	}
+	return s.genericAction("DELETE", resource_url, payload, exitStatus)
+}
+
 func (s *restClient) verifyStatusCode(response http.Response, expected_status_code int) error {
 	if response.StatusCode != expected_status_code {
 		fmt.Printf("------->response statuc code, %#v", response)
@@ -155,7 +212,7 @@ type ScbeRestClient interface {
 	MapVolume(wwn string, host string) error
 	UnmapVolume(wwn string, host string) error
 	GetVolMapping(wwn string) (string, error)
-	ServiceExist(serviceName string) bool
+	ServiceExist(serviceName string) (bool, error)
 }
 
 type scbeRestClient struct {
@@ -164,29 +221,34 @@ type scbeRestClient struct {
 	client         RestClient
 }
 
-const DEFAULT_SCBE_PORT = 8440
-const URL_SCBE_REFERER = "https://%s:%d/"
-const URL_SCBE_BASE_SUFFIX = "api/v1"
-const SCBE_FLOCKER_GROUP_PARAM = "flocker"
-const URL_SCBE_RESOURCE_GET_AUTH = "/users/get-auth-token"
+const (
+	DEFAULT_SCBE_PORT          = 8440
+	URL_SCBE_REFERER           = "https://%s:%d/"
+	URL_SCBE_BASE_SUFFIX       = "api/v1"
+	URL_SCBE_RESOURCE_GET_AUTH = "/users/get-auth-token"
+	SCBE_FLOCKER_GROUP_PARAM   = "flocker"
+	UrlScbeResourceService     = "/services"
+	//UrlScbeResourceVolume = "/volumes"
+	//UrlScbeResourceMapping = "/mappings"
+	//UrlScbeResourceHost = "/hosts"
+)
 
 func NewScbeRestClient(logger *log.Logger, conInfo ConnectionInfo) (ScbeRestClient, error) {
 	// Set default SCBE port if not mentioned
-	if conInfo.Port == "" {
-		conInfo.Port = string(DEFAULT_SCBE_PORT)
+	if conInfo.Port == 0 {
+		conInfo.Port = DEFAULT_SCBE_PORT
 	}
-	// Add the default SCBE Flocker group to the credentials
+	// Add the default SCBE Flocker group to the credentials # TODO need to update with ubiquity group later on
 	conInfo.CredentialInfo.Group = SCBE_FLOCKER_GROUP_PARAM
 	referrer := fmt.Sprintf(URL_SCBE_REFERER, conInfo.ManagementIP, conInfo.Port)
 	baseUrl := referrer + URL_SCBE_BASE_SUFFIX
-
 	client, _ := NewRestClient(logger, conInfo, baseUrl, URL_SCBE_RESOURCE_GET_AUTH, referrer)
 
 	return &scbeRestClient{logger, conInfo, client}, nil
 }
 
 func (s *scbeRestClient) Login() error {
-	return nil
+	return s.client.Login()
 }
 
 func (s *scbeRestClient) CreateVolume(volName string, serviceName string, size_byte int) (ScbeVolumeInfo, error) {
@@ -214,6 +276,32 @@ func (s *scbeRestClient) GetVolMapping(wwn string) (string, error) {
 	return "", nil
 }
 
-func (s *scbeRestClient) ServiceExist(serviceName string) bool {
-	return true
+func (s *scbeRestClient) ServiceExist(serviceName string) (exist bool, err error) {
+	var services []ScbeStorageService
+	services, err = s.serviceList(serviceName)
+	if err == nil {
+		exist = len(services) > 0
+	}
+	return
+}
+
+func (s *scbeRestClient) serviceList(serviceName string) ([]ScbeStorageService, error) {
+	payload := make(map[string]string)
+	var err error
+	if serviceName == "" {
+		payload = nil // TODO else
+	} else {
+		payload["name"] = serviceName
+	}
+	servicesRaw, err := s.client.Get(UrlScbeResourceService, payload, -1)
+	if err != nil {
+		return nil, err
+	}
+	var services []ScbeStorageService
+	err = json.Unmarshal(servicesRaw, &services)
+	if err != nil {
+		return nil, err
+	}
+
+	return services, nil
 }
