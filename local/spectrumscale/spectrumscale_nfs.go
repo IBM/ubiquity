@@ -23,7 +23,7 @@ func NewSpectrumNfsLocalClient(logger *log.Logger, config resources.SpectrumScal
 		return nil, fmt.Errorf("spectrumNfsLocalClient: init: missing required parameter 'spectrumConfigPath'")
 	}
 
-	if config.DefaultFilesystem == "" {
+	if config.DefaultFilesystemName == "" {
 		return nil, fmt.Errorf("spectrumNfsLocalClient: init: missing required parameter 'spectrumDefaultFileSystem'")
 	}
 
