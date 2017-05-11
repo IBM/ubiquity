@@ -1,28 +1,21 @@
 package scbe
 
 import (
-	"log"
-	"net/http"
-
 	"fmt"
-
-	"github.com/jinzhu/gorm"
-
-	"sync"
-
 	"github.com/IBM/ubiquity/resources"
-	"github.com/IBM/ubiquity/utils"
+	"github.com/jinzhu/gorm"
+	"log"
+	"sync"
 )
 
 type scbeLocalClient struct {
 	logger         *log.Logger
 	dataModel      ScbeDataModel
-	httpClient     *http.Client
+	scbeRestClient ScbeRestClient
 	isActivated    bool
 	config         resources.ScbeConfig
 	activationLock *sync.RWMutex
 }
-
 
 func NewScbeLocalClient(logger *log.Logger, config resources.ScbeConfig, database *gorm.DB) (resources.StorageClient, error) {
 	if config.ConfigPath == "" {
@@ -31,23 +24,43 @@ func NewScbeLocalClient(logger *log.Logger, config resources.ScbeConfig, databas
 	return newScbeLocalClient(logger, config, database, resources.SCBE)
 }
 
-func NewScbeLocalClientWithHTTPClientAndDataModel(logger *log.Logger, config resources.ScbeConfig, dataModel ScbeDataModel, httpClient *http.Client) (resources.StorageClient, error) {
+func NewScbeLocalClientWithNewScbeRestClientAndDataModel(logger *log.Logger, config resources.ScbeConfig, dataModel ScbeDataModel, scbeRestClient *ScbeRestClient) (resources.StorageClient, error) {
 	if config.ConfigPath == "" {
 		return nil, fmt.Errorf("scbeLocalClient: init: missing required parameter 'spectrumConfigPath'")
 	}
-	return &scbeLocalClient{logger: logger, httpClient: httpClient, dataModel: dataModel, config: config, activationLock: &sync.RWMutex{}}, nil
+	return &scbeLocalClient{
+		logger:         logger,
+		scbeRestClient: nil, // TODO need to mock it in more advance way
+		dataModel:      dataModel,
+		config:         config,
+		activationLock: &sync.RWMutex{}}, nil
 }
 
 func newScbeLocalClient(logger *log.Logger, config resources.ScbeConfig, database *gorm.DB, backend resources.Backend) (*scbeLocalClient, error) {
 	logger.Println("scbeLocalClient: init start")
 	defer logger.Println("scbeLocalClient: init end")
 
-	datamodel := NewScbeDataModel(logger, database, backend)
-	err := datamodel.CreateVolumeTable()
+	/*
+		// TODO implement DB later
+		datamodel := NewScbeDataModel(logger, database, backend)
+		err := datamodel.CreateVolumeTable()
+		if err != nil {
+			return &scbeLocalClient{}, err
+		}
+	*/
+	var datamodel ScbeDataModel
+	scbeRestClient, err := NewScbeRestClient(logger, config.ConnectionInfo)
 	if err != nil {
 		return &scbeLocalClient{}, err
 	}
-	return &scbeLocalClient{logger: logger, httpClient: &http.Client{}, dataModel: datamodel, config: config, activationLock: &sync.RWMutex{}}, nil
+
+	client := &scbeLocalClient{
+		logger:         logger,
+		scbeRestClient: scbeRestClient,
+		dataModel:      datamodel,
+		config:         config,
+		activationLock: &sync.RWMutex{}}
+	return client, nil
 }
 
 func (s *scbeLocalClient) Activate() error {
@@ -65,17 +78,31 @@ func (s *scbeLocalClient) Activate() error {
 	defer s.activationLock.Unlock()
 
 	//do any needed configuration
-	activateURL := utils.FormatURL(s.config.ScbeURL, "activate")
-	response, err := utils.HttpExecute(s.httpClient, s.logger, "POST", activateURL, nil)
+	err := s.scbeRestClient.Login()
 	if err != nil {
 		s.logger.Printf("Error in activate remote call %#v", err)
 		return fmt.Errorf("Error in activate remote call")
+	} else {
+		s.logger.Printf("Succeeded to login to SCBE %s", s.config.ConnectionInfo.ManagementIP)
 	}
 
-	if response.StatusCode != http.StatusAccepted {
-		s.logger.Printf("Error in activate scbe remote call %#v\n", response)
-		return utils.ExtractErrorResponse(response)
+	var isExist bool
+	isExist, err = s.scbeRestClient.ServiceExist(s.config.DefaultService)
+	if err != nil {
+		s.logger.Printf("Error in activate SCBE backend while checking default service. (%#v)", err)
+		return fmt.Errorf("Error in activate remote call")
 	}
+
+	if isExist == false {
+		msg := fmt.Sprintf("Error in activate SCBE backend %#v. The default service %s does not exist in SCBE %s",
+			err, s.config.DefaultService, s.config.ConnectionInfo.ManagementIP)
+		s.logger.Printf(msg)
+		return fmt.Errorf(msg)
+	} else {
+		s.logger.Printf("The default service [%s] exist in SCBE %s",
+			s.config.DefaultService, s.config.ConnectionInfo.ManagementIP)
+	}
+
 	s.logger.Println("scbe remoteClient: Activate success")
 
 	s.isActivated = true

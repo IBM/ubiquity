@@ -111,6 +111,22 @@ defaultFilesystemName = "gold"    # Default name of Spectrum Scale file system t
 configPath = "/gpfs/gold/config"  # Path in an existing filesystem where Ubiquity can create/store volume DB.
 nfsServerAddr = "CESClusterHost"  # IP/hostname of Spectrum Scale CES NFS cluster.  This is the hostname that NFS clients will use to mount NFS volumes. (required for creation of NFS accessible volumes)
 
+[ScbeConfig]
+configPath = "/opt/ubiquity-db" # Path in an existing filesystem where Ubiquity can create/store volume DB.
+DefaultService = "gold"         # SCBE storage service to be used by default if not mentioned by plugin
+DefaultVolumeSize = "50gb"      # The default volume size in case not specified by user (default is 80gb), possible UNITs gb,mb,b.
+DefaultFilesystem = "ext4"      # The default filesystem to create on new volumes (default ext4)
+
+
+[ScbeConfig.ConnectionInfo]
+managementIp = "IP Address"     # SCBE server IP or FQDN
+port = 8440                     # SCBE server port. This setting is optional (default port is 8440).
+verifySSL = false               # True verifies SCB SSL certificate or False ignores the certificate (default is True)
+
+[ScbeConfig.ConnectionInfo.CredentialInfo]
+username = "user"               # user name defined for SCBE Ubiquity interface
+password = "password"           # password defined for SCBE Ubiquity interface
+
 # Controls the behavior of volume deletion.  If set to true, the data in the the storage system (e.g., fileset, directory) will be deleted upon volume deletion.  If set to false, the volume will be removed from the local database, but the data will not be deleted from the storage system.  Note that volumes created from existing data in the storage system should never have their data deleted upon volume deletion (although this may not be true for Kubernetes volumes with a recycle reclaim policy).
 forceDelete = false 
 ```
