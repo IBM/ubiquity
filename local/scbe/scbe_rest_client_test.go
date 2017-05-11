@@ -8,6 +8,7 @@ import (
 	"os"
 
 	"github.com/IBM/ubiquity/local/scbe"
+	"github.com/IBM/ubiquity/resources"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega" // including the whole package inside the file
 	// httpmock is the referrer for this module
@@ -25,13 +26,13 @@ const (
 var _ = Describe("restClient", func() {
 	var (
 		logger  *log.Logger
-		conInfo scbe.ConnectionInfo
+		conInfo resources.ConnectionInfo
 		client  scbe.RestClient
 		err     error
 	)
 	BeforeEach(func() {
 		logger = log.New(os.Stdout, "ubiquity scbe: ", log.Lshortfile|log.LstdFlags)
-		conInfo = scbe.ConnectionInfo{}
+		conInfo = resources.ConnectionInfo{}
 		client, err = scbe.NewRestClient(logger, conInfo, fakeScbeUrlBase, fakeScbeUrlAuth, fakeScbeUrlReferer)
 		Expect(err).ToNot(HaveOccurred())
 	})

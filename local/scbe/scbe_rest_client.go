@@ -5,6 +5,7 @@ import (
 	"crypto/tls"
 	"encoding/json"
 	"fmt"
+	"github.com/IBM/ubiquity/resources"
 	"github.com/IBM/ubiquity/utils"
 	"io/ioutil"
 	"log"
@@ -35,13 +36,13 @@ type restClient struct {
 	baseURL        string
 	authURL        string
 	referrer       string
-	connectionInfo ConnectionInfo
+	connectionInfo resources.ConnectionInfo
 	httpClient     *http.Client
 	token          string
 	headers        map[string]string
 }
 
-func NewRestClient(logger *log.Logger, conInfo ConnectionInfo, baseURL string, authURL string, referrer string) (RestClient, error) {
+func NewRestClient(logger *log.Logger, conInfo resources.ConnectionInfo, baseURL string, authURL string, referrer string) (RestClient, error) {
 	headers := map[string]string{
 		"Content-Type": "application/json",
 		"referer":      referrer,
@@ -217,7 +218,7 @@ type ScbeRestClient interface {
 
 type scbeRestClient struct {
 	logger         *log.Logger
-	connectionInfo ConnectionInfo
+	connectionInfo resources.ConnectionInfo
 	client         RestClient
 }
 
@@ -233,7 +234,7 @@ const (
 	//UrlScbeResourceHost = "/hosts"
 )
 
-func NewScbeRestClient(logger *log.Logger, conInfo ConnectionInfo) (ScbeRestClient, error) {
+func NewScbeRestClient(logger *log.Logger, conInfo resources.ConnectionInfo) (ScbeRestClient, error) {
 	// Set default SCBE port if not mentioned
 	if conInfo.Port == 0 {
 		conInfo.Port = DEFAULT_SCBE_PORT

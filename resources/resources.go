@@ -19,10 +19,12 @@ type UbiquityServerConfig struct {
 	Port                int
 	LogPath             string
 	SpectrumScaleConfig SpectrumScaleConfig
+	ScbeConfig          ScbeConfig
 	BrokerConfig        BrokerConfig
 	DefaultBackend      string
 }
 
+// TODO we should consider to move dedicated backend structs to the backend resource file instead of this one.
 type SpectrumScaleConfig struct {
 	DefaultFilesystem string
 	ConfigPath        string
@@ -31,10 +33,28 @@ type SpectrumScaleConfig struct {
 	RestConfig        RestConfig
 	ForceDelete       bool
 }
-type ScbeConfig struct {
-	ConfigPath string
-	ScbeURL    string
+
+type CredentialInfo struct {
+	UserName string `json:"username"`
+	Password string `json:"password"`
+	Group    string `json:"group"`
 }
+
+type ConnectionInfo struct {
+	CredentialInfo CredentialInfo
+	Port           int
+	ManagementIP   string
+	VerifySSL      bool
+}
+
+type ScbeConfig struct {
+	ConfigPath        string // TODO consider to remove later
+	ConnectionInfo    ConnectionInfo
+	DefaultService    string // SCBE storage service to be used by default if not mentioned by plugin
+	DefaultVolumeSize string // The default volume size in case not specified by user
+	DefaultFilesystem string // The default filesystem to create on new volumes
+}
+
 type SshConfig struct {
 	User string
 	Host string

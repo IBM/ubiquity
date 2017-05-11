@@ -27,8 +27,12 @@ var _ = Describe("scbeLocalClient", func() {
 	BeforeEach(func() {
 		logger = log.New(os.Stdout, "ubiquity scbe: ", log.Lshortfile|log.LstdFlags)
 		fakeScbeDataModel = new(fakes.FakeScbeDataModel)
-		fakeConfig = resources.ScbeConfig{ConfigPath: "/tmp", ScbeURL: "http://scbe.com"}
-		client, err = scbe.NewScbeLocalClientWithHTTPClientAndDataModel(logger, fakeConfig, fakeScbeDataModel, &http.Client{})
+		fakeConfig = resources.ScbeConfig{ConfigPath: "/tmp"} // TODO add more details
+		client, err = scbe.NewScbeLocalClientWithNewScbeRestClientAndDataModel(
+			logger,
+			fakeConfig,
+			fakeScbeDataModel,
+			nil) // TODO send mock client
 		Expect(err).ToNot(HaveOccurred())
 
 	})

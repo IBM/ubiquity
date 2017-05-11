@@ -2,6 +2,7 @@ package scbe_test
 
 import (
 	"github.com/IBM/ubiquity/local/scbe"
+	"github.com/IBM/ubiquity/resources"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega" // including the whole package inside the file
 	"log"
@@ -16,9 +17,9 @@ import (
 var _ = Describe("restClient integration testing with existing SCBE instance", func() {
 	var (
 		logger         *log.Logger
-		conInfo        scbe.ConnectionInfo
+		conInfo        resources.ConnectionInfo
 		client         scbe.RestClient
-		credentialInfo scbe.CredentialInfo
+		credentialInfo resources.CredentialInfo
 	)
 	BeforeEach(func() {
 		logger = log.New(os.Stdout, "ubiquity scbe: ", log.Lshortfile|log.LstdFlags)
@@ -27,9 +28,8 @@ var _ = Describe("restClient integration testing with existing SCBE instance", f
 		if err != nil {
 			Skip(err.Error())
 		}
-		credentialInfo = scbe.CredentialInfo{scbeUser, scbePassword, "flocker"}
-		conInfo = scbe.ConnectionInfo{credentialInfo, scbePort, scbeIP, false}
-		fmt.Printf("xxxxxxxxx %d \n", scbePort)
+		credentialInfo = resources.CredentialInfo{scbeUser, scbePassword, "flocker"}
+		conInfo = resources.ConnectionInfo{credentialInfo, scbePort, scbeIP, false}
 		client, err = scbe.NewRestClient(
 			logger,
 			conInfo,
@@ -99,9 +99,9 @@ func getScbeEnvs() (scbeUser, scbePassword, scbeIP string, scbePort int, err err
 var _ = Describe("ScbeRestClient integration testing with existing SCBE instance", func() {
 	var (
 		logger         *log.Logger
-		conInfo        scbe.ConnectionInfo
+		conInfo        resources.ConnectionInfo
 		scbeRestClient scbe.ScbeRestClient
-		credentialInfo scbe.CredentialInfo
+		credentialInfo resources.CredentialInfo
 	)
 	BeforeEach(func() {
 		logger = log.New(os.Stdout, "ubiquity scbe: ", log.Lshortfile|log.LstdFlags)
@@ -110,8 +110,8 @@ var _ = Describe("ScbeRestClient integration testing with existing SCBE instance
 		if err != nil {
 			Skip(err.Error())
 		}
-		credentialInfo = scbe.CredentialInfo{scbeUser, scbePassword, "flocker"}
-		conInfo = scbe.ConnectionInfo{credentialInfo, scbePort, scbeIP, false}
+		credentialInfo = resources.CredentialInfo{scbeUser, scbePassword, "flocker"}
+		conInfo = resources.ConnectionInfo{credentialInfo, scbePort, scbeIP, false}
 		scbeRestClient, err = scbe.NewScbeRestClient(logger, conInfo)
 		Expect(err).ToNot(HaveOccurred())
 		httpmock.DeactivateAndReset()
