@@ -23,12 +23,12 @@ type UbiquityServerConfig struct {
 }
 
 type SpectrumScaleConfig struct {
-	DefaultFilesystem string
-	ConfigPath        string
-	NfsServerAddr     string
-	SshConfig         SshConfig
-	RestConfig        RestConfig
-	ForceDelete       bool
+	DefaultFilesystemName string
+	ConfigPath            string
+	NfsServerAddr         string
+	SshConfig             SshConfig
+	RestConfig            RestConfig
+	ForceDelete           bool
 }
 
 type SshConfig struct {

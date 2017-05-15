@@ -104,7 +104,7 @@ logPath = "/tmp/ubiquity"         # The Ubiquity service will write logs to file
 defaultBackend = "spectrum-scale" # The "spectrum-scale" backend will be the default backend if none is specified in the request
 
 [SpectrumScaleConfig]             # If this section is specified, the "spectrum-scale" backend will be enabled.
-defaultFilesystem = "gold"        # Default name of Spectrum Scale file system to use if user does not specify one during creation of a volume.  This file system must already exist.
+defaultFilesystemName = "gold"    # Default name of Spectrum Scale file system to use if user does not specify one during creation of a volume.  This file system must already exist.
 configPath = "/gpfs/gold/config"  # Path in an existing filesystem where Ubiquity can create/store volume DB.
 nfsServerAddr = "CESClusterHost"  # IP/hostname of Spectrum Scale CES NFS cluster.  This is the hostname that NFS clients will use to mount NFS volumes. (required for creation of NFS accessible volumes)
 
