@@ -24,6 +24,17 @@ func NewSpectrumMMCLIWithExecutor(logger *log.Logger, executor utils.Executor) (
 	return &spectrum_mmcli{logger: logger, executor: executor}, nil
 }
 
+func (s *spectrum_mmcli) ExportNfs(volumeMountpoint string, clientConfig string) error {
+/* TODO: Implement ExportNfs method */
+	return nil
+}
+
+func (s *spectrum_mmcli) UnexportNfs(volumeMountpoint string) error {
+/* TODO: Implement UnexportNfs */
+	return nil
+}
+
+
 func (s *spectrum_mmcli) GetClusterId() (string, error) {
 	spectrumCommand := "/usr/lpp/mmfs/bin/mmlscluster"
 	args := []string{spectrumCommand}
