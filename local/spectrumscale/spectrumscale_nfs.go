@@ -191,18 +191,13 @@ func (s *spectrumNfsLocalClient) exportNfs(name, clientConfig string) error {
 		return err
 	}
 
-	spectrumCommand := "/usr/lpp/mmfs/bin/mmnfs"
-
-	args := []string{spectrumCommand, "export", "add", volumeMountpoint, "--client", fmt.Sprintf("%s", clientConfig)}
-
-	output, err := s.executor.Execute("sudo", args)
+	err = s.spectrumClient.connector.ExportNfs(volumeMountpoint,clientConfig)
 
 	if err != nil {
-		s.spectrumClient.logger.Printf("spectrumNfsLocalClient: error %#v ExportNfs output: %#v\n", err, output)
+		s.spectrumClient.logger.Printf("spectrumNfsLocalClient: error %#v during Export of NFS\n", err)
 		return fmt.Errorf("Failed to export fileset via Nfs: %s", err.Error())
 	}
 
-	s.spectrumClient.logger.Printf("spectrumNfsLocalClient: ExportNfs output: %s\n", string(output))
 	return nil
 }
 
@@ -221,23 +216,20 @@ func (s *spectrumNfsLocalClient) unexportNfs(name string) error {
 		return err
 	}
 
-	spectrumCommand := "/usr/lpp/mmfs/bin/mmnfs"
+
 	volumeMountpoint, err := s.spectrumClient.getVolumeMountPoint(existingVolume)
 	if err != nil {
 		return err
 	}
 
-	args := []string{spectrumCommand, "export", "remove", volumeMountpoint, "--force"}
 
-	output, err := s.executor.Execute("sudo", args)
+	err = s.spectrumClient.connector.UnexportNfs(volumeMountpoint)
 
 	if err != nil {
-		s.spectrumClient.logger.Printf("spectrumNfsLocalClient: error %#v executing mmnfs command for output %#v \n", err, output)
+		s.spectrumClient.logger.Printf("spectrumNfsLocalClient: error %#v during deleting NFS export \n", err)
 		return fmt.Errorf("spectrumNfsLocalClient: Failed to unexport fileset via Nfs: %s", err.Error())
 
 	}
-
-	s.spectrumClient.logger.Printf("spectrumNfsLocalClient: UnexportNfs output: %s\n", string(output))
 
 	return nil
 }

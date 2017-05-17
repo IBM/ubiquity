@@ -37,6 +37,14 @@ func NewSpectrumRestWithClient(logger *log.Logger, restConfig resources.RestConf
 	return &spectrum_rest{logger: logger, httpClient: client, endpoint: endpoint}, nil
 }
 
+func (s *spectrum_rest) ExportNfs(volumeMountpoint string, clientConfig string) error {
+	return nil
+}
+
+func (s *spectrum_rest) UnexportNfs(volumeMountpoint string) error {
+	return nil
+}
+
 func (s *spectrum_rest) GetClusterId() (string, error) {
 	getClusterURL := utils.FormatURL(s.endpoint, "scalemgmt/v1/cluster")
 	getClusterResponse := GetClusterResponse{}
