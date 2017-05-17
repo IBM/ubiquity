@@ -31,6 +31,15 @@ func NewSpectrumSSHWithExecutor(logger *log.Logger, sshConfig resources.SshConfi
 	return &spectrum_ssh{logger: logger, executor: executor, user: user, host: host, port: port}, nil
 }
 
+func (s *spectrum_ssh) ExportNfs(volumeMountpoint string, clientConfig string) error {
+	return nil
+}
+
+func (s *spectrum_ssh) UnexportNfs(volumeMountpoint string) error {
+	return nil
+}
+
+
 func (s *spectrum_ssh) GetClusterId() (string, error) {
 	spectrumCommand := "/usr/lpp/mmfs/bin/mmlscluster"
 	userAndHost := fmt.Sprintf("%s@%s", s.user, s.host)

@@ -218,6 +218,11 @@ type GenericResponse struct {
         Jobs   []Job  `json:"jobs,omitempty"`
 }
 
+type nfsExportRequest struct {
+	Path             string `json:"path,omitempty"`
+	ClientDetail   []string `json:"nfsClients,omitempty"`
+}
+
 type GetQuotaResponse struct {
 	Links  map[string]string `json:"links,omitempty"`
 	Quotas []Quota           `json:"quotas,omitempty"`
