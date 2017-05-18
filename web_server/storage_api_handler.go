@@ -68,6 +68,7 @@ func (h *StorageApiHandler) Activate() http.HandlerFunc {
 				return
 			}
 		}
+
 		h.logger.Println("Activate success (on server)")
 		utils.WriteResponse(w, http.StatusOK, nil)
 	}
