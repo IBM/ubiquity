@@ -541,7 +541,7 @@ func (s *spectrumRestV2) UnexportNfs(volumeMountpoint string) error {
 
 
 func (s *spectrumRestV2) doHTTP(endpoint string, method string, responseObject interface{}, param interface{}) (error) {
-        response, err := utils.HttpExecute(s.httpClient, s.logger, method, endpoint, s.user, s.password, param)
+        response, err := utils.HttpExecuteUserAuth(s.httpClient, s.logger, method, endpoint, s.user, s.password, param)
         if err != nil {
                 s.logger.Printf("Error in %s: %s remote call %#v", method, endpoint, err)
 

@@ -307,7 +307,7 @@ func (s *spectrum_rest) SetFilesetQuota(filesystemName string, filesetName strin
 }
 
 func (s *spectrum_rest) doHTTP(endpoint string, method string, responseObject interface{}, param interface{}) (interface{}, error) {
-	response, err := utils.HttpExecute(s.httpClient, s.logger, method, endpoint, s.user, s.password, param)
+	response, err := utils.HttpExecuteUserAuth(s.httpClient, s.logger, method, endpoint, s.user, s.password, param)
 	if err != nil {
 		s.logger.Printf("Error in %s: %s remote call %#v", method, endpoint, err)
 		return nil, fmt.Errorf("Error in get filesystem remote call")
