@@ -22,7 +22,10 @@ type spectrumRestV2 struct {
 }
 
 
-func IsStatusOK(StatusCode int) bool {
+func (s *spectrumRestV2) isStatusOK(StatusCode int) bool {
+        s.logger.Println("spectrumRestConnector: isStatusOK")
+        defer s.logger.Println("spectrumRestConnector: isStatusOK end")
+
 
 	if ((StatusCode == http.StatusOK) ||
 	    (StatusCode == http.StatusCreated) ||
@@ -33,22 +36,42 @@ func IsStatusOK(StatusCode int) bool {
 }
 
 
-func CheckAsynchronousJob(StatusCode int) bool {
+func (s *spectrumRestV2) checkAsynchronousJob(StatusCode int) bool {
+        s.logger.Println("spectrumRestConnector: checkAsynchronousJob")
+        defer s.logger.Println("spectrumRestConnector: checkAsynchronousJob end")
+
 	if ((StatusCode == http.StatusAccepted) ||
             (StatusCode == http.StatusCreated)) {
 		return true
 	}
 	return false
- 
 }
 
-func (s *spectrumRestV2) WaitForJobCompletion(statuscode int, jobID uint64) error {
-        if (CheckAsynchronousJob(statuscode)) {
+
+func (s *spectrumRestV2) isRequestAccepted(response GenericResponse, url string) error {
+        s.logger.Println("spectrumRestConnector: isRequestAccepted")
+        defer s.logger.Println("spectrumRestConnector: isRequestAccepted end")
+
+        if !s.isStatusOK(response.Status.Code)  {
+                return fmt.Errorf("error %v for url %v", response, url)
+        }
+
+        if (len(response.Jobs) == 0) {
+                return fmt.Errorf("Unable to get Job details for %v request", url)
+        }
+	return nil
+}
+
+func (s *spectrumRestV2) waitForJobCompletion(statuscode int, jobID uint64) error {
+        s.logger.Println("spectrumRestConnector: waitForJobCompletion")
+        defer s.logger.Println("spectrumRestConnector: waitForJobCompletion end")
+
+        if (s.checkAsynchronousJob(statuscode)) {
                 JobID := jobID
                 jobURL := utils.FormatURL(s.endpoint, fmt.Sprintf("scalemgmt/v2/jobs?filter=jobId=%d",JobID))
                 async_status,err := s.AsyncJobCompletion(jobURL)
                 if err != nil {
-                        return fmt.Errorf("error getting jobid %v",err)
+                        return fmt.Errorf("Error %v  Completing Job %v",err,jobURL)
                 }
                 if (async_status == "SUCCESS") {
                         return nil
@@ -62,6 +85,9 @@ func (s *spectrumRestV2) WaitForJobCompletion(statuscode int, jobID uint64) erro
 
 
 func (s *spectrumRestV2) AsyncJobCompletion(jobURL string) (status string, err error) {
+        s.logger.Println("spectrumRestConnector: AsyncJobCompletion")
+        defer s.logger.Println("spectrumRestConnector: AsyncJobCompletion end")
+
 	createFilesetResponse := GenericResponse{}
         for {
                 s.logger.Printf("jobUrl  %v", jobURL)
@@ -69,6 +95,10 @@ func (s *spectrumRestV2) AsyncJobCompletion(jobURL string) (status string, err e
                 if err != nil {
                     return "FAILED", err;
                 }
+		if (len(createFilesetResponse.Jobs) == 0) {
+			return "FAILED", fmt.Errorf("Unable to get Job %v details",jobURL)
+		}
+
                 if (createFilesetResponse.Jobs[0].Status == "RUNNING") {
                         time.Sleep(5000 * time.Millisecond)
                         continue
@@ -82,7 +112,8 @@ func (s *spectrumRestV2) AsyncJobCompletion(jobURL string) (status string, err e
 }
 
 
-func NewSpectrumRest_v2(logger *log.Logger, restConfig resources.RestConfig) (SpectrumScaleConnector, error) {
+func NewSpectrumRestV2(logger *log.Logger, restConfig resources.RestConfig) (SpectrumScaleConnector, error) {
+
         endpoint := restConfig.Endpoint
         user := restConfig.User
         password := restConfig.Password
@@ -95,6 +126,9 @@ func NewSpectrumRest_v2(logger *log.Logger, restConfig resources.RestConfig) (Sp
 
 
 func (s *spectrumRestV2) GetClusterId() (string, error) {
+        s.logger.Println("spectrumRestConnector: GetClusterId")
+        defer s.logger.Println("spectrumRestConnector: GetClusterId end")
+
 	getClusterURL := utils.FormatURL(s.endpoint, "scalemgmt/v2/cluster")
 
         getClusterResponse := GetClusterResponse{}
@@ -109,6 +143,9 @@ func (s *spectrumRestV2) GetClusterId() (string, error) {
 
 
 func (s *spectrumRestV2) IsFilesystemMounted(filesystemName string) (bool, error) {
+        s.logger.Println("spectrumRestConnector: IsFilesystemMounted")
+        defer s.logger.Println("spectrumRestConnector: IsFilesystemMounted end")
+
         getNodesURL := utils.FormatURL(s.endpoint, "scalemgmt/v2/nodes")
         getNodesResponse := GetNodesResponse_v2{}
 
@@ -140,6 +177,10 @@ func (s *spectrumRestV2) MountFileSystem(filesystemName string) error {
 }
 
 func (s *spectrumRestV2) ListFilesystems() ([]string, error) {
+
+        s.logger.Println("spectrumRestConnector: ListFilesystems")
+        defer s.logger.Println("spectrumRestConnector: ListFilesystems end")
+
         listFilesystemsURL := utils.FormatURL(s.endpoint, "scalemgmt/v2/filesystems")
         getFilesystemResponse := GetFilesystemResponse_v2{}
         err := s.doHTTP(listFilesystemsURL, "GET", &getFilesystemResponse, nil)
@@ -156,6 +197,10 @@ func (s *spectrumRestV2) ListFilesystems() ([]string, error) {
 }
 
 func (s *spectrumRestV2) GetFilesystemMountpoint(filesystemName string) (string, error) {
+
+        s.logger.Println("spectrumRestConnector: GetFilesystemMountpoint")
+        defer s.logger.Println("spectrumRestConnector: GetFilesystemMountpoint end")
+
         getFilesystemURL := utils.FormatURL(s.endpoint, fmt.Sprintf("scalemgmt/v2/filesystems/%s", filesystemName))
 
         getFilesystemResponse := GetFilesystemResponse_v2{}
@@ -167,12 +212,16 @@ func (s *spectrumRestV2) GetFilesystemMountpoint(filesystemName string) (string,
         }
 
 	if (len(getFilesystemResponse.FileSystems) > 0) {
-	        return getFilesystemResponse.FileSystems[0].Mount.MountPoint, nil } else {
+	        return getFilesystemResponse.FileSystems[0].Mount.MountPoint, nil
+	} else {
 		return "",fmt.Errorf("Unable to get Filesystem")
 	}
 }
 
 func (s *spectrumRestV2) CreateFileset(filesystemName string, filesetName string, opts map[string]interface{}) error {
+
+        s.logger.Println("spectrumRestConnector: CreateFileset")
+        defer s.logger.Println("spectrumRestConnector: CreateFileset end")
 
         filesetreq := CreateFilesetRequest{}
         filesetreq.FilesetName = filesetName
@@ -192,12 +241,13 @@ func (s *spectrumRestV2) CreateFileset(filesystemName string, filesetName string
                 s.logger.Printf("error in remote call %v", err)
                 return err
         }
-        //TODO check the response message content and code
-        if !IsStatusOK(createFilesetResponse.Status.Code)  {
-                return fmt.Errorf("error creating fileset %v", createFilesetResponse)
-        }
 
-	err = s.WaitForJobCompletion(createFilesetResponse.Status.Code,createFilesetResponse.Jobs[0].JobID)
+	err = s.isRequestAccepted(createFilesetResponse,createFilesetURL)
+	if err != nil {
+		return err
+	}
+
+	err = s.waitForJobCompletion(createFilesetResponse.Status.Code,createFilesetResponse.Jobs[0].JobID)
 	if  err != nil {
 		return err
 	}
@@ -205,6 +255,9 @@ func (s *spectrumRestV2) CreateFileset(filesystemName string, filesetName string
 }
 
 func (s *spectrumRestV2) DeleteFileset(filesystemName string, filesetName string) error {
+
+        s.logger.Println("spectrumRestConnector: DeleteFileset")
+        defer s.logger.Println("spectrumRestConnector: DeleteFileset end")
 
         deleteFilesetURL := utils.FormatURL(s.endpoint, fmt.Sprintf("scalemgmt/v2/filesystems/%s/filesets/%s", filesystemName, filesetName))
         deleteFilesetResponse := GenericResponse{}
@@ -214,11 +267,12 @@ func (s *spectrumRestV2) DeleteFileset(filesystemName string, filesetName string
                 return err
         }
 
-        if !IsStatusOK(deleteFilesetResponse.Status.Code) {
-                return fmt.Errorf("error deleting fileset %v", deleteFilesetResponse)
-        }
+	err = s.isRequestAccepted(deleteFilesetResponse, deleteFilesetURL)
+	if err != nil {
+		return err
+	}
 
-       err = s.WaitForJobCompletion(deleteFilesetResponse.Status.Code, deleteFilesetResponse.Jobs[0].JobID)
+        err = s.waitForJobCompletion(deleteFilesetResponse.Status.Code, deleteFilesetResponse.Jobs[0].JobID)
         if  err != nil {
                 return err
         }
@@ -228,6 +282,10 @@ func (s *spectrumRestV2) DeleteFileset(filesystemName string, filesetName string
 
 
 func (s *spectrumRestV2) LinkFileset(filesystemName string, filesetName string) error {
+
+        s.logger.Println("spectrumRestConnector: LinkFileset")
+        defer s.logger.Println("spectrumRestConnector: LinkFileset end")
+
         linkReq := LinkFilesetRequest{}
         fsMountpoint, err := s.GetFilesystemMountpoint(filesystemName)
         if err != nil {
@@ -245,11 +303,12 @@ func (s *spectrumRestV2) LinkFileset(filesystemName string, filesetName string) 
                 return err
         }
 
-        if !IsStatusOK(linkFilesetResponse.Status.Code) {
-                return fmt.Errorf("error linking fileset %v", linkFilesetResponse)
-        }
+	err = s.isRequestAccepted(linkFilesetResponse, linkFilesetURL)
+	if err != nil {
+		return err
+	}
 
-        err = s.WaitForJobCompletion(linkFilesetResponse.Status.Code, linkFilesetResponse.Jobs[0].JobID)
+        err = s.waitForJobCompletion(linkFilesetResponse.Status.Code, linkFilesetResponse.Jobs[0].JobID)
         if  err != nil {
                 return err
         }
@@ -259,24 +318,28 @@ func (s *spectrumRestV2) LinkFileset(filesystemName string, filesetName string) 
 
 func (s *spectrumRestV2) UnlinkFileset(filesystemName string, filesetName string) error {
 
+        s.logger.Println("spectrumRestConnector: UnlinkFileset")
+        defer s.logger.Println("spectrumRestConnector: UnlinkFileset end")
+
 	UnlinkReq := UnlinkFilesetRequest{}
 	UnlinkReq.Force = true 
 
-	linkFilesetURL := utils.FormatURL(s.endpoint, fmt.Sprintf("scalemgmt/v2/filesystems/%s/filesets/%s/link",filesystemName,filesetName))
+	unlinkFilesetURL := utils.FormatURL(s.endpoint, fmt.Sprintf("scalemgmt/v2/filesystems/%s/filesets/%s/link",filesystemName,filesetName))
 	unlinkFilesetResponse := GenericResponse{}
 
-	err := s.doHTTP(linkFilesetURL, "DELETE", &unlinkFilesetResponse, UnlinkReq)
+	err := s.doHTTP(unlinkFilesetURL, "DELETE", &unlinkFilesetResponse, UnlinkReq)
 
         if err != nil {
                 s.logger.Printf("error in remote call %v", err)
                 return err
         }
 
-	if !IsStatusOK(unlinkFilesetResponse.Status.Code) {
-		return fmt.Errorf("error unlinking fileset %v", unlinkFilesetResponse)
+	err = s.isRequestAccepted(unlinkFilesetResponse, unlinkFilesetURL)
+	if err != nil {
+		return err
 	}
 
-        err = s.WaitForJobCompletion(unlinkFilesetResponse.Status.Code, unlinkFilesetResponse.Jobs[0].JobID)
+        err = s.waitForJobCompletion(unlinkFilesetResponse.Status.Code, unlinkFilesetResponse.Jobs[0].JobID)
         if  err != nil {
                 return err
         }
@@ -286,6 +349,10 @@ func (s *spectrumRestV2) UnlinkFileset(filesystemName string, filesetName string
 }
 
 func (s *spectrumRestV2) ListFileset(filesystemName string, filesetName string) (resources.VolumeMetadata, error) {
+
+        s.logger.Println("spectrumRestConnector: ListFileset")
+        defer s.logger.Println("spectrumRestConnector: ListFileset end")
+
         getFilesetURL := utils.FormatURL(s.endpoint, fmt.Sprintf("scalemgmt/v2/filesystems/%s/filesets/%s", filesystemName,filesetName))
 
         getFilesetResponse := GetFilesetResponse_v2{}
@@ -295,6 +362,9 @@ func (s *spectrumRestV2) ListFileset(filesystemName string, filesetName string) 
                 return resources.VolumeMetadata{}, err
         }
 
+	if (len(getFilesetResponse.Filesets) == 0) {
+		return resources.VolumeMetadata{}, fmt.Errorf("Unable to get fileset %v",getFilesetURL)
+	}
 
         name := getFilesetResponse.Filesets[0].Config.FilesetName
         mountpoint := getFilesetResponse.Filesets[0].Config.Path
@@ -303,6 +373,10 @@ func (s *spectrumRestV2) ListFileset(filesystemName string, filesetName string) 
 }
 
 func (s *spectrumRestV2) ListFilesets(filesystemName string) ([]resources.VolumeMetadata, error) {
+
+        s.logger.Println("spectrumRestConnector: ListFilesets")
+        defer s.logger.Println("spectrumRestConnector: ListFilesets end")
+
 	listFilesetURL := utils.FormatURL(s.endpoint, "scalemgmt/v2/filesystems/%s/filesets",filesystemName)
 	listFilesetResponse := GetFilesetResponse_v2{}
 
@@ -331,6 +405,10 @@ func (s *spectrumRestV2) ListFilesets(filesystemName string) ([]resources.Volume
 }
 
 func (s *spectrumRestV2) IsFilesetLinked(filesystemName string, filesetName string) (bool, error) {
+
+        s.logger.Println("spectrumRestConnector: IsFilesetLinked")
+        defer s.logger.Println("spectrumRestConnector: IsFilesetLinked end")
+
         fileset, err := s.ListFileset(filesystemName, filesetName)
         if err != nil {
                 s.logger.Printf("error retrieving fileset data")
@@ -345,6 +423,9 @@ func (s *spectrumRestV2) IsFilesetLinked(filesystemName string, filesetName stri
 }
 
 func (s *spectrumRestV2) SetFilesetQuota(filesystemName string, filesetName string, quota string) error {
+
+        s.logger.Println("spectrumRestConnector: SetFilesetQuota")
+        defer s.logger.Println("spectrumRestConnector: SetFilesetQuota end")
 
 	setQuotaURL := utils.FormatURL(s.endpoint, fmt.Sprintf("scalemgmt/v2/filesystems/%s/filesets/%s/quotas",filesystemName,filesetName))
 	quotaRequest := SetQuotaRequest_v2{}	
@@ -361,15 +442,16 @@ func (s *spectrumRestV2) SetFilesetQuota(filesystemName string, filesetName stri
                 s.logger.Printf("error setting quota for fileset %v", err)
                 return err
         }
-        if !IsStatusOK(setQuotaResponse.Status.Code) {
-                return fmt.Errorf("error unlinking fileset %v", setQuotaResponse)
-        }
 
-        err = s.WaitForJobCompletion(setQuotaResponse.Status.Code, setQuotaResponse.Jobs[0].JobID)
-        if  err != nil {
+        err = s.isRequestAccepted(setQuotaResponse, setQuotaURL)
+        if err != nil {
                 return err
         }
 
+        err = s.waitForJobCompletion(setQuotaResponse.Status.Code, setQuotaResponse.Jobs[0].JobID)
+        if  err != nil {
+                return err
+        }
 
         return nil
 }
@@ -377,6 +459,9 @@ func (s *spectrumRestV2) SetFilesetQuota(filesystemName string, filesetName stri
 
 func (s *spectrumRestV2) ListFilesetQuota(filesystemName string, filesetName string) (string, error) {
 
+        s.logger.Println("spectrumRestConnector: ListFilesetQuota")
+        defer s.logger.Println("spectrumRestConnector: ListFilesetQuota end")
+        
 	listQuotaURL := utils.FormatURL(s.endpoint, fmt.Sprintf("scalemgmt/v2/filesystems/%s/filesets/%s/quotas",filesystemName,filesetName))
 	listQuotaResponse := GetQuotaResponse_v2{}
 
@@ -397,6 +482,9 @@ func (s *spectrumRestV2) ListFilesetQuota(filesystemName string, filesetName str
 
 func (s *spectrumRestV2) ExportNfs(volumeMountpoint string, clientConfig string) error {
 
+        s.logger.Println("spectrumRestConnector: ExportNfs")
+        defer s.logger.Println("spectrumRestConnector: ExportNfs end")
+
 	exportNfsURL := utils.FormatURL(s.endpoint, fmt.Sprintf("scalemgmt/v2/nfs/exports"))
 	nfsExportReq := nfsExportRequest{}
         nfsExportReq.Path = volumeMountpoint
@@ -410,11 +498,13 @@ func (s *spectrumRestV2) ExportNfs(volumeMountpoint string, clientConfig string)
 		s.logger.Printf("error during NFS export %v",err)
 		return err
 	}
-	
-	if (!IsStatusOK(nfsExportResp.Status.Code)) {
-		return fmt.Errorf("error during NFS export %v",nfsExportResp.Status.Code)
-	}
-	err = s.WaitForJobCompletion(nfsExportResp.Status.Code, nfsExportResp.Jobs[0].JobID)
+
+        err = s.isRequestAccepted(nfsExportResp, exportNfsURL)
+        if err != nil {
+                return err
+        }
+
+	err = s.waitForJobCompletion(nfsExportResp.Status.Code, nfsExportResp.Jobs[0].JobID)
 	if err != nil {
 		return err
 	}
@@ -422,6 +512,10 @@ func (s *spectrumRestV2) ExportNfs(volumeMountpoint string, clientConfig string)
 }
 
 func (s *spectrumRestV2) UnexportNfs(volumeMountpoint string) error {
+
+        s.logger.Println("spectrumRestConnector: UnexportNfs")
+        defer s.logger.Println("spectrumRestConnector: UnexportNfs end")
+
 	volumeMountpoint = url.QueryEscape(volumeMountpoint)
 	unexportNfsURL := utils.FormatURL(s.endpoint, "scalemgmt/v2/nfs/exports/",volumeMountpoint)
         s.logger.Printf("URL: %s\n",unexportNfsURL)
@@ -432,11 +526,12 @@ func (s *spectrumRestV2) UnexportNfs(volumeMountpoint string) error {
 		return err
 	}
 
-	if !IsStatusOK(unexportNfsResp.Status.Code) {
-		return fmt.Errorf("Error while deleting NFS export %v",unexportNfsResp.Status.Code)
-	}
+        err = s.isRequestAccepted(unexportNfsResp, unexportNfsURL)
+        if err != nil {
+                return err
+        }
 
-	err = s.WaitForJobCompletion(unexportNfsResp.Status.Code, unexportNfsResp.Jobs[0].JobID)
+	err = s.waitForJobCompletion(unexportNfsResp.Status.Code, unexportNfsResp.Jobs[0].JobID)
 
 	if err != nil {
 		return err	
@@ -453,7 +548,7 @@ func (s *spectrumRestV2) doHTTP(endpoint string, method string, responseObject i
                 return err
         }
 
-        if (!IsStatusOK(response.StatusCode))  {
+        if (!s.isStatusOK(response.StatusCode))  {
 	            s.logger.Printf("Error in get filesystem remote call %#v\n", response)
                 return utils.ExtractErrorResponse(response)
         }

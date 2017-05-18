@@ -38,7 +38,7 @@ const (
 func GetSpectrumScaleConnector(logger *log.Logger, config resources.SpectrumScaleConfig) (SpectrumScaleConnector, error) {
 	if config.RestConfig.Endpoint != "" {
 		logger.Printf("Initializing SpectrumScale REST connector with restConfig: %+v\n", config.RestConfig)
-		return NewSpectrumRest_v2(logger, config.RestConfig)
+		return NewSpectrumRestV2(logger, config.RestConfig)
 	}
 	if config.SshConfig.User != "" && config.SshConfig.Host != "" {
 		if config.SshConfig.Port == "" || config.SshConfig.Port == "0" {
