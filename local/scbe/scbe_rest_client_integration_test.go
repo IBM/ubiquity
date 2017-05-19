@@ -8,7 +8,6 @@ import (
 	"log"
 	"os"
 	// httpmock is the referrer for this module
-	"encoding/json"
 	"fmt"
 	"gopkg.in/jarcoal/httpmock.v1"
 	"strconv"
@@ -49,11 +48,10 @@ var _ = Describe("restClient integration testing with existing SCBE instance", f
 
 	Context(".Get", func() {
 		It("Succeed if there are services available in SCBE", func() {
+			var services []scbe.ScbeStorageService
 			err := client.Login()
 			Expect(err).ToNot(HaveOccurred())
-			servicesRaw, err := client.Get("/services", nil, 200)
-			var services []scbe.ScbeStorageService
-			json.Unmarshal(servicesRaw, &services)
+			err = client.Get("/services", nil, 200, &services)
 			fmt.Printf("%#v", services)
 			Expect(len(services) > 0).To(Equal(true))
 		})
