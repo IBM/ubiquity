@@ -9,8 +9,8 @@ import (
 
 	"fmt"
 
-	"github.com/jinzhu/gorm"
 	"github.com/IBM/ubiquity/model"
+	"github.com/jinzhu/gorm"
 )
 
 type StorageApiHandler struct {
@@ -28,14 +28,26 @@ func NewStorageApiHandler(logger *log.Logger, backends map[resources.Backend]res
 func (h *StorageApiHandler) Activate() http.HandlerFunc {
 	return func(w http.ResponseWriter, req *http.Request) {
 		h.logger.Println("start")
-		for _, backend := range h.backends {
-			err := backend.Activate()
-			if err != nil {
-				h.logger.Printf("Error activating %s", err.Error())
-				utils.WriteResponse(w, http.StatusInternalServerError, &resources.GenericResponse{Err: err.Error()})
-				return
-			}
+		activateRequest := resources.ActivateRequest{}
+		err := utils.UnmarshalDataFromRequest(req, &activateRequest)
+		if err != nil {
+			utils.WriteResponse(w, 409, &resources.GenericResponse{Err: err.Error()})
+			return
 		}
+
+		backend, ok := h.backends[activateRequest.Backend]
+		if !ok {
+			h.logger.Printf("error-activating-backend%s", activateRequest.Backend)
+			utils.WriteResponse(w, http.StatusNotFound, &resources.GenericResponse{Err: "backend-not-found"})
+			return
+		}
+		err = backend.Activate(activateRequest)
+		if err != nil {
+			h.logger.Printf("Error activating %s", err.Error())
+			utils.WriteResponse(w, http.StatusInternalServerError, &resources.GenericResponse{Err: err.Error()})
+			return
+		}
+
 		h.logger.Println("Activate success (on server)")
 		utils.WriteResponse(w, http.StatusOK, nil)
 	}
@@ -44,43 +56,32 @@ func (h *StorageApiHandler) Activate() http.HandlerFunc {
 func (h *StorageApiHandler) CreateVolume() http.HandlerFunc {
 	return func(w http.ResponseWriter, req *http.Request) {
 
-		createRequest := resources.CreateRequest{}
-		err := utils.UnmarshalDataFromRequest(req, &createRequest)
+		createVolumeRequest := resources.CreateVolumeRequest{}
+		err := utils.UnmarshalDataFromRequest(req, &createVolumeRequest)
 		if err != nil {
 			utils.WriteResponse(w, 409, &resources.GenericResponse{Err: err.Error()})
 			return
 		}
-		backendName, exists := createRequest.Opts["backend"]
-		if exists == false {
-			if h.config.DefaultBackend == "" {
-				h.logger.Printf("Error creating volume, `backend` is a required opts -- not found")
-				utils.WriteResponse(w, http.StatusInternalServerError, &resources.GenericResponse{Err: fmt.Sprintf("Error creating volume, `backend` is a required opts -- not found")})
-				return
-			}
-			h.logger.Printf("Default to '%s' backend", h.config.DefaultBackend)
-			backendName = h.config.DefaultBackend
-		}
-
-		backend, exists := h.backends[resources.Backend(backendName.(string))]
-		if !exists {
-			h.logger.Printf("Error creating volume- backend %s not found", backendName)
-			utils.WriteResponse(w, http.StatusInternalServerError, &resources.GenericResponse{Err: fmt.Sprintf("Error creating volume, `backend` is a required opt", backendName)})
+		backend, ok := h.backends[createVolumeRequest.Backend]
+		if !ok {
+			h.logger.Printf("error-backend-not-found%s", createVolumeRequest.Backend)
+			utils.WriteResponse(w, http.StatusNotFound, &resources.GenericResponse{Err: "backend-not-found"})
 			return
 		}
 
-		h.locker.ReadLock(createRequest.Name) // will block if another caller is already in process of creating volume with same name
+		h.locker.ReadLock(createVolumeRequest.Name) // will block if another caller is already in process of creating volume with same name
 		//TODO: err needs to be check for db connection issues
-		exists, _ = model.VolumeExists(h.database, createRequest.Name)
+		exists, _ := model.VolumeExists(h.database, createVolumeRequest.Name)
 		if exists == true {
-			utils.WriteResponse(w, 409, &resources.GenericResponse{Err: fmt.Sprintf("Volume `%s` already exists", createRequest.Name)})
-			h.locker.ReadUnlock(createRequest.Name)
+			utils.WriteResponse(w, 409, &resources.GenericResponse{Err: fmt.Sprintf("Volume `%s` already exists", createVolumeRequest.Name)})
+			h.locker.ReadUnlock(createVolumeRequest.Name)
 			return
 		}
-		h.locker.ReadUnlock(createRequest.Name)
+		h.locker.ReadUnlock(createVolumeRequest.Name)
 
-		h.locker.WriteLock(createRequest.Name) // will ensure no other caller can create volume with same name concurrently
-		defer h.locker.WriteUnlock(createRequest.Name)
-		err = backend.CreateVolume(createRequest.Name, createRequest.Opts)
+		h.locker.WriteLock(createVolumeRequest.Name) // will ensure no other caller can create volume with same name concurrently
+		defer h.locker.WriteUnlock(createVolumeRequest.Name)
+		err = backend.CreateVolume(createVolumeRequest)
 		if err != nil {
 			utils.WriteResponse(w, 409, &resources.GenericResponse{Err: err.Error()})
 			return
@@ -91,28 +92,22 @@ func (h *StorageApiHandler) CreateVolume() http.HandlerFunc {
 
 func (h *StorageApiHandler) RemoveVolume() http.HandlerFunc {
 	return func(w http.ResponseWriter, req *http.Request) {
-		volume := utils.ExtractVarsFromRequest(req, "volume")
-		if volume == "" {
-			utils.WriteResponse(w, 409, &resources.GenericResponse{Err: "volume missing from url"})
-			return
-		}
-
-		backend, err := h.getBackend(volume)
-		if err != nil {
-			h.logger.Printf("Error removing volume %#v", err)
-			utils.WriteResponse(w, http.StatusInternalServerError, &resources.GenericResponse{Err: err.Error()})
-			return
-		}
-
-		removeRequest := resources.RemoveRequest{}
-		err = utils.UnmarshalDataFromRequest(req, &removeRequest)
+		removeVolumeRequest := resources.RemoveVolumeRequest{}
+		err := utils.UnmarshalDataFromRequest(req, &removeVolumeRequest)
 		if err != nil {
 			utils.WriteResponse(w, 409, &resources.GenericResponse{Err: err.Error()})
 			return
 		}
-		h.locker.WriteLock(volume)
-		defer h.locker.WriteUnlock(volume)
-		err = backend.RemoveVolume(volume)
+		backend, ok := h.backends[removeVolumeRequest.Backend]
+		if !ok {
+			h.logger.Printf("error-backend-not-found%s", removeVolumeRequest.Backend)
+			utils.WriteResponse(w, http.StatusNotFound, &resources.GenericResponse{Err: "backend-not-found"})
+			return
+		}
+
+		h.locker.WriteLock(removeVolumeRequest.Name)
+		defer h.locker.WriteUnlock(removeVolumeRequest.Name)
+		err = backend.RemoveVolume(removeVolumeRequest)
 		if err != nil {
 			utils.WriteResponse(w, 409, &resources.GenericResponse{Err: err.Error()})
 			return
@@ -123,22 +118,22 @@ func (h *StorageApiHandler) RemoveVolume() http.HandlerFunc {
 
 func (h *StorageApiHandler) AttachVolume() http.HandlerFunc {
 	return func(w http.ResponseWriter, req *http.Request) {
-		volume := utils.ExtractVarsFromRequest(req, "volume")
-		if volume == "" {
-			utils.WriteResponse(w, 409, &resources.GenericResponse{Err: "Cannot determine volume from request"})
-			return
-		}
-
-		backend, err := h.getBackend(volume)
+		attachRequest := resources.AttachRequest{}
+		err := utils.UnmarshalDataFromRequest(req, &attachRequest)
 		if err != nil {
-			h.logger.Printf("Error removing volume %#v", err)
-			utils.WriteResponse(w, http.StatusInternalServerError, &resources.GenericResponse{Err: err.Error()})
+			utils.WriteResponse(w, 409, &resources.GenericResponse{Err: err.Error()})
+			return
+		}
+		backend, ok := h.backends[attachRequest.Backend]
+		if !ok {
+			h.logger.Printf("error-backend-not-found%s", attachRequest.Backend)
+			utils.WriteResponse(w, http.StatusNotFound, &resources.GenericResponse{Err: "backend-not-found"})
 			return
 		}
 
-		h.locker.WriteLock(volume)
-		defer h.locker.WriteUnlock(volume)
-		mountpoint, err := backend.Attach(volume)
+		h.locker.WriteLock(attachRequest.Name)
+		defer h.locker.WriteUnlock(attachRequest.Name)
+		mountpoint, err := backend.Attach(attachRequest)
 		if err != nil {
 			utils.WriteResponse(w, 409, &resources.GenericResponse{Err: err.Error()})
 			return
@@ -151,21 +146,22 @@ func (h *StorageApiHandler) AttachVolume() http.HandlerFunc {
 
 func (h *StorageApiHandler) DetachVolume() http.HandlerFunc {
 	return func(w http.ResponseWriter, req *http.Request) {
-		volume := utils.ExtractVarsFromRequest(req, "volume")
-		if volume == "" {
-			utils.WriteResponse(w, 409, &resources.GenericResponse{Err: "cannot determine volume from request"})
+		detachRequest := resources.DetachRequest{}
+		err := utils.UnmarshalDataFromRequest(req, &detachRequest)
+		if err != nil {
+			utils.WriteResponse(w, 409, &resources.GenericResponse{Err: err.Error()})
+			return
+		}
+		backend, ok := h.backends[detachRequest.Backend]
+		if !ok {
+			h.logger.Printf("error-backend-not-found%s", detachRequest.Backend)
+			utils.WriteResponse(w, http.StatusNotFound, &resources.GenericResponse{Err: "backend-not-found"})
 			return
 		}
 
-		backend, err := h.getBackend(volume)
-		if err != nil {
-			h.logger.Printf("Error removing volume %#v", err)
-			utils.WriteResponse(w, http.StatusInternalServerError, &resources.GenericResponse{Err: err.Error()})
-			return
-		}
-		h.locker.WriteLock(volume)
-		defer h.locker.WriteUnlock(volume)
-		err = backend.Detach(volume)
+		h.locker.WriteLock(detachRequest.Name)
+		defer h.locker.WriteUnlock(detachRequest.Name)
+		err = backend.Detach(detachRequest)
 		if err != nil {
 			utils.WriteResponse(w, 409, &resources.GenericResponse{Err: err.Error()})
 			return
@@ -176,22 +172,23 @@ func (h *StorageApiHandler) DetachVolume() http.HandlerFunc {
 
 func (h *StorageApiHandler) GetVolumeConfig() http.HandlerFunc {
 	return func(w http.ResponseWriter, req *http.Request) {
-		volume := utils.ExtractVarsFromRequest(req, "volume")
-		if volume == "" {
-			utils.WriteResponse(w, 409, &resources.GenericResponse{Err: "cannot determine volume from request"})
-			return
-		}
-
-		backend, err := h.getBackend(volume)
+		getVolumeConfigRequest := resources.GetVolumeConfigRequest{}
+		err := utils.UnmarshalDataFromRequest(req, &getVolumeConfigRequest)
 		if err != nil {
-			h.logger.Printf("Error removing volume %#v", err)
-			utils.WriteResponse(w, http.StatusInternalServerError, &resources.GetConfigResponse{Err: err.Error()})
+			utils.WriteResponse(w, 409, &resources.GenericResponse{Err: err.Error()})
+			return
+		}
+		backend, ok := h.backends[getVolumeConfigRequest.Backend]
+		if !ok {
+			h.logger.Printf("error-backend-not-found%s", getVolumeConfigRequest.Backend)
+			utils.WriteResponse(w, http.StatusNotFound, &resources.GenericResponse{Err: "backend-not-found"})
 			return
 		}
 
-		h.locker.ReadLock(volume)
-		defer h.locker.ReadUnlock(volume)
-		config, err := backend.GetVolumeConfig(volume)
+		h.locker.WriteLock(getVolumeConfigRequest.Name)
+		defer h.locker.WriteUnlock(getVolumeConfigRequest.Name)
+
+		config, err := backend.GetVolumeConfig(getVolumeConfigRequest)
 		if err != nil {
 			utils.WriteResponse(w, 409, &resources.GetConfigResponse{Err: err.Error()})
 			return
@@ -205,21 +202,24 @@ func (h *StorageApiHandler) GetVolumeConfig() http.HandlerFunc {
 
 func (h *StorageApiHandler) GetVolume() http.HandlerFunc {
 	return func(w http.ResponseWriter, req *http.Request) {
-		volume := utils.ExtractVarsFromRequest(req, "volume")
-		if volume == "" {
-			utils.WriteResponse(w, 409, &resources.GetResponse{Err: "cannot determine volume from request"})
+
+		getVolumeRequest := resources.GetVolumeRequest{}
+		err := utils.UnmarshalDataFromRequest(req, &getVolumeRequest)
+		if err != nil {
+			utils.WriteResponse(w, 409, &resources.GenericResponse{Err: err.Error()})
+			return
+		}
+		backend, ok := h.backends[getVolumeRequest.Backend]
+		if !ok {
+			h.logger.Printf("error-backend-not-found%s", getVolumeRequest.Backend)
+			utils.WriteResponse(w, http.StatusNotFound, &resources.GenericResponse{Err: "backend-not-found"})
 			return
 		}
 
-		backend, err := h.getBackend(volume)
-		if err != nil {
-			h.logger.Printf("Error removing volume %#v", err)
-			utils.WriteResponse(w, http.StatusInternalServerError, &resources.GetResponse{Err: err.Error()})
-			return
-		}
-		h.locker.ReadLock(volume)
-		defer h.locker.ReadUnlock(volume)
-		volumeInfo, err := backend.GetVolume(volume)
+		h.locker.WriteLock(getVolumeRequest.Name)
+		defer h.locker.WriteUnlock(getVolumeRequest.Name)
+
+		volumeInfo, err := backend.GetVolume(getVolumeRequest)
 		if err != nil {
 			utils.WriteResponse(w, 409, &resources.GetResponse{Err: err.Error()})
 			return
@@ -234,9 +234,35 @@ func (h *StorageApiHandler) GetVolume() http.HandlerFunc {
 func (h *StorageApiHandler) ListVolumes() http.HandlerFunc {
 	return func(w http.ResponseWriter, req *http.Request) {
 
+		listVolumesRequest := resources.ListVolumesRequest{}
+		err := utils.UnmarshalDataFromRequest(req, &listVolumesRequest)
+		if err != nil {
+			utils.WriteResponse(w, 409, &resources.GenericResponse{Err: err.Error()})
+			return
+		}
+
+		if listVolumesRequest.Backend != "" {
+			backend, ok := h.backends[listVolumesRequest.Backend]
+			if !ok {
+				h.logger.Printf("error-backend-not-found%s", listVolumesRequest.Backend)
+				utils.WriteResponse(w, http.StatusNotFound, &resources.GenericResponse{Err: "backend-not-found"})
+				return
+			}
+			volumesForBackend, err := backend.ListVolumes(listVolumesRequest)
+			if err != nil {
+				h.logger.Printf("Error listing volume %s", err.Error())
+				utils.WriteResponse(w, 409, &resources.GenericResponse{Err: err.Error()})
+				return
+			}
+			listResponse := resources.ListResponse{Volumes: volumesForBackend}
+			h.logger.Printf("List response: %#v\n", listResponse)
+			utils.WriteResponse(w, http.StatusOK, listResponse)
+			return
+		}
+
 		var volumes []resources.VolumeMetadata
 		for _, backend := range h.backends {
-			volumesForBackend, err := backend.ListVolumes()
+			volumesForBackend, err := backend.ListVolumes(listVolumesRequest)
 			if err != nil {
 				h.logger.Printf("Error listing volume %s", err.Error())
 				utils.WriteResponse(w, 409, &resources.GenericResponse{Err: err.Error()})
@@ -250,18 +276,4 @@ func (h *StorageApiHandler) ListVolumes() http.HandlerFunc {
 		h.logger.Printf("List response: %#v\n", listResponse)
 		utils.WriteResponse(w, http.StatusOK, listResponse)
 	}
-}
-func (h *StorageApiHandler) getBackend(name string) (resources.StorageClient, error) {
-
-	backendName, err := model.GetBackendForVolume(h.database, name)
-	if err != nil {
-		return nil, fmt.Errorf("Volume not found")
-	}
-
-	backend, exists := h.backends[backendName]
-	if !exists {
-		h.logger.Printf("Cannot find backend %s", backendName)
-		return nil, fmt.Errorf("Cannot find backend %s", backend)
-	}
-	return backend, nil
 }

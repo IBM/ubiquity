@@ -1,11 +1,5 @@
 package resources
 
-import (
-	"encoding/json"
-	"fmt"
-	"net/http"
-)
-
 const (
 	SPECTRUM_SCALE     Backend = "spectrum-scale"
 	SPECTRUM_SCALE_NFS Backend = "spectrum-scale-nfs"
@@ -70,62 +64,63 @@ type UbiquityServerConnectionInfo struct {
 //go:generate counterfeiter -o ../fakes/fake_storage_client.go . StorageClient
 
 type StorageClient interface {
-	Activate() error
-	CreateVolume(name string, opts map[string]interface{}) error
-	RemoveVolume(name string) error
-	ListVolumes() ([]VolumeMetadata, error)
-	GetVolume(name string) (Volume, error)
-	GetVolumeConfig(name string) (map[string]interface{}, error)
-	Attach(name string) (string, error)
-	Detach(name string) error
+	Activate(activateRequest ActivateRequest) error
+	CreateVolume(createVolumeRequest CreateVolumeRequest) error
+	RemoveVolume(removeVolumeRequest RemoveVolumeRequest) error
+	ListVolumes(listVolumeRequest ListVolumesRequest) ([]VolumeMetadata, error)
+	GetVolume(getVolumeRequest GetVolumeRequest) (Volume, error)
+	GetVolumeConfig(getVolumeConfigRequest GetVolumeConfigRequest) (map[string]interface{}, error)
+	Attach(attachRequest AttachRequest) (string, error)
+	Detach(detachRequest DetachRequest) error
 }
 
-type CreateRequest struct {
-	Name string
-	Opts map[string]interface{}
+type ActivateRequest struct {
+	Backend Backend
+	Opts    map[string]string
 }
 
-type RemoveRequest struct {
-	Name string
+type CreateVolumeRequest struct {
+	Name    string
+	Backend Backend
+	Opts    map[string]interface{}
+}
+
+type RemoveVolumeRequest struct {
+	Name    string
+	Backend Backend
+}
+
+type ListVolumesRequest struct {
+	//TODO add filter
+	Backend Backend
 }
 
 type AttachRequest struct {
-	Name string
+	Name    string
+	Host    string
+	Backend Backend
 }
 
 type DetachRequest struct {
-	Name string
+	Name    string
+	Host    string
+	Backend Backend
 }
-
+type GetVolumeRequest struct {
+	Name    string
+	Backend Backend
+}
+type GetVolumeConfigRequest struct {
+	Name    string
+	Backend Backend
+}
 type ActivateResponse struct {
 	Implements []string
-}
-
-func (r *ActivateResponse) WriteResponse(w http.ResponseWriter) {
-	data, err := json.Marshal(r)
-	if err != nil {
-		fmt.Errorf("Error marshalling response: %s", err.Error())
-		w.WriteHeader(http.StatusInternalServerError)
-		return
-	}
-	fmt.Fprintf(w, string(data))
+	Err        string
 }
 
 type GenericResponse struct {
 	Err string
-}
-
-func (r *GenericResponse) WriteResponse(w http.ResponseWriter) {
-	if r.Err != "" {
-		w.WriteHeader(http.StatusBadRequest)
-	}
-	data, err := json.Marshal(r)
-	if err != nil {
-		fmt.Errorf("Error marshalling response: %s", err.Error())
-		w.WriteHeader(http.StatusInternalServerError)
-		return
-	}
-	fmt.Fprintf(w, string(data))
 }
 
 type GenericRequest struct {
@@ -135,19 +130,6 @@ type GenericRequest struct {
 type MountResponse struct {
 	Mountpoint string
 	Err        string
-}
-
-func (r *MountResponse) WriteResponse(w http.ResponseWriter) {
-	if r.Err != "" {
-		w.WriteHeader(http.StatusBadRequest)
-	}
-	data, err := json.Marshal(r)
-	if err != nil {
-		fmt.Errorf("Error marshalling Get response: %s", err.Error())
-		w.WriteHeader(http.StatusInternalServerError)
-		return
-	}
-	fmt.Fprintf(w, string(data))
 }
 
 type VolumeMetadata struct {
@@ -174,47 +156,9 @@ type GetConfigResponse struct {
 	Err          string
 }
 
-func (r *GetResponse) WriteResponse(w http.ResponseWriter) {
-	if r.Err != "" {
-		w.WriteHeader(http.StatusBadRequest)
-	}
-	data, err := json.Marshal(r)
-	if err != nil {
-		fmt.Errorf("Error marshalling Get response: %s", err.Error())
-		w.WriteHeader(http.StatusInternalServerError)
-		return
-	}
-	fmt.Fprintf(w, string(data))
-}
-func (r *DockerGetResponse) WriteResponse(w http.ResponseWriter) {
-	if r.Err != "" {
-		w.WriteHeader(http.StatusBadRequest)
-	}
-	data, err := json.Marshal(r)
-	if err != nil {
-		fmt.Errorf("Error marshalling DockerGetResponse: %s", err.Error())
-		w.WriteHeader(http.StatusInternalServerError)
-		return
-	}
-	fmt.Fprintf(w, string(data))
-}
-
 type ListResponse struct {
 	Volumes []VolumeMetadata
 	Err     string
-}
-
-func (r *ListResponse) WriteResponse(w http.ResponseWriter) {
-	if r.Err != "" {
-		w.WriteHeader(http.StatusBadRequest)
-	}
-	data, err := json.Marshal(r)
-	if err != nil {
-		fmt.Errorf("Error marshalling Get response: %s", err.Error())
-		w.WriteHeader(http.StatusInternalServerError)
-		return
-	}
-	fmt.Fprintf(w, string(data))
 }
 
 type FlexVolumeResponse struct {
@@ -226,13 +170,24 @@ type FlexVolumeResponse struct {
 type FlexVolumeMountRequest struct {
 	MountPath   string                 `json:"mountPath"`
 	MountDevice string                 `json:"name"`
+	Backend     Backend                `json:"backend"`
 	Opts        map[string]interface{} `json:"opts"`
 }
 
 type FlexVolumeUnmountRequest struct {
-	MountPath string `json:"mountPath"`
+	MountPath string  `json:"mountPath"`
+	Backend   Backend `json:"backend"`
+}
+
+type FlexVolumeAttachRequest struct {
+	Name    string            `json:"name"`
+	Host    string            `json:"host"`
+	Backend Backend           `json:"backend"`
+	Opts    map[string]string `json:"opts"`
 }
 
 type FlexVolumeDetachRequest struct {
-	Name string `json:"name"`
+	Name    string  `json:"name"`
+	Host    string  `json:"host"`
+	Backend Backend `json:"backend"`
 }
