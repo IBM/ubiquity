@@ -18,11 +18,11 @@ type RestClient interface {
 	// Authenticate the server, prepare headers and save the token
 	Login() error
 	// Paper the payload, send post request and check expected status response and returned parsed response
-	Post(resource_url string, payload []byte, exitStatus int) ([]byte, error)
+	Post(resource_url string, payload []byte, exitStatus int, v interface{}) error
 	// Paper the payload, send get request and check expected status response and returned parsed response
-	Get(resource_url string, params map[string]string, exitStatus int) ([]byte, error)
+	Get(resource_url string, params map[string]string, exitStatus int, v interface{}) error
 	// Paper the payload, send delete request and check expected status respon		se and returned parsed response
-	Delete(resource_url string, payload []byte, exitStatus int) ([]byte, error)
+	Delete(resource_url string, payload []byte, exitStatus int, v interface{}) error
 }
 
 const (
@@ -73,6 +73,7 @@ func (s *restClient) Login() error {
 
 func (s *restClient) getToken() (string, error) {
 	delete(s.headers, HTTP_AUTH_KEY) // because no need token to get the token only user\password
+	var loginResponse = LoginResponse{}
 
 	credentials, err := json.Marshal(s.connectionInfo.CredentialInfo)
 	if err != nil {
@@ -80,15 +81,9 @@ func (s *restClient) getToken() (string, error) {
 		return "", fmt.Errorf("Error in marshalling CredentialInfo")
 	}
 
-	responseBody, err := s.Post(s.authURL, credentials, HTTP_SUCCEED)
+	err = s.Post(s.authURL, credentials, HTTP_SUCCEED, &loginResponse)
 	if err != nil {
 		s.logger.Printf("Error posting to url %#v to get a token %#v", s.authURL, err)
-		return "", err
-	}
-
-	var loginResponse = LoginResponse{}
-	err = json.Unmarshal(responseBody, &loginResponse)
-	if err != nil {
 		return "", err
 	}
 
@@ -99,14 +94,14 @@ func (s *restClient) getToken() (string, error) {
 	return loginResponse.Token, nil
 }
 
-func (s *restClient) genericAction(actionName string, resource_url string, payload []byte, exitStatus int) ([]byte, error) {
+func (s *restClient) genericAction(actionName string, resource_url string, payload []byte, exitStatus int, v interface{}) error {
 	url := utils.FormatURL(s.baseURL, resource_url)
 
 	reader := bytes.NewReader(payload)
 	request, err := http.NewRequest(actionName, url, reader)
 	if err != nil {
 		s.logger.Printf("Error in creating %s request %#v", actionName, err)
-		return nil, fmt.Errorf("Error in creating request")
+		return fmt.Errorf("Error in creating request")
 	}
 	// append all the headers to the request
 	for key, value := range s.headers {
@@ -116,32 +111,39 @@ func (s *restClient) genericAction(actionName string, resource_url string, paylo
 	response, err := s.httpClient.Do(request)
 	if err != nil {
 		s.logger.Printf("Error sending %s request : %#v", actionName, err)
-		return nil, err
+		return err
 	}
 
 	defer response.Body.Close()
 	data, err := ioutil.ReadAll(response.Body)
 	if err != nil {
-		//TODO logging
-		return nil, err
+		s.logger.Printf("Fail to read the body %#v", err)
+		return err
 	}
 
 	err = s.verifyStatusCode(*response, exitStatus) // &dereference
 	if err != nil {
-		//TODO logging
-		return nil, err
+		s.logger.Printf("Status code is wrong %#v", err)
+		return err
 	}
-	return data, nil
+
+	err = json.Unmarshal(data, v)
+	if err != nil {
+		s.logger.Printf("Error unmarshal %#v", err)
+		return err
+	}
+
+	return nil
 }
 
-func (s *restClient) Post(resource_url string, payload []byte, exitStatus int) ([]byte, error) {
+func (s *restClient) Post(resource_url string, payload []byte, exitStatus int, v interface{}) error {
 	if exitStatus < 0 {
 		exitStatus = HTTP_SUCCEED_POST // Default value
 	}
-	return s.genericAction("POST", resource_url, payload, exitStatus)
+	return s.genericAction("POST", resource_url, payload, exitStatus, v)
 }
 
-func (s *restClient) Get(resource_url string, params map[string]string, exitStatus int) ([]byte, error) {
+func (s *restClient) Get(resource_url string, params map[string]string, exitStatus int, v interface{}) error {
 	if exitStatus < 0 {
 		exitStatus = HTTP_SUCCEED // Default value
 	}
@@ -150,7 +152,7 @@ func (s *restClient) Get(resource_url string, params map[string]string, exitStat
 	request, err := http.NewRequest("GET", url, nil)
 	if err != nil {
 		s.logger.Printf("Error in creating GET request %#v", err)
-		return nil, fmt.Errorf("Error in creating request")
+		return fmt.Errorf("Error in creating request")
 	}
 
 	// append all the headers to the request
@@ -169,23 +171,30 @@ func (s *restClient) Get(resource_url string, params map[string]string, exitStat
 	defer response.Body.Close()
 	data, err := ioutil.ReadAll(response.Body)
 	if err != nil {
-		//TODO logging
-		return nil, err
+		s.logger.Printf("Fail to read the body %#v", err)
+		return err
 	}
 
 	err = s.verifyStatusCode(*response, exitStatus) // &dereference
 	if err != nil {
-		//TODO logging
-		return nil, err
+		s.logger.Printf("Status code is wrong %#v", err)
+		return err
 	}
-	return data, nil
+
+	err = json.Unmarshal(data, v)
+	if err != nil {
+		s.logger.Printf("Error unmarshal %#v", err)
+		return err
+	}
+
+	return nil
 }
 
-func (s *restClient) Delete(resource_url string, payload []byte, exitStatus int) ([]byte, error) {
+func (s *restClient) Delete(resource_url string, payload []byte, exitStatus int, v interface{}) error {
 	if exitStatus < 0 {
 		exitStatus = HTTP_SUCCEED_DELETED // Default value
 	}
-	return s.genericAction("DELETE", resource_url, payload, exitStatus)
+	return s.genericAction("DELETE", resource_url, payload, exitStatus, v)
 }
 
 func (s *restClient) verifyStatusCode(response http.Response, expected_status_code int) error {
@@ -294,12 +303,8 @@ func (s *scbeRestClient) serviceList(serviceName string) ([]ScbeStorageService, 
 	} else {
 		payload["name"] = serviceName
 	}
-	servicesRaw, err := s.client.Get(UrlScbeResourceService, payload, -1)
-	if err != nil {
-		return nil, err
-	}
 	var services []ScbeStorageService
-	err = json.Unmarshal(servicesRaw, &services)
+	err = s.client.Get(UrlScbeResourceService, payload, -1, &services)
 	if err != nil {
 		return nil, err
 	}
