@@ -3,10 +3,10 @@ package resources
 import "github.com/jinzhu/gorm"
 
 const (
-	SpectrumScale    string = "spectrum-scale"
-	SpectrumScaleNFS string = "spectrum-scale-nfs"
-	SoftlayerNFS     string = "softlayer-nfs"
-	SCBE               Backend = "scbe"
+	SpectrumScale    string  = "spectrum-scale"
+	SpectrumScaleNFS string  = "spectrum-scale-nfs"
+	SoftlayerNFS     string  = "softlayer-nfs"
+	SCBE             Backend = "scbe"
 )
 
 type UbiquityServerConfig struct {

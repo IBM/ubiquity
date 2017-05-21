@@ -1,10 +1,12 @@
 package scbe
 
 import (
+	"crypto/tls"
 	"fmt"
 	"github.com/IBM/ubiquity/resources"
 	"github.com/jinzhu/gorm"
 	"log"
+	"net/http"
 	"sync"
 )
 
@@ -40,16 +42,16 @@ func newScbeLocalClient(logger *log.Logger, config resources.ScbeConfig, databas
 	logger.Println("scbeLocalClient: init start")
 	defer logger.Println("scbeLocalClient: init end")
 
-	/*
-		// TODO implement DB later
-		datamodel := NewScbeDataModel(logger, database, backend)
-		err := datamodel.CreateVolumeTable()
-		if err != nil {
-			return &scbeLocalClient{}, err
-		}
-	*/
-	var datamodel ScbeDataModel
-	scbeRestClient, err := NewScbeRestClient(logger, config.ConnectionInfo)
+	datamodel := NewScbeDataModel(logger, database, backend)
+	err := datamodel.CreateVolumeTable()
+	if err != nil {
+		return &scbeLocalClient{}, err
+	}
+
+	transCfg := &http.Transport{
+		TLSClientConfig: &tls.Config{InsecureSkipVerify: true}, // ignore expired SSL certificates TODO to use
+	}
+	scbeRestClient, err := NewScbeRestClient(logger, config.ConnectionInfo, transCfg)
 
 	if err != nil {
 		return &scbeLocalClient{}, err
@@ -130,7 +132,7 @@ func (s *scbeLocalClient) CreateVolume(name string, opts map[string]interface{})
 
 	if len(opts) == 0 {
 
-		return s.createVolume(name, opts)
+		return s.createVolume(name, "TODO wwn", string(opts["profile"].(string))) // TODO
 	}
 	return fmt.Errorf("Internal error")
 }
@@ -266,11 +268,11 @@ func (s *scbeLocalClient) ListVolumes() ([]resources.VolumeMetadata, error) {
 	return volumes, nil
 }
 
-func (s *scbeLocalClient) createVolume(name string, opts map[string]interface{}) error {
+func (s *scbeLocalClient) createVolume(name string, wwn string, profile string) error {
 	s.logger.Println("scbeLocalClient: createVolume start")
 	defer s.logger.Println("scbeLocalClient: createVolume end")
 
-	err := s.dataModel.InsertVolume(name, opts)
+	err := s.dataModel.InsertVolume(name, wwn, profile, "")
 
 	if err != nil {
 		s.logger.Printf("Error inserting volume %v", err)

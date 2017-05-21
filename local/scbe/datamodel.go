@@ -15,28 +15,23 @@ import (
 type ScbeDataModel interface {
 	CreateVolumeTable() error
 	DeleteVolume(name string) error
-	InsertVolume(volumeName string, opts map[string]interface{}) error
+	InsertVolume(volumeName string, wwn string, profile string, attachTo string) error
 	GetVolume(name string) (ScbeVolume, bool, error)
 	ListVolumes() ([]ScbeVolume, error)
 }
 
 type scbeDataModel struct {
-	log       *log.Logger
-	database  *gorm.DB
-	clusterId string
-	backend   resources.Backend
+	log      *log.Logger
+	database *gorm.DB
+	backend  resources.Backend
 }
 
-const (
-	USER_SPECIFIED_UID string = "uid"
-	USER_SPECIFIED_GID string = "gid"
-)
-
 type ScbeVolume struct {
-	ID     uint
-	Volume model.Volume
-	WWN    string
-	Quota  string
+	ID       uint
+	Volume   model.Volume
+	WWN      string
+	Profile  string
+	AttachTo string
 }
 
 func NewScbeDataModel(log *log.Logger, db *gorm.DB, backend resources.Backend) ScbeDataModel {
@@ -53,6 +48,7 @@ func (d *scbeDataModel) CreateVolumeTable() error {
 	return nil
 }
 
+// DeleteVolume if vol exist in DB then delete it (both in the generic table and the specific one)
 func (d *scbeDataModel) DeleteVolume(name string) error {
 	d.log.Println("ScbeDataModel: DeleteVolume start")
 	defer d.log.Println("SpectrumDataModel: DeleteVolume end")
@@ -75,18 +71,18 @@ func (d *scbeDataModel) DeleteVolume(name string) error {
 	return nil
 }
 
-func (d *scbeDataModel) InsertVolume(volumeName string, opts map[string]interface{}) error {
+// InsertVolume volume name and its details given in opts
+func (d *scbeDataModel) InsertVolume(volumeName string, wwn string, profile string, attachTo string) error {
 	d.log.Println("ScbeDataModel: InsertVolume start")
 	defer d.log.Println("ScbeDataModel: InsertVolume end")
 
-	volume := ScbeVolume{Volume: model.Volume{Name: volumeName, Backend: fmt.Sprintf("%s", d.backend)}}
-
-	return d.insertVolume(volume)
-}
-
-func (d *scbeDataModel) insertVolume(volume ScbeVolume) error {
-	d.log.Println("ScbeDataModel: insertVolume start")
-	defer d.log.Println("ScbeDataModel: insertVolume end")
+	volume := ScbeVolume{
+		Volume: model.Volume{Name: volumeName,
+			Backend: fmt.Sprintf("%s", d.backend)},
+		WWN:      wwn,
+		Profile:  profile,
+		AttachTo: attachTo,
+	}
 
 	if err := d.database.Create(&volume).Error; err != nil {
 		return err
@@ -94,6 +90,7 @@ func (d *scbeDataModel) insertVolume(volume ScbeVolume) error {
 	return nil
 }
 
+// GetVolume return ScbeVolume if exist in DB, else return false and err
 func (d *scbeDataModel) GetVolume(name string) (ScbeVolume, bool, error) {
 	d.log.Println("ScbeDataModel: GetVolume start")
 	defer d.log.Println("ScbeDataModel: GetVolume end")
