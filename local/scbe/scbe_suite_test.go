@@ -3,7 +3,6 @@ package scbe_test
 import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
-	//	httpmock "gopkg.in/jarcoal/httpmock.v1"
 	"testing"
 
 	"github.com/jarcoal/httpmock"

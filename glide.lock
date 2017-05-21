@@ -67,7 +67,7 @@ testImports:
   version: 8f0908ab3b2457e2e15403d3697c9ef5cb4b57a9
   subpackages:
   - unix
-- name: gopkg.in/jarcoal/httpmock.v1
-  version: abbf1543e32e3d8a74ab639e37d9b097178a6924
+- name: github.com/jarcoal/httpmock
+  version: 4442edb3db31196622da56482fd8d0fa375fba4d
 - name: gopkg.in/yaml.v2
   version: 53feefa2559fb8dfa8d81baad31be332c97d6c77
