@@ -11,25 +11,32 @@ import (
 	"net/http"
 )
 
-// TODO change _ to camel case
-/// Wrapper for http requests to provide easy REST API operations, help with parsing, exist status and token handling
+// RestClient is an interface that wrapper the http requests to provide easy REST API operations,
 type RestClient interface {
 	// Authenticate the server, prepare headers and save the token
 	Login() error
+
 	// Paper the payload, send post request and check expected status response and returned parsed response
 	Post(resource_url string, payload []byte, exitStatus int, v interface{}) error
+
 	// Paper the payload, send get request and check expected status response and returned parsed response
 	Get(resource_url string, params map[string]string, exitStatus int, v interface{}) error
+
 	// Paper the payload, send delete request and check expected status respon		se and returned parsed response
 	Delete(resource_url string, payload []byte, exitStatus int, v interface{}) error
 }
 
+// TODO consider to move this RestClient into different go file named restclient.go
 const (
 	HTTP_SUCCEED         = 200
 	HTTP_SUCCEED_POST    = 201
 	HTTP_SUCCEED_DELETED = 204
+	HTTP_AUTH_KEY        = "Authorization"
 )
 
+// restClient implements RestClient interface.
+// The implementation of each interface simplify the use of REST API by doing all the rest and json ops,
+// like pars the response result, handling json, marshaling, and token expire handling.
 type restClient struct {
 	logger         *log.Logger
 	baseURL        string
@@ -51,25 +58,22 @@ func NewRestClient(logger *log.Logger, conInfo resources.ConnectionInfo, baseURL
 	if transport != nil {
 		client = &http.Client{Transport: transport}
 	} else {
-		/*if conInfo.VerifySSL == false {
-			// apply the verify ssl
-			transCfg := &http.Transport{
-				TLSClientConfig: &tls.Config{InsecureSkipVerify: true}, // ignore expired SSL certificates TODO to use
+		/*
+			# TODO need to set the verify ssl
+			if conInfo.VerifySSL == false {
+				// apply the verify ssl
+				transCfg := &http.Transport{
+					TLSClientConfig: &tls.Config{InsecureSkipVerify: true}, // ignore expired SSL certificates TODO to use
+				}
+				client = &http.Client{Transport: transCfg}
+			} else {
+				client = &http.Client{}
 			}
-			client = &http.Client{Transport: transCfg}
-		} else {
-			client = &http.Client{}
-		}*/
+		*/
 		client = &http.Client{}
 	}
-	//transCfg := &http.Transport{
-	//	TLSClientConfig: &tls.Config{InsecureSkipVerify: true}, // ignore expired SSL certificates TODO to use
-	//}
-	//client := &http.Client{Transport: transCfg}
 	return &restClient{logger: logger, connectionInfo: conInfo, baseURL: baseURL, authURL: authURL, referrer: referrer, httpClient: client, headers: headers}, nil
 }
-
-const HTTP_AUTH_KEY = "Authorization"
 
 func (s *restClient) Login() error {
 	token, err := s.getToken()
@@ -109,14 +113,35 @@ func (s *restClient) getToken() (string, error) {
 	return loginResponse.Token, nil
 }
 
-func (s *restClient) genericAction(actionName string, resource_url string, payload []byte, exitStatus int, v interface{}) error {
+// genericAction trigger the http actionName give.
+// It first format the url, prepare the http.Request(if post\delete uses payload, if get uses params)
+// Then it append all relevant the http headers and then trigger the http action by using Do interface.
+// Then read the response, and if exist status as expacted it reads the body into the given struct(v)
+// The function return only error if accured and of cause the object(v) loaded with the response.
+func (s *restClient) genericAction(actionName string, resource_url string, payload []byte, params map[string]string, exitStatus int, v interface{}) error {
 	url := utils.FormatURL(s.baseURL, resource_url)
-	reader := bytes.NewReader(payload)
-	request, err := http.NewRequest(actionName, url, reader)
-	if err != nil {
-		s.logger.Printf("Error in creating %s request %#v", actionName, err)
-		return fmt.Errorf("Error in creating request")
+	var err error
+	var request *http.Request
+	if actionName == "GET" {
+		request, err = http.NewRequest(actionName, url, nil)
+	} else {
+		request, err = http.NewRequest(actionName, url, bytes.NewReader(payload))
 	}
+
+	if err != nil {
+		msg := fmt.Sprintf("Error in creating %s request %#v", actionName, err)
+		s.logger.Printf(msg)
+		return fmt.Errorf(msg)
+	}
+	if actionName == "GET" {
+		// append all the params into the request
+		q := request.URL.Query()
+		for key, value := range params {
+			q.Add(key, value)
+		}
+		request.URL.RawQuery = q.Encode()
+	}
+
 	// append all the headers to the request
 	for key, value := range s.headers {
 		request.Header.Add(key, value)
@@ -150,76 +175,43 @@ func (s *restClient) genericAction(actionName string, resource_url string, paylo
 	return nil
 }
 
+// Post http request
 func (s *restClient) Post(resource_url string, payload []byte, exitStatus int, v interface{}) error {
 	if exitStatus < 0 {
 		exitStatus = HTTP_SUCCEED_POST // Default value
 	}
-	return s.genericAction("POST", resource_url, payload, exitStatus, v)
+	return s.genericAction("POST", resource_url, payload, nil, exitStatus, v)
 }
 
+// Get http request
 func (s *restClient) Get(resource_url string, params map[string]string, exitStatus int, v interface{}) error {
-	// TODO need to refactor and add it as part of the generic
 	if exitStatus < 0 {
 		exitStatus = HTTP_SUCCEED // Default value
 	}
-	url := utils.FormatURL(s.baseURL, resource_url)
-
-	request, err := http.NewRequest("GET", url, nil)
-	if err != nil {
-		s.logger.Printf("Error in creating GET request %#v", err)
-		return fmt.Errorf("Error in creating request")
-	}
-
-	// append all the headers to the request
-	for key, value := range s.headers {
-		request.Header.Add(key, value)
-	}
-	// append all the params into the request
-	q := request.URL.Query()
-	for key, value := range params {
-		q.Add(key, value)
-	}
-	request.URL.RawQuery = q.Encode()
-	response, err := s.httpClient.Do(request)
-	if err != nil {
-		s.logger.Printf("Error sending GET request : %#v", err)
-		return err
-	}
-	defer response.Body.Close()
-	data, err := ioutil.ReadAll(response.Body)
-	if err != nil {
-		s.logger.Printf("Fail to read the body %#v", err)
-		return err
-	}
-	err = s.verifyStatusCode(*response, exitStatus) // &dereference
-	if err != nil {
-		s.logger.Printf("Status code is wrong %#v", err)
-		return err
-	}
-
-	err = json.Unmarshal(data, v)
-	if err != nil {
-		s.logger.Printf("Error unmarshal %#v", err)
-		return err
-	}
-	return nil
+	return s.genericAction("GET", resource_url, nil, params, exitStatus, v)
 }
 
+// Delete request
 func (s *restClient) Delete(resource_url string, payload []byte, exitStatus int, v interface{}) error {
 	if exitStatus < 0 {
 		exitStatus = HTTP_SUCCEED_DELETED // Default value
 	}
-	return s.genericAction("DELETE", resource_url, payload, exitStatus, v)
+	return s.genericAction("DELETE", resource_url, payload, nil, exitStatus, v)
 }
 
+// verifyStatusCode verify that the http response returned the expected exit code, if not return error
 func (s *restClient) verifyStatusCode(response http.Response, expected_status_code int) error {
 	if response.StatusCode != expected_status_code {
-		fmt.Printf("------->response statuc code, %#v", response)
-		s.logger.Printf("Error, bad status code of http response %#v", response.StatusCode)
-		return fmt.Errorf("Error, bad status code of http response")
+		msg := fmt.Sprintf("Error, bad status code of http response %#v", response.StatusCode)
+		s.logger.Printf(msg)
+		return fmt.Errorf(msg)
 	}
 	return nil
 }
+
+// ********************************
+// ****** SCBE Rest Client ********
+// ********************************
 
 type ScbeVolumeInfo struct {
 	name string
@@ -227,7 +219,6 @@ type ScbeVolumeInfo struct {
 	// TODO later on we will want also size and maybe other stuff
 }
 
-/// SCBE rest client
 //go:generate counterfeiter -o ../fakes/fake_scbe_rest_client.go . ScbeRestClient
 type ScbeRestClient interface {
 	Login() error
@@ -264,7 +255,7 @@ func NewScbeRestClient(logger *log.Logger, conInfo resources.ConnectionInfo, tra
 	if conInfo.Port == 0 {
 		conInfo.Port = DEFAULT_SCBE_PORT
 	}
-	// Add the default SCBE Flocker group to the credentials # TODO need to update with ubiquity group later on
+	// Add the default SCBE Flocker group to the credentials
 	conInfo.CredentialInfo.Group = SCBE_FLOCKER_GROUP_PARAM
 	referrer := fmt.Sprintf(URL_SCBE_REFERER, conInfo.ManagementIP, conInfo.Port)
 	baseUrl := referrer + URL_SCBE_BASE_SUFFIX
@@ -315,7 +306,7 @@ func (s *scbeRestClient) serviceList(serviceName string) ([]ScbeStorageService, 
 	payload := make(map[string]string)
 	var err error
 	if serviceName == "" {
-		payload = nil // TODO else
+		payload = nil
 	} else {
 		payload["name"] = serviceName
 	}

@@ -57,47 +57,11 @@ var _ = Describe("restClient integration testing with existing SCBE instance", f
 			err := client.Login()
 			Expect(err).ToNot(HaveOccurred())
 			err = client.Get("/services", nil, 200, &services)
-			fmt.Printf("%#v", services)
 			Expect(len(services) > 0).To(Equal(true))
 		})
 	})
 
 })
-
-func getScbeEnvs() (scbeUser, scbePassword, scbeIP string, scbePort int, err error) {
-	scbeUser = os.Getenv("SCBE_USER")
-	scbePassword = os.Getenv("SCBE_PASSWORD")
-	scbeIP = os.Getenv("SCBE_IP")
-	scbePortStr := os.Getenv("SCBE_PORT")
-	var missingEnvs string
-	if scbeUser == "" {
-		missingEnvs = missingEnvs + "SCBE_USER "
-	}
-	if scbePassword == "" {
-		missingEnvs = missingEnvs + "SCBE_PASSWORD "
-	}
-	if scbeIP == "" {
-		missingEnvs = missingEnvs + "SCBE_IP "
-	}
-	if scbePortStr == "" {
-		missingEnvs = missingEnvs + "SCBE_PORT "
-		scbePort = 0
-	} else {
-		scbePort, err = strconv.Atoi(scbePortStr)
-		if err != nil {
-			err = fmt.Errorf("SCBE_PORT environment must be a number")
-			return
-		}
-	}
-	if missingEnvs != "" {
-		missingEnvs = missingEnvs + "environments are empty, skip the integration test."
-		err = fmt.Errorf(missingEnvs)
-	} else {
-		//fmt.Printf("Using the following params : %s, %s, %s, %s\n", scbeUser, scbePassword, scbeIP, scbePort)
-	}
-
-	return
-}
 
 var _ = Describe("ScbeRestClient integration testing with existing SCBE instance", func() {
 	var (
@@ -142,3 +106,36 @@ var _ = Describe("ScbeRestClient integration testing with existing SCBE instance
 		})
 	})
 })
+
+func getScbeEnvs() (scbeUser, scbePassword, scbeIP string, scbePort int, err error) {
+	scbeUser = os.Getenv("SCBE_USER")
+	scbePassword = os.Getenv("SCBE_PASSWORD")
+	scbeIP = os.Getenv("SCBE_IP")
+	scbePortStr := os.Getenv("SCBE_PORT")
+	var missingEnvs string
+	if scbeUser == "" {
+		missingEnvs = missingEnvs + "SCBE_USER "
+	}
+	if scbePassword == "" {
+		missingEnvs = missingEnvs + "SCBE_PASSWORD "
+	}
+	if scbeIP == "" {
+		missingEnvs = missingEnvs + "SCBE_IP "
+	}
+	if scbePortStr == "" {
+		missingEnvs = missingEnvs + "SCBE_PORT "
+		scbePort = 0
+	} else {
+		scbePort, err = strconv.Atoi(scbePortStr)
+		if err != nil {
+			err = fmt.Errorf("SCBE_PORT environment must be a number")
+			return
+		}
+	}
+	if missingEnvs != "" {
+		missingEnvs = missingEnvs + "environments are empty, skip the integration test."
+		err = fmt.Errorf(missingEnvs)
+	}
+
+	return
+}

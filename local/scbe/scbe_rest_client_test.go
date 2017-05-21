@@ -2,15 +2,13 @@ package scbe_test
 
 import (
 	"encoding/json"
-	"log"
-	"net/http"
-
-	"fmt"
 	"github.com/IBM/ubiquity/local/scbe"
 	"github.com/IBM/ubiquity/resources"
 	"github.com/jarcoal/httpmock"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega" // including the whole package inside the file
+	"log"
+	"net/http"
 	"os"
 )
 
@@ -66,7 +64,6 @@ var _ = Describe("restClient", func() {
 
 	Context(".Login", func() {
 		It("should succeed when httpClient succeed and return a token", func() {
-			fmt.Printf("11111111111111")
 			loginResponse := scbe.LoginResponse{Token: "fake-token"}
 			marshalledResponse, err := json.Marshal(loginResponse)
 			Expect(err).ToNot(HaveOccurred())
@@ -75,9 +72,7 @@ var _ = Describe("restClient", func() {
 				fakeScbeUrlAuthFull,
 				httpmock.NewStringResponder(http.StatusOK, string(marshalledResponse)),
 			)
-			fmt.Printf("22222\n")
 			err = client.Login()
-			fmt.Printf("3333\n")
 			Expect(err).ToNot(HaveOccurred())
 		})
 		It("should fail when httpClient succeed and return an empty token", func() {
@@ -93,7 +88,7 @@ var _ = Describe("restClient", func() {
 			httpmock.RegisterResponder("POST", fakeScbeUrlAuthFull, httpmock.NewStringResponder(http.StatusBadRequest, "{}"))
 			err = client.Login()
 			Expect(err).To(HaveOccurred())
-			Expect(err.Error()).To(Equal("Error, bad status code of http response"))
+			Expect(err.Error()).To(MatchRegexp("^Error, bad status code of http response"))
 		})
 		It("should fail when httpClient.post return bad structure that marshaling cannot work with", func() {
 			httpmock.RegisterResponder("POST", fakeScbeUrlAuthFull, httpmock.NewStringResponder(http.StatusOK, "yyy"))
