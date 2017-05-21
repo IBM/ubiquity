@@ -2,7 +2,6 @@ package scbe
 
 import (
 	"bytes"
-	"crypto/tls"
 	"encoding/json"
 	"fmt"
 	"github.com/IBM/ubiquity/resources"
@@ -42,15 +41,31 @@ type restClient struct {
 	headers        map[string]string
 }
 
-func NewRestClient(logger *log.Logger, conInfo resources.ConnectionInfo, baseURL string, authURL string, referrer string) (RestClient, error) {
+func NewRestClient(logger *log.Logger, conInfo resources.ConnectionInfo, baseURL string, authURL string, referrer string, transport *http.Transport) (RestClient, error) {
 	headers := map[string]string{
 		"Content-Type": "application/json",
 		"referer":      referrer,
 	}
-	transCfg := &http.Transport{
-		TLSClientConfig: &tls.Config{InsecureSkipVerify: true}, // ignore expired SSL certificates TODO to use
+	var client *http.Client
+
+	if transport != nil {
+		client = &http.Client{Transport: transport}
+	} else {
+		/*if conInfo.VerifySSL == false {
+			// apply the verify ssl
+			transCfg := &http.Transport{
+				TLSClientConfig: &tls.Config{InsecureSkipVerify: true}, // ignore expired SSL certificates TODO to use
+			}
+			client = &http.Client{Transport: transCfg}
+		} else {
+			client = &http.Client{}
+		}*/
+		client = &http.Client{}
 	}
-	client := &http.Client{Transport: transCfg}
+	//transCfg := &http.Transport{
+	//	TLSClientConfig: &tls.Config{InsecureSkipVerify: true}, // ignore expired SSL certificates TODO to use
+	//}
+	//client := &http.Client{Transport: transCfg}
 	return &restClient{logger: logger, connectionInfo: conInfo, baseURL: baseURL, authURL: authURL, referrer: referrer, httpClient: client, headers: headers}, nil
 }
 
@@ -96,7 +111,6 @@ func (s *restClient) getToken() (string, error) {
 
 func (s *restClient) genericAction(actionName string, resource_url string, payload []byte, exitStatus int, v interface{}) error {
 	url := utils.FormatURL(s.baseURL, resource_url)
-
 	reader := bytes.NewReader(payload)
 	request, err := http.NewRequest(actionName, url, reader)
 	if err != nil {
@@ -144,6 +158,7 @@ func (s *restClient) Post(resource_url string, payload []byte, exitStatus int, v
 }
 
 func (s *restClient) Get(resource_url string, params map[string]string, exitStatus int, v interface{}) error {
+	// TODO need to refactor and add it as part of the generic
 	if exitStatus < 0 {
 		exitStatus = HTTP_SUCCEED // Default value
 	}
@@ -159,22 +174,23 @@ func (s *restClient) Get(resource_url string, params map[string]string, exitStat
 	for key, value := range s.headers {
 		request.Header.Add(key, value)
 	}
-
 	// append all the params into the request
 	q := request.URL.Query()
 	for key, value := range params {
 		q.Add(key, value)
 	}
 	request.URL.RawQuery = q.Encode()
-
 	response, err := s.httpClient.Do(request)
+	if err != nil {
+		s.logger.Printf("Error sending GET request : %#v", err)
+		return err
+	}
 	defer response.Body.Close()
 	data, err := ioutil.ReadAll(response.Body)
 	if err != nil {
 		s.logger.Printf("Fail to read the body %#v", err)
 		return err
 	}
-
 	err = s.verifyStatusCode(*response, exitStatus) // &dereference
 	if err != nil {
 		s.logger.Printf("Status code is wrong %#v", err)
@@ -186,7 +202,6 @@ func (s *restClient) Get(resource_url string, params map[string]string, exitStat
 		s.logger.Printf("Error unmarshal %#v", err)
 		return err
 	}
-
 	return nil
 }
 
@@ -213,6 +228,7 @@ type ScbeVolumeInfo struct {
 }
 
 /// SCBE rest client
+
 type ScbeRestClient interface {
 	Login() error
 	CreateVolume(volName string, serviceName string, size_byte int) (ScbeVolumeInfo, error)
@@ -243,7 +259,7 @@ const (
 	//UrlScbeResourceHost = "/hosts"
 )
 
-func NewScbeRestClient(logger *log.Logger, conInfo resources.ConnectionInfo) (ScbeRestClient, error) {
+func NewScbeRestClient(logger *log.Logger, conInfo resources.ConnectionInfo, transport *http.Transport) (ScbeRestClient, error) {
 	// Set default SCBE port if not mentioned
 	if conInfo.Port == 0 {
 		conInfo.Port = DEFAULT_SCBE_PORT
@@ -252,7 +268,7 @@ func NewScbeRestClient(logger *log.Logger, conInfo resources.ConnectionInfo) (Sc
 	conInfo.CredentialInfo.Group = SCBE_FLOCKER_GROUP_PARAM
 	referrer := fmt.Sprintf(URL_SCBE_REFERER, conInfo.ManagementIP, conInfo.Port)
 	baseUrl := referrer + URL_SCBE_BASE_SUFFIX
-	client, _ := NewRestClient(logger, conInfo, baseUrl, URL_SCBE_RESOURCE_GET_AUTH, referrer)
+	client, _ := NewRestClient(logger, conInfo, baseUrl, URL_SCBE_RESOURCE_GET_AUTH, referrer, transport)
 
 	return &scbeRestClient{logger, conInfo, client}, nil
 }

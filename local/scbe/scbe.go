@@ -1,10 +1,12 @@
 package scbe
 
 import (
+	"crypto/tls"
 	"fmt"
 	"github.com/IBM/ubiquity/resources"
 	"github.com/jinzhu/gorm"
 	"log"
+	"net/http"
 	"sync"
 )
 
@@ -24,13 +26,13 @@ func NewScbeLocalClient(logger *log.Logger, config resources.ScbeConfig, databas
 	return newScbeLocalClient(logger, config, database, resources.SCBE)
 }
 
-func NewScbeLocalClientWithNewScbeRestClientAndDataModel(logger *log.Logger, config resources.ScbeConfig, dataModel ScbeDataModel, scbeRestClient *ScbeRestClient) (resources.StorageClient, error) {
+func NewScbeLocalClientWithNewScbeRestClientAndDataModel(logger *log.Logger, config resources.ScbeConfig, dataModel ScbeDataModel, scbeRestClient ScbeRestClient) (resources.StorageClient, error) {
 	if config.ConfigPath == "" {
 		return nil, fmt.Errorf("scbeLocalClient: init: missing required parameter 'spectrumConfigPath'")
 	}
 	return &scbeLocalClient{
 		logger:         logger,
-		scbeRestClient: nil, // TODO need to mock it in more advance way
+		scbeRestClient: scbeRestClient, // TODO need to mock it in more advance way
 		dataModel:      dataModel,
 		config:         config,
 		activationLock: &sync.RWMutex{}}, nil
@@ -49,7 +51,11 @@ func newScbeLocalClient(logger *log.Logger, config resources.ScbeConfig, databas
 		}
 	*/
 	var datamodel ScbeDataModel
-	scbeRestClient, err := NewScbeRestClient(logger, config.ConnectionInfo)
+	transCfg := &http.Transport{
+		TLSClientConfig: &tls.Config{InsecureSkipVerify: true}, // ignore expired SSL certificates TODO to use
+	}
+	scbeRestClient, err := NewScbeRestClient(logger, config.ConnectionInfo, transCfg)
+
 	if err != nil {
 		return &scbeLocalClient{}, err
 	}
@@ -80,8 +86,8 @@ func (s *scbeLocalClient) Activate() error {
 	//do any needed configuration
 	err := s.scbeRestClient.Login()
 	if err != nil {
-		s.logger.Printf("Error in activate remote call %#v", err)
-		return fmt.Errorf("Error in activate remote call")
+		s.logger.Printf("Error in login remote call %#v", err)
+		return fmt.Errorf("Error in login remote call")
 	} else {
 		s.logger.Printf("Succeeded to login to SCBE %s", s.config.ConnectionInfo.ManagementIP)
 	}
@@ -90,7 +96,7 @@ func (s *scbeLocalClient) Activate() error {
 	isExist, err = s.scbeRestClient.ServiceExist(s.config.DefaultService)
 	if err != nil {
 		s.logger.Printf("Error in activate SCBE backend while checking default service. (%#v)", err)
-		return fmt.Errorf("Error in activate remote call")
+		return fmt.Errorf("Error in serviceExist remote call")
 	}
 
 	if isExist == false {
