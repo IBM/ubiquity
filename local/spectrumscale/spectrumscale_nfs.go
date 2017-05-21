@@ -191,14 +191,7 @@ func (s *spectrumNfsLocalClient) exportNfs(name, clientConfig string) error {
 		return err
 	}
 
-	err = s.spectrumClient.connector.ExportNfs(volumeMountpoint,clientConfig)
-
-	if err != nil {
-		s.spectrumClient.logger.Printf("spectrumNfsLocalClient: error %#v during Export of NFS\n", err)
-		return fmt.Errorf("Failed to export fileset via Nfs: %s", err.Error())
-	}
-
-	return nil
+	return s.spectrumClient.connector.ExportNfs(volumeMountpoint,clientConfig)
 }
 
 func (s *spectrumNfsLocalClient) unexportNfs(name string) error {
@@ -216,20 +209,10 @@ func (s *spectrumNfsLocalClient) unexportNfs(name string) error {
 		return err
 	}
 
-
 	volumeMountpoint, err := s.spectrumClient.getVolumeMountPoint(existingVolume)
 	if err != nil {
 		return err
 	}
 
-
-	err = s.spectrumClient.connector.UnexportNfs(volumeMountpoint)
-
-	if err != nil {
-		s.spectrumClient.logger.Printf("spectrumNfsLocalClient: error %#v during deleting NFS export \n", err)
-		return fmt.Errorf("spectrumNfsLocalClient: Failed to unexport fileset via Nfs: %s", err.Error())
-
-	}
-
-	return nil
+	return s.spectrumClient.connector.UnexportNfs(volumeMountpoint)
 }
