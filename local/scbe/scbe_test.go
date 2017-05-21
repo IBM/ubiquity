@@ -2,10 +2,8 @@ package scbe_test
 
 import (
 	"log"
-	"net/http"
 	"os"
 
-	httpmock "gopkg.in/jarcoal/httpmock.v1"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -38,21 +36,6 @@ var _ = Describe("scbeLocalClient", func() {
 	})
 
 	Context(".Activate", func() {
-		It("should succeed when httpClient returns statusAccepted", func() {
-			httpmock.RegisterResponder("POST", "http://scbe.com/activate",
-				httpmock.NewStringResponder(http.StatusAccepted, `[]`))
-
-			err = client.Activate()
-			Expect(err).ToNot(HaveOccurred())
+		
 		})
-
-		It("should fail when httpClient returns http.StatusNotAcceptable", func() {
-			httpmock.RegisterResponder("POST", "http://scbe.com/activate",
-				httpmock.NewStringResponder(http.StatusNotAcceptable, `[]`))
-
-			err = client.Activate()
-			Expect(err).To(HaveOccurred())
-		})
-	})
-
 })

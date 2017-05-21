@@ -1,16 +1,17 @@
 package scbe_test
 
 import (
+	"crypto/tls"
+	"fmt"
 	"github.com/IBM/ubiquity/local/scbe"
 	"github.com/IBM/ubiquity/resources"
+	"os"
+	"strconv"
+	//"github.com/jarcoal/httpmock"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega" // including the whole package inside the file
 	"log"
-	"os"
-	// httpmock is the referrer for this module
-	"fmt"
-	"gopkg.in/jarcoal/httpmock.v1"
-	"strconv"
+	"net/http"
 )
 
 var _ = Describe("restClient integration testing with existing SCBE instance", func() {
@@ -29,14 +30,18 @@ var _ = Describe("restClient integration testing with existing SCBE instance", f
 		}
 		credentialInfo = resources.CredentialInfo{scbeUser, scbePassword, "flocker"}
 		conInfo = resources.ConnectionInfo{credentialInfo, scbePort, scbeIP, false}
+		transCfg := &http.Transport{
+			TLSClientConfig: &tls.Config{InsecureSkipVerify: true}, // ignore expired SSL certificates TODO to use
+		}
+
 		client, err = scbe.NewRestClient(
 			logger,
 			conInfo,
 			"https://"+scbeIP+":"+strconv.Itoa(scbePort)+"/api/v1",
 			"users/get-auth-token",
-			"https://"+scbeIP+":"+strconv.Itoa(scbePort)+"/")
+			"https://"+scbeIP+":"+strconv.Itoa(scbePort)+"/", transCfg)
 		Expect(err).ToNot(HaveOccurred())
-		httpmock.DeactivateAndReset()
+		//httpmock.DeactivateAndReset()
 	})
 
 	Context(".Login", func() {
@@ -110,9 +115,12 @@ var _ = Describe("ScbeRestClient integration testing with existing SCBE instance
 		}
 		credentialInfo = resources.CredentialInfo{scbeUser, scbePassword, "flocker"}
 		conInfo = resources.ConnectionInfo{credentialInfo, scbePort, scbeIP, false}
-		scbeRestClient, err = scbe.NewScbeRestClient(logger, conInfo)
+		transCfg := &http.Transport{
+			TLSClientConfig: &tls.Config{InsecureSkipVerify: true}, // ignore expired SSL certificates TODO to use
+		}
+		scbeRestClient, err = scbe.NewScbeRestClient(logger, conInfo, transCfg)
 		Expect(err).ToNot(HaveOccurred())
-		httpmock.DeactivateAndReset()
+		//httpmock.DeactivateAndReset()
 	})
 
 	Context(".Login", func() {
