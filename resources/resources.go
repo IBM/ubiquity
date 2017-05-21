@@ -38,7 +38,7 @@ type ConnectionInfo struct {
 	CredentialInfo CredentialInfo
 	Port           int
 	ManagementIP   string
-	VerifySSL      bool
+	SkipVerifySSL  bool
 }
 
 type ScbeConfig struct {

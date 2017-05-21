@@ -9,6 +9,7 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
+	"crypto/tls"
 )
 
 // RestClient is an interface that wrapper the http requests to provide easy REST API operations,
@@ -48,28 +49,17 @@ type restClient struct {
 	headers        map[string]string
 }
 
-func NewRestClient(logger *log.Logger, conInfo resources.ConnectionInfo, baseURL string, authURL string, referrer string, transport *http.Transport) (RestClient, error) {
+func NewRestClient(logger *log.Logger, conInfo resources.ConnectionInfo, baseURL string, authURL string, referrer string) (RestClient, error) {
 	headers := map[string]string{
 		"Content-Type": "application/json",
 		"referer":      referrer,
 	}
 	var client *http.Client
 
-	if transport != nil {
-		client = &http.Client{Transport: transport}
+	if conInfo.SkipVerifySSL {
+		transCfg := &http.Transport{TLSClientConfig: &tls.Config{InsecureSkipVerify: true}}
+		client = &http.Client{Transport: transCfg}
 	} else {
-		/*
-			# TODO need to set the verify ssl
-			if conInfo.VerifySSL == false {
-				// apply the verify ssl
-				transCfg := &http.Transport{
-					TLSClientConfig: &tls.Config{InsecureSkipVerify: true}, // ignore expired SSL certificates TODO to use
-				}
-				client = &http.Client{Transport: transCfg}
-			} else {
-				client = &http.Client{}
-			}
-		*/
 		client = &http.Client{}
 	}
 	return &restClient{logger: logger, connectionInfo: conInfo, baseURL: baseURL, authURL: authURL, referrer: referrer, httpClient: client, headers: headers}, nil
@@ -250,7 +240,7 @@ const (
 	//UrlScbeResourceHost = "/hosts"
 )
 
-func NewScbeRestClient(logger *log.Logger, conInfo resources.ConnectionInfo, transport *http.Transport) (ScbeRestClient, error) {
+func NewScbeRestClient(logger *log.Logger, conInfo resources.ConnectionInfo) (ScbeRestClient, error) {
 	// Set default SCBE port if not mentioned
 	if conInfo.Port == 0 {
 		conInfo.Port = DEFAULT_SCBE_PORT
@@ -259,7 +249,7 @@ func NewScbeRestClient(logger *log.Logger, conInfo resources.ConnectionInfo, tra
 	conInfo.CredentialInfo.Group = SCBE_FLOCKER_GROUP_PARAM
 	referrer := fmt.Sprintf(URL_SCBE_REFERER, conInfo.ManagementIP, conInfo.Port)
 	baseUrl := referrer + URL_SCBE_BASE_SUFFIX
-	client, _ := NewRestClient(logger, conInfo, baseUrl, URL_SCBE_RESOURCE_GET_AUTH, referrer, transport)
+	client, _ := NewRestClient(logger, conInfo, baseUrl, URL_SCBE_RESOURCE_GET_AUTH, referrer)
 
 	return &scbeRestClient{logger, conInfo, client}, nil
 }

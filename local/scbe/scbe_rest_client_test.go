@@ -50,15 +50,12 @@ var fakeServiceJsonResponse string = `
 var _ = Describe("restClient", func() {
 	var (
 		logger  *log.Logger
-		conInfo resources.ConnectionInfo
 		client  scbe.RestClient
 		err     error
 	)
 	BeforeEach(func() {
 		logger = log.New(os.Stdout, "ubiquity scbe: ", log.Lshortfile|log.LstdFlags)
-		conInfo = resources.ConnectionInfo{}
-		client, err = scbe.NewRestClient(logger, conInfo, fakeScbeUrlBase+"/"+suffix, fakeScbeUrlAuth, fakeScbeUrlReferer, nil)
-
+		client, err = scbe.NewRestClient(logger, resources.ConnectionInfo{}, fakeScbeUrlBase+"/"+suffix, fakeScbeUrlAuth, fakeScbeUrlReferer)
 		Expect(err).ToNot(HaveOccurred())
 	})
 
@@ -103,15 +100,12 @@ var _ = Describe("restClient", func() {
 var _ = Describe("restClient", func() {
 	var (
 		logger  *log.Logger
-		conInfo resources.ConnectionInfo
 		client  scbe.RestClient
 		err     error
 	)
 	BeforeEach(func() {
 		logger = log.New(os.Stdout, "ubiquity scbe: ", log.Lshortfile|log.LstdFlags)
-		conInfo = resources.ConnectionInfo{}
-		client, err = scbe.NewRestClient(logger, conInfo, fakeScbeUrlBase+"/"+suffix, fakeScbeUrlAuth, fakeScbeUrlReferer, nil)
-
+		client, err = scbe.NewRestClient(logger, resources.ConnectionInfo{}, fakeScbeUrlBase+"/"+suffix, fakeScbeUrlAuth, fakeScbeUrlReferer)
 		Expect(err).ToNot(HaveOccurred())
 		loginResponse := scbe.LoginResponse{Token: "fake-token"}
 		marshalledResponse, err := json.Marshal(loginResponse)
