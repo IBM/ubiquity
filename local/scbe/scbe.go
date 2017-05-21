@@ -95,8 +95,9 @@ func (s *scbeLocalClient) Activate() error {
 	var isExist bool
 	isExist, err = s.scbeRestClient.ServiceExist(s.config.DefaultService)
 	if err != nil {
-		s.logger.Printf("Error in activate SCBE backend while checking default service. (%#v)", err)
-		return fmt.Errorf("Error in serviceExist remote call")
+		msg := fmt.Sprintf("Error in activate SCBE backend while checking default service. (%#v)", err)
+		s.logger.Printf(msg)
+		return fmt.Errorf(msg)
 	}
 
 	if isExist == false {

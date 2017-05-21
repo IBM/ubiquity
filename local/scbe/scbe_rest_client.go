@@ -228,7 +228,7 @@ type ScbeVolumeInfo struct {
 }
 
 /// SCBE rest client
-
+//go:generate counterfeiter -o ../fakes/fake_scbe_rest_client.go . ScbeRestClient
 type ScbeRestClient interface {
 	Login() error
 	CreateVolume(volName string, serviceName string, size_byte int) (ScbeVolumeInfo, error)
