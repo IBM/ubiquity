@@ -19,6 +19,7 @@ type spectrumRestV2 struct {
         endpoint   string
         user       string
         password   string
+	hostname   string
 }
 
 
@@ -117,11 +118,12 @@ func NewSpectrumRestV2(logger *log.Logger, restConfig resources.RestConfig) (Spe
         endpoint := restConfig.Endpoint
         user := restConfig.User
         password := restConfig.Password
+	hostname := restConfig.Hostname
 
         tr := &http.Transport{
                 TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
         }
-        return &spectrumRestV2{logger: logger, httpClient: &http.Client{Transport: tr}, endpoint: endpoint, user: user, password: password}, nil
+        return &spectrumRestV2{logger: logger, httpClient: &http.Client{Transport: tr}, endpoint: endpoint, user: user, password: password, hostname: hostname}, nil
 }
 
 
@@ -146,6 +148,7 @@ func (s *spectrumRestV2) IsFilesystemMounted(filesystemName string) (bool, error
         s.logger.Println("spectrumRestConnector: IsFilesystemMounted")
         defer s.logger.Println("spectrumRestConnector: IsFilesystemMounted end")
 
+	var currentNode string
         getNodesURL := utils.FormatURL(s.endpoint, "scalemgmt/v2/nodes")
         getNodesResponse := GetNodesResponse_v2{}
 
@@ -155,7 +158,13 @@ func (s *spectrumRestV2) IsFilesystemMounted(filesystemName string) (bool, error
                 	s.logger.Printf("error in executing remote call: %v", err)
                         return false, err
                 }
-                currentNode, _ := os.Hostname()
+
+		if (s.hostname != "") {
+			s.logger.Printf("Got hostname from config %v",s.hostname)
+			currentNode = s.hostname
+		} else {		
+	                currentNode, _ = os.Hostname()
+		}
                 s.logger.Printf("spectrum rest Client: node name: %s\n", currentNode)
                 for _, node := range getNodesResponse.Nodes {
                         if node.AdminNodename == currentNode {
