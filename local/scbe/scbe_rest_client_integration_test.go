@@ -8,10 +8,13 @@ import (
 	"os"
 	"strconv"
 	//"github.com/jarcoal/httpmock"
+	"github.com/IBM/ubiquity/model"
+	"github.com/jinzhu/gorm"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega" // including the whole package inside the file
 	"log"
 	"net/http"
+	"path"
 )
 
 var _ = Describe("restClient integration testing with existing SCBE instance", func() {
@@ -139,3 +142,71 @@ func getScbeEnvs() (scbeUser, scbePassword, scbeIP string, scbePort int, err err
 
 	return
 }
+
+var _ = Describe("datamodel integration testing with live DB", func() {
+	var (
+		logger    *log.Logger
+		DBPath    string
+		db        *gorm.DB
+		datamodel scbe.ScbeDataModel
+	)
+	BeforeEach(func() {
+		logger = log.New(os.Stdout, "ubiquity scbe: ", log.Lshortfile|log.LstdFlags)
+		// Get environment variable for the tests
+		DBPath = os.Getenv("DBPath")
+		if DBPath == "" {
+			Skip("DBPath environment is empty, skip the DB integration test.")
+		}
+
+		// create DB
+		logger.Println("Obtaining handle to DB")
+		var err error
+		db, err = gorm.Open("sqlite3", path.Join(DBPath, "integration-ubiquity.db"))
+		Expect(err).NotTo(HaveOccurred(), "failed to connect database")
+		Expect(db.AutoMigrate(&model.Volume{}).Error).NotTo(HaveOccurred(), "fail to create Volume basic table")
+		datamodel = scbe.NewScbeDataModel(logger, db, resources.SCBE)
+		Expect(datamodel.CreateVolumeTable()).ToNot(HaveOccurred())
+		Expect(db.HasTable(scbe.ScbeVolume{})).To(Equal(true))
+	})
+
+	Context(".table", func() {
+		It("Should to succeed to insert new volume raw and find it in DB", func() {
+			fakeVolName := "volname1"
+			err := datamodel.InsertVolume(fakeVolName, "www1", "fake_gold_profile", "host")
+			Expect(err).NotTo(HaveOccurred())
+			ScbeVolume, exist, err := datamodel.GetVolume(fakeVolName)
+			Expect(err).NotTo(HaveOccurred())
+			Expect(exist).To(Equal(true))
+			Expect(ScbeVolume.Volume.Name).To(Equal(fakeVolName))
+			Expect(ScbeVolume.WWN).To(Equal("www1"))
+		})
+		It("Should to succeed to insert new volume and delete it", func() {
+			fakeVolName := "volname1"
+			err := datamodel.InsertVolume(fakeVolName, "www1", "fake_gold_profile", "host")
+			Expect(err).NotTo(HaveOccurred())
+			_, exist, err := datamodel.GetVolume(fakeVolName)
+			Expect(err).NotTo(HaveOccurred())
+			Expect(datamodel.DeleteVolume(fakeVolName)).NotTo(HaveOccurred())
+			_, exist, err = datamodel.GetVolume(fakeVolName)
+			Expect(err).NotTo(HaveOccurred())
+			Expect(exist).To(Equal(false))
+		})
+		It("Should to succeed to insert 3 volumes and list them", func() {
+			var volname string
+			num := 10
+			for i := 0; i < num; i++ {
+				volname = fmt.Sprintf("fakevol %d", i)
+				Expect(datamodel.InsertVolume(volname, "www1", "fake_gold_profile", "host")).NotTo(HaveOccurred())
+			}
+			vols, err := datamodel.ListVolumes()
+			Expect(err).NotTo(HaveOccurred())
+			Expect(len(vols)).To(Equal(num))
+		})
+
+	})
+	AfterEach(func() {
+		db.DropTable(&model.Volume{})
+		db.DropTable(&scbe.ScbeVolume{})
+		db.Close()
+	})
+})

@@ -29,6 +29,7 @@ type scbeDataModel struct {
 type ScbeVolume struct {
 	ID       uint
 	Volume   model.Volume
+	VolumeID uint
 	WWN      string
 	Profile  string
 	AttachTo string
@@ -38,6 +39,7 @@ func NewScbeDataModel(log *log.Logger, db *gorm.DB, backend resources.Backend) S
 	return &scbeDataModel{log: log, database: db, backend: backend}
 }
 
+// CreateVolumeTable create the SCBE backend table
 func (d *scbeDataModel) CreateVolumeTable() error {
 	d.log.Println("ScbeDataModel: Create Volumes Table start")
 	defer d.log.Println("ScbeDataModel: Create Volumes Table end")
@@ -84,6 +86,7 @@ func (d *scbeDataModel) InsertVolume(volumeName string, wwn string, profile stri
 		AttachTo: attachTo,
 	}
 
+	fmt.Printf("before insrt -> %#v \n", volume)
 	if err := d.database.Create(&volume).Error; err != nil {
 		return err
 	}
