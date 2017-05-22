@@ -24,4 +24,6 @@ testImport:
   version: bb93381d543b0e5725244abe752214a110791d01
 - package: github.com/onsi/gomega
   version: c463cd2a8578290d4be7a25cba69de81cf35785e
-- package: gopkg.in/jarcoal/httpmock.v1
+- package: github.com/jarcoal/httpmock
+  version: 4442edb3db31196622da56482fd8d0fa375fba4d
+
