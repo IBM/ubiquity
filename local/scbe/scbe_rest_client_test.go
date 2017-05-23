@@ -120,7 +120,6 @@ var _ = Describe("restClient", func() {
 
 	Context(".Get", func() {
 		It("should succeed when Get succeed and return an expacted struct back", func() {
-			Expect(err).ToNot(HaveOccurred())
 			httpmock.RegisterResponder(
 				"GET",
 				fakeScbeUrlApi+"/"+scbe.UrlScbeResourceService,
@@ -132,7 +131,6 @@ var _ = Describe("restClient", func() {
 			Expect(services[0].Name).To(Equal("gold"))
 		})
 		It("should fail when Get succeed and return an expacted struct back", func() {
-			Expect(err).ToNot(HaveOccurred())
 			httpmock.RegisterResponder(
 				"GET",
 				fakeScbeUrlApi+"/"+scbe.UrlScbeResourceService,
@@ -143,6 +141,40 @@ var _ = Describe("restClient", func() {
 			Expect(err).To(HaveOccurred())
 			Expect(err.Error()).To(MatchRegexp("^Error, bad status code of http response"))
 		})
-
+		It("Login and retry rest call if token expired", func() {
+			var numLogin, numGetServices int
+			loginResponse := scbe.LoginResponse{Token: "fake-token-2"}
+			marshalledResponse, err := json.Marshal(loginResponse)
+			Expect(err).ToNot(HaveOccurred())
+			httpmock.RegisterResponder("POST", fakeScbeUrlAuthFull,
+				CountLoginResponder(&numLogin, string(marshalledResponse)))
+			httpmock.RegisterResponder("GET", fakeScbeUrlApi+"/"+scbe.UrlScbeResourceService,
+				TokenExpiredResponder(&numGetServices))
+			var services []scbe.ScbeStorageService
+			err = client.Get(scbe.UrlScbeResourceService, nil, http.StatusOK, &services)
+			Expect(err).ToNot(HaveOccurred())
+			Expect(numLogin).To(Equal(1))
+			Expect(numGetServices).To(Equal(2))
+		})
 	})
 })
+
+func CountLoginResponder (num *int, loginResp string) httpmock.Responder {
+	*num = 0
+	return func(req *http.Request) (*http.Response, error) {
+		*num++
+		return httpmock.NewStringResponse(http.StatusOK, loginResp), nil
+	}
+}
+
+func TokenExpiredResponder (num *int) httpmock.Responder {
+	*num = 0
+	return func(req *http.Request) (*http.Response, error) {
+		*num++
+		if *num == 1 {
+			return httpmock.NewStringResponse(http.StatusUnauthorized, ""), nil
+		} else {
+			return httpmock.NewStringResponse(http.StatusOK, fakeServiceJsonResponse), nil
+		}
+	}
+}
