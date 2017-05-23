@@ -36,7 +36,7 @@ var _ = Describe("restClient integration testing with existing SCBE instance", f
 			logger,
 			conInfo,
 			"https://"+scbeIP+":"+strconv.Itoa(scbePort)+"/api/v1",
-			"users/get-auth-token",
+			scbe.URL_SCBE_RESOURCE_GET_AUTH,
 			"https://"+scbeIP+":"+strconv.Itoa(scbePort)+"/")
 		Expect(err).ToNot(HaveOccurred())
 	})
@@ -53,7 +53,7 @@ var _ = Describe("restClient integration testing with existing SCBE instance", f
 			var services []scbe.ScbeStorageService
 			err := client.Login()
 			Expect(err).ToNot(HaveOccurred())
-			err = client.Get("/services", nil, 200, &services)
+			err = client.Get(scbe.UrlScbeResourceService, nil, 200, &services)
 			Expect(len(services) > 0).To(Equal(true))
 		})
 	})
