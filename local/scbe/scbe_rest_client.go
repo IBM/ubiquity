@@ -45,7 +45,6 @@ type restClient struct {
 	referrer       string
 	connectionInfo resources.ConnectionInfo
 	httpClient     *http.Client
-	token          string
 	headers        map[string]string
 }
 
@@ -66,41 +65,37 @@ func NewRestClient(logger *log.Logger, conInfo resources.ConnectionInfo, baseURL
 }
 
 func (s *restClient) Login() error {
-	token, err := s.getToken()
+	err := s.getToken()
 	if err != nil {
 		s.logger.Printf("Error in getting token %#v", err)
 		return err
 	}
-	if token == "" {
-		s.logger.Printf("Error, token is empty")
-		return fmt.Errorf("Error, token is empty")
-	}
-	s.headers[HTTP_AUTH_KEY] = "Token " + token
 
 	return nil
 }
 
-func (s *restClient) getToken() (string, error) {
+func (s *restClient) getToken() (error) {
 	delete(s.headers, HTTP_AUTH_KEY) // because no need token to get the token only user\password
 	var loginResponse = LoginResponse{}
 
 	credentials, err := json.Marshal(s.connectionInfo.CredentialInfo)
 	if err != nil {
 		s.logger.Printf("Error in marshalling CredentialInfo %#v", err)
-		return "", fmt.Errorf("Error in marshalling CredentialInfo")
+		return fmt.Errorf("Error in marshalling CredentialInfo")
 	}
 
 	err = s.Post(s.authURL, credentials, HTTP_SUCCEED, &loginResponse)
 	if err != nil {
 		s.logger.Printf("Error posting to url %#v to get a token %#v", s.authURL, err)
-		return "", err
+		return err
 	}
 
 	if loginResponse.Token == "" {
-		return "", fmt.Errorf("Token is empty")
+		return fmt.Errorf("Token is empty")
 	}
+	s.headers[HTTP_AUTH_KEY] = "Token " + loginResponse.Token
 
-	return loginResponse.Token, nil
+	return nil
 }
 
 // genericAction trigger the http actionName give.
@@ -143,6 +138,24 @@ func (s *restClient) genericAction(actionName string, resource_url string, paylo
 		return err
 	}
 
+	// check if client sent a token and it expired
+	if response.StatusCode == http.StatusUnauthorized && s.headers[HTTP_AUTH_KEY] != "" {
+
+		// login
+		err = s.Login()
+		if err != nil {
+			s.logger.Printf("Login error: %#v", err)
+			return err
+		}
+
+		// retry
+		response, err = s.httpClient.Do(request)
+		if err != nil {
+			s.logger.Printf("Error sending %s request : %#v", actionName, err)
+			return err
+		}
+	}
+
 	defer response.Body.Close()
 	data, err := ioutil.ReadAll(response.Body)
 	if err != nil {
@@ -150,10 +163,10 @@ func (s *restClient) genericAction(actionName string, resource_url string, paylo
 		return err
 	}
 
-	err = s.verifyStatusCode(*response, exitStatus) // &dereference
-	if err != nil {
-		s.logger.Printf("Status code is wrong %#v", err)
-		return err
+	if response.StatusCode != exitStatus {
+		msg := fmt.Sprintf("Error, bad status code of http response %#v", response.StatusCode)
+		s.logger.Printf(msg)
+		return fmt.Errorf(msg)
 	}
 
 	err = json.Unmarshal(data, v)
@@ -189,15 +202,6 @@ func (s *restClient) Delete(resource_url string, payload []byte, exitStatus int,
 	return s.genericAction("DELETE", resource_url, payload, nil, exitStatus, v)
 }
 
-// verifyStatusCode verify that the http response returned the expected exit code, if not return error
-func (s *restClient) verifyStatusCode(response http.Response, expected_status_code int) error {
-	if response.StatusCode != expected_status_code {
-		msg := fmt.Sprintf("Error, bad status code of http response %#v", response.StatusCode)
-		s.logger.Printf(msg)
-		return fmt.Errorf(msg)
-	}
-	return nil
-}
 
 // ********************************
 // ****** SCBE Rest Client ********
