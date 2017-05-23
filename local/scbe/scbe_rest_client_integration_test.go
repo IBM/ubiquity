@@ -30,13 +30,12 @@ var _ = Describe("restClient integration testing with existing SCBE instance", f
 		}
 		credentialInfo = resources.CredentialInfo{scbeUser, scbePassword, "flocker"}
 		conInfo = resources.ConnectionInfo{credentialInfo, scbePort, scbeIP, true}
-		client, err = scbe.NewRestClient(
+		client = scbe.NewRestClient(
 			logger,
 			conInfo,
 			"https://"+scbeIP+":"+strconv.Itoa(scbePort)+"/api/v1",
 			scbe.URL_SCBE_RESOURCE_GET_AUTH,
 			"https://"+scbeIP+":"+strconv.Itoa(scbePort)+"/")
-		Expect(err).ToNot(HaveOccurred())
 	})
 
 	Context(".Login", func() {
@@ -52,6 +51,7 @@ var _ = Describe("restClient integration testing with existing SCBE instance", f
 			err := client.Login()
 			Expect(err).ToNot(HaveOccurred())
 			err = client.Get(scbe.UrlScbeResourceService, nil, 200, &services)
+			Expect(err).ToNot(HaveOccurred())
 			Expect(len(services) > 0).To(Equal(true))
 		})
 	})

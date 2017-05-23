@@ -49,7 +49,7 @@ type restClient struct {
 	headers        map[string]string
 }
 
-func NewRestClient(logger *log.Logger, conInfo resources.ConnectionInfo, baseURL string, authURL string, referrer string) (RestClient, error) {
+func NewRestClient(logger *log.Logger, conInfo resources.ConnectionInfo, baseURL string, authURL string, referrer string) (RestClient) {
 	headers := map[string]string{
 		"Content-Type": "application/json",
 		"referer":      referrer,
@@ -62,7 +62,7 @@ func NewRestClient(logger *log.Logger, conInfo resources.ConnectionInfo, baseURL
 	} else {
 		client = &http.Client{}
 	}
-	return &restClient{logger: logger, connectionInfo: conInfo, baseURL: baseURL, authURL: authURL, referrer: referrer, httpClient: client, headers: headers}, nil
+	return &restClient{logger: logger, connectionInfo: conInfo, baseURL: baseURL, authURL: authURL, referrer: referrer, httpClient: client, headers: headers}
 }
 
 func (s *restClient) Login() error {
@@ -249,8 +249,7 @@ func NewScbeRestClient(logger *log.Logger, conInfo resources.ConnectionInfo) (Sc
 	conInfo.CredentialInfo.Group = SCBE_FLOCKER_GROUP_PARAM
 	referrer := fmt.Sprintf(URL_SCBE_REFERER, conInfo.ManagementIP, conInfo.Port)
 	baseUrl := referrer + URL_SCBE_BASE_SUFFIX
-	client, _ := NewRestClient(logger, conInfo, baseUrl, URL_SCBE_RESOURCE_GET_AUTH, referrer)
-
+	client := NewRestClient(logger, conInfo, baseUrl, URL_SCBE_RESOURCE_GET_AUTH, referrer)
 	return &scbeRestClient{logger, conInfo, client}, nil
 }
 
