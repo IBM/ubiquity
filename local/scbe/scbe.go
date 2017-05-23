@@ -6,7 +6,7 @@ import (
 	"github.com/IBM/ubiquity/resources"
 	"github.com/jinzhu/gorm"
 	"log"
-	"net/http"
+	"strconv"
 	"sync"
 )
 
@@ -19,10 +19,25 @@ type scbeLocalClient struct {
 	activationLock *sync.RWMutex
 }
 
+const (
+	OptionNameForServiceName    = "profile"
+	OptionNameForVolumeSize     = "size"
+	volumeNamePrefix            = "u_"
+	DefaultUbiquityInstanceName = "ubiquity_instance1" // TODO this should be part of the configuration
+	AttachedToNothing           = ""                   // during provisioning the volume is not attached to any host
+)
+
+var (
+	ComposeVolumeName = volumeNamePrefix + "%s_%s"
+)
+
+// prefix_ubiquityIntanceName_northboundVolumeName
+
 func NewScbeLocalClient(logger *log.Logger, config resources.ScbeConfig, database *gorm.DB) (resources.StorageClient, error) {
 	if config.ConfigPath == "" {
 		return nil, fmt.Errorf("scbeLocalClient: init: missing required parameter 'spectrumConfigPath'")
 	}
+
 	return newScbeLocalClient(logger, config, database, resources.SCBE)
 }
 
@@ -35,7 +50,8 @@ func NewScbeLocalClientWithNewScbeRestClientAndDataModel(logger *log.Logger, con
 		scbeRestClient: scbeRestClient, // TODO need to mock it in more advance way
 		dataModel:      dataModel,
 		config:         config,
-		activationLock: &sync.RWMutex{}}, nil
+		activationLock: &sync.RWMutex{},
+	}, nil
 }
 
 func newScbeLocalClient(logger *log.Logger, config resources.ScbeConfig, database *gorm.DB, backend resources.Backend) (*scbeLocalClient, error) {
@@ -48,11 +64,7 @@ func newScbeLocalClient(logger *log.Logger, config resources.ScbeConfig, databas
 		return &scbeLocalClient{}, err
 	}
 
-	transCfg := &http.Transport{
-		TLSClientConfig: &tls.Config{InsecureSkipVerify: true}, // ignore expired SSL certificates TODO to use
-	}
-	scbeRestClient, err := NewScbeRestClient(logger, config.ConnectionInfo, transCfg)
-
+	scbeRestClient, err := NewScbeRestClient(logger, config.ConnectionInfo)
 	if err != nil {
 		return &scbeLocalClient{}, err
 	}
@@ -62,7 +74,8 @@ func newScbeLocalClient(logger *log.Logger, config resources.ScbeConfig, databas
 		scbeRestClient: scbeRestClient,
 		dataModel:      datamodel,
 		config:         config,
-		activationLock: &sync.RWMutex{}}
+		activationLock: &sync.RWMutex{},
+	}
 	return client, nil
 }
 
@@ -113,28 +126,54 @@ func (s *scbeLocalClient) Activate() error {
 	return nil
 }
 
+// CreateVolume parse and validate the given options and trigger the volume creation
 func (s *scbeLocalClient) CreateVolume(name string, opts map[string]interface{}) (err error) {
 	s.logger.Println("scbeLocalClient: create start")
 	defer s.logger.Println("scbeLocalClient: create end")
 
 	_, volExists, err := s.dataModel.GetVolume(name)
-
 	if err != nil {
 		s.logger.Println(err.Error())
 		return err
 	}
 
+	// validate service exist
 	if volExists {
-		return fmt.Errorf("Volume already exists")
+		return fmt.Errorf(MsgVolumeAlreadyExistInDB, name)
 	}
 
-	s.logger.Printf("Opts for create: %#v\n", opts)
-
-	if len(opts) == 0 {
-
-		return s.createVolume(name, "TODO wwn", string(opts["profile"].(string))) // TODO
+	// validate size option given
+	sizeStr := opts[OptionNameForVolumeSize]
+	if sizeStr == "" || sizeStr == nil {
+		return fmt.Errorf(MsgOptionSizeIsMissing)
 	}
-	return fmt.Errorf("Internal error")
+
+	// validate size is a number
+	size, err := strconv.Atoi(sizeStr.(string))
+	if err != nil {
+		return fmt.Errorf(MsgOptionMustBeNumber, sizeStr)
+	}
+	// Get the profile option
+	profile := s.config.DefaultService
+	if opts[OptionNameForServiceName] != "" && opts[OptionNameForServiceName] != nil {
+		profile = opts[OptionNameForServiceName].(string)
+	}
+
+	// Provision the volume on SCBE service
+	volNameToCreate := fmt.Sprintf(ComposeVolumeName, DefaultUbiquityInstanceName, name) // TODO need to get real instance name
+	volInfo := ScbeVolumeInfo{}
+	volInfo, err = s.scbeRestClient.CreateVolume(volNameToCreate, profile, size)
+	if err != nil {
+		return err
+	}
+
+	err = s.dataModel.InsertVolume(name, volInfo.Wwn, profile, AttachedToNothing)
+	if err != nil {
+		return err
+	}
+	defer s.logger.Println("scbeLocalClient: Successfully create volume %s on profile %s", name, profile)
+
+	return nil
 }
 
 func (s *scbeLocalClient) RemoveVolume(name string) (err error) {

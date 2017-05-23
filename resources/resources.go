@@ -16,7 +16,6 @@ type UbiquityServerConfig struct {
 	SpectrumScaleConfig SpectrumScaleConfig
 	ScbeConfig          ScbeConfig
 	BrokerConfig        BrokerConfig
-	DefaultBackend      string
 }
 
 // TODO we should consider to move dedicated backend structs to the backend resource file instead of this one.
