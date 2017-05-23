@@ -232,9 +232,9 @@ const (
 	DEFAULT_SCBE_PORT          = 8440
 	URL_SCBE_REFERER           = "https://%s:%d/"
 	URL_SCBE_BASE_SUFFIX       = "api/v1"
-	URL_SCBE_RESOURCE_GET_AUTH = "/users/get-auth-token"
+	URL_SCBE_RESOURCE_GET_AUTH = "users/get-auth-token"
 	SCBE_FLOCKER_GROUP_PARAM   = "flocker"
-	UrlScbeResourceService     = "/services"
+	UrlScbeResourceService     = "services"
 	//UrlScbeResourceVolume = "/volumes"
 	//UrlScbeResourceMapping = "/mappings"
 	//UrlScbeResourceHost = "/hosts"
