@@ -34,20 +34,35 @@ func (h *StorageApiHandler) Activate() http.HandlerFunc {
 			utils.WriteResponse(w, 409, &resources.GenericResponse{Err: err.Error()})
 			return
 		}
+		if activateRequest.Backend != "" {
 
-		backend, ok := h.backends[activateRequest.Backend]
-		if !ok {
-			h.logger.Printf("error-activating-backend%s", activateRequest.Backend)
-			utils.WriteResponse(w, http.StatusNotFound, &resources.GenericResponse{Err: "backend-not-found"})
-			return
+			backend, ok := h.backends[activateRequest.Backend]
+			if !ok {
+				h.logger.Printf("error-activating-backend%s", activateRequest.Backend)
+				utils.WriteResponse(w, http.StatusNotFound, &resources.GenericResponse{Err: "backend-not-found"})
+				return
+			}
+			err = backend.Activate(activateRequest)
+			if err != nil {
+				h.logger.Printf("Error activating %s", err.Error())
+				utils.WriteResponse(w, http.StatusInternalServerError, &resources.GenericResponse{Err: err.Error()})
+				return
+			}
+		} else {
+			var errors string
+			errors = ""
+			for name, backend := range h.backends {
+				err := backend.Activate(activateRequest)
+				if err != nil {
+					h.logger.Printf("Error activating %s", err.Error())
+					errors = fmt.Sprintf("%s,%s", errors, name)
+				}
+			}
+			if errors != "" {
+				utils.WriteResponse(w, http.StatusInternalServerError, &resources.GenericResponse{Err: errors})
+				return
+			}
 		}
-		err = backend.Activate(activateRequest)
-		if err != nil {
-			h.logger.Printf("Error activating %s", err.Error())
-			utils.WriteResponse(w, http.StatusInternalServerError, &resources.GenericResponse{Err: err.Error()})
-			return
-		}
-
 		h.logger.Println("Activate success (on server)")
 		utils.WriteResponse(w, http.StatusOK, nil)
 	}
