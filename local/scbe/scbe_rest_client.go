@@ -2,6 +2,7 @@ package scbe
 
 import (
 	"bytes"
+	"crypto/tls"
 	"encoding/json"
 	"fmt"
 	"github.com/IBM/ubiquity/resources"
@@ -9,7 +10,6 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
-	"crypto/tls"
 )
 
 // RestClient is an interface that wrapper the http requests to provide easy REST API operations,
@@ -204,8 +204,8 @@ func (s *restClient) verifyStatusCode(response http.Response, expected_status_co
 // ********************************
 
 type ScbeVolumeInfo struct {
-	name string
-	wwn  string
+	Name string
+	Wwn  string
 	// TODO later on we will want also size and maybe other stuff
 }
 
@@ -259,6 +259,17 @@ func (s *scbeRestClient) Login() error {
 }
 
 func (s *scbeRestClient) CreateVolume(volName string, serviceName string, size_byte int) (ScbeVolumeInfo, error) {
+	exist, err := s.ServiceExist(serviceName)
+	if err != nil {
+		return ScbeVolumeInfo{}, err
+	}
+	if !exist {
+		msg := fmt.Sprintf(MsgVolumeCreateFailBecauseNoServicesExist, volName, serviceName, s.connectionInfo.ManagementIP)
+		s.logger.Printf(msg)
+		return ScbeVolumeInfo{}, fmt.Errorf(msg)
+	}
+
+	// TODO create vol
 	return ScbeVolumeInfo{}, nil
 }
 func (s *scbeRestClient) GetAllVolumes() ([]ScbeVolumeInfo, error) {
@@ -287,9 +298,9 @@ func (s *scbeRestClient) ServiceExist(serviceName string) (exist bool, err error
 	var services []ScbeStorageService
 	services, err = s.serviceList(serviceName)
 	if err == nil {
-		exist = len(services) > 0
+		return len(services) > 0, err
 	}
-	return
+	return false, err
 }
 
 func (s *scbeRestClient) serviceList(serviceName string) ([]ScbeStorageService, error) {
