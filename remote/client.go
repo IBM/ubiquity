@@ -256,9 +256,9 @@ func (s *remoteClient) ListVolumes(listVolumesRequest resources.ListVolumesReque
 func (s *remoteClient) getMounterForBackend(backend resources.Backend) (resources.Mounter, error) {
 	s.logger.Println("remoteClient: getMounterForVolume start")
 	defer s.logger.Println("remoteClient: getMounterForVolume end")
-	if backend == resources.SPECTRUM_SCALE {
+	if backend == resources.SpectrumScale {
 		return mounter.NewSpectrumScaleMounter(s.logger), nil
-	} else if backend == resources.SOFTLAYER_NFS || backend == resources.SPECTRUM_SCALE_NFS {
+	} else if backend == resources.SoftlayerNFS || backend == resources.SpectrumScaleNFS {
 		return mounter.NewNfsMounter(s.logger), nil
 	}
 	return nil, fmt.Errorf("Mounter not found for backend: %s", backend)
