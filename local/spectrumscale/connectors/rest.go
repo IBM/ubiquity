@@ -201,7 +201,7 @@ func (s *spectrum_rest) UnlinkFileset(filesystemName string, filesetName string)
 	return nil
 }
 
-func (s *spectrum_rest) ListFilesets(filesystemName string) ([]resources.VolumeMetadata, error) {
+func (s *spectrum_rest) ListFilesets(filesystemName string) ([]resources.Volume, error) {
 	listFilesetURL := utils.FormatURL(s.endpoint, "scalemgmt/v1/filesets")
 	listFilesetResponse := GetFilesetResponse{}
 	lfsResponse, err := s.doHTTP(listFilesetURL, "GET", listFilesetResponse, nil)
@@ -212,30 +212,30 @@ func (s *spectrum_rest) ListFilesets(filesystemName string) ([]resources.VolumeM
 
 	listFilesetResponse = lfsResponse.(GetFilesetResponse)
 	responseSize := len(listFilesetResponse.Filesets)
-	response := make([]resources.VolumeMetadata, responseSize)
+	response := make([]resources.Volume, responseSize)
 
 	for i := 0; i < responseSize; i++ {
 		name := listFilesetResponse.Filesets[i].Config.FilesetName
 		mountpoint := listFilesetResponse.Filesets[i].Config.Path
-		response[i] = resources.VolumeMetadata{Name: name, Mountpoint: mountpoint}
+		response[i] = resources.Volume{Name: name, Mountpoint: mountpoint}
 	}
 	return response, nil
 }
 
-func (s *spectrum_rest) ListFileset(filesystemName string, filesetName string) (resources.VolumeMetadata, error) {
+func (s *spectrum_rest) ListFileset(filesystemName string, filesetName string) (resources.Volume, error) {
 	getFilesetURL := utils.FormatURL(s.endpoint, fmt.Sprintf("scalemgmt/v1/filesets/%s?filesystemname=%s", filesetName, filesystemName))
 	getFilesetResponse := GetFilesetResponse{}
 	gfsResponse, err := s.doHTTP(getFilesetURL, "GET", getFilesetResponse, nil)
 	if err != nil {
 		s.logger.Printf("error in processing remote call %v", err)
-		return resources.VolumeMetadata{}, err
+		return resources.Volume{}, err
 	}
 
 	getFilesetResponse = gfsResponse.(GetFilesetResponse)
 	name := getFilesetResponse.Filesets[0].Config.FilesetName
 	mountpoint := getFilesetResponse.Filesets[0].Config.Path
 
-	return resources.VolumeMetadata{Name: name, Mountpoint: mountpoint}, nil
+	return resources.Volume{Name: name, Mountpoint: mountpoint}, nil
 }
 
 func (s *spectrum_rest) IsFilesetLinked(filesystemName string, filesetName string) (bool, error) {

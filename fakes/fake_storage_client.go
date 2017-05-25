@@ -41,17 +41,17 @@ type FakeStorageClient struct {
 	removeVolumeReturnsOnCall map[int]struct {
 		result1 error
 	}
-	ListVolumesStub        func(listVolumeRequest resources.ListVolumesRequest) ([]resources.VolumeMetadata, error)
+	ListVolumesStub        func(listVolumeRequest resources.ListVolumesRequest) ([]resources.Volume, error)
 	listVolumesMutex       sync.RWMutex
 	listVolumesArgsForCall []struct {
 		listVolumeRequest resources.ListVolumesRequest
 	}
 	listVolumesReturns struct {
-		result1 []resources.VolumeMetadata
+		result1 []resources.Volume
 		result2 error
 	}
 	listVolumesReturnsOnCall map[int]struct {
-		result1 []resources.VolumeMetadata
+		result1 []resources.Volume
 		result2 error
 	}
 	GetVolumeStub        func(getVolumeRequest resources.GetVolumeRequest) (resources.Volume, error)
@@ -252,7 +252,7 @@ func (fake *FakeStorageClient) RemoveVolumeReturnsOnCall(i int, result1 error) {
 	}{result1}
 }
 
-func (fake *FakeStorageClient) ListVolumes(listVolumeRequest resources.ListVolumesRequest) ([]resources.VolumeMetadata, error) {
+func (fake *FakeStorageClient) ListVolumes(listVolumeRequest resources.ListVolumesRequest) ([]resources.Volume, error) {
 	fake.listVolumesMutex.Lock()
 	ret, specificReturn := fake.listVolumesReturnsOnCall[len(fake.listVolumesArgsForCall)]
 	fake.listVolumesArgsForCall = append(fake.listVolumesArgsForCall, struct {
@@ -281,24 +281,24 @@ func (fake *FakeStorageClient) ListVolumesArgsForCall(i int) resources.ListVolum
 	return fake.listVolumesArgsForCall[i].listVolumeRequest
 }
 
-func (fake *FakeStorageClient) ListVolumesReturns(result1 []resources.VolumeMetadata, result2 error) {
+func (fake *FakeStorageClient) ListVolumesReturns(result1 []resources.Volume, result2 error) {
 	fake.ListVolumesStub = nil
 	fake.listVolumesReturns = struct {
-		result1 []resources.VolumeMetadata
+		result1 []resources.Volume
 		result2 error
 	}{result1, result2}
 }
 
-func (fake *FakeStorageClient) ListVolumesReturnsOnCall(i int, result1 []resources.VolumeMetadata, result2 error) {
+func (fake *FakeStorageClient) ListVolumesReturnsOnCall(i int, result1 []resources.Volume, result2 error) {
 	fake.ListVolumesStub = nil
 	if fake.listVolumesReturnsOnCall == nil {
 		fake.listVolumesReturnsOnCall = make(map[int]struct {
-			result1 []resources.VolumeMetadata
+			result1 []resources.Volume
 			result2 error
 		})
 	}
 	fake.listVolumesReturnsOnCall[i] = struct {
-		result1 []resources.VolumeMetadata
+		result1 []resources.Volume
 		result2 error
 	}{result1, result2}
 }

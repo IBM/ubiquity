@@ -275,7 +275,7 @@ func (s *spectrumLocalClient) GetVolume(getVolumeRequest resources.GetVolumeRequ
 		return resources.Volume{}, fmt.Errorf("Volume not found")
 	}
 
-	return resources.Volume{Name: existingVolume.Volume.Name, Backend: resources.Backend(existingVolume.Volume.Backend)}, nil
+	return resources.Volume{Name: existingVolume.Volume.Name, Backend: resources.Backend(existingVolume.Volume.Backend), Mountpoint: existingVolume.Volume.Mountpoint}, nil
 }
 
 func (s *spectrumLocalClient) GetVolumeConfig(getVolumeConfigRequest resources.GetVolumeConfigRequest) (volumeConfigDetails map[string]interface{}, err error) {
@@ -364,6 +364,8 @@ func (s *spectrumLocalClient) Attach(attachRequest resources.AttachRequest) (vol
 		}
 	}
 
+	existingVolume.Volume.Mountpoint = volumeMountpoint
+
 	return volumeMountpoint, nil
 }
 
@@ -398,7 +400,8 @@ func (s *spectrumLocalClient) Detach(detachRequest resources.DetachRequest) (err
 
 	return nil
 }
-func (s *spectrumLocalClient) ListVolumes(listVolumeRequest resources.ListVolumesRequest) ([]resources.VolumeMetadata, error) {
+
+func (s *spectrumLocalClient) ListVolumes(listVolumesRequest resources.ListVolumesRequest) ([]resources.Volume, error) {
 	s.logger.Println("spectrumLocalClient: list start")
 	defer s.logger.Println("spectrumLocalClient: list end")
 	var err error
@@ -409,21 +412,21 @@ func (s *spectrumLocalClient) ListVolumes(listVolumeRequest resources.ListVolume
 		s.logger.Printf("error retrieving volumes from db %#v\n", err)
 		return nil, err
 	}
-	s.logger.Printf("Volumes in db: %d\n", len(volumesInDb))
-	var volumes []resources.VolumeMetadata
-	for _, volume := range volumesInDb {
-		s.logger.Printf("Volume from db: %#v\n", volume)
+	//s.logger.Printf("Volumes in db: %d\n", len(volumesInDb))
+	//var volumes []resources.Volume
+	//for _, volume := range volumesInDb {
+	//	s.logger.Printf("Volume from db: %#v\n", volume)
+	//
+	//	volumeMountpoint, err := s.getVolumeMountPoint(volume)
+	//	if err != nil {
+	//		s.logger.Println(err.Error())
+	//		return nil, err
+	//	}
+	//
+	//	volumes = append(volumes, resources.Volume{Name: volume.Name, Mountpoint: volumeMountpoint})
+	//}
 
-		volumeMountpoint, err := s.getVolumeMountPoint(volume)
-		if err != nil {
-			s.logger.Println(err.Error())
-			return nil, err
-		}
-
-		volumes = append(volumes, resources.VolumeMetadata{Name: volume.Volume.Name, Mountpoint: volumeMountpoint})
-	}
-
-	return volumes, nil
+	return volumesInDb, nil
 }
 
 func (s *spectrumLocalClient) createFilesetVolume(filesystem, name string, opts map[string]interface{}) error {

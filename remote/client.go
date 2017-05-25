@@ -226,7 +226,7 @@ func (s *remoteClient) Detach(detachRequest resources.DetachRequest) error {
 
 }
 
-func (s *remoteClient) ListVolumes(listVolumesRequest resources.ListVolumesRequest) ([]resources.VolumeMetadata, error) {
+func (s *remoteClient) ListVolumes(listVolumesRequest resources.ListVolumesRequest) ([]resources.Volume, error) {
 	s.logger.Println("remoteClient: list start")
 	defer s.logger.Println("remoteClient: list end")
 

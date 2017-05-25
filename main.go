@@ -12,7 +12,6 @@ import (
 
 	"github.com/BurntSushi/toml"
 	"github.com/IBM/ubiquity/local"
-	"github.com/IBM/ubiquity/model"
 	"github.com/IBM/ubiquity/resources"
 	"github.com/IBM/ubiquity/utils"
 	"github.com/IBM/ubiquity/web_server"
@@ -74,7 +73,7 @@ func main() {
 	}
 	defer db.Close()
 
-	if err := db.AutoMigrate(&model.Volume{}).Error; err != nil {
+	if err := db.AutoMigrate(&resources.Volume{}).Error; err != nil {
 		panic(err)
 	}
 

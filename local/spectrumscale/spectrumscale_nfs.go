@@ -45,7 +45,7 @@ func (s *spectrumNfsLocalClient) Activate(activateRequest resources.ActivateRequ
 	return s.spectrumClient.Activate(activateRequest)
 }
 
-func (s *spectrumNfsLocalClient) ListVolumes(listVolumesRequest resources.ListVolumesRequest) ([]resources.VolumeMetadata, error) {
+func (s *spectrumNfsLocalClient) ListVolumes(listVolumesRequest resources.ListVolumesRequest) ([]resources.Volume, error) {
 	s.spectrumClient.logger.Println("spectrumNfsLocalClient: List-volumes-start")
 	defer s.spectrumClient.logger.Println("spectrumNfsLocalClient: List-volumes-end")
 
@@ -108,25 +108,25 @@ func (s *spectrumNfsLocalClient) CreateVolume(createVolumeRequest resources.Crea
 		s.spectrumClient.logger.Printf("spectrumNfsLocalClient: error creating volume %#v\n", err)
 		return err
 	}
-	attachRequest := resources.AttachRequest{Name: createVolumeRequest.Name, Backend: createVolumeRequest.Backend}
+	attachRequest := resources.AttachRequest{Name: createVolumeRequest.Name}
 	if _, err := s.spectrumClient.Attach(attachRequest); err != nil {
 		s.spectrumClient.logger.Printf("spectrumNfsLocalClient: error attaching volume %#v\n; deleting volume", err)
 
-		removeVolumeRequest := resources.RemoveVolumeRequest{Name: createVolumeRequest.Name, Backend: createVolumeRequest.Backend}
+		removeVolumeRequest := resources.RemoveVolumeRequest{Name: createVolumeRequest.Name}
 		s.spectrumClient.RemoveVolume(removeVolumeRequest)
 		return err
 	}
 
 	if err := s.spectrumClient.updatePermissions(createVolumeRequest.Name); err != nil {
 		s.spectrumClient.logger.Printf("spectrumNfsLocalClient: error updating permissions of volume %#v\n; deleting volume", err)
-		removeVolumeRequest := resources.RemoveVolumeRequest{Name: createVolumeRequest.Name, Backend: createVolumeRequest.Backend}
+		removeVolumeRequest := resources.RemoveVolumeRequest{Name: createVolumeRequest.Name}
 		s.spectrumClient.RemoveVolume(removeVolumeRequest)
 		return err
 	}
 
 	if err := s.exportNfs(createVolumeRequest.Name, nfsClientConfig); err != nil {
 		s.spectrumClient.logger.Printf("spectrumNfsLocalClient: error exporting volume %#v\n; deleting volume", err)
-		removeVolumeRequest := resources.RemoveVolumeRequest{Name: createVolumeRequest.Name, Backend: createVolumeRequest.Backend}
+		removeVolumeRequest := resources.RemoveVolumeRequest{Name: createVolumeRequest.Name}
 		s.spectrumClient.RemoveVolume(removeVolumeRequest)
 		return err
 	}
@@ -140,7 +140,7 @@ func (s *spectrumNfsLocalClient) RemoveVolume(removeVolumeRequest resources.Remo
 	if err := s.unexportNfs(removeVolumeRequest.Name); err != nil {
 		s.spectrumClient.logger.Printf("spectrumNfsLocalClient: Could not unexport volume %s (error=%s)", removeVolumeRequest.Name, err.Error())
 	}
-	detachRequest := resources.DetachRequest{Name: removeVolumeRequest.Name, Backend: removeVolumeRequest.Backend}
+	detachRequest := resources.DetachRequest{Name: removeVolumeRequest.Name}
 	if err := s.spectrumClient.Detach(detachRequest); err != nil {
 		s.spectrumClient.logger.Printf("spectrumNfsLocalClient: Could not detach volume %s (error=%s)", removeVolumeRequest.Name, err.Error())
 	}

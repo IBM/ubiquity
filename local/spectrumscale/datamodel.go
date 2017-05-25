@@ -21,7 +21,7 @@ type SpectrumDataModel interface {
 	InsertLightweightVolume(fileset, directory, volumeName string, filesystem string, isPreexisting bool, opts map[string]interface{}) error
 	InsertFilesetQuotaVolume(fileset, quota, volumeName string, filesystem string, isPreexisting bool, opts map[string]interface{}) error
 	GetVolume(name string) (SpectrumScaleVolume, bool, error)
-	ListVolumes() ([]SpectrumScaleVolume, error)
+	ListVolumes() ([]resources.Volume, error)
 }
 
 type spectrumDataModel struct {
@@ -46,7 +46,7 @@ const (
 
 type SpectrumScaleVolume struct {
 	ID            uint
-	Volume        model.Volume
+	Volume        resources.Volume
 	VolumeID      uint
 	Type          VolumeType
 	ClusterId     string
@@ -105,7 +105,7 @@ func (d *spectrumDataModel) InsertFilesetVolume(fileset, volumeName string, file
 	d.log.Println("SpectrumDataModel: InsertFilesetVolume start")
 	defer d.log.Println("SpectrumDataModel: InsertFilesetVolume end")
 
-	volume := SpectrumScaleVolume{Volume: model.Volume{Name: volumeName, Backend: fmt.Sprintf("%s", d.backend)}, Type: Fileset, ClusterId: d.clusterId, FileSystem: filesystem,
+	volume := SpectrumScaleVolume{Volume: resources.Volume{Name: volumeName, Backend: d.backend}, Type: Fileset, ClusterId: d.clusterId, FileSystem: filesystem,
 		Fileset: fileset, IsPreexisting: isPreexisting}
 
 	addPermissionsForVolume(&volume, opts)
@@ -117,7 +117,7 @@ func (d *spectrumDataModel) InsertLightweightVolume(fileset, directory, volumeNa
 	d.log.Println("SpectrumDataModel: InsertLightweightVolume start")
 	defer d.log.Println("SpectrumDataModel: InsertLightweightVolume end")
 
-	volume := SpectrumScaleVolume{Volume: model.Volume{Name: volumeName, Backend: fmt.Sprintf("%s", d.backend)}, Type: Lightweight, ClusterId: d.clusterId, FileSystem: filesystem,
+	volume := SpectrumScaleVolume{Volume: resources.Volume{Name: volumeName, Backend: d.backend}, Type: Lightweight, ClusterId: d.clusterId, FileSystem: filesystem,
 		Fileset: fileset, Directory: directory, IsPreexisting: isPreexisting}
 
 	addPermissionsForVolume(&volume, opts)
@@ -129,7 +129,7 @@ func (d *spectrumDataModel) InsertFilesetQuotaVolume(fileset, quota, volumeName 
 	d.log.Println("SpectrumDataModel: InsertFilesetQuotaVolume start")
 	defer d.log.Println("SpectrumDataModel: InsertFilesetQuotaVolume end")
 
-	volume := SpectrumScaleVolume{Volume: model.Volume{Name: volumeName, Backend: fmt.Sprintf("%s", d.backend)}, Type: FilesetWithQuota, ClusterId: d.clusterId, FileSystem: filesystem,
+	volume := SpectrumScaleVolume{Volume: resources.Volume{Name: volumeName, Backend: d.backend}, Type: FilesetWithQuota, ClusterId: d.clusterId, FileSystem: filesystem,
 		Fileset: fileset, Quota: quota, IsPreexisting: isPreexisting}
 
 	addPermissionsForVolume(&volume, opts)
@@ -169,7 +169,7 @@ func (d *spectrumDataModel) GetVolume(name string) (SpectrumScaleVolume, bool, e
 	return spectrumVolume, true, nil
 }
 
-func (d *spectrumDataModel) ListVolumes() ([]SpectrumScaleVolume, error) {
+func (d *spectrumDataModel) ListVolumes() ([]resources.Volume, error) {
 	d.log.Println("SpectrumDataModel: ListVolumes start")
 	defer d.log.Println("SpectrumDataModel: ListVolumes end")
 
@@ -178,10 +178,10 @@ func (d *spectrumDataModel) ListVolumes() ([]SpectrumScaleVolume, error) {
 		return nil, err
 	}
 	// hack: to be replaced by proper DB filtering (joins)
-	var volumes []SpectrumScaleVolume
+	var volumes []resources.Volume
 	for _, volume := range volumesInDb {
 		if resources.Backend(volume.Volume.Backend) == d.backend {
-			volumes = append(volumes, volume)
+			volumes = append(volumes, volume.Volume)
 		}
 	}
 

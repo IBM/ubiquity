@@ -117,31 +117,31 @@ type FakeSpectrumScaleConnector struct {
 	unlinkFilesetReturnsOnCall map[int]struct {
 		result1 error
 	}
-	ListFilesetsStub        func(filesystemName string) ([]resources.VolumeMetadata, error)
+	ListFilesetsStub        func(filesystemName string) ([]resources.Volume, error)
 	listFilesetsMutex       sync.RWMutex
 	listFilesetsArgsForCall []struct {
 		filesystemName string
 	}
 	listFilesetsReturns struct {
-		result1 []resources.VolumeMetadata
+		result1 []resources.Volume
 		result2 error
 	}
 	listFilesetsReturnsOnCall map[int]struct {
-		result1 []resources.VolumeMetadata
+		result1 []resources.Volume
 		result2 error
 	}
-	ListFilesetStub        func(filesystemName string, filesetName string) (resources.VolumeMetadata, error)
+	ListFilesetStub        func(filesystemName string, filesetName string) (resources.Volume, error)
 	listFilesetMutex       sync.RWMutex
 	listFilesetArgsForCall []struct {
 		filesystemName string
 		filesetName    string
 	}
 	listFilesetReturns struct {
-		result1 resources.VolumeMetadata
+		result1 resources.Volume
 		result2 error
 	}
 	listFilesetReturnsOnCall map[int]struct {
-		result1 resources.VolumeMetadata
+		result1 resources.Volume
 		result2 error
 	}
 	IsFilesetLinkedStub        func(filesystemName string, filesetName string) (bool, error)
@@ -622,7 +622,7 @@ func (fake *FakeSpectrumScaleConnector) UnlinkFilesetReturnsOnCall(i int, result
 	}{result1}
 }
 
-func (fake *FakeSpectrumScaleConnector) ListFilesets(filesystemName string) ([]resources.VolumeMetadata, error) {
+func (fake *FakeSpectrumScaleConnector) ListFilesets(filesystemName string) ([]resources.Volume, error) {
 	fake.listFilesetsMutex.Lock()
 	ret, specificReturn := fake.listFilesetsReturnsOnCall[len(fake.listFilesetsArgsForCall)]
 	fake.listFilesetsArgsForCall = append(fake.listFilesetsArgsForCall, struct {
@@ -651,29 +651,29 @@ func (fake *FakeSpectrumScaleConnector) ListFilesetsArgsForCall(i int) string {
 	return fake.listFilesetsArgsForCall[i].filesystemName
 }
 
-func (fake *FakeSpectrumScaleConnector) ListFilesetsReturns(result1 []resources.VolumeMetadata, result2 error) {
+func (fake *FakeSpectrumScaleConnector) ListFilesetsReturns(result1 []resources.Volume, result2 error) {
 	fake.ListFilesetsStub = nil
 	fake.listFilesetsReturns = struct {
-		result1 []resources.VolumeMetadata
+		result1 []resources.Volume
 		result2 error
 	}{result1, result2}
 }
 
-func (fake *FakeSpectrumScaleConnector) ListFilesetsReturnsOnCall(i int, result1 []resources.VolumeMetadata, result2 error) {
+func (fake *FakeSpectrumScaleConnector) ListFilesetsReturnsOnCall(i int, result1 []resources.Volume, result2 error) {
 	fake.ListFilesetsStub = nil
 	if fake.listFilesetsReturnsOnCall == nil {
 		fake.listFilesetsReturnsOnCall = make(map[int]struct {
-			result1 []resources.VolumeMetadata
+			result1 []resources.Volume
 			result2 error
 		})
 	}
 	fake.listFilesetsReturnsOnCall[i] = struct {
-		result1 []resources.VolumeMetadata
+		result1 []resources.Volume
 		result2 error
 	}{result1, result2}
 }
 
-func (fake *FakeSpectrumScaleConnector) ListFileset(filesystemName string, filesetName string) (resources.VolumeMetadata, error) {
+func (fake *FakeSpectrumScaleConnector) ListFileset(filesystemName string, filesetName string) (resources.Volume, error) {
 	fake.listFilesetMutex.Lock()
 	ret, specificReturn := fake.listFilesetReturnsOnCall[len(fake.listFilesetArgsForCall)]
 	fake.listFilesetArgsForCall = append(fake.listFilesetArgsForCall, struct {
@@ -703,24 +703,24 @@ func (fake *FakeSpectrumScaleConnector) ListFilesetArgsForCall(i int) (string, s
 	return fake.listFilesetArgsForCall[i].filesystemName, fake.listFilesetArgsForCall[i].filesetName
 }
 
-func (fake *FakeSpectrumScaleConnector) ListFilesetReturns(result1 resources.VolumeMetadata, result2 error) {
+func (fake *FakeSpectrumScaleConnector) ListFilesetReturns(result1 resources.Volume, result2 error) {
 	fake.ListFilesetStub = nil
 	fake.listFilesetReturns = struct {
-		result1 resources.VolumeMetadata
+		result1 resources.Volume
 		result2 error
 	}{result1, result2}
 }
 
-func (fake *FakeSpectrumScaleConnector) ListFilesetReturnsOnCall(i int, result1 resources.VolumeMetadata, result2 error) {
+func (fake *FakeSpectrumScaleConnector) ListFilesetReturnsOnCall(i int, result1 resources.Volume, result2 error) {
 	fake.ListFilesetStub = nil
 	if fake.listFilesetReturnsOnCall == nil {
 		fake.listFilesetReturnsOnCall = make(map[int]struct {
-			result1 resources.VolumeMetadata
+			result1 resources.Volume
 			result2 error
 		})
 	}
 	fake.listFilesetReturnsOnCall[i] = struct {
-		result1 resources.VolumeMetadata
+		result1 resources.Volume
 		result2 error
 	}{result1, result2}
 }

@@ -165,11 +165,11 @@ func (s *spectrum_ssh) UnlinkFileset(filesystemName string, filesetName string) 
 	return UnlinkFilesetInternal(s.logger, s.executor, filesystemName, filesetName, "ssh", args)
 }
 
-func (s *spectrum_ssh) ListFilesets(filesystemName string) ([]resources.VolumeMetadata, error) {
+func (s *spectrum_ssh) ListFilesets(filesystemName string) ([]resources.Volume, error) {
 	return nil, nil
 }
 
-func (s *spectrum_ssh) ListFileset(filesystemName string, filesetName string) (resources.VolumeMetadata, error) {
+func (s *spectrum_ssh) ListFileset(filesystemName string, filesetName string) (resources.Volume, error) {
 	s.logger.Println("spectrumLocalClient: ListFileset start")
 	defer s.logger.Println("spectrumLocalClient: ListFileset end")
 

@@ -1,5 +1,7 @@
 package resources
 
+import "github.com/jinzhu/gorm"
+
 const (
 	SpectrumScale    Backend = "spectrum-scale"
 	SpectrumScaleNFS Backend = "spectrum-scale-nfs"
@@ -68,7 +70,7 @@ type StorageClient interface {
 	Activate(activateRequest ActivateRequest) error
 	CreateVolume(createVolumeRequest CreateVolumeRequest) error
 	RemoveVolume(removeVolumeRequest RemoveVolumeRequest) error
-	ListVolumes(listVolumeRequest ListVolumesRequest) ([]VolumeMetadata, error)
+	ListVolumes(listVolumeRequest ListVolumesRequest) ([]Volume, error)
 	GetVolume(getVolumeRequest GetVolumeRequest) (Volume, error)
 	GetVolumeConfig(getVolumeConfigRequest GetVolumeConfigRequest) (map[string]interface{}, error)
 	Attach(attachRequest AttachRequest) (string, error)
@@ -94,33 +96,28 @@ type CreateVolumeRequest struct {
 }
 
 type RemoveVolumeRequest struct {
-	Name    string
-	Backend Backend
+	Name string
 }
 
 type ListVolumesRequest struct {
 	//TODO add filter
-	Backend Backend
+	Backends []Backend
 }
 
 type AttachRequest struct {
-	Name    string
-	Host    string
-	Backend Backend
+	Name string
+	Host string
 }
 
 type DetachRequest struct {
-	Name    string
-	Host    string
-	Backend Backend
+	Name string
+	Host string
 }
 type GetVolumeRequest struct {
-	Name    string
-	Backend Backend
+	Name string
 }
 type GetVolumeConfigRequest struct {
-	Name    string
-	Backend Backend
+	Name string
 }
 type ActivateResponse struct {
 	Implements []string
@@ -154,23 +151,20 @@ type MountResponse struct {
 	Err        string
 }
 
-type VolumeMetadata struct {
-	Name       string
-	Mountpoint string
-}
-
 type GetResponse struct {
 	Volume Volume
 	Err    string
 }
 type DockerGetResponse struct {
-	Volume VolumeMetadata
+	Volume Volume
 	Err    string
 }
 
 type Volume struct {
-	Name    string
-	Backend Backend
+	gorm.Model
+	Name       string
+	Backend    Backend
+	Mountpoint string
 }
 
 type GetConfigResponse struct {
@@ -179,7 +173,7 @@ type GetConfigResponse struct {
 }
 
 type ListResponse struct {
-	Volumes []VolumeMetadata
+	Volumes []Volume
 	Err     string
 }
 

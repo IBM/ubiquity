@@ -5,6 +5,7 @@ import (
 	"sync"
 
 	"github.com/IBM/ubiquity/local/spectrumscale"
+	"github.com/IBM/ubiquity/resources"
 	_ "github.com/mattn/go-sqlite3"
 )
 
@@ -105,15 +106,15 @@ type FakeSpectrumDataModel struct {
 		result2 bool
 		result3 error
 	}
-	ListVolumesStub        func() ([]spectrumscale.SpectrumScaleVolume, error)
+	ListVolumesStub        func() ([]resources.Volume, error)
 	listVolumesMutex       sync.RWMutex
 	listVolumesArgsForCall []struct{}
 	listVolumesReturns     struct {
-		result1 []spectrumscale.SpectrumScaleVolume
+		result1 []resources.Volume
 		result2 error
 	}
 	listVolumesReturnsOnCall map[int]struct {
-		result1 []spectrumscale.SpectrumScaleVolume
+		result1 []resources.Volume
 		result2 error
 	}
 	invocations      map[string][][]interface{}
@@ -484,7 +485,7 @@ func (fake *FakeSpectrumDataModel) GetVolumeReturnsOnCall(i int, result1 spectru
 	}{result1, result2, result3}
 }
 
-func (fake *FakeSpectrumDataModel) ListVolumes() ([]spectrumscale.SpectrumScaleVolume, error) {
+func (fake *FakeSpectrumDataModel) ListVolumes() ([]resources.Volume, error) {
 	fake.listVolumesMutex.Lock()
 	ret, specificReturn := fake.listVolumesReturnsOnCall[len(fake.listVolumesArgsForCall)]
 	fake.listVolumesArgsForCall = append(fake.listVolumesArgsForCall, struct{}{})
@@ -505,24 +506,24 @@ func (fake *FakeSpectrumDataModel) ListVolumesCallCount() int {
 	return len(fake.listVolumesArgsForCall)
 }
 
-func (fake *FakeSpectrumDataModel) ListVolumesReturns(result1 []spectrumscale.SpectrumScaleVolume, result2 error) {
+func (fake *FakeSpectrumDataModel) ListVolumesReturns(result1 []resources.Volume, result2 error) {
 	fake.ListVolumesStub = nil
 	fake.listVolumesReturns = struct {
-		result1 []spectrumscale.SpectrumScaleVolume
+		result1 []resources.Volume
 		result2 error
 	}{result1, result2}
 }
 
-func (fake *FakeSpectrumDataModel) ListVolumesReturnsOnCall(i int, result1 []spectrumscale.SpectrumScaleVolume, result2 error) {
+func (fake *FakeSpectrumDataModel) ListVolumesReturnsOnCall(i int, result1 []resources.Volume, result2 error) {
 	fake.ListVolumesStub = nil
 	if fake.listVolumesReturnsOnCall == nil {
 		fake.listVolumesReturnsOnCall = make(map[int]struct {
-			result1 []spectrumscale.SpectrumScaleVolume
+			result1 []resources.Volume
 			result2 error
 		})
 	}
 	fake.listVolumesReturnsOnCall[i] = struct {
-		result1 []spectrumscale.SpectrumScaleVolume
+		result1 []resources.Volume
 		result2 error
 	}{result1, result2}
 }
