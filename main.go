@@ -27,7 +27,7 @@ var configFile = flag.String(
 )
 
 const (
-	HEARTBEAT_INTERVAL = 5 //seconds
+	HeartbeatInterval = 5 //seconds
 )
 
 func main() {
@@ -97,7 +97,7 @@ func keepAlive(heartbeat utils.Heartbeat) {
 		if err != nil {
 			panic("Failed updating heartbeat...aborting")
 		}
-		time.Sleep(HEARTBEAT_INTERVAL * time.Second)
+		time.Sleep(HeartbeatInterval * time.Second)
 	}
 }
 func probeHeartbeatUntilFree(heartbeat utils.Heartbeat) {
@@ -117,9 +117,9 @@ func probeHeartbeatUntilFree(heartbeat utils.Heartbeat) {
 			panic("Unable to determine state of heartbeat...aborting")
 		}
 
-		if currentTime.Sub(lastUpdateTimestamp).Seconds() > HEARTBEAT_INTERVAL {
+		if currentTime.Sub(lastUpdateTimestamp).Seconds() > HeartbeatInterval {
 			break
 		}
-		time.Sleep(HEARTBEAT_INTERVAL * time.Second)
+		time.Sleep(HeartbeatInterval * time.Second)
 	}
 }

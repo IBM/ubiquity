@@ -1,14 +1,14 @@
-hash: 64b985a537050053119f5ecf0647475d3a50286a1b14bd88cfa5a1d5f4779c99
-updated: 2017-04-03T15:24:18.821637561-07:00
+hash: 0ad2ed48be6f7177d174c6224fa42d9cbe3739d39afca093398663495876fa60
+updated: 2017-05-25T07:47:58.712122432-07:00
 imports:
 - name: github.com/BurntSushi/toml
   version: b26d9c308763d68093482582cea63d69be07a0f0
 - name: github.com/djherbis/times
   version: 95292e44976d1217cf3611dc7c8d9466877d3ed5
 - name: github.com/gorilla/context
-  version: 215affda49addc4c8ef7e2534915df2c8c35c6cd
+  version: 08b5f424b9271eedf6f9f0ce86cb9396ed337a42
 - name: github.com/gorilla/mux
-  version: 392c28fe23e1c45ddba891b0320b3b5df220beea
+  version: bcd8bc72b08df0f70df986b97f95590779502d31
 - name: github.com/jinzhu/gorm
   version: 5174cc5c242a728b435ea2be8a2f7f998e15429b
   subpackages:
@@ -17,19 +17,13 @@ imports:
   version: 1c35d901db3da928c72a72d8458480cc9ade058f
 - name: github.com/mattn/go-sqlite3
   version: ca5e3819723d8eeaf170ad510e7da1d6d2e94a08
-- name: github.com/openstack/golang-client
-  version: 753e96dd4a3983c05c665bc6f7a2abb25ceabd04
-  subpackages:
-  - openstack
 - name: golang.org/x/net
   version: e90d6d0afc4c315a0d87a568ae68577cc15149a0
   subpackages:
   - context
-- name: k8s.io/kubernetes
-  version: 98d693e9d24f585cb4e6615efdb3d07ec3a1616b
-  subpackages:
-  - staging/src/k8s.io/client-go/_vendor/github.com/golang/glog
 testImports:
+- name: github.com/jarcoal/httpmock
+  version: cf52904a3cf0f78f199ecade6a6df8e245d5b25a
 - name: github.com/onsi/ginkgo
   version: bb93381d543b0e5725244abe752214a110791d01
   subpackages:

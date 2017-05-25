@@ -1,9 +1,9 @@
 package resources
 
 const (
-	SPECTRUM_SCALE     Backend = "spectrum-scale"
-	SPECTRUM_SCALE_NFS Backend = "spectrum-scale-nfs"
-	SOFTLAYER_NFS      Backend = "softlayer-nfs"
+	SpectrumScale    Backend = "spectrum-scale"
+	SpectrumScaleNFS Backend = "spectrum-scale-nfs"
+	SoftlayerNFS     Backend = "softlayer-nfs"
 )
 
 type Backend string
@@ -74,6 +74,13 @@ type StorageClient interface {
 	Detach(detachRequest DetachRequest) error
 }
 
+//go:generate counterfeiter -o ../fakes/fake_mounter.go . Mounter
+
+type Mounter interface {
+	Mount(mountRequest MountRequest) (string, error)
+	Unmount(unmountRequest UnmountRequest) error
+}
+
 type ActivateRequest struct {
 	Backend Backend
 	Opts    map[string]string
@@ -125,6 +132,20 @@ type GenericResponse struct {
 
 type GenericRequest struct {
 	Name string
+}
+
+type MountRequest struct {
+	Mountpoint   string
+	VolumeConfig map[string]interface{}
+	Backend      Backend
+}
+type UnmountRequest struct {
+	VolumeConfig map[string]interface{}
+	Backend      Backend
+}
+type AttachResponse struct {
+	Mountpoint string
+	Err        string
 }
 
 type MountResponse struct {

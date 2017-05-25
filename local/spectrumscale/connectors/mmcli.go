@@ -198,8 +198,8 @@ func (s *spectrum_mmcli) CreateFileset(filesystemName string, filesetName string
 	spectrumCommand := "/usr/lpp/mmfs/bin/mmcrfileset"
 	args := []string{spectrumCommand, filesystemName, filesetName, "-t", "fileset for container volume"}
 
-	filesetType, filesetTypeSpecified := opts[USER_SPECIFIED_FILESET_TYPE]
-	inodeLimit, inodeLimitSpecified := opts[USER_SPECIFIED_INODE_LIMIT]
+	filesetType, filesetTypeSpecified := opts[UserSpecifiedFilesetType]
+	inodeLimit, inodeLimitSpecified := opts[UserSpecifiedInodeLimit]
 
 	if filesetTypeSpecified && filesetType.(string) == "independent" {
 		args = append(args, "--inode-space", "new")

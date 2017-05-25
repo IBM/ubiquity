@@ -40,7 +40,7 @@ var _ = Describe("local-client", func() {
 		fakeExec = new(fakes.FakeExecutor)
 		fakeSpectrumDataModel = new(fakes.FakeSpectrumDataModel)
 		fakeConfig = resources.SpectrumScaleConfig{}
-		activateRequest = resources.ActivateRequest{Backend: resources.SPECTRUM_SCALE}
+		activateRequest = resources.ActivateRequest{Backend: resources.SpectrumScale}
 		client, err = spectrumscale.NewSpectrumLocalClientWithConnectors(logger, fakeSpectrumScaleConnector, fakeExec, fakeConfig, fakeSpectrumDataModel)
 		Expect(err).ToNot(HaveOccurred())
 
@@ -530,7 +530,7 @@ var _ = Describe("local-client", func() {
 
 	Context(".ListVolumes", func() {
 		BeforeEach(func() {
-			listVolumesRequest = resources.ListVolumesRequest{Backend: resources.SPECTRUM_SCALE}
+			listVolumesRequest = resources.ListVolumesRequest{Backend: resources.SpectrumScale}
 		})
 
 		It("should fail when dbClient fails to list volumes", func() {
@@ -559,7 +559,7 @@ var _ = Describe("local-client", func() {
 
 	Context("GetVolume", func() {
 		BeforeEach(func() {
-			getVolumeRequest = resources.GetVolumeRequest{Name: "fake-volume", Backend: resources.SPECTRUM_SCALE}
+			getVolumeRequest = resources.GetVolumeRequest{Name: "fake-volume", Backend: resources.SpectrumScale}
 		})
 
 		It("should fail when dbClient fails to check if the volume exists", func() {
@@ -599,7 +599,7 @@ var _ = Describe("local-client", func() {
 
 	Context(".Attach", func() {
 		BeforeEach(func() {
-			attachRequest = resources.AttachRequest{Name: "fake-volume", Backend: resources.SPECTRUM_SCALE}
+			attachRequest = resources.AttachRequest{Name: "fake-volume", Backend: resources.SpectrumScale}
 		})
 
 		It("should fail when dbClient fails to check volumeExists", func() {
@@ -644,7 +644,7 @@ var _ = Describe("local-client", func() {
 		})
 
 		It("should fail when volume is fileset volume and spectrumClient fails to check fileset linked", func() {
-			volume := spectrumscale.SpectrumScaleVolume{Volume: model.Volume{Name: "fake-volume"}, FileSystem: "fake-filesystem", Type: spectrumscale.FILESET}
+			volume := spectrumscale.SpectrumScaleVolume{Volume: model.Volume{Name: "fake-volume"}, FileSystem: "fake-filesystem", Type: spectrumscale.Fileset}
 			fakeSpectrumDataModel.GetVolumeReturns(volume, true, nil)
 			fakeSpectrumScaleConnector.GetFilesystemMountpointReturns("fake-mountpoint", nil)
 			fakeSpectrumScaleConnector.IsFilesetLinkedReturns(false, fmt.Errorf("error checking filesetlinked"))
@@ -659,7 +659,7 @@ var _ = Describe("local-client", func() {
 		})
 
 		It("should fail when volume is fileset volume and spectrumClient fails to link it", func() {
-			volume := spectrumscale.SpectrumScaleVolume{Volume: model.Volume{Name: "fake-volume"}, FileSystem: "fake-filesystem", Type: spectrumscale.FILESET}
+			volume := spectrumscale.SpectrumScaleVolume{Volume: model.Volume{Name: "fake-volume"}, FileSystem: "fake-filesystem", Type: spectrumscale.Fileset}
 			fakeSpectrumDataModel.GetVolumeReturns(volume, true, nil)
 			fakeSpectrumScaleConnector.GetFilesystemMountpointReturns("fake-mountpoint", nil)
 			fakeSpectrumScaleConnector.IsFilesetLinkedReturns(false, nil)
@@ -675,7 +675,7 @@ var _ = Describe("local-client", func() {
 		})
 
 		It("should succeed when volume is lightweight volume with permissions", func() {
-			volume := spectrumscale.SpectrumScaleVolume{Volume: model.Volume{Name: "fake-volume"}, FileSystem: "fake-filesystem", Type: spectrumscale.LIGHTWEIGHT, UID: "fake-uid", GID: "gid"}
+			volume := spectrumscale.SpectrumScaleVolume{Volume: model.Volume{Name: "fake-volume"}, FileSystem: "fake-filesystem", Type: spectrumscale.Lightweight, UID: "fake-uid", GID: "gid"}
 			fakeSpectrumDataModel.GetVolumeReturns(volume, true, nil)
 			fakeSpectrumScaleConnector.GetFilesystemMountpointReturns("fake-mountpoint", nil)
 			fakeSpectrumScaleConnector.IsFilesetLinkedReturns(false, nil)
@@ -691,7 +691,7 @@ var _ = Describe("local-client", func() {
 		})
 
 		It("should succeed when volume is fileset volume with permissions", func() {
-			volume := spectrumscale.SpectrumScaleVolume{Volume: model.Volume{Name: "fake-volume"}, FileSystem: "fake-filesystem", Type: spectrumscale.FILESET, UID: "fake-uid", GID: "gid"}
+			volume := spectrumscale.SpectrumScaleVolume{Volume: model.Volume{Name: "fake-volume"}, FileSystem: "fake-filesystem", Type: spectrumscale.Fileset, UID: "fake-uid", GID: "gid"}
 			fakeSpectrumDataModel.GetVolumeReturns(volume, true, nil)
 			fakeSpectrumScaleConnector.GetFilesystemMountpointReturns("fake-mountpoint", nil)
 			fakeSpectrumScaleConnector.IsFilesetLinkedReturns(false, nil)
@@ -710,7 +710,7 @@ var _ = Describe("local-client", func() {
 
 	Context(".Detach", func() {
 		BeforeEach(func() {
-			detachRequest = resources.DetachRequest{Name: "fake-volume", Backend: resources.SPECTRUM_SCALE}
+			detachRequest = resources.DetachRequest{Name: "fake-volume", Backend: resources.SpectrumScale}
 		})
 
 		It("should fail when dbClient fails to check volumeExists", func() {

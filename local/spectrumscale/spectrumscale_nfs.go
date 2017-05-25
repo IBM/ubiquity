@@ -31,7 +31,7 @@ func NewSpectrumNfsLocalClient(logger *log.Logger, config resources.SpectrumScal
 		return nil, fmt.Errorf("spectrumNfsLocalClient: init: missing required parameter 'spectrumNfsServerAddr'")
 	}
 
-	spectrumClient, err := newSpectrumLocalClient(logger, config, db, resources.SPECTRUM_SCALE_NFS)
+	spectrumClient, err := newSpectrumLocalClient(logger, config, db, resources.SpectrumScaleNFS)
 	if err != nil {
 		return nil, err
 	}

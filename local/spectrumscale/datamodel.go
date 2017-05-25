@@ -5,10 +5,10 @@ import (
 
 	"fmt"
 
-	"github.com/jinzhu/gorm"
-	_ "github.com/mattn/go-sqlite3"
 	"github.com/IBM/ubiquity/model"
 	"github.com/IBM/ubiquity/resources"
+	"github.com/jinzhu/gorm"
+	_ "github.com/mattn/go-sqlite3"
 )
 
 //go:generate counterfeiter -o ../../fakes/fake_SpectrumDataModel.go . SpectrumDataModel
@@ -34,14 +34,14 @@ type spectrumDataModel struct {
 type VolumeType int
 
 const (
-	FILESET VolumeType = iota
-	LIGHTWEIGHT
-	FILESET_WITH_QUOTA
+	Fileset VolumeType = iota
+	Lightweight
+	FilesetWithQuota
 )
 
 const (
-	USER_SPECIFIED_UID string = "uid"
-	USER_SPECIFIED_GID string = "gid"
+	UserSpecifiedUID string = "uid"
+	UserSpecifiedGID string = "gid"
 )
 
 type SpectrumScaleVolume struct {
@@ -105,7 +105,7 @@ func (d *spectrumDataModel) InsertFilesetVolume(fileset, volumeName string, file
 	d.log.Println("SpectrumDataModel: InsertFilesetVolume start")
 	defer d.log.Println("SpectrumDataModel: InsertFilesetVolume end")
 
-	volume := SpectrumScaleVolume{Volume: model.Volume{Name: volumeName, Backend: fmt.Sprintf("%s", d.backend)}, Type: FILESET, ClusterId: d.clusterId, FileSystem: filesystem,
+	volume := SpectrumScaleVolume{Volume: model.Volume{Name: volumeName, Backend: fmt.Sprintf("%s", d.backend)}, Type: Fileset, ClusterId: d.clusterId, FileSystem: filesystem,
 		Fileset: fileset, IsPreexisting: isPreexisting}
 
 	addPermissionsForVolume(&volume, opts)
@@ -117,7 +117,7 @@ func (d *spectrumDataModel) InsertLightweightVolume(fileset, directory, volumeNa
 	d.log.Println("SpectrumDataModel: InsertLightweightVolume start")
 	defer d.log.Println("SpectrumDataModel: InsertLightweightVolume end")
 
-	volume := SpectrumScaleVolume{Volume: model.Volume{Name: volumeName, Backend: fmt.Sprintf("%s", d.backend)}, Type: LIGHTWEIGHT, ClusterId: d.clusterId, FileSystem: filesystem,
+	volume := SpectrumScaleVolume{Volume: model.Volume{Name: volumeName, Backend: fmt.Sprintf("%s", d.backend)}, Type: Lightweight, ClusterId: d.clusterId, FileSystem: filesystem,
 		Fileset: fileset, Directory: directory, IsPreexisting: isPreexisting}
 
 	addPermissionsForVolume(&volume, opts)
@@ -129,7 +129,7 @@ func (d *spectrumDataModel) InsertFilesetQuotaVolume(fileset, quota, volumeName 
 	d.log.Println("SpectrumDataModel: InsertFilesetQuotaVolume start")
 	defer d.log.Println("SpectrumDataModel: InsertFilesetQuotaVolume end")
 
-	volume := SpectrumScaleVolume{Volume: model.Volume{Name: volumeName, Backend: fmt.Sprintf("%s", d.backend)}, Type: FILESET_WITH_QUOTA, ClusterId: d.clusterId, FileSystem: filesystem,
+	volume := SpectrumScaleVolume{Volume: model.Volume{Name: volumeName, Backend: fmt.Sprintf("%s", d.backend)}, Type: FilesetWithQuota, ClusterId: d.clusterId, FileSystem: filesystem,
 		Fileset: fileset, Quota: quota, IsPreexisting: isPreexisting}
 
 	addPermissionsForVolume(&volume, opts)
@@ -191,8 +191,8 @@ func (d *spectrumDataModel) ListVolumes() ([]SpectrumScaleVolume, error) {
 func addPermissionsForVolume(volume *SpectrumScaleVolume, opts map[string]interface{}) {
 
 	if len(opts) > 0 {
-		uid, uidSpecified := opts[USER_SPECIFIED_UID]
-		gid, gidSpecified := opts[USER_SPECIFIED_GID]
+		uid, uidSpecified := opts[UserSpecifiedUID]
+		gid, gidSpecified := opts[UserSpecifiedGID]
 
 		if uidSpecified && gidSpecified {
 			volume.UID = uid.(string)

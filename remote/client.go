@@ -27,7 +27,7 @@ func NewRemoteClient(logger *log.Logger, storageApiURL string, config resources.
 	return &remoteClient{logger: logger, storageApiURL: storageApiURL, httpClient: &http.Client{}, config: config}, nil
 }
 
-func (s *remoteClient) Activate() (err error) {
+func (s *remoteClient) Activate(resources.ActivateRequest) error {
 	s.logger.Println("remoteClient: Activate start")
 	defer s.logger.Println("remoteClient: Activate end")
 
@@ -52,16 +52,15 @@ func (s *remoteClient) Activate() (err error) {
 	return nil
 }
 
-func (s *remoteClient) CreateVolume(name string, opts map[string]interface{}) (err error) {
+func (s *remoteClient) CreateVolume(createVolumeRequest resources.CreateVolumeRequest) error {
 	s.logger.Println("remoteClient: create start")
 	defer s.logger.Println("remoteClient: create end")
 
 	createRemoteURL := utils.FormatURL(s.storageApiURL, "volumes")
 
 	if reflect.DeepEqual(s.config.SpectrumNfsRemoteConfig, resources.SpectrumNfsRemoteConfig{}) == false {
-		opts["nfsClientConfig"] = s.config.SpectrumNfsRemoteConfig.ClientConfig
+		createVolumeRequest.Opts["nfsClientConfig"] = s.config.SpectrumNfsRemoteConfig.ClientConfig
 	}
-	createVolumeRequest := resources.CreateRequest{Name: name, Opts: opts}
 
 	response, err := utils.HttpExecute(s.httpClient, s.logger, "POST", createRemoteURL, createVolumeRequest)
 	if err != nil {
@@ -77,14 +76,13 @@ func (s *remoteClient) CreateVolume(name string, opts map[string]interface{}) (e
 	return nil
 }
 
-func (s *remoteClient) RemoveVolume(name string) (err error) {
+func (s *remoteClient) RemoveVolume(removeVolumeRequest resources.RemoveVolumeRequest) error {
 	s.logger.Println("remoteClient: remove start")
 	defer s.logger.Println("remoteClient: remove end")
 
-	removeRemoteURL := utils.FormatURL(s.storageApiURL, "volumes", name)
-	removeRequest := resources.RemoveRequest{Name: name}
+	removeRemoteURL := utils.FormatURL(s.storageApiURL, "volumes", removeVolumeRequest.Name)
 
-	response, err := utils.HttpExecute(s.httpClient, s.logger, "DELETE", removeRemoteURL, removeRequest)
+	response, err := utils.HttpExecute(s.httpClient, s.logger, "DELETE", removeRemoteURL, removeVolumeRequest)
 	if err != nil {
 		s.logger.Printf("Error in remove volume remote call %#v", err)
 		return fmt.Errorf("Error in remove volume remote call")
@@ -98,12 +96,12 @@ func (s *remoteClient) RemoveVolume(name string) (err error) {
 	return nil
 }
 
-func (s *remoteClient) GetVolume(name string) (resources.Volume, error) {
+func (s *remoteClient) GetVolume(getVolumeRequest resources.GetVolumeRequest) (resources.Volume, error) {
 	s.logger.Println("remoteClient: get start")
 	defer s.logger.Println("remoteClient: get finish")
 
-	getRemoteURL := utils.FormatURL(s.storageApiURL, "volumes", name)
-	response, err := utils.HttpExecute(s.httpClient, s.logger, "GET", getRemoteURL, nil)
+	getRemoteURL := utils.FormatURL(s.storageApiURL, "volumes", getVolumeRequest.Name)
+	response, err := utils.HttpExecute(s.httpClient, s.logger, "GET", getRemoteURL, getVolumeRequest)
 	if err != nil {
 		s.logger.Printf("Error in get volume remote call %#v", err)
 		return resources.Volume{}, fmt.Errorf("Error in get volume remote call")
@@ -124,12 +122,12 @@ func (s *remoteClient) GetVolume(name string) (resources.Volume, error) {
 	return getResponse.Volume, nil
 }
 
-func (s *remoteClient) GetVolumeConfig(name string) (map[string]interface{}, error) {
+func (s *remoteClient) GetVolumeConfig(getVolumeConfigRequest resources.GetVolumeConfigRequest) (map[string]interface{}, error) {
 	s.logger.Println("remoteClient: GetVolumeConfig start")
 	defer s.logger.Println("remoteClient: GetVolumeConfig finish")
 
-	getRemoteURL := utils.FormatURL(s.storageApiURL, "volumes", name, "config")
-	response, err := utils.HttpExecute(s.httpClient, s.logger, "GET", getRemoteURL, nil)
+	getRemoteURL := utils.FormatURL(s.storageApiURL, "volumes", getVolumeConfigRequest.Name, "config")
+	response, err := utils.HttpExecute(s.httpClient, s.logger, "GET", getRemoteURL, getVolumeConfigRequest)
 	if err != nil {
 		s.logger.Printf("Error in get volume remote call %#v", err)
 		return nil, fmt.Errorf("Error in get volume remote call")
@@ -150,12 +148,12 @@ func (s *remoteClient) GetVolumeConfig(name string) (map[string]interface{}, err
 	return getResponse.VolumeConfig, nil
 }
 
-func (s *remoteClient) Attach(name string) (string, error) {
+func (s *remoteClient) Attach(attachRequest resources.AttachRequest) (string, error) {
 	s.logger.Println("remoteClient: attach start")
 	defer s.logger.Println("remoteClient: attach end")
 
-	attachRemoteURL := utils.FormatURL(s.storageApiURL, "volumes", name, "attach")
-	response, err := utils.HttpExecute(s.httpClient, s.logger, "PUT", attachRemoteURL, nil)
+	attachRemoteURL := utils.FormatURL(s.storageApiURL, "volumes", attachRequest.Name, "attach")
+	response, err := utils.HttpExecute(s.httpClient, s.logger, "PUT", attachRemoteURL, attachRequest)
 	if err != nil {
 		s.logger.Printf("Error in attach volume remote call %#v", err)
 		return "", fmt.Errorf("Error in attach volume remote call")
@@ -167,22 +165,23 @@ func (s *remoteClient) Attach(name string) (string, error) {
 		return "", utils.ExtractErrorResponse(response)
 	}
 
-	mountResponse := resources.MountResponse{}
-	err = utils.UnmarshalResponse(response, &mountResponse)
+	attachResponse := resources.AttachResponse{}
+	err = utils.UnmarshalResponse(response, &attachResponse)
 	if err != nil {
 		return "", fmt.Errorf("Error in unmarshalling response for attach remote call")
 	}
-
-	volumeConfig, err := s.GetVolumeConfig(name)
+	getVolumeConfigRequest := resources.GetVolumeConfigRequest{Name: attachRequest.Name, Backend: attachRequest.Backend}
+	volumeConfig, err := s.GetVolumeConfig(getVolumeConfigRequest)
 	if err != nil {
 		return "", err
 	}
 
-	mounter, err := s.getMounterForVolume(name)
+	mounter, err := s.getMounterForBackend(attachRequest.Backend)
 	if err != nil {
 		return "", fmt.Errorf("Error determining mounter for volume: %s", err.Error())
 	}
-	mountpoint, err := mounter.Mount(mountResponse.Mountpoint, volumeConfig)
+	mountRequest := resources.MountRequest{Mountpoint: attachResponse.Mountpoint, VolumeConfig: volumeConfig}
+	mountpoint, err := mounter.Mount(mountRequest)
 	if err != nil {
 		return "", err
 	}
@@ -191,26 +190,27 @@ func (s *remoteClient) Attach(name string) (string, error) {
 	return mountpoint, nil
 }
 
-func (s *remoteClient) Detach(name string) error {
+func (s *remoteClient) Detach(detachRequest resources.DetachRequest) error {
 	s.logger.Println("remoteClient: detach start")
 	defer s.logger.Println("remoteClient: detach end")
 
-	mounter, err := s.getMounterForVolume(name)
+	mounter, err := s.getMounterForBackend(detachRequest.Backend)
 	if err != nil {
 		return fmt.Errorf("Volume not found")
 	}
 
-	volumeConfig, err := s.GetVolumeConfig(name)
+	getVolumeConfigRequest := resources.GetVolumeConfigRequest{Name: detachRequest.Name, Backend: detachRequest.Backend}
+	volumeConfig, err := s.GetVolumeConfig(getVolumeConfigRequest)
+	if err != nil {
+		return err
+	}
+	unmountRequest := resources.UnmountRequest{VolumeConfig: volumeConfig}
+	err = mounter.Unmount(unmountRequest)
 	if err != nil {
 		return err
 	}
 
-	err = mounter.Unmount(volumeConfig)
-	if err != nil {
-		return err
-	}
-
-	detachRemoteURL := utils.FormatURL(s.storageApiURL, "volumes", name, "detach")
+	detachRemoteURL := utils.FormatURL(s.storageApiURL, "volumes", detachRequest.Name, "detach")
 	response, err := utils.HttpExecute(s.httpClient, s.logger, "PUT", detachRemoteURL, nil)
 	if err != nil {
 		s.logger.Printf("Error in detach volume remote call %#v", err)
@@ -226,12 +226,12 @@ func (s *remoteClient) Detach(name string) error {
 
 }
 
-func (s *remoteClient) ListVolumes() ([]resources.VolumeMetadata, error) {
+func (s *remoteClient) ListVolumes(listVolumesRequest resources.ListVolumesRequest) ([]resources.VolumeMetadata, error) {
 	s.logger.Println("remoteClient: list start")
 	defer s.logger.Println("remoteClient: list end")
 
 	listRemoteURL := utils.FormatURL(s.storageApiURL, "volumes")
-	response, err := utils.HttpExecute(s.httpClient, s.logger, "GET", listRemoteURL, nil)
+	response, err := utils.HttpExecute(s.httpClient, s.logger, "GET", listRemoteURL, listVolumesRequest)
 	if err != nil {
 		s.logger.Printf("Error in list volume remote call %#v", err)
 		return nil, fmt.Errorf("Error in list volume remote call")
@@ -253,12 +253,13 @@ func (s *remoteClient) ListVolumes() ([]resources.VolumeMetadata, error) {
 
 }
 
-func (s *remoteClient) getMounterForVolume(name string) (mounter.Mounter, error) {
+func (s *remoteClient) getMounterForBackend(backend resources.Backend) (resources.Mounter, error) {
 	s.logger.Println("remoteClient: getMounterForVolume start")
 	defer s.logger.Println("remoteClient: getMounterForVolume end")
-	volume, err := s.GetVolume(name)
-	if err != nil {
-		return nil, err
+	if backend == resources.SPECTRUM_SCALE {
+		return mounter.NewSpectrumScaleMounter(s.logger), nil
+	} else if backend == resources.SOFTLAYER_NFS || backend == resources.SPECTRUM_SCALE_NFS {
+		return mounter.NewNfsMounter(s.logger), nil
 	}
-	return mounter.GetMounterForVolume(s.logger, volume)
+	return nil, fmt.Errorf("Mounter not found for backend: %s", backend)
 }

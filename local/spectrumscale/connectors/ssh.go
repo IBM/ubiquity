@@ -95,8 +95,8 @@ func (s *spectrum_ssh) CreateFileset(filesystemName string, filesetName string, 
 	userAndHost := fmt.Sprintf("%s@%s", s.user, s.host)
 	args := []string{userAndHost, "-p", s.port, "sudo", spectrumCommand, filesystemName, filesetName, "-t", "'fileset for container volume'"}
 
-	filesetType, filesetTypeSpecified := opts[USER_SPECIFIED_FILESET_TYPE]
-	inodeLimit, inodeLimitSpecified := opts[USER_SPECIFIED_INODE_LIMIT]
+	filesetType, filesetTypeSpecified := opts[UserSpecifiedFilesetType]
+	inodeLimit, inodeLimitSpecified := opts[UserSpecifiedInodeLimit]
 
 	if filesetTypeSpecified && filesetType.(string) == "independent" {
 		args = append(args, "--inode-space", "new")
