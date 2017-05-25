@@ -34,19 +34,20 @@ func (h *StorageApiHandler) Activate() http.HandlerFunc {
 			utils.WriteResponse(w, 409, &resources.GenericResponse{Err: err.Error()})
 			return
 		}
-		if activateRequest.Backend != "" {
-
-			backend, ok := h.backends[activateRequest.Backend]
-			if !ok {
-				h.logger.Printf("error-activating-backend%s", activateRequest.Backend)
-				utils.WriteResponse(w, http.StatusNotFound, &resources.GenericResponse{Err: "backend-not-found"})
-				return
-			}
-			err = backend.Activate(activateRequest)
-			if err != nil {
-				h.logger.Printf("Error activating %s", err.Error())
-				utils.WriteResponse(w, http.StatusInternalServerError, &resources.GenericResponse{Err: err.Error()})
-				return
+		if len(activateRequest.Backends) != 0 {
+			for _, b := range activateRequest.Backends {
+				backend, ok := h.backends[b]
+				if !ok {
+					h.logger.Printf("error-activating-backend%s", b)
+					utils.WriteResponse(w, http.StatusNotFound, &resources.GenericResponse{Err: "backend-not-found"})
+					return
+				}
+				err = backend.Activate(activateRequest)
+				if err != nil {
+					h.logger.Printf("Error activating %s", err.Error())
+					utils.WriteResponse(w, http.StatusInternalServerError, &resources.GenericResponse{Err: err.Error()})
+					return
+				}
 			}
 		} else {
 			var errors string

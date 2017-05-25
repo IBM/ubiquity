@@ -83,8 +83,8 @@ type Mounter interface {
 }
 
 type ActivateRequest struct {
-	Backend Backend
-	Opts    map[string]string
+	Backends []Backend
+	Opts     map[string]string
 }
 
 type CreateVolumeRequest struct {
