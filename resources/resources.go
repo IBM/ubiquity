@@ -49,6 +49,7 @@ type UbiquityPluginConfig struct {
 	LogPath                 string
 	UbiquityServer          UbiquityServerConnectionInfo
 	SpectrumNfsRemoteConfig SpectrumNfsRemoteConfig
+	Backends                []Backend
 }
 type UbiquityDockerPluginConfig struct {
 	//Address          string
