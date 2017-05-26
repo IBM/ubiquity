@@ -49,9 +49,9 @@ var fakeServiceJsonResponse string = `
 
 var _ = Describe("restClient", func() {
 	var (
-		logger  *log.Logger
-		client  scbe.RestClient
-		err     error
+		logger *log.Logger
+		client scbe.RestClient
+		err    error
 	)
 	BeforeEach(func() {
 		logger = log.New(os.Stdout, "ubiquity scbe: ", log.Lshortfile|log.LstdFlags)
@@ -84,7 +84,7 @@ var _ = Describe("restClient", func() {
 			httpmock.RegisterResponder("POST", fakeScbeUrlAuthFull, httpmock.NewStringResponder(http.StatusBadRequest, "{}"))
 			err = client.Login()
 			Expect(err).To(HaveOccurred())
-			Expect(err.Error()).To(MatchRegexp("^Error, bad status code of http response"))
+			Expect(err.Error()).To(MatchRegexp("^Error, bad status code"))
 		})
 		It("should fail when httpClient.post return bad structure that marshaling cannot work with", func() {
 			httpmock.RegisterResponder("POST", fakeScbeUrlAuthFull, httpmock.NewStringResponder(http.StatusOK, "yyy"))
@@ -98,9 +98,9 @@ var _ = Describe("restClient", func() {
 
 var _ = Describe("restClient", func() {
 	var (
-		logger  *log.Logger
-		client  scbe.RestClient
-		err     error
+		logger *log.Logger
+		client scbe.RestClient
+		err    error
 	)
 	BeforeEach(func() {
 		logger = log.New(os.Stdout, "ubiquity scbe: ", log.Lshortfile|log.LstdFlags)
@@ -139,7 +139,7 @@ var _ = Describe("restClient", func() {
 			var services []scbe.ScbeStorageService
 			err = client.Get(scbe.UrlScbeResourceService, nil, -1, &services)
 			Expect(err).To(HaveOccurred())
-			Expect(err.Error()).To(MatchRegexp("^Error, bad status code of http response"))
+			Expect(err.Error()).To(MatchRegexp("^Error, bad status code"))
 		})
 		It("Login and retry rest call if token expired", func() {
 			var numLogin, numGetServices int
@@ -159,7 +159,36 @@ var _ = Describe("restClient", func() {
 	})
 })
 
-func CountLoginResponder (num *int, loginResp string) httpmock.Responder {
+/*
+var _ = Describe("ScbeRestClient", func() {
+	var (
+		logger *log.Logger
+		client scbe.RestClient
+		err    error
+	)
+	BeforeEach(func() {
+		logger = log.New(os.Stdout, "ubiquity scbe: ", log.Lshortfile|log.LstdFlags)
+		credentialInfo := resources.CredentialInfo{"user", "password", "flocker"}
+		conInfo := resources.ConnectionInfo{credentialInfo, 8440, "ip", true}
+		scbeRestClient, err := scbe.NewScbeRestClient(logger, conInfo)
+				Expect(err).ToNot(HaveOccurred())
+				httpmock.RegisterResponder(
+					"POST",
+					scbeRestClient.,
+					httpmock.NewStringResponder(http.StatusOK, string(marshalledResponse)),
+				)
+				err = client.Login()
+				Expect(err).ToNot(HaveOccurred())
+	})
+
+	Context(".Get", func() {
+		It("should succeed when Get succeed and return an expacted struct back", func() {
+			logger.Printf("aaa")
+		})
+	})
+})
+*/
+func CountLoginResponder(num *int, loginResp string) httpmock.Responder {
 	*num = 0
 	return func(req *http.Request) (*http.Response, error) {
 		*num++
@@ -167,7 +196,7 @@ func CountLoginResponder (num *int, loginResp string) httpmock.Responder {
 	}
 }
 
-func TokenExpiredResponder (num *int) httpmock.Responder {
+func TokenExpiredResponder(num *int) httpmock.Responder {
 	*num = 0
 	return func(req *http.Request) (*http.Response, error) {
 		*num++
