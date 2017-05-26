@@ -146,7 +146,7 @@ var _ = Describe("scbeLocalClient", func() {
 
 		It("should fail to insert vol to DB after create it", func() {
 			fakeScbeDataModel.GetVolumeReturns(scbe.ScbeVolume{}, false, nil)
-			fakeScbeRestClient.CreateVolumeReturns(scbe.ScbeVolumeInfo{"v1", "wwn1"}, nil)
+			fakeScbeRestClient.CreateVolumeReturns(scbe.ScbeVolumeInfo{"v1", "wwn1", "gold"}, nil)
 			fakeScbeDataModel.InsertVolumeReturns(fmt.Errorf("error"))
 			opts := make(map[string]interface{})
 			opts[scbe.OptionNameForVolumeSize] = "100"
@@ -167,7 +167,7 @@ var _ = Describe("scbeLocalClient", func() {
 
 		It("should succeed to insert vol to DB after create it", func() {
 			fakeScbeDataModel.GetVolumeReturns(scbe.ScbeVolume{}, false, nil)
-			fakeScbeRestClient.CreateVolumeReturns(scbe.ScbeVolumeInfo{"v1", "wwn1"}, nil)
+			fakeScbeRestClient.CreateVolumeReturns(scbe.ScbeVolumeInfo{"v1", "wwn1", "gold"}, nil)
 			fakeScbeDataModel.InsertVolumeReturns(nil)
 			opts := make(map[string]interface{})
 			opts[scbe.OptionNameForVolumeSize] = "100"

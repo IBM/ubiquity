@@ -13,6 +13,7 @@ import (
 )
 
 // RestClient is an interface that wrapper the http requests to provide easy REST API operations,
+//go:generate counterfeiter -o ../fakes/fake_scbe_rest_client.go . RestClient
 type RestClient interface {
 	// Authenticate the server, prepare headers and save the token
 	Login() error
@@ -48,7 +49,7 @@ type restClient struct {
 	headers        map[string]string
 }
 
-func NewRestClient(logger *log.Logger, conInfo resources.ConnectionInfo, baseURL string, authURL string, referrer string) (RestClient) {
+func NewRestClient(logger *log.Logger, conInfo resources.ConnectionInfo, baseURL string, authURL string, referrer string) RestClient {
 	headers := map[string]string{
 		"Content-Type": "application/json",
 		"referer":      referrer,
@@ -74,7 +75,7 @@ func (s *restClient) Login() error {
 	return nil
 }
 
-func (s *restClient) getToken() (error) {
+func (s *restClient) getToken() error {
 	delete(s.headers, HTTP_AUTH_KEY) // because no need token to get the token only user\password
 	var loginResponse = LoginResponse{}
 
@@ -110,6 +111,7 @@ func (s *restClient) genericAction(actionName string, resource_url string, paylo
 	if actionName == "GET" {
 		request, err = http.NewRequest(actionName, url, nil)
 	} else {
+		// TODO : consider to add
 		request, err = http.NewRequest(actionName, url, bytes.NewReader(payload))
 	}
 
@@ -134,7 +136,7 @@ func (s *restClient) genericAction(actionName string, resource_url string, paylo
 
 	response, err := s.httpClient.Do(request)
 	if err != nil {
-		s.logger.Printf("Error sending %s request : %#v", actionName, err)
+		s.logger.Printf("Error sending %s request url [%s]: %#v", actionName, url, err)
 		return err
 	}
 
@@ -151,7 +153,7 @@ func (s *restClient) genericAction(actionName string, resource_url string, paylo
 		// retry
 		response, err = s.httpClient.Do(request)
 		if err != nil {
-			s.logger.Printf("Error sending %s request : %#v", actionName, err)
+			s.logger.Printf("Error sending %s request url [%s]: %#v", actionName, url, err)
 			return err
 		}
 	}
@@ -164,15 +166,17 @@ func (s *restClient) genericAction(actionName string, resource_url string, paylo
 	}
 
 	if response.StatusCode != exitStatus {
-		msg := fmt.Sprintf("Error, bad status code of http response %#v", response.StatusCode)
+		msg := fmt.Sprintf("Error, bad status code [%#v] of http response to url [%s].", response.StatusCode, url)
 		s.logger.Printf(msg)
 		return fmt.Errorf(msg)
 	}
-
-	err = json.Unmarshal(data, v)
-	if err != nil {
-		s.logger.Printf("Error unmarshal %#v", err)
-		return err
+	if v != nil {
+		s.logger.Printf("Unmarsh the post data into the given interface")
+		err = json.Unmarshal(data, v)
+		if err != nil {
+			s.logger.Printf("Error unmarshal %#v", err)
+			return err
+		}
 	}
 
 	return nil
@@ -202,21 +206,14 @@ func (s *restClient) Delete(resource_url string, payload []byte, exitStatus int,
 	return s.genericAction("DELETE", resource_url, payload, nil, exitStatus, v)
 }
 
-
 // ********************************
 // ****** SCBE Rest Client ********
 // ********************************
 
-type ScbeVolumeInfo struct {
-	Name string
-	Wwn  string
-	// TODO later on we will want also size and maybe other stuff
-}
-
 //go:generate counterfeiter -o ../fakes/fake_scbe_rest_client.go . ScbeRestClient
 type ScbeRestClient interface {
 	Login() error
-	CreateVolume(volName string, serviceName string, size_byte int) (ScbeVolumeInfo, error)
+	CreateVolume(volName string, serviceName string, size int) (ScbeVolumeInfo, error)
 	GetAllVolumes() ([]ScbeVolumeInfo, error)
 	GetVolume(wwn string) (ScbeVolumeInfo, error)
 	DeleteVolume(wwn string) error
@@ -239,9 +236,10 @@ const (
 	URL_SCBE_RESOURCE_GET_AUTH = "users/get-auth-token"
 	SCBE_FLOCKER_GROUP_PARAM   = "flocker"
 	UrlScbeResourceService     = "services"
-	//UrlScbeResourceVolume = "/volumes"
+	UrlScbeResourceVolume      = "volumes"
 	//UrlScbeResourceMapping = "/mappings"
 	//UrlScbeResourceHost = "/hosts"
+	DefaultSizeUnit = "gb"
 )
 
 func NewScbeRestClient(logger *log.Logger, conInfo resources.ConnectionInfo) (ScbeRestClient, error) {
@@ -261,20 +259,48 @@ func (s *scbeRestClient) Login() error {
 	return s.client.Login()
 }
 
-func (s *scbeRestClient) CreateVolume(volName string, serviceName string, size_byte int) (ScbeVolumeInfo, error) {
-	exist, err := s.ServiceExist(serviceName)
+// CreateVolume provision new volume on SCBE storage service.
+// Return ScbeVolumeInfo of the new volume that was created
+// Errors:
+//	if service don't exist
+//	if fail to create the volume
+func (s *scbeRestClient) CreateVolume(volName string, serviceName string, size int) (ScbeVolumeInfo, error) {
+	// find the service in order to validate and also to get the service id
+	services, err := s.serviceList(serviceName)
 	if err != nil {
 		return ScbeVolumeInfo{}, err
 	}
-	if !exist {
-		msg := fmt.Sprintf(MsgVolumeCreateFailBecauseNoServicesExist, volName, serviceName, s.connectionInfo.ManagementIP)
+	// check existence of the service
+	if len(services) <= 0 || services[0].Name != serviceName {
+		err = fmt.Errorf(fmt.Sprintf(
+			MsgVolumeCreateFailBecauseNoServicesExist, volName, serviceName, s.connectionInfo.ManagementIP))
+		return ScbeVolumeInfo{}, err
+	}
+
+	payload := ScbeCreateVolumePostParams{
+		services[0].Id,
+		volName,
+		size,
+		DefaultSizeUnit, // TODO lets support different type of unit size, for now only gb
+	}
+
+	payloadMarshaled, err := json.Marshal(payload)
+	if err != nil {
+		msg := fmt.Sprintf("Error in marshalling payload for create volume %#v", err)
+		s.logger.Printf(msg)
+		return ScbeVolumeInfo{}, fmt.Errorf(msg)
+	}
+	volResponse := ScbeResponseVolume{}
+	err = s.client.Post(UrlScbeResourceVolume, payloadMarshaled, HTTP_SUCCEED_POST, &volResponse)
+	if err != nil {
+		msg := fmt.Sprintf("Fail to provision volume %#v on service %s, due to error: %#v", volName, serviceName, err)
 		s.logger.Printf(msg)
 		return ScbeVolumeInfo{}, fmt.Errorf(msg)
 	}
 
-	// TODO create vol
-	return ScbeVolumeInfo{}, nil
+	return ScbeVolumeInfo{volResponse.Name, volResponse.ScsiIdentifier, serviceName}, nil
 }
+
 func (s *scbeRestClient) GetAllVolumes() ([]ScbeVolumeInfo, error) {
 	return nil, nil
 }
@@ -282,6 +308,13 @@ func (s *scbeRestClient) GetVolume(wwn string) (ScbeVolumeInfo, error) {
 	return ScbeVolumeInfo{}, nil
 }
 func (s *scbeRestClient) DeleteVolume(wwn string) error {
+	urlToDelete := fmt.Sprintf("%s/%s", UrlScbeResourceVolume, wwn)
+	err := s.client.Delete(urlToDelete, nil, HTTP_SUCCEED_DELETED, nil)
+	if err != nil {
+		msg := fmt.Sprintf("Fail to delete volume WWN %#v, due to error: %#v", wwn, err)
+		s.logger.Printf(msg)
+		return fmt.Errorf(msg)
+	}
 	return nil
 }
 
