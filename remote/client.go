@@ -170,13 +170,15 @@ func (s *remoteClient) Attach(attachRequest resources.AttachRequest) (string, er
 	if err != nil {
 		return "", fmt.Errorf("Error in unmarshalling response for attach remote call")
 	}
-	getVolumeConfigRequest := resources.GetVolumeConfigRequest{Name: attachRequest.Name, Backend: attachRequest.Backend}
+	getVolumeConfigRequest := resources.GetVolumeConfigRequest{Name: attachRequest.Name}
 	volumeConfig, err := s.GetVolumeConfig(getVolumeConfigRequest)
 	if err != nil {
 		return "", err
 	}
+	getVolumeRequest := resources.GetVolumeRequest{Name: attachRequest.Name}
+	volume, err := s.GetVolume(getVolumeRequest)
 
-	mounter, err := s.getMounterForBackend(attachRequest.Backend)
+	mounter, err := s.getMounterForBackend(volume.Backend)
 	if err != nil {
 		return "", fmt.Errorf("Error determining mounter for volume: %s", err.Error())
 	}
@@ -194,12 +196,15 @@ func (s *remoteClient) Detach(detachRequest resources.DetachRequest) error {
 	s.logger.Println("remoteClient: detach start")
 	defer s.logger.Println("remoteClient: detach end")
 
-	mounter, err := s.getMounterForBackend(detachRequest.Backend)
+	getVolumeRequest := resources.GetVolumeRequest{Name: detachRequest.Name}
+	volume, err := s.GetVolume(getVolumeRequest)
+
+	mounter, err := s.getMounterForBackend(volume.Backend)
 	if err != nil {
 		return fmt.Errorf("Volume not found")
 	}
 
-	getVolumeConfigRequest := resources.GetVolumeConfigRequest{Name: detachRequest.Name, Backend: detachRequest.Backend}
+	getVolumeConfigRequest := resources.GetVolumeConfigRequest{Name: detachRequest.Name}
 	volumeConfig, err := s.GetVolumeConfig(getVolumeConfigRequest)
 	if err != nil {
 		return err
@@ -246,7 +251,7 @@ func (s *remoteClient) ListVolumes(listVolumesRequest resources.ListVolumesReque
 	err = utils.UnmarshalResponse(response, &listResponse)
 	if err != nil {
 		s.logger.Printf("Error in unmarshalling response for get remote call %#v for response %#v", err, response)
-		return []resources.VolumeMetadata{}, nil
+		return []resources.Volume{}, nil
 	}
 
 	return listResponse.Volumes, nil
