@@ -13,6 +13,7 @@ type Executor interface { // basic host dependent functions
 	Mkdir(string, os.FileMode) error
 	RemoveAll(string) error
 	Hostname() (string, error)
+	IsExecutable(string) error
 }
 
 type executor struct {
@@ -47,4 +48,9 @@ func (e *executor) RemoveAll(path string) error {
 
 func (e *executor) Hostname() (string, error) {
 	return os.Hostname()
+}
+
+func (e *executor) IsExecutable(path string) error {
+	_, err := exec.LookPath(path)
+	return err
 }
