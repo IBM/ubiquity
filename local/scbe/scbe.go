@@ -170,7 +170,8 @@ func (s *scbeLocalClient) CreateVolume(name string, opts map[string]interface{})
 	if err != nil {
 		return err
 	}
-	defer s.logger.Println("scbeLocalClient: Successfully create volume %s on profile %s", name, profile)
+	msg := fmt.Sprintf("scbeLocalClient: Successfully create volume %s on profile %s", name, profile)
+	defer s.logger.Println(msg)
 
 	return nil
 }
