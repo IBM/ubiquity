@@ -111,22 +111,6 @@ defaultFilesystemName = "gold"    # Default name of Spectrum Scale file system t
 configPath = "/gpfs/gold/config"  # Path in an existing filesystem where Ubiquity can create/store volume DB.
 nfsServerAddr = "CESClusterHost"  # IP/hostname of Spectrum Scale CES NFS cluster.  This is the hostname that NFS clients will use to mount NFS volumes. (required for creation of NFS accessible volumes)
 
-[ScbeConfig]
-configPath = "/opt/ubiquity-db" # Path in an existing filesystem where Ubiquity can create/store volume DB.
-DefaultService = "gold"         # SCBE storage service to be used by default if not mentioned by plugin
-DefaultVolumeSize = "50gb"      # The default volume size in case not specified by user (default is 80gb), possible UNITs gb,mb,b.
-DefaultFilesystem = "ext4"      # The default filesystem to create on new volumes (default ext4)
-
-
-[ScbeConfig.ConnectionInfo]
-managementIp = "IP Address"     # SCBE server IP or FQDN
-port = 8440                     # SCBE server port. This setting is optional (default port is 8440).
-verifySSL = false               # True verifies SCB SSL certificate or False ignores the certificate (default is True)
-
-[ScbeConfig.ConnectionInfo.CredentialInfo]
-username = "user"               # user name defined for SCBE Ubiquity interface
-password = "password"           # password defined for SCBE Ubiquity interface
-
 # Controls the behavior of volume deletion.  If set to true, the data in the the storage system (e.g., fileset, directory) will be deleted upon volume deletion.  If set to false, the volume will be removed from the local database, but the data will not be deleted from the storage system.  Note that volumes created from existing data in the storage system should never have their data deleted upon volume deletion (although this may not be true for Kubernetes volumes with a recycle reclaim policy).
 forceDelete = false 
 ```
@@ -138,6 +122,44 @@ To support running the Ubiquity service on a host (or VM or container) that does
 user = "ubiquity"                 # username to login as on the Spectrum Scale storage system
 host = "my_ss_host"                # hostname of the Spectrum Scale storage system
 port = "22"                       # port to connect to on the Spectrum Scale storage system
+```
+
+
+IBM Block Storage Systems Support
+
+To support running the Ubiquity service for IBM Block Storage systems, please follow the instructions and configuration below:
+* Ubiquity communicates with the IBM storage systems through IBM Spectrum Control Base Edition 3.2.0 or later.
+See [IBM Knowledge Center](http://www.ibm.com/support/knowledgecenter/STWMS9/landing/IBM_Spectrum_Control_Base_Edition_welcome_page.html) for instructions on how download, install and configure Spectrum Control Base Edition software.
+After IBM Spectrum Control Base Edition is installed, do the following :
+    * Log into Spectrum Control Base Edition server at https://SCBE_IP_address:8440.
+    * Add a Ubiquity interface. Note: The Ubiqity interface username and the password will be used in the ubiquity server configuration file below.
+    * Add the IBM storage systems to be used with the Ubiquity plug-in.
+    * Create storage service(s) with required storage capacities and capabilities. This service(s) will be available for provisioning (as a profile option) from the plugin side ([docker](https://github.com/IBM/ubiquity-docker-plugin), [kubernetes](https://github.com/IBM/ubiquity-k8s))
+  5. Delegate at least one storage service to the Ubiquity interface.
+
+* The following snippet shows a sample configuration file for Ubiquity service for IBM Block Storage System:
+```toml
+port = 9999                       # The TCP port to listen on
+logPath = "/tmp/ubiquity"         # The Ubiquity service will write logs to file "ubiquity.log" in this path.  This path must already exist.
+defaultBackend = "scbe" # The "spectrum-scale" backend will be the default backend if none is specified in the request
+
+[ScbeConfig]
+configPath = "/opt/ubiquity-db" # Path in an existing filesystem where Ubiquity can create/store volume DB.
+DefaultService = "gold"         # SCBE storage service to be used by default if not mentioned by plugin
+DefaultVolumeSize = "50"        # The default volume size in case not specified by user (default is 80gb), possible UNITs gb,mb,b.
+DefaultFilesystem = "ext4"      # The default filesystem to create on new volumes (default ext4)
+
+[ScbeConfig.ConnectionInfo]
+managementIp = "IP Address"     # SCBE server IP or FQDN
+port = 8440                     # SCBE server port. This setting is optional (default port is 8440).
+SkipVerifySSL = false           # True verifies SCB SSL certificate or False ignores the certificate (default is True)
+
+[ScbeConfig.ConnectionInfo.CredentialInfo]
+username = "user"               # user name defined for SCBE Ubiquity interface
+password = "password"           # password defined for SCBE Ubiquity interface
+
+[SpectrumScaleConfig]
+configPath = "/opt/ubiquityDB"  # Path in an existing filesystem where Ubiquity can create/store volume DB.
 ```
 
 ### Two Options to Install and Run
