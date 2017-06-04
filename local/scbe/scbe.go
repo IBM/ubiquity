@@ -170,7 +170,8 @@ func (s *scbeLocalClient) CreateVolume(name string, opts map[string]interface{})
 	if err != nil {
 		return err
 	}
-	defer s.logger.Println("scbeLocalClient: Successfully create volume %s on profile %s", name, profile)
+	msg := fmt.Sprintf("scbeLocalClient: Successfully create volume %s on profile %s", name, profile)
+	defer s.logger.Println(msg)
 
 	return nil
 }
@@ -180,14 +181,13 @@ func (s *scbeLocalClient) RemoveVolume(name string) (err error) {
 	defer s.logger.Println("scbeLocalClient: remove end")
 
 	existingVolume, volExists, err := s.dataModel.GetVolume(name)
-
 	if err != nil {
 		s.logger.Println(err.Error())
 		return err
 	}
 
 	if volExists == false {
-		return fmt.Errorf("Volume not found")
+		return fmt.Errorf("Volume [%s] not found", name)
 	}
 
 	err = s.dataModel.DeleteVolume(name)
@@ -196,8 +196,10 @@ func (s *scbeLocalClient) RemoveVolume(name string) (err error) {
 		s.logger.Println(err.Error())
 		return err
 	}
-	//TODO real delete
-	fmt.Printf("Delete me %#v", existingVolume)
+	err = s.scbeRestClient.DeleteVolume(existingVolume.WWN)
+	if err != nil {
+		return err
+	}
 
 	return nil
 }

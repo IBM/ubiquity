@@ -24,7 +24,7 @@ var _ = Describe("restClient integration testing with existing SCBE instance", f
 	BeforeEach(func() {
 		logger = log.New(os.Stdout, "ubiquity scbe: ", log.Lshortfile|log.LstdFlags)
 		// Get environment variable for the tests
-		scbeUser, scbePassword, scbeIP, scbePort, err := getScbeEnvs()
+		scbeUser, scbePassword, scbeIP, scbePort, _, err := getScbeEnvs()
 		if err != nil {
 			Skip(err.Error())
 		}
@@ -64,11 +64,12 @@ var _ = Describe("ScbeRestClient integration testing with existing SCBE instance
 		conInfo        resources.ConnectionInfo
 		scbeRestClient scbe.ScbeRestClient
 		credentialInfo resources.CredentialInfo
+		profile        string
 	)
 	BeforeEach(func() {
 		logger = log.New(os.Stdout, "ubiquity scbe: ", log.Lshortfile|log.LstdFlags)
 		// Get environment variable for the tests
-		scbeUser, scbePassword, scbeIP, scbePort, err := getScbeEnvs()
+		scbeUser, scbePassword, scbeIP, scbePort, _, err := getScbeEnvs()
 		if err != nil {
 			Skip(err.Error())
 		}
@@ -88,22 +89,67 @@ var _ = Describe("ScbeRestClient integration testing with existing SCBE instance
 	})
 
 	Context(".ServiceExist", func() {
-		It("Should succeed if gold service exist in SCBE", func() {
+		It(fmt.Sprintf("Should succeed if %s service exist in SCBE", profile), func() {
 			err := scbeRestClient.Login()
 			Expect(err).ToNot(HaveOccurred())
 			var exist bool
-			exist, err = scbeRestClient.ServiceExist("gold")
+			exist, err = scbeRestClient.ServiceExist(profile)
 			Expect(err).NotTo(HaveOccurred())
 			Expect(exist).To(Equal(true))
 		})
 	})
 })
 
-func getScbeEnvs() (scbeUser, scbePassword, scbeIP string, scbePort int, err error) {
+var _ = Describe("ScbeRestClient volume operations integration testing with existing SCBE instance", func() {
+	var (
+		logger         *log.Logger
+		conInfo        resources.ConnectionInfo
+		scbeRestClient scbe.ScbeRestClient
+		credentialInfo resources.CredentialInfo
+		profile        string
+	)
+	BeforeEach(func() {
+		logger = log.New(os.Stdout, "ubiquity scbe: ", log.Lshortfile|log.LstdFlags)
+		// Get environment variable for the tests
+		scbeUser, scbePassword, scbeIP, scbePort, profile1, err := getScbeEnvs()
+		profile = profile1
+		if err != nil {
+			Skip(err.Error())
+		}
+		credentialInfo = resources.CredentialInfo{scbeUser, scbePassword, "flocker"}
+		conInfo = resources.ConnectionInfo{credentialInfo, scbePort, scbeIP, true}
+		scbeRestClient, err = scbe.NewScbeRestClient(logger, conInfo)
+		Expect(err).ToNot(HaveOccurred())
+
+		err = scbeRestClient.Login()
+		Expect(err).ToNot(HaveOccurred())
+		var exist bool
+		exist, err = scbeRestClient.ServiceExist(profile)
+		Expect(err).NotTo(HaveOccurred())
+		Expect(exist).To(Equal(true))
+	})
+
+	Context(".CreateVolume", func() {
+		It(fmt.Sprintf("Should succeed if vol was created and deleted on %s service", profile), func() {
+			fakeName := "fakevol_ubiquity"
+			volInfo, err := scbeRestClient.CreateVolume(fakeName, profile, 10)
+			Expect(err).NotTo(HaveOccurred())
+			Expect(volInfo.Name).To(Equal(fakeName))
+			Expect(volInfo.ServiceName).To(Equal(profile))
+			Expect(volInfo.Wwn).NotTo(Equal(""))
+			err = scbeRestClient.DeleteVolume(volInfo.Wwn)
+			Expect(err).NotTo(HaveOccurred())
+		})
+	})
+})
+
+func getScbeEnvs() (scbeUser, scbePassword, scbeIP string, scbePort int, profile string, err error) {
 	scbeUser = os.Getenv("SCBE_USER")
 	scbePassword = os.Getenv("SCBE_PASSWORD")
 	scbeIP = os.Getenv("SCBE_IP")
 	scbePortStr := os.Getenv("SCBE_PORT")
+	profile = os.Getenv("SCBE_SERVICE")
+
 	var missingEnvs string
 	if scbeUser == "" {
 		missingEnvs = missingEnvs + "SCBE_USER "
@@ -113,6 +159,9 @@ func getScbeEnvs() (scbeUser, scbePassword, scbeIP string, scbePort int, err err
 	}
 	if scbeIP == "" {
 		missingEnvs = missingEnvs + "SCBE_IP "
+	}
+	if profile == "" {
+		missingEnvs = missingEnvs + "SCBE_SERVICE "
 	}
 	if scbePortStr == "" {
 		missingEnvs = missingEnvs + "SCBE_PORT "
@@ -128,7 +177,6 @@ func getScbeEnvs() (scbeUser, scbePassword, scbeIP string, scbePort int, err err
 		missingEnvs = missingEnvs + "environments are empty, skip the integration test."
 		err = fmt.Errorf(missingEnvs)
 	}
-
 	return
 }
 
