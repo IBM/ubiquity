@@ -20,7 +20,7 @@ var _ = Describe("restClient integration testing with existing SCBE instance", f
 	var (
 		logger         *log.Logger
 		conInfo        resources.ConnectionInfo
-		client         scbe.RestClient
+		client         scbe.SimpleRestClient
 		credentialInfo resources.CredentialInfo
 	)
 	BeforeEach(func() {
@@ -32,7 +32,7 @@ var _ = Describe("restClient integration testing with existing SCBE instance", f
 		}
 		credentialInfo = resources.CredentialInfo{scbeUser, scbePassword, "flocker"}
 		conInfo = resources.ConnectionInfo{credentialInfo, scbePort, scbeIP, true}
-		client = scbe.NewRestClient(
+		client = scbe.NewSimpleRestClient(
 			logger,
 			conInfo,
 			"https://"+scbeIP+":"+strconv.Itoa(scbePort)+"/api/v1",

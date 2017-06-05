@@ -7,7 +7,7 @@ import (
 	"github.com/IBM/ubiquity/local/scbe"
 )
 
-type FakeRestClient struct {
+type FakeSimpleRestClient struct {
 	LoginStub        func() error
 	loginMutex       sync.RWMutex
 	loginArgsForCall []struct{}
@@ -63,7 +63,7 @@ type FakeRestClient struct {
 	invocationsMutex sync.RWMutex
 }
 
-func (fake *FakeRestClient) Login() error {
+func (fake *FakeSimpleRestClient) Login() error {
 	fake.loginMutex.Lock()
 	ret, specificReturn := fake.loginReturnsOnCall[len(fake.loginArgsForCall)]
 	fake.loginArgsForCall = append(fake.loginArgsForCall, struct{}{})
@@ -78,20 +78,20 @@ func (fake *FakeRestClient) Login() error {
 	return fake.loginReturns.result1
 }
 
-func (fake *FakeRestClient) LoginCallCount() int {
+func (fake *FakeSimpleRestClient) LoginCallCount() int {
 	fake.loginMutex.RLock()
 	defer fake.loginMutex.RUnlock()
 	return len(fake.loginArgsForCall)
 }
 
-func (fake *FakeRestClient) LoginReturns(result1 error) {
+func (fake *FakeSimpleRestClient) LoginReturns(result1 error) {
 	fake.LoginStub = nil
 	fake.loginReturns = struct {
 		result1 error
 	}{result1}
 }
 
-func (fake *FakeRestClient) LoginReturnsOnCall(i int, result1 error) {
+func (fake *FakeSimpleRestClient) LoginReturnsOnCall(i int, result1 error) {
 	fake.LoginStub = nil
 	if fake.loginReturnsOnCall == nil {
 		fake.loginReturnsOnCall = make(map[int]struct {
@@ -103,7 +103,7 @@ func (fake *FakeRestClient) LoginReturnsOnCall(i int, result1 error) {
 	}{result1}
 }
 
-func (fake *FakeRestClient) Post(resource_url string, payload []byte, exitStatus int, v interface{}) error {
+func (fake *FakeSimpleRestClient) Post(resource_url string, payload []byte, exitStatus int, v interface{}) error {
 	var payloadCopy []byte
 	if payload != nil {
 		payloadCopy = make([]byte, len(payload))
@@ -128,26 +128,26 @@ func (fake *FakeRestClient) Post(resource_url string, payload []byte, exitStatus
 	return fake.postReturns.result1
 }
 
-func (fake *FakeRestClient) PostCallCount() int {
+func (fake *FakeSimpleRestClient) PostCallCount() int {
 	fake.postMutex.RLock()
 	defer fake.postMutex.RUnlock()
 	return len(fake.postArgsForCall)
 }
 
-func (fake *FakeRestClient) PostArgsForCall(i int) (string, []byte, int, interface{}) {
+func (fake *FakeSimpleRestClient) PostArgsForCall(i int) (string, []byte, int, interface{}) {
 	fake.postMutex.RLock()
 	defer fake.postMutex.RUnlock()
 	return fake.postArgsForCall[i].resource_url, fake.postArgsForCall[i].payload, fake.postArgsForCall[i].exitStatus, fake.postArgsForCall[i].v
 }
 
-func (fake *FakeRestClient) PostReturns(result1 error) {
+func (fake *FakeSimpleRestClient) PostReturns(result1 error) {
 	fake.PostStub = nil
 	fake.postReturns = struct {
 		result1 error
 	}{result1}
 }
 
-func (fake *FakeRestClient) PostReturnsOnCall(i int, result1 error) {
+func (fake *FakeSimpleRestClient) PostReturnsOnCall(i int, result1 error) {
 	fake.PostStub = nil
 	if fake.postReturnsOnCall == nil {
 		fake.postReturnsOnCall = make(map[int]struct {
@@ -159,7 +159,7 @@ func (fake *FakeRestClient) PostReturnsOnCall(i int, result1 error) {
 	}{result1}
 }
 
-func (fake *FakeRestClient) Get(resource_url string, params map[string]string, exitStatus int, v interface{}) error {
+func (fake *FakeSimpleRestClient) Get(resource_url string, params map[string]string, exitStatus int, v interface{}) error {
 	fake.getMutex.Lock()
 	ret, specificReturn := fake.getReturnsOnCall[len(fake.getArgsForCall)]
 	fake.getArgsForCall = append(fake.getArgsForCall, struct {
@@ -179,26 +179,26 @@ func (fake *FakeRestClient) Get(resource_url string, params map[string]string, e
 	return fake.getReturns.result1
 }
 
-func (fake *FakeRestClient) GetCallCount() int {
+func (fake *FakeSimpleRestClient) GetCallCount() int {
 	fake.getMutex.RLock()
 	defer fake.getMutex.RUnlock()
 	return len(fake.getArgsForCall)
 }
 
-func (fake *FakeRestClient) GetArgsForCall(i int) (string, map[string]string, int, interface{}) {
+func (fake *FakeSimpleRestClient) GetArgsForCall(i int) (string, map[string]string, int, interface{}) {
 	fake.getMutex.RLock()
 	defer fake.getMutex.RUnlock()
 	return fake.getArgsForCall[i].resource_url, fake.getArgsForCall[i].params, fake.getArgsForCall[i].exitStatus, fake.getArgsForCall[i].v
 }
 
-func (fake *FakeRestClient) GetReturns(result1 error) {
+func (fake *FakeSimpleRestClient) GetReturns(result1 error) {
 	fake.GetStub = nil
 	fake.getReturns = struct {
 		result1 error
 	}{result1}
 }
 
-func (fake *FakeRestClient) GetReturnsOnCall(i int, result1 error) {
+func (fake *FakeSimpleRestClient) GetReturnsOnCall(i int, result1 error) {
 	fake.GetStub = nil
 	if fake.getReturnsOnCall == nil {
 		fake.getReturnsOnCall = make(map[int]struct {
@@ -210,7 +210,7 @@ func (fake *FakeRestClient) GetReturnsOnCall(i int, result1 error) {
 	}{result1}
 }
 
-func (fake *FakeRestClient) Delete(resource_url string, payload []byte, exitStatus int, v interface{}) error {
+func (fake *FakeSimpleRestClient) Delete(resource_url string, payload []byte, exitStatus int, v interface{}) error {
 	var payloadCopy []byte
 	if payload != nil {
 		payloadCopy = make([]byte, len(payload))
@@ -235,26 +235,26 @@ func (fake *FakeRestClient) Delete(resource_url string, payload []byte, exitStat
 	return fake.deleteReturns.result1
 }
 
-func (fake *FakeRestClient) DeleteCallCount() int {
+func (fake *FakeSimpleRestClient) DeleteCallCount() int {
 	fake.deleteMutex.RLock()
 	defer fake.deleteMutex.RUnlock()
 	return len(fake.deleteArgsForCall)
 }
 
-func (fake *FakeRestClient) DeleteArgsForCall(i int) (string, []byte, int, interface{}) {
+func (fake *FakeSimpleRestClient) DeleteArgsForCall(i int) (string, []byte, int, interface{}) {
 	fake.deleteMutex.RLock()
 	defer fake.deleteMutex.RUnlock()
 	return fake.deleteArgsForCall[i].resource_url, fake.deleteArgsForCall[i].payload, fake.deleteArgsForCall[i].exitStatus, fake.deleteArgsForCall[i].v
 }
 
-func (fake *FakeRestClient) DeleteReturns(result1 error) {
+func (fake *FakeSimpleRestClient) DeleteReturns(result1 error) {
 	fake.DeleteStub = nil
 	fake.deleteReturns = struct {
 		result1 error
 	}{result1}
 }
 
-func (fake *FakeRestClient) DeleteReturnsOnCall(i int, result1 error) {
+func (fake *FakeSimpleRestClient) DeleteReturnsOnCall(i int, result1 error) {
 	fake.DeleteStub = nil
 	if fake.deleteReturnsOnCall == nil {
 		fake.deleteReturnsOnCall = make(map[int]struct {
@@ -266,7 +266,7 @@ func (fake *FakeRestClient) DeleteReturnsOnCall(i int, result1 error) {
 	}{result1}
 }
 
-func (fake *FakeRestClient) Invocations() map[string][][]interface{} {
+func (fake *FakeSimpleRestClient) Invocations() map[string][][]interface{} {
 	fake.invocationsMutex.RLock()
 	defer fake.invocationsMutex.RUnlock()
 	fake.loginMutex.RLock()
@@ -284,7 +284,7 @@ func (fake *FakeRestClient) Invocations() map[string][][]interface{} {
 	return copiedInvocations
 }
 
-func (fake *FakeRestClient) recordInvocation(key string, args []interface{}) {
+func (fake *FakeSimpleRestClient) recordInvocation(key string, args []interface{}) {
 	fake.invocationsMutex.Lock()
 	defer fake.invocationsMutex.Unlock()
 	if fake.invocations == nil {
@@ -296,4 +296,4 @@ func (fake *FakeRestClient) recordInvocation(key string, args []interface{}) {
 	fake.invocations[key] = append(fake.invocations[key], args)
 }
 
-var _ scbe.RestClient = new(FakeRestClient)
+var _ scbe.SimpleRestClient = new(FakeSimpleRestClient)
