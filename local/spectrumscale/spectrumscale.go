@@ -63,7 +63,7 @@ func NewSpectrumLocalClientWithConnectors(logger *log.Logger, connector connecto
 	return &spectrumLocalClient{logger: logger, connector: connector, dataModel: datamodel, executor: spectrumExecutor, config: config, activationLock: &sync.RWMutex{}}, nil
 }
 
-func newSpectrumLocalClient(logger *log.Logger, config resources.SpectrumScaleConfig, database *gorm.DB, backend resources.Backend) (*spectrumLocalClient, error) {
+func newSpectrumLocalClient(logger *log.Logger, config resources.SpectrumScaleConfig, database *gorm.DB, backend string) (*spectrumLocalClient, error) {
 	logger.Println("spectrumLocalClient: init start")
 	defer logger.Println("spectrumLocalClient: init end")
 	client, err := connectors.GetSpectrumScaleConnector(logger, config)
@@ -275,7 +275,7 @@ func (s *spectrumLocalClient) GetVolume(getVolumeRequest resources.GetVolumeRequ
 		return resources.Volume{}, fmt.Errorf("Volume not found")
 	}
 
-	return resources.Volume{Name: existingVolume.Volume.Name, Backend: resources.Backend(existingVolume.Volume.Backend), Mountpoint: existingVolume.Volume.Mountpoint}, nil
+	return resources.Volume{Name: existingVolume.Volume.Name, Backend: existingVolume.Volume.Backend, Mountpoint: existingVolume.Volume.Mountpoint}, nil
 }
 
 func (s *spectrumLocalClient) GetVolumeConfig(getVolumeConfigRequest resources.GetVolumeConfigRequest) (volumeConfigDetails map[string]interface{}, err error) {

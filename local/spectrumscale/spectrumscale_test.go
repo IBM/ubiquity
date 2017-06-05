@@ -28,7 +28,7 @@ var _ = Describe("local-client", func() {
 		attachRequest              resources.AttachRequest
 		detachRequest              resources.DetachRequest
 		getVolumeRequest           resources.GetVolumeRequest
-		backends                   []resources.Backend
+		backends                   []string
 		// getVolumeConfigRequest     resources.GetVolumeConfigRequest
 		listVolumesRequest resources.ListVolumesRequest
 		err                error
@@ -36,7 +36,7 @@ var _ = Describe("local-client", func() {
 	BeforeEach(func() {
 		logger = log.New(os.Stdout, "ubiquity: ", log.Lshortfile|log.LstdFlags)
 		fakeSpectrumScaleConnector = new(fakes.FakeSpectrumScaleConnector)
-		backends = []resources.Backend{resources.SpectrumScale}
+		backends = []string{resources.SpectrumScale}
 		fakeExec = new(fakes.FakeExecutor)
 		fakeSpectrumDataModel = new(fakes.FakeSpectrumDataModel)
 		fakeConfig = resources.SpectrumScaleConfig{}

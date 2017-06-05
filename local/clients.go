@@ -10,9 +10,9 @@ import (
 	"github.com/jinzhu/gorm"
 )
 
-func GetLocalClients(logger *log.Logger, config resources.UbiquityServerConfig, database *gorm.DB) (map[resources.Backend]resources.StorageClient, error) {
+func GetLocalClients(logger *log.Logger, config resources.UbiquityServerConfig, database *gorm.DB) (map[string]resources.StorageClient, error) {
 
-	clients := make(map[resources.Backend]resources.StorageClient)
+	clients := make(map[string]resources.StorageClient)
 	spectrumClient, err := spectrumscale.NewSpectrumLocalClient(logger, config.SpectrumScaleConfig, database)
 	if err != nil {
 		logger.Printf("Not enough params to initialize '%s' client", resources.SpectrumScale)

@@ -5,11 +5,11 @@ import (
 	"log"
 	"os"
 
-	. "github.com/onsi/ginkgo"
-	. "github.com/onsi/gomega"
 	"github.com/IBM/ubiquity/fakes"
 	"github.com/IBM/ubiquity/local/spectrumscale/connectors"
 	"github.com/IBM/ubiquity/resources"
+	. "github.com/onsi/ginkgo"
+	. "github.com/onsi/gomega"
 )
 
 var _ = Describe("spectrum_mmcli", func() {
@@ -312,7 +312,7 @@ var _ = Describe("spectrum_mmcli", func() {
 			volume, err := spectrumMMCLI.ListFileset(filesystem, fileset)
 			Expect(err).To(HaveOccurred())
 			Expect(err.Error()).To(Equal(errorMsg))
-			Expect(volume).To(Equal(resources.VolumeMetadata{}))
+			Expect(volume).To(Equal(resources.Volume{}))
 		})
 
 		It("should succeed when execute command does not error", func() {

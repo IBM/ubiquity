@@ -28,7 +28,7 @@ type spectrumDataModel struct {
 	log       *log.Logger
 	database  *gorm.DB
 	clusterId string
-	backend   resources.Backend
+	backend   string
 }
 
 type VolumeType int
@@ -59,7 +59,7 @@ type SpectrumScaleVolume struct {
 	IsPreexisting bool
 }
 
-func NewSpectrumDataModel(log *log.Logger, db *gorm.DB, backend resources.Backend) SpectrumDataModel {
+func NewSpectrumDataModel(log *log.Logger, db *gorm.DB, backend string) SpectrumDataModel {
 	return &spectrumDataModel{log: log, database: db, backend: backend}
 }
 
@@ -180,7 +180,7 @@ func (d *spectrumDataModel) ListVolumes() ([]resources.Volume, error) {
 	// hack: to be replaced by proper DB filtering (joins)
 	var volumes []resources.Volume
 	for _, volume := range volumesInDb {
-		if resources.Backend(volume.Volume.Backend) == d.backend {
+		if volume.Volume.Backend == d.backend {
 			volumes = append(volumes, volume.Volume)
 		}
 	}
