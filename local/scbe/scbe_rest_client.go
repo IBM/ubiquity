@@ -39,18 +39,32 @@ const (
 	DefaultSizeUnit            = "gb"
 )
 
-func NewScbeRestClient(logger *log.Logger, conInfo resources.ConnectionInfo) (ScbeRestClient, error) {
+
+func NewScbeRestClient(logger *log.Logger, conInfo resources.ConnectionInfo) ScbeRestClient {
+	return newScbeRestClient(logger, conInfo, nil)
+}
+
+// NewScbeRestClientWithNewRestClient for mocking during test # TODO consider to remove it to test file
+func NewScbeRestClientWithSimpleRestClient(logger *log.Logger, conInfo resources.ConnectionInfo, simpleClient SimpleRestClient) ScbeRestClient {
+	return newScbeRestClient(logger, conInfo, simpleClient)
+}
+
+func newScbeRestClient(logger *log.Logger, conInfo resources.ConnectionInfo, simpleClient SimpleRestClient) ScbeRestClient {
 	// Set default SCBE port if not mentioned
 	if conInfo.Port == 0 {
 		conInfo.Port = DEFAULT_SCBE_PORT
 	}
-	// Add the default SCBE Flocker group to the credentials
+	// Add the default SCBE Flocker group to the credentials  # TODO change to ubiquity interface
 	conInfo.CredentialInfo.Group = SCBE_FLOCKER_GROUP_PARAM
-	referrer := fmt.Sprintf(URL_SCBE_REFERER, conInfo.ManagementIP, conInfo.Port)
-	baseUrl := referrer + URL_SCBE_BASE_SUFFIX
-	client := NewSimpleRestClient(logger, conInfo, baseUrl, URL_SCBE_RESOURCE_GET_AUTH, referrer)
-	return &scbeRestClient{logger, conInfo, client}, nil
+
+	if simpleClient == nil {
+		referrer := fmt.Sprintf(URL_SCBE_REFERER, conInfo.ManagementIP, conInfo.Port)
+		baseUrl := referrer + URL_SCBE_BASE_SUFFIX
+		simpleClient = NewSimpleRestClient(logger, conInfo, baseUrl, URL_SCBE_RESOURCE_GET_AUTH, referrer)
+	}
+	return &scbeRestClient{logger, conInfo, simpleClient}
 }
+
 
 func (s *scbeRestClient) Login() error {
 	return s.client.Login()

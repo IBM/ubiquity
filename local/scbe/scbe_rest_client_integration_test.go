@@ -75,9 +75,7 @@ var _ = Describe("ScbeRestClient integration testing with existing SCBE instance
 		}
 		credentialInfo = resources.CredentialInfo{scbeUser, scbePassword, "flocker"}
 		conInfo = resources.ConnectionInfo{credentialInfo, scbePort, scbeIP, true}
-		scbeRestClient, err = scbe.NewScbeRestClient(logger, conInfo)
-		Expect(err).ToNot(HaveOccurred())
-		//httpmock.DeactivateAndReset()
+		scbeRestClient = scbe.NewScbeRestClient(logger, conInfo)
 	})
 
 	Context(".Login", func() {
@@ -120,8 +118,7 @@ var _ = Describe("ScbeRestClient volume operations integration testing with exis
 		}
 		credentialInfo = resources.CredentialInfo{scbeUser, scbePassword, "flocker"}
 		conInfo = resources.ConnectionInfo{credentialInfo, scbePort, scbeIP, true}
-		scbeRestClient, err = scbe.NewScbeRestClient(logger, conInfo)
-		Expect(err).ToNot(HaveOccurred())
+		scbeRestClient = scbe.NewScbeRestClient(logger, conInfo)
 
 		err = scbeRestClient.Login()
 		Expect(err).ToNot(HaveOccurred())
@@ -159,47 +156,6 @@ var _ = Describe("ScbeRestClient volume operations integration testing with exis
 		})
 	})
 })
-
-func getScbeEnvs() (scbeUser, scbePassword, scbeIP string, scbePort int, profile string, host string, err error) {
-	scbeUser = os.Getenv("SCBE_USER")
-	scbePassword = os.Getenv("SCBE_PASSWORD")
-	scbeIP = os.Getenv("SCBE_IP")
-	scbePortStr := os.Getenv("SCBE_PORT")
-	host = os.Getenv("SCBE_STORAGE_HOST_DEFINE")
-	profile = os.Getenv("SCBE_SERVICE")
-
-	var missingEnvs string
-	if scbeUser == "" {
-		missingEnvs = missingEnvs + "SCBE_USER "
-	}
-	if scbePassword == "" {
-		missingEnvs = missingEnvs + "SCBE_PASSWORD "
-	}
-	if scbeIP == "" {
-		missingEnvs = missingEnvs + "SCBE_IP "
-	}
-	if profile == "" {
-		missingEnvs = missingEnvs + "SCBE_SERVICE "
-	}
-	if host == "" {
-		missingEnvs = missingEnvs + "SCBE_STORAGE_HOST_DEFINE "
-	}
-	if scbePortStr == "" {
-		missingEnvs = missingEnvs + "SCBE_PORT "
-		scbePort = 0
-	} else {
-		scbePort, err = strconv.Atoi(scbePortStr)
-		if err != nil {
-			err = fmt.Errorf("SCBE_PORT environment must be a number")
-			return
-		}
-	}
-	if missingEnvs != "" {
-		missingEnvs = missingEnvs + "environments are empty, skip the integration test."
-		err = fmt.Errorf(missingEnvs)
-	}
-	return
-}
 
 var _ = Describe("datamodel integration testing with live DB", func() {
 	var (
@@ -268,3 +224,44 @@ var _ = Describe("datamodel integration testing with live DB", func() {
 		db.Close()
 	})
 })
+
+func getScbeEnvs() (scbeUser, scbePassword, scbeIP string, scbePort int, profile string, host string, err error) {
+	scbeUser = os.Getenv("SCBE_USER")
+	scbePassword = os.Getenv("SCBE_PASSWORD")
+	scbeIP = os.Getenv("SCBE_IP")
+	scbePortStr := os.Getenv("SCBE_PORT")
+	host = os.Getenv("SCBE_STORAGE_HOST_DEFINE")
+	profile = os.Getenv("SCBE_SERVICE")
+
+	var missingEnvs string
+	if scbeUser == "" {
+		missingEnvs = missingEnvs + "SCBE_USER "
+	}
+	if scbePassword == "" {
+		missingEnvs = missingEnvs + "SCBE_PASSWORD "
+	}
+	if scbeIP == "" {
+		missingEnvs = missingEnvs + "SCBE_IP "
+	}
+	if profile == "" {
+		missingEnvs = missingEnvs + "SCBE_SERVICE "
+	}
+	if host == "" {
+		missingEnvs = missingEnvs + "SCBE_STORAGE_HOST_DEFINE "
+	}
+	if scbePortStr == "" {
+		missingEnvs = missingEnvs + "SCBE_PORT "
+		scbePort = 0
+	} else {
+		scbePort, err = strconv.Atoi(scbePortStr)
+		if err != nil {
+			err = fmt.Errorf("SCBE_PORT environment must be a number")
+			return
+		}
+	}
+	if missingEnvs != "" {
+		missingEnvs = missingEnvs + "environments are empty, skip the integration test."
+		err = fmt.Errorf(missingEnvs)
+	}
+	return
+}
