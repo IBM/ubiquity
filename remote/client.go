@@ -27,7 +27,7 @@ func NewRemoteClient(logger *log.Logger, storageApiURL string, config resources.
 	return &remoteClient{logger: logger, storageApiURL: storageApiURL, httpClient: &http.Client{}, config: config}, nil
 }
 
-func (s *remoteClient) Activate(resources.ActivateRequest) error {
+func (s *remoteClient) Activate(activateRequest resources.ActivateRequest) error {
 	s.logger.Println("remoteClient: Activate start")
 	defer s.logger.Println("remoteClient: Activate end")
 
@@ -37,7 +37,7 @@ func (s *remoteClient) Activate(resources.ActivateRequest) error {
 
 	// call remote activate
 	activateURL := utils.FormatURL(s.storageApiURL, "activate")
-	response, err := utils.HttpExecute(s.httpClient, s.logger, "POST", activateURL, nil)
+	response, err := utils.HttpExecute(s.httpClient, s.logger, "POST", activateURL, activateRequest)
 	if err != nil {
 		s.logger.Printf("Error in activate remote call %#v", err)
 		return fmt.Errorf("Error in activate remote call")
@@ -216,7 +216,7 @@ func (s *remoteClient) Detach(detachRequest resources.DetachRequest) error {
 	}
 
 	detachRemoteURL := utils.FormatURL(s.storageApiURL, "volumes", detachRequest.Name, "detach")
-	response, err := utils.HttpExecute(s.httpClient, s.logger, "PUT", detachRemoteURL, nil)
+	response, err := utils.HttpExecute(s.httpClient, s.logger, "PUT", detachRemoteURL, detachRequest)
 	if err != nil {
 		s.logger.Printf("Error in detach volume remote call %#v", err)
 		return fmt.Errorf("Error in detach volume remote call")
