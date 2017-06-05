@@ -165,6 +165,8 @@ func (s *restClient) genericAction(actionName string, resource_url string, paylo
 		return err
 	}
 
+	msg := fmt.Sprintf("The response Data from request url [%s] with action [%s] is : %#v", url, actionName, string(data[:]))
+	s.logger.Printf(msg)
 	if response.StatusCode != exitStatus {
 		msg := fmt.Sprintf("Error, bad status code [%#v] of http response to url [%s].", response.StatusCode, url)
 		s.logger.Printf(msg)
@@ -217,7 +219,7 @@ type ScbeRestClient interface {
 	GetAllVolumes() ([]ScbeVolumeInfo, error)
 	GetVolume(wwn string) (ScbeVolumeInfo, error)
 	DeleteVolume(wwn string) error
-	MapVolume(wwn string, host string) error
+	MapVolume(wwn string, host string) (ScbeResponseMapping, error)
 	UnmapVolume(wwn string, host string) error
 	GetVolMapping(wwn string) (string, error)
 	ServiceExist(serviceName string) (bool, error)
@@ -237,9 +239,9 @@ const (
 	SCBE_FLOCKER_GROUP_PARAM   = "flocker"
 	UrlScbeResourceService     = "services"
 	UrlScbeResourceVolume      = "volumes"
-	//UrlScbeResourceMapping = "/mappings"
-	//UrlScbeResourceHost = "/hosts"
-	DefaultSizeUnit = "gb"
+	UrlScbeResourceMapping     = "mappings"
+	UrlScbeResourceHost        = "hosts"
+	DefaultSizeUnit            = "gb"
 )
 
 func NewScbeRestClient(logger *log.Logger, conInfo resources.ConnectionInfo) (ScbeRestClient, error) {
@@ -317,15 +319,50 @@ func (s *scbeRestClient) DeleteVolume(wwn string) error {
 	}
 	return nil
 }
-
-func (s *scbeRestClient) MapVolume(wwn string, host string) error {
-	return nil
-
+func (s *scbeRestClient) MapVolume(wwn string, host string) (ScbeResponseMapping, error) {
+	hostId, err := s.getHostIdByVol(wwn, host)
+	if err != nil {
+		return ScbeResponseMapping{}, err
+	}
+	payload := ScbeMapVolumePostParams{VolumeId: wwn, HostId: hostId}
+	payloadMarshal, err := json.Marshal(payload)
+	if err != nil {
+		s.logger.Printf("Error in marshalling ScbeMapVolumePostParams %#v", err)
+		return ScbeResponseMapping{}, fmt.Errorf("Error in marshalling ScbeMapVolumePostParams")
+	}
+	mappingsResponse := ScbeResponseMappings{}
+	err = s.client.Post(UrlScbeResourceMapping, payloadMarshal, HTTP_SUCCEED_POST, &mappingsResponse)
+	if err != nil {
+		return ScbeResponseMapping{}, err
+	}
+	if len(mappingsResponse.Mappings) != 1 {
+		msg := fmt.Sprintf(MsgMappingDoneButResponseNotOk, mappingsResponse.Mappings)
+		s.logger.Printf(msg)
+		return ScbeResponseMapping{}, fmt.Errorf(msg)
+	}
+	return mappingsResponse.Mappings[0], nil
 }
+
 func (s *scbeRestClient) UnmapVolume(wwn string, host string) error {
+	// TODO consider to return the unmap SCBE response
+	hostId, err := s.getHostIdByVol(wwn, host)
+	if err != nil {
+		return err
+	}
+	payload := ScbeUnMapVolumePostParams{VolumeId: wwn, HostId: hostId}
+	payloadMarshal, err := json.Marshal(payload)
+	if err != nil {
+		msg := fmt.Sprintf("Error in marshalling ScbeMapVolumePostParams %#v", err)
+		s.logger.Printf(msg)
+		return fmt.Errorf(msg)
+	}
+	err = s.client.Delete(UrlScbeResourceMapping, payloadMarshal, HTTP_SUCCEED_DELETED, nil)
+	if err != nil {
+		return err
+	}
 	return nil
-
 }
+
 func (s *scbeRestClient) GetVolMapping(wwn string) (string, error) {
 	return "", nil
 }
@@ -354,4 +391,56 @@ func (s *scbeRestClient) serviceList(serviceName string) ([]ScbeStorageService, 
 	}
 
 	return services, nil
+}
+func (s *scbeRestClient) volumeList(wwn string) ([]ScbeResponseVolume, error) {
+	payload := make(map[string]string)
+	var err error
+	if wwn == "" {
+		payload = nil
+	} else {
+		payload["scsi_identifier"] = wwn
+	}
+	var volumes []ScbeResponseVolume
+	err = s.client.Get(UrlScbeResourceVolume, payload, -1, &volumes)
+	if err != nil {
+		return nil, err
+	}
+
+	return volumes, nil
+}
+
+func (s *scbeRestClient) hostList(payload map[string]string) ([]ScbeResponseHost, error) {
+	var hosts []ScbeResponseHost
+	err := s.client.Get(UrlScbeResourceHost, payload, -1, &hosts)
+	if err != nil {
+		return nil, err
+	}
+	return hosts, nil
+}
+
+//getHostIdByVol return the host ID from the storage system of the given volume(wwn)
+func (s *scbeRestClient) getHostIdByVol(wwn string, host string) (int, error) {
+	vols, err := s.volumeList(wwn)
+	if err != nil {
+		s.logger.Printf("Fail to get volume of wwn ", wwn, " due to error ", err)
+		return 0, err
+	}
+
+	if len(vols) == 0 {
+		msg := fmt.Sprintf(MsgVolumeWWNNotFound, wwn)
+		s.logger.Printf(msg)
+		return 0, fmt.Errorf(msg)
+	}
+	vol := vols[0]
+	payload := make(map[string]string)
+	payload["array_id"] = vol.Array
+	payload["name"] = host
+	hosts, err := s.hostList(payload)
+	if len(hosts) != 1 {
+		msg := fmt.Sprintf(MsgHostIDNotFoundByVolWWNOnArray, host, vol.Array, wwn, hosts)
+		s.logger.Printf(msg)
+		return 0, fmt.Errorf(msg)
+	}
+
+	return hosts[0].Id, nil
 }

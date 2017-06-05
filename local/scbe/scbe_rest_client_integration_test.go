@@ -26,7 +26,7 @@ var _ = Describe("restClient integration testing with existing SCBE instance", f
 	BeforeEach(func() {
 		logger = log.New(os.Stdout, "ubiquity scbe: ", log.Lshortfile|log.LstdFlags)
 		// Get environment variable for the tests
-		scbeUser, scbePassword, scbeIP, scbePort, _, err := getScbeEnvs()
+		scbeUser, scbePassword, scbeIP, scbePort, _, _, err := getScbeEnvs()
 		if err != nil {
 			Skip(err.Error())
 		}
@@ -71,7 +71,7 @@ var _ = Describe("ScbeRestClient integration testing with existing SCBE instance
 	BeforeEach(func() {
 		logger = log.New(os.Stdout, "ubiquity scbe: ", log.Lshortfile|log.LstdFlags)
 		// Get environment variable for the tests
-		scbeUser, scbePassword, scbeIP, scbePort, _, err := getScbeEnvs()
+		scbeUser, scbePassword, scbeIP, scbePort, _, _, err := getScbeEnvs()
 		if err != nil {
 			Skip(err.Error())
 		}
@@ -109,12 +109,14 @@ var _ = Describe("ScbeRestClient volume operations integration testing with exis
 		scbeRestClient scbe.ScbeRestClient
 		credentialInfo resources.CredentialInfo
 		profile        string
+		host           string
 	)
 	BeforeEach(func() {
 		logger = log.New(os.Stdout, "ubiquity scbe: ", log.Lshortfile|log.LstdFlags)
 		// Get environment variable for the tests
-		scbeUser, scbePassword, scbeIP, scbePort, profile1, err := getScbeEnvs()
+		scbeUser, scbePassword, scbeIP, scbePort, profile1, host1, err := getScbeEnvs()
 		profile = profile1
+		host = host1
 		if err != nil {
 			Skip(err.Error())
 		}
@@ -142,14 +144,30 @@ var _ = Describe("ScbeRestClient volume operations integration testing with exis
 			err = scbeRestClient.DeleteVolume(volInfo.Wwn)
 			Expect(err).NotTo(HaveOccurred())
 		})
+		It(fmt.Sprintf("Should succeed if vol map and unmap works", profile), func() {
+			fakeName := "fakevol_ubiquity"
+			volInfo, err := scbeRestClient.CreateVolume(fakeName, profile, 10)
+			Expect(err).NotTo(HaveOccurred())
+			mapInfo, err := scbeRestClient.MapVolume(volInfo.Wwn, host)
+			Expect(err).NotTo(HaveOccurred())
+			Expect(mapInfo.Volume).To(Equal(volInfo.Wwn))
+			Expect(mapInfo.LunNumber > 0).To(Equal(true)) // TODO maybe not working on SVC
+			err = scbeRestClient.DeleteVolume(volInfo.Wwn)
+			Expect(err).To(HaveOccurred()) // because the vol is mapped, so cannot delete the volume before unmapping it first
+			err = scbeRestClient.UnmapVolume(volInfo.Wwn, host)
+			Expect(err).NotTo(HaveOccurred())
+			err = scbeRestClient.DeleteVolume(volInfo.Wwn)
+			Expect(err).NotTo(HaveOccurred())
+		})
 	})
 })
 
-func getScbeEnvs() (scbeUser, scbePassword, scbeIP string, scbePort int, profile string, err error) {
+func getScbeEnvs() (scbeUser, scbePassword, scbeIP string, scbePort int, profile string, host string, err error) {
 	scbeUser = os.Getenv("SCBE_USER")
 	scbePassword = os.Getenv("SCBE_PASSWORD")
 	scbeIP = os.Getenv("SCBE_IP")
 	scbePortStr := os.Getenv("SCBE_PORT")
+	host = os.Getenv("SCBE_STORAGE_HOST_DEFINE")
 	profile = os.Getenv("SCBE_SERVICE")
 
 	var missingEnvs string
@@ -164,6 +182,9 @@ func getScbeEnvs() (scbeUser, scbePassword, scbeIP string, scbePort int, profile
 	}
 	if profile == "" {
 		missingEnvs = missingEnvs + "SCBE_SERVICE "
+	}
+	if host == "" {
+		missingEnvs = missingEnvs + "SCBE_STORAGE_HOST_DEFINE "
 	}
 	if scbePortStr == "" {
 		missingEnvs = missingEnvs + "SCBE_PORT "
