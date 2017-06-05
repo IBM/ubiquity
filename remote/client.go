@@ -258,7 +258,7 @@ func (s *remoteClient) ListVolumes(listVolumesRequest resources.ListVolumesReque
 
 }
 
-func (s *remoteClient) getMounterForBackend(backend resources.Backend) (resources.Mounter, error) {
+func (s *remoteClient) getMounterForBackend(backend string) (resources.Mounter, error) {
 	s.logger.Println("remoteClient: getMounterForVolume start")
 	defer s.logger.Println("remoteClient: getMounterForVolume end")
 	if backend == resources.SpectrumScale {

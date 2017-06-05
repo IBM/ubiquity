@@ -8,18 +8,18 @@ import (
 	_ "github.com/jinzhu/gorm/dialects/sqlite"
 )
 
-func GetVolume(db *gorm.DB, name string, backend resources.Backend) (resources.Volume, error) {
+func GetVolume(db *gorm.DB, name string, backend string) (resources.Volume, error) {
 	var volume resources.Volume
 	err := db.Where("name = ? AND backend = ?", name, fmt.Sprintf("%s", backend)).First(&volume).Error
 	return volume, err
 }
-func GetBackendForVolume(db *gorm.DB, name string) (resources.Backend, error) {
+func GetBackendForVolume(db *gorm.DB, name string) (string, error) {
 	var volume resources.Volume
 	err := db.Where("name = ? ", name).First(&volume).Error
 	if err != nil {
-		return resources.Backend(""), err
+		return "", err
 	}
-	return resources.Backend(volume.Backend), err
+	return volume.Backend, err
 }
 func VolumeExists(db *gorm.DB, name string) (bool, error) {
 	var volume resources.Volume

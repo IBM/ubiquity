@@ -3,12 +3,10 @@ package resources
 import "github.com/jinzhu/gorm"
 
 const (
-	SpectrumScale    Backend = "spectrum-scale"
-	SpectrumScaleNFS Backend = "spectrum-scale-nfs"
-	SoftlayerNFS     Backend = "softlayer-nfs"
+	SpectrumScale    string = "spectrum-scale"
+	SpectrumScaleNFS string = "spectrum-scale-nfs"
+	SoftlayerNFS     string = "softlayer-nfs"
 )
-
-type Backend string
 
 type UbiquityServerConfig struct {
 	Port                int
@@ -51,7 +49,7 @@ type UbiquityPluginConfig struct {
 	LogPath                 string
 	UbiquityServer          UbiquityServerConnectionInfo
 	SpectrumNfsRemoteConfig SpectrumNfsRemoteConfig
-	Backends                []Backend
+	Backends                []string
 }
 type UbiquityDockerPluginConfig struct {
 	//Address          string
@@ -85,13 +83,13 @@ type Mounter interface {
 }
 
 type ActivateRequest struct {
-	Backends []Backend
+	Backends []string
 	Opts     map[string]string
 }
 
 type CreateVolumeRequest struct {
 	Name    string
-	Backend Backend
+	Backend string
 	Opts    map[string]interface{}
 }
 
@@ -101,7 +99,7 @@ type RemoveVolumeRequest struct {
 
 type ListVolumesRequest struct {
 	//TODO add filter
-	Backends []Backend
+	Backends []string
 }
 
 type AttachRequest struct {
@@ -135,11 +133,9 @@ type GenericRequest struct {
 type MountRequest struct {
 	Mountpoint   string
 	VolumeConfig map[string]interface{}
-	Backend      Backend
 }
 type UnmountRequest struct {
 	VolumeConfig map[string]interface{}
-	Backend      Backend
 }
 type AttachResponse struct {
 	Mountpoint string
@@ -163,7 +159,7 @@ type DockerGetResponse struct {
 type Volume struct {
 	gorm.Model
 	Name       string
-	Backend    Backend
+	Backend    string
 	Mountpoint string
 }
 
@@ -186,24 +182,20 @@ type FlexVolumeResponse struct {
 type FlexVolumeMountRequest struct {
 	MountPath   string                 `json:"mountPath"`
 	MountDevice string                 `json:"name"`
-	Backend     Backend                `json:"backend"`
 	Opts        map[string]interface{} `json:"opts"`
 }
 
 type FlexVolumeUnmountRequest struct {
-	MountPath string  `json:"mountPath"`
-	Backend   Backend `json:"backend"`
+	MountPath string `json:"mountPath"`
 }
 
 type FlexVolumeAttachRequest struct {
-	Name    string            `json:"name"`
-	Host    string            `json:"host"`
-	Backend Backend           `json:"backend"`
-	Opts    map[string]string `json:"opts"`
+	Name string            `json:"name"`
+	Host string            `json:"host"`
+	Opts map[string]string `json:"opts"`
 }
 
 type FlexVolumeDetachRequest struct {
-	Name    string  `json:"name"`
-	Host    string  `json:"host"`
-	Backend Backend `json:"backend"`
+	Name string `json:"name"`
+	Host string `json:"host"`
 }

@@ -15,13 +15,13 @@ import (
 
 type StorageApiHandler struct {
 	logger   *log.Logger
-	backends map[resources.Backend]resources.StorageClient
+	backends map[string]resources.StorageClient
 	database *gorm.DB
 	config   resources.UbiquityServerConfig
 	locker   utils.Locker
 }
 
-func NewStorageApiHandler(logger *log.Logger, backends map[resources.Backend]resources.StorageClient, database *gorm.DB, config resources.UbiquityServerConfig) *StorageApiHandler {
+func NewStorageApiHandler(logger *log.Logger, backends map[string]resources.StorageClient, database *gorm.DB, config resources.UbiquityServerConfig) *StorageApiHandler {
 	return &StorageApiHandler{logger: logger, backends: backends, database: database, config: config, locker: utils.NewLocker(logger)}
 }
 
