@@ -36,6 +36,8 @@ func (h *StorageApiHandler) Activate() http.HandlerFunc {
 		}
 		if len(activateRequest.Backends) != 0 {
 			for _, b := range activateRequest.Backends {
+				fmt.Printf("Activating just one backend %s", b)
+				h.logger.Printf("Activating just one backend %s", b)
 				backend, ok := h.backends[b]
 				if !ok {
 					h.logger.Printf("error-activating-backend%s", b)
@@ -51,6 +53,8 @@ func (h *StorageApiHandler) Activate() http.HandlerFunc {
 			}
 		} else {
 			var errors string
+			fmt.Printf("Activating all backends")
+			h.logger.Printf("Activating all backends")
 			errors = ""
 			for name, backend := range h.backends {
 				err := backend.Activate(activateRequest)
