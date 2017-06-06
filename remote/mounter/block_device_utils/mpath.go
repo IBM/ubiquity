@@ -10,19 +10,30 @@ import (
     "path/filepath"
 )
 
+const multipathCmd = "multipath"
+
+
+func (s *impBlockDeviceUtils) ReloadMultipath() (error) {
+    if err := s.exec.IsExecutable(multipathCmd); err != nil {
+        s.logger.Printf("ReloadMultipath: %v", err)
+        return err
+    }
+    args := []string{multipathCmd, "-r"}
+    _, err := s.exec.Execute("sudo", args)
+    if err != nil {
+        s.logger.Printf("ReloadMultipath: %v", err)
+        return err
+    }
+    return nil
+}
+
 
 func (s *impBlockDeviceUtils) Discover(volumeWwn string) (string, error) {
-    multipathCmd := "multipath"
     if err := s.exec.IsExecutable(multipathCmd); err != nil {
         s.logger.Printf("Discover: %v", err)
         return "", err
     }
-    args := []string{multipathCmd}
-    if _, err := s.exec.Execute("sudo", args); err != nil {
-        s.logger.Printf("Discover: %v", err)
-        return "", err
-    }
-    args = []string{multipathCmd, "-ll"}
+    args := []string{multipathCmd, "-ll"}
     outputBytes, err := s.exec.Execute("sudo", args)
     if err != nil {
         s.logger.Printf("Discover: %v", err)
@@ -37,7 +48,7 @@ func (s *impBlockDeviceUtils) Discover(volumeWwn string) (string, error) {
     }
     dev := ""
     for scanner.Scan() {
-        if strings.Contains(scanner.Text()," IBM") && regex.MatchString(scanner.Text()) {
+        if regex.MatchString(scanner.Text()) {
             dev = strings.Split(scanner.Text(), " ")[0]
             break
         }
@@ -69,7 +80,6 @@ func (s *impBlockDeviceUtils) Cleanup(mpath string) (error) {
         s.logger.Printf("Cleanup: %v", err)
         return err
     }
-    multipathCmd := "multipath"
     if err := s.exec.IsExecutable(multipathCmd); err != nil {
         s.logger.Printf("Cleanup: %v", err)
         return err

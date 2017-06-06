@@ -17,7 +17,8 @@ const (
 
 
 type BlockDeviceUtils interface {
-    Rescan() (error)
+    Rescan(protocol Protocol) (error)
+    ReloadMultipath() (error)
     Discover(volumeWwn string) (string, error)
     Cleanup(mpath string) (error)
     CheckFs(mpath string) (bool, error)
@@ -30,14 +31,13 @@ type BlockDeviceUtils interface {
 type impBlockDeviceUtils struct {
     logger *log.Logger
     exec utils.Executor
-    protocol Protocol
 }
 
 
-func GetBlockDeviceUtils(logger *log.Logger, protocol Protocol) BlockDeviceUtils {
-    return &impBlockDeviceUtils{logger: logger, exec: utils.NewExecutor(logger), protocol: protocol}
+func NewBlockDeviceUtils(logger *log.Logger) BlockDeviceUtils {
+    return &impBlockDeviceUtils{logger: logger, exec: utils.NewExecutor(logger)}
 }
 
-func GetBlockDeviceUtilsWithExecutor(logger *log.Logger, protocol Protocol, executor utils.Executor) BlockDeviceUtils {
-    return &impBlockDeviceUtils{logger: logger, exec: executor, protocol: protocol}
+func NewBlockDeviceUtilsWithExecutor(logger *log.Logger, executor utils.Executor) BlockDeviceUtils {
+    return &impBlockDeviceUtils{logger: logger, exec: executor}
 }
