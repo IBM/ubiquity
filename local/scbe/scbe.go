@@ -65,10 +65,7 @@ func newScbeLocalClient(logger *log.Logger, config resources.ScbeConfig, databas
 		return &scbeLocalClient{}, err
 	}
 
-	scbeRestClient, err := NewScbeRestClient(logger, config.ConnectionInfo)
-	if err != nil {
-		return &scbeLocalClient{}, err
-	}
+	scbeRestClient := NewScbeRestClient(logger, config.ConnectionInfo)
 
 	client := &scbeLocalClient{
 		logger:         logger,
