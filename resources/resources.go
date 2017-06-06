@@ -47,6 +47,7 @@ type ScbeConfig struct {
 	DefaultService    string // SCBE storage service to be used by default if not mentioned by plugin
 	DefaultVolumeSize string // The default volume size in case not specified by user
 	DefaultFilesystem string // The default filesystem to create on new volumes
+	HostnameTmp	  string // TODO this is a temp config param that workaround issue #23 (remove it when #23 will be fixed)
 }
 
 type SshConfig struct {

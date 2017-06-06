@@ -18,6 +18,7 @@ type ScbeDataModel interface {
 	InsertVolume(volumeName string, wwn string, profile string, attachTo string) error
 	GetVolume(name string) (ScbeVolume, bool, error)
 	ListVolumes() ([]ScbeVolume, error)
+	UpdateVolumeAttachTo(volumeName string, scbeVolume ScbeVolume, host2attach string) error
 }
 
 type scbeDataModel struct {
@@ -86,7 +87,6 @@ func (d *scbeDataModel) InsertVolume(volumeName string, wwn string, profile stri
 		AttachTo: attachTo,
 	}
 
-	fmt.Printf("before insrt -> %#v \n", volume)
 	if err := d.database.Create(&volume).Error; err != nil {
 		return err
 	}
@@ -133,4 +133,13 @@ func (d *scbeDataModel) ListVolumes() ([]ScbeVolume, error) {
 	}
 
 	return volumes, nil
+}
+func (d *scbeDataModel) UpdateVolumeAttachTo(volumeName string, scbeVolume ScbeVolume, host2attach string) error {
+	err := d.database.Table("scbe_volumes").Where("volume_id = ?", scbeVolume.ID).Update("attach_to", host2attach).Error
+	if err != nil {
+		msg := fmt.Sprintf("Error in update attachto field of volume named %s.  ERROR is %s", volumeName, err.Error())
+		d.log.Printf(msg)
+		return err
+	}
+	return nil
 }

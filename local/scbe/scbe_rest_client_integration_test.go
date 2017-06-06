@@ -218,6 +218,31 @@ var _ = Describe("datamodel integration testing with live DB", func() {
 			Expect(err).NotTo(HaveOccurred())
 			Expect(len(vols)).To(Equal(num))
 		})
+		It("Should to succeed to insert and then update the attach of the volume", func() {
+			fakeVolName := "volname1"
+			err := datamodel.InsertVolume(fakeVolName, "www1", "fake_gold_profile", "host")
+			Expect(err).NotTo(HaveOccurred())
+			vol, exist, err := datamodel.GetVolume(fakeVolName)
+			Expect(err).NotTo(HaveOccurred())
+
+			// Here is the main verification of the update
+			err = datamodel.UpdateVolumeAttachTo(fakeVolName, vol, "")
+			Expect(err).NotTo(HaveOccurred())
+			vol, exist, err = datamodel.GetVolume(fakeVolName)
+			Expect(err).NotTo(HaveOccurred())
+			Expect(exist).To(Equal(true))
+			Expect(vol.AttachTo).To(Equal(""))
+
+			// Here is the main verification of the update
+			err = datamodel.UpdateVolumeAttachTo(fakeVolName, vol, "newhost")
+			Expect(err).NotTo(HaveOccurred())
+			vol, exist, err = datamodel.GetVolume(fakeVolName)
+			Expect(err).NotTo(HaveOccurred())
+			Expect(exist).To(Equal(true))
+			Expect(vol.AttachTo).To(Equal("newhost"))
+
+			Expect(datamodel.DeleteVolume(fakeVolName)).NotTo(HaveOccurred())
+		})
 
 	})
 	AfterEach(func() {
