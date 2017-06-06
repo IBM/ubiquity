@@ -19,11 +19,13 @@ type scbeLocalClient struct {
 }
 
 const (
-	OptionNameForServiceName    = "profile"
-	OptionNameForVolumeSize     = "size"
-	volumeNamePrefix            = "u_"
-	DefaultUbiquityInstanceName = "ubiquity_instance1" // TODO this should be part of the configuration
-	AttachedToNothing           = ""                   // during provisioning the volume is not attached to any host
+	OptionNameForServiceName        = "profile"
+	OptionNameForVolumeSize         = "size"
+	volumeNamePrefix                = "u_"
+	DefaultUbiquityInstanceName     = "ubiquity_instance1" // TODO this should be part of the configuration
+	AttachedToNothing               = ""                   // during provisioning the volume is not attached to any host
+	PathToMountUbiquityBlockDevices = "/ubiquity/%s"       // %s is the WWN of the volume
+	EmptyHost                       = ""
 )
 
 var (
@@ -236,50 +238,81 @@ func (s *scbeLocalClient) GetVolumeConfig(name string) (map[string]interface{}, 
 
 	volumeConfigDetails := make(map[string]interface{})
 	//TODO fill the configDetails
-	fmt.Printf("get my config %#v", existingVolume)
 	return volumeConfigDetails, nil
 
 }
 func (s *scbeLocalClient) Attach(name string) (string, error) {
 	s.logger.Println("scbeLocalClient: attach start")
 	defer s.logger.Println("scbeLocalClient: attach end")
+	host2attach := s.config.HostnameTmp // TODO this is workaround for issue #23 (remove it when #23 will be fixed and use the host that will be given as argument to the interface)
 
 	existingVolume, volExists, err := s.dataModel.GetVolume(name)
-
 	if err != nil {
 		s.logger.Println(err.Error())
 		return "", err
 	}
 
 	if !volExists {
-		return "", fmt.Errorf("Volume not found")
+		return "", fmt.Errorf(fmt.Sprintf(MsgVolumeNotFoundInUbiquityDB, "detach", name))
 	}
 
-	//TODO do the attach and get the mountpoint
-	fmt.Printf("attach me %#v", existingVolume)
-	volumeMountpoint := ""
+	if existingVolume.AttachTo != "" {
+		msg := fmt.Sprintf(MsgCannotAttachVolThatAlreadyAttached, name, host2attach, existingVolume.AttachTo)
+		s.logger.Printf(msg)
+		return "", fmt.Errorf(msg)
+	}
+
+	s.logger.Printf("Attaching vol %#v", existingVolume)
+	_, err = s.scbeRestClient.MapVolume(existingVolume.WWN, host2attach)
+	if err != nil {
+		return "", err
+	}
+
+	err = s.dataModel.UpdateVolumeAttachTo(name, existingVolume, host2attach)
+	if err != nil {
+		return "", err
+	}
+
+	volumeMountpoint := fmt.Sprintf(PathToMountUbiquityBlockDevices, existingVolume.WWN)
 	return volumeMountpoint, nil
 }
 
 func (s *scbeLocalClient) Detach(name string) (err error) {
 	s.logger.Println("scbeLocalClient: detach start")
 	defer s.logger.Println("scbeLocalClient: detach end")
+	host2detach := s.config.HostnameTmp // TODO this is workaround for issue #23 (remove it when #23 will be fixed and use the host that will be given as argument to the interface)
 
 	existingVolume, volExists, err := s.dataModel.GetVolume(name)
-
 	if err != nil {
 		s.logger.Println(err.Error())
 		return err
 	}
 
 	if !volExists {
-		return fmt.Errorf("Volume not found")
+		return fmt.Errorf(fmt.Sprintf(MsgVolumeNotFoundInUbiquityDB, "detach", name))
 	}
 
-	//TODO detach
-	fmt.Printf("Detach me %#v", existingVolume)
+	// Fail if vol already detach
+	if existingVolume.AttachTo == EmptyHost {
+		msg := fmt.Sprintf(MsgCannotDetachVolThatAlreadyDetached, name, host2detach)
+		s.logger.Printf(msg)
+		return fmt.Errorf(msg)
+	}
+
+	s.logger.Printf("Detach vol %#v", existingVolume)
+	err = s.scbeRestClient.UnmapVolume(existingVolume.WWN, host2detach)
+	if err != nil {
+		return err
+	}
+
+	err = s.dataModel.UpdateVolumeAttachTo(name, existingVolume, EmptyHost)
+	if err != nil {
+		return err
+	}
+
 	return nil
 }
+
 func (s *scbeLocalClient) ListVolumes() ([]resources.VolumeMetadata, error) {
 	s.logger.Println("scbeLocalClient: list start")
 	defer s.logger.Println("scbeLocalClient: list end")
