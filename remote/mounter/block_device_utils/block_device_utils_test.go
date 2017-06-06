@@ -26,12 +26,12 @@ var _ = Describe("block_device_utils_test", func() {
     BeforeEach(func() {
         logger = log.New(os.Stdout, "block_device_utils: ", log.Lshortfile|log.LstdFlags)
         fakeExec = new(fakes.FakeExecutor)
+        bdUtils = block_device_utils.NewBlockDeviceUtilsWithExecutor(logger, fakeExec)
     })
 
     Context(".Rescan", func() {
         It("Rescan ISCSI calls 'sudo iscsiadm -m session --rescan'", func() {
-            bdUtils = block_device_utils.GetBlockDeviceUtilsWithExecutor(logger, block_device_utils.ISCSI, fakeExec)
-            err = bdUtils.Rescan()
+            err = bdUtils.Rescan(block_device_utils.ISCSI)
             Expect(err).ToNot(HaveOccurred())
             Expect(fakeExec.ExecuteCallCount()).To(Equal(1))
             cmd, args := fakeExec.ExecuteArgsForCall(0)
@@ -39,8 +39,7 @@ var _ = Describe("block_device_utils_test", func() {
             Expect(args).To(Equal([]string{"iscsiadm", "-m", "session", "--rescan"}))
         })
         It("Rescan SCSI calls 'sudo rescan-scsi-bus -r'", func() {
-            bdUtils = block_device_utils.GetBlockDeviceUtilsWithExecutor(logger, block_device_utils.SCSI, fakeExec)
-            err = bdUtils.Rescan()
+            err = bdUtils.Rescan(block_device_utils.SCSI)
             Expect(err).ToNot(HaveOccurred())
             Expect(fakeExec.ExecuteCallCount()).To(Equal(1))
             cmd, args := fakeExec.ExecuteArgsForCall(0)
@@ -49,8 +48,7 @@ var _ = Describe("block_device_utils_test", func() {
         })
         It("Rescan ISCSI fails if iscsiadm command missing", func() {
             fakeExec.IsExecutableReturns(cmdErr)
-            bdUtils = block_device_utils.GetBlockDeviceUtilsWithExecutor(logger, block_device_utils.ISCSI, fakeExec)
-            err = bdUtils.Rescan()
+            err = bdUtils.Rescan(block_device_utils.ISCSI)
             Expect(err).To(HaveOccurred())
             Expect(err).To(MatchError(cmdErr))
             Expect(fakeExec.ExecuteCallCount()).To(Equal(0))
@@ -59,8 +57,7 @@ var _ = Describe("block_device_utils_test", func() {
         })
         It("Rescan SCSI fails if rescan-scsi-bus command missing", func() {
             fakeExec.IsExecutableReturns(cmdErr)
-            bdUtils = block_device_utils.GetBlockDeviceUtilsWithExecutor(logger, block_device_utils.SCSI, fakeExec)
-            err = bdUtils.Rescan()
+            err = bdUtils.Rescan(block_device_utils.SCSI)
             Expect(err).To(HaveOccurred())
             Expect(fakeExec.ExecuteCallCount()).To(Equal(0))
             Expect(fakeExec.IsExecutableCallCount()).To(Equal(2))
@@ -69,20 +66,17 @@ var _ = Describe("block_device_utils_test", func() {
         })
         It("Rescan ISCSI fails if iscsiadm execution fails", func() {
             fakeExec.ExecuteReturns([]byte{}, cmdErr)
-            bdUtils = block_device_utils.GetBlockDeviceUtilsWithExecutor(logger, block_device_utils.ISCSI, fakeExec)
-            err = bdUtils.Rescan()
+            err = bdUtils.Rescan(block_device_utils.ISCSI)
             Expect(err).To(MatchError(cmdErr))
         })
         It("Rescan SCSI fails if rescan-scsi-bus execution fails", func() {
             fakeExec.ExecuteReturns([]byte{}, cmdErr)
-            bdUtils = block_device_utils.GetBlockDeviceUtilsWithExecutor(logger, block_device_utils.SCSI, fakeExec)
-            err = bdUtils.Rescan()
+            err = bdUtils.Rescan(block_device_utils.SCSI)
             Expect(err).To(MatchError(cmdErr))
         })
     })
     Context(".Discover", func() {
         It("Discover returns path for volume", func() {
-            bdUtils = block_device_utils.GetBlockDeviceUtilsWithExecutor(logger, block_device_utils.ISCSI, fakeExec)
             volumeId := "volume-id"
             result := "mpath"
             fakeExec.ExecuteReturnsOnCall(1, []byte(
@@ -99,7 +93,6 @@ var _ = Describe("block_device_utils_test", func() {
             Expect(args2).To(Equal([]string{"multipath", "-ll"}))
         })
         It("Discover fails if multipath command is missing", func() {
-            bdUtils = block_device_utils.GetBlockDeviceUtilsWithExecutor(logger, block_device_utils.ISCSI, fakeExec)
             volumeId := "volume-id"
             fakeExec.IsExecutableReturns(cmdErr)
             _, err := bdUtils.Discover(volumeId)
@@ -107,7 +100,6 @@ var _ = Describe("block_device_utils_test", func() {
             Expect(err).To(MatchError(cmdErr))
         })
         It("Discover fails if multipath command fails", func() {
-            bdUtils = block_device_utils.GetBlockDeviceUtilsWithExecutor(logger, block_device_utils.ISCSI, fakeExec)
             volumeId := "volume-id"
             fakeExec.ExecuteReturns([]byte{}, cmdErr)
             _, err := bdUtils.Discover(volumeId)
@@ -115,7 +107,6 @@ var _ = Describe("block_device_utils_test", func() {
             Expect(err).To(MatchError(cmdErr))
         })
         It("Discover fails if multipath -ll command fails", func() {
-            bdUtils = block_device_utils.GetBlockDeviceUtilsWithExecutor(logger, block_device_utils.ISCSI, fakeExec)
             volumeId := "volume-id"
             fakeExec.ExecuteReturnsOnCall(1, []byte{}, cmdErr)
             _, err := bdUtils.Discover(volumeId)
@@ -124,7 +115,6 @@ var _ = Describe("block_device_utils_test", func() {
             Expect(fakeExec.ExecuteCallCount()).To(Equal(2))
         })
         It("Discover fails if volume not found", func() {
-            bdUtils = block_device_utils.GetBlockDeviceUtilsWithExecutor(logger, block_device_utils.ISCSI, fakeExec)
             volumeId := "volume-id"
             fakeExec.ExecuteReturnsOnCall(1, []byte(
                 fmt.Sprintf("mpath (other-volume) dm-1 IBM\nmpath (volume-id) dm-1 other-vendor")), nil)
@@ -135,7 +125,6 @@ var _ = Describe("block_device_utils_test", func() {
     })
     Context(".Cleanup", func() {
         It("Cleanup calls dmsetup and multipath", func() {
-            bdUtils = block_device_utils.GetBlockDeviceUtilsWithExecutor(logger, block_device_utils.ISCSI, fakeExec)
             mpath := "mpath"
             err = bdUtils.Cleanup(mpath)
             Expect(err).ToNot(HaveOccurred())
@@ -148,7 +137,6 @@ var _ = Describe("block_device_utils_test", func() {
             Expect(args2).To(Equal([]string{"multipath", "-f", mpath}))
         })
         It("Cleanup fails if dmsetup command missing", func() {
-            bdUtils = block_device_utils.GetBlockDeviceUtilsWithExecutor(logger, block_device_utils.ISCSI, fakeExec)
             mpath := "mpath"
             fakeExec.IsExecutableReturns(cmdErr)
             err = bdUtils.Cleanup(mpath)
@@ -156,7 +144,6 @@ var _ = Describe("block_device_utils_test", func() {
             Expect(err).To(MatchError(cmdErr))
         })
         It("Cleanup fails if dmsetup command fails", func() {
-            bdUtils = block_device_utils.GetBlockDeviceUtilsWithExecutor(logger, block_device_utils.ISCSI, fakeExec)
             mpath := "mpath"
             fakeExec.ExecuteReturns([]byte{}, cmdErr)
             err = bdUtils.Cleanup(mpath)
@@ -164,7 +151,6 @@ var _ = Describe("block_device_utils_test", func() {
             Expect(err).To(MatchError(cmdErr))
         })
         It("Cleanup fails if multipath command missing", func() {
-            bdUtils = block_device_utils.GetBlockDeviceUtilsWithExecutor(logger, block_device_utils.ISCSI, fakeExec)
             mpath := "/dev/mapper/mpath"
             fakeExec.IsExecutableReturnsOnCall(1, cmdErr)
             err = bdUtils.Cleanup(mpath)
@@ -173,7 +159,6 @@ var _ = Describe("block_device_utils_test", func() {
             Expect(fakeExec.IsExecutableCallCount()).To(Equal(2))
         })
         It("Cleanup fails if multipath command fails", func() {
-            bdUtils = block_device_utils.GetBlockDeviceUtilsWithExecutor(logger, block_device_utils.ISCSI, fakeExec)
             mpath := "mpath"
             fakeExec.ExecuteReturnsOnCall(1, []byte{}, cmdErr)
             err = bdUtils.Cleanup(mpath)
@@ -183,7 +168,6 @@ var _ = Describe("block_device_utils_test", func() {
     })
     Context(".CheckFs", func() {
         It("CheckFs detects exiting filesystem on device", func() {
-            bdUtils = block_device_utils.GetBlockDeviceUtilsWithExecutor(logger, block_device_utils.ISCSI, fakeExec)
             mpath := "mpath"
             fakeExec.ExecuteReturns([]byte{}, nil)
             fs, err := bdUtils.CheckFs(mpath)
@@ -200,7 +184,6 @@ var _ = Describe("block_device_utils_test", func() {
             executor := utils.NewExecutor(logger)
             _, exitErr2 := executor.Execute("sh", []string{"/tmp/tst.sh"})
             Expect(exitErr2).To(HaveOccurred())
-            bdUtils = block_device_utils.GetBlockDeviceUtilsWithExecutor(logger, block_device_utils.ISCSI, fakeExec)
             mpath := "mpath"
             fakeExec.ExecuteReturns([]byte{}, exitErr2)
             fs, err := bdUtils.CheckFs(mpath)
@@ -212,7 +195,6 @@ var _ = Describe("block_device_utils_test", func() {
             Expect(args).To(Equal([]string{"blkid", mpath}))
         })
         It("CheckFs fails if blkid missing", func() {
-            bdUtils = block_device_utils.GetBlockDeviceUtilsWithExecutor(logger, block_device_utils.ISCSI, fakeExec)
             mpath := "mpath"
             fakeExec.IsExecutableReturns(cmdErr)
             _, err = bdUtils.CheckFs(mpath)
@@ -220,7 +202,6 @@ var _ = Describe("block_device_utils_test", func() {
             Expect(err).To(MatchError(cmdErr))
         })
         It("CheckFs fails if blkid fails", func() {
-            bdUtils = block_device_utils.GetBlockDeviceUtilsWithExecutor(logger, block_device_utils.ISCSI, fakeExec)
             mpath := "mpath"
             fakeExec.ExecuteReturns([]byte{}, cmdErr)
             _, err := bdUtils.CheckFs(mpath)
@@ -230,7 +211,6 @@ var _ = Describe("block_device_utils_test", func() {
     })
     Context(".MakeFs", func() {
         It("MakeFs creates fs by type", func() {
-            bdUtils = block_device_utils.GetBlockDeviceUtilsWithExecutor(logger, block_device_utils.ISCSI, fakeExec)
             mpath := "mpath"
             fstype := "fstype"
             err = bdUtils.MakeFs(mpath, fstype)
@@ -241,7 +221,6 @@ var _ = Describe("block_device_utils_test", func() {
             Expect(args).To(Equal([]string{"mkfs", "-t", fstype, mpath}))
         })
         It("MakeFs fails if mkfs missing", func() {
-            bdUtils = block_device_utils.GetBlockDeviceUtilsWithExecutor(logger, block_device_utils.ISCSI, fakeExec)
             mpath := "mpath"
             fakeExec.IsExecutableReturns(cmdErr)
             err = bdUtils.MakeFs(mpath, "")
@@ -249,7 +228,6 @@ var _ = Describe("block_device_utils_test", func() {
             Expect(err).To(MatchError(cmdErr))
         })
         It("MakeFs fails if mkfs command fails", func() {
-            bdUtils = block_device_utils.GetBlockDeviceUtilsWithExecutor(logger, block_device_utils.ISCSI, fakeExec)
             mpath := "mpath"
             fakeExec.ExecuteReturns([]byte{}, cmdErr)
             err = bdUtils.MakeFs(mpath, "")
@@ -259,7 +237,6 @@ var _ = Describe("block_device_utils_test", func() {
     })
     Context(".MountFs", func() {
         It("MountFs succeeds", func() {
-            bdUtils = block_device_utils.GetBlockDeviceUtilsWithExecutor(logger, block_device_utils.ISCSI, fakeExec)
             mpath := "mpath"
             mpoint := "mpoint"
             err = bdUtils.MountFs(mpath, mpoint)
@@ -270,7 +247,6 @@ var _ = Describe("block_device_utils_test", func() {
             Expect(args).To(Equal([]string{"mount", mpath, mpoint}))
         })
         It("MountFs fails if mount command missing", func() {
-            bdUtils = block_device_utils.GetBlockDeviceUtilsWithExecutor(logger, block_device_utils.ISCSI, fakeExec)
             mpath := "mpath"
             mpoint := "mpoint"
             fakeExec.IsExecutableReturns(cmdErr)
@@ -279,7 +255,6 @@ var _ = Describe("block_device_utils_test", func() {
             Expect(err).To(MatchError(cmdErr))
         })
         It("MountFs fails if mount command fails", func() {
-            bdUtils = block_device_utils.GetBlockDeviceUtilsWithExecutor(logger, block_device_utils.ISCSI, fakeExec)
             mpath := "mpath"
             mpoint := "mpoint"
             fakeExec.ExecuteReturns([]byte{}, cmdErr)
@@ -291,7 +266,6 @@ var _ = Describe("block_device_utils_test", func() {
     })
     Context(".UmountFs", func() {
         It("UmountFs succeeds", func() {
-            bdUtils = block_device_utils.GetBlockDeviceUtilsWithExecutor(logger, block_device_utils.ISCSI, fakeExec)
             mpoint := "mpoint"
             err = bdUtils.UmountFs(mpoint)
             Expect(err).To(Not(HaveOccurred()))
@@ -301,7 +275,6 @@ var _ = Describe("block_device_utils_test", func() {
             Expect(args).To(Equal([]string{"umount", mpoint}))
         })
         It("UmountFs fails if umount command missing", func() {
-            bdUtils = block_device_utils.GetBlockDeviceUtilsWithExecutor(logger, block_device_utils.ISCSI, fakeExec)
             mpoint := "mpoint"
             fakeExec.IsExecutableReturns(cmdErr)
             err = bdUtils.UmountFs(mpoint)
@@ -309,7 +282,6 @@ var _ = Describe("block_device_utils_test", func() {
             Expect(err).To(MatchError(cmdErr))
         })
         It("UmountFs fails if umount command fails", func() {
-            bdUtils = block_device_utils.GetBlockDeviceUtilsWithExecutor(logger, block_device_utils.ISCSI, fakeExec)
             mpoint := "mpoint"
             fakeExec.ExecuteReturns([]byte{}, cmdErr)
             err = bdUtils.UmountFs(mpoint)

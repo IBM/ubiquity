@@ -7,14 +7,14 @@ import (
 )
 
 
-func (s *impBlockDeviceUtils) Rescan() (error) {
-    switch s.protocol {
+func (s *impBlockDeviceUtils) Rescan(protocol Protocol) (error) {
+    switch protocol {
     case SCSI:
         return s.RescanSCSI()
     case ISCSI:
         return s.RescanISCSI()
     default:
-        panic(fmt.Errorf("Rescan: unsupported protocol %s", s.protocol))
+        return fmt.Errorf("Rescan: unsupported protocol %v", protocol)
     }
 }
 
