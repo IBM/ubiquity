@@ -75,22 +75,40 @@ var _ = Describe("block_device_utils_test", func() {
             Expect(err).To(MatchError(cmdErr))
         })
     })
+    Context(".ReloadMultipath", func() {
+        It("ReloadMultipath calls multipath command", func() {
+            err = bdUtils.ReloadMultipath()
+            Expect(err).ToNot(HaveOccurred())
+            Expect(fakeExec.ExecuteCallCount()).To(Equal(1))
+            cmd, args := fakeExec.ExecuteArgsForCall(0)
+            Expect(cmd).To(Equal("sudo"))
+            Expect(args).To(Equal([]string{"multipath", "-r"}))
+        })
+        It("ReloadMultipath fails if multipath command is missing", func() {
+            fakeExec.IsExecutableReturns(cmdErr)
+            err = bdUtils.ReloadMultipath()
+            Expect(err).To(HaveOccurred())
+            Expect(err).To(MatchError(cmdErr))
+        })
+        It("ReloadMultipath fails if multipath command fails", func() {
+            fakeExec.ExecuteReturns([]byte{}, cmdErr)
+            err = bdUtils.ReloadMultipath()
+            Expect(err).To(HaveOccurred())
+            Expect(err).To(MatchError(cmdErr))
+        })
+    })
     Context(".Discover", func() {
         It("Discover returns path for volume", func() {
             volumeId := "volume-id"
             result := "mpath"
-            fakeExec.ExecuteReturnsOnCall(1, []byte(
-                fmt.Sprintf("%s (%s) dm-1 IBM", result, volumeId)), nil)
+            fakeExec.ExecuteReturns([]byte(fmt.Sprintf("%s (%s) dm-1", result, volumeId)), nil)
             mpath, err := bdUtils.Discover(volumeId)
             Expect(err).ToNot(HaveOccurred())
             Expect(mpath).To(Equal("/dev/mapper/" + result))
-            Expect(fakeExec.ExecuteCallCount()).To(Equal(2))
-            cmd1, args1 := fakeExec.ExecuteArgsForCall(0)
-            Expect(cmd1).To(Equal("sudo"))
-            Expect(args1).To(Equal([]string{"multipath"}))
-            cmd2, args2 := fakeExec.ExecuteArgsForCall(1)
-            Expect(cmd2).To(Equal("sudo"))
-            Expect(args2).To(Equal([]string{"multipath", "-ll"}))
+            Expect(fakeExec.ExecuteCallCount()).To(Equal(1))
+            cmd, args := fakeExec.ExecuteArgsForCall(0)
+            Expect(cmd).To(Equal("sudo"))
+            Expect(args).To(Equal([]string{"multipath", "-ll"}))
         })
         It("Discover fails if multipath command is missing", func() {
             volumeId := "volume-id"
@@ -99,28 +117,19 @@ var _ = Describe("block_device_utils_test", func() {
             Expect(err).To(HaveOccurred())
             Expect(err).To(MatchError(cmdErr))
         })
-        It("Discover fails if multipath command fails", func() {
+        It("Discover fails if multipath -ll command fails", func() {
             volumeId := "volume-id"
             fakeExec.ExecuteReturns([]byte{}, cmdErr)
             _, err := bdUtils.Discover(volumeId)
             Expect(err).To(HaveOccurred())
             Expect(err).To(MatchError(cmdErr))
         })
-        It("Discover fails if multipath -ll command fails", func() {
-            volumeId := "volume-id"
-            fakeExec.ExecuteReturnsOnCall(1, []byte{}, cmdErr)
-            _, err := bdUtils.Discover(volumeId)
-            Expect(err).To(HaveOccurred())
-            Expect(err).To(MatchError(cmdErr))
-            Expect(fakeExec.ExecuteCallCount()).To(Equal(2))
-        })
         It("Discover fails if volume not found", func() {
             volumeId := "volume-id"
-            fakeExec.ExecuteReturnsOnCall(1, []byte(
-                fmt.Sprintf("mpath (other-volume) dm-1 IBM\nmpath (volume-id) dm-1 other-vendor")), nil)
+            fakeExec.ExecuteReturns([]byte(fmt.Sprintf(
+                "mpath (other-volume-1) dm-1\nmpath (other-volume-2) dm-2")), nil)
             _, err := bdUtils.Discover(volumeId)
             Expect(err).To(HaveOccurred())
-            Expect(fakeExec.ExecuteCallCount()).To(Equal(2))
         })
     })
     Context(".Cleanup", func() {
