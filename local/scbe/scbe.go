@@ -222,7 +222,7 @@ func (s *scbeLocalClient) GetVolumeConfig(name string) (map[string]interface{}, 
 	s.logger.Println("scbeLocalClient: GetVolumeConfig start")
 	defer s.logger.Println("scbeLocalClient: GetVolumeConfig finish")
 
-	existingVolume, volExists, err := s.dataModel.GetVolume(name)
+	_, volExists, err := s.dataModel.GetVolume(name)
 
 	if err != nil {
 		s.logger.Println(err.Error())
