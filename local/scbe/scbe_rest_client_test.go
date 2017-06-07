@@ -16,28 +16,28 @@ import (
 
 var _ = Describe("ScbeRestClient", func() {
     var (
-        logger            *log.Logger
-        scbeRestClient    scbe.ScbeRestClient
-        simpleRestClient  *fakes.FakeSimpleRestClient
-        err               error
-        profileName       string = "fake-profile"
-        volName           string = "fake-volume"
-        volIdentifier     string = "fake-volume-identifier"
-        volSize           int = 10
-        restErr           error = errors.New("rest error")
+        logger                *log.Logger
+        scbeRestClient        scbe.ScbeRestClient
+        fakeSimpleRestClient  *fakes.FakeSimpleRestClient
+        err                   error
+        profileName           string = "fake-profile"
+        volName               string = "fake-volume"
+        volIdentifier         string = "fake-volume-identifier"
+        volSize               int = 10
+        restErr               error = errors.New("rest error")
     )
     BeforeEach(func() {
         logger = log.New(os.Stdout, "ubiquity scbe: ", log.Lshortfile|log.LstdFlags)
-        simpleRestClient = new(fakes.FakeSimpleRestClient)
+        fakeSimpleRestClient = new(fakes.FakeSimpleRestClient)
         credentialInfo := resources.CredentialInfo{"user", "password", "flocker"}
         conInfo := resources.ConnectionInfo{credentialInfo, 8440, "ip", true}
-        scbeRestClient = scbe.NewScbeRestClientWithSimpleRestClient(logger, conInfo, simpleRestClient)
+        scbeRestClient = scbe.NewScbeRestClientWithSimpleRestClient(logger, conInfo, fakeSimpleRestClient)
     })
 
 
     Context(".ServiceExist", func() {
         It("fail upon rest call error", func() {
-            simpleRestClient.GetReturns(restErr)
+            fakeSimpleRestClient.GetReturns(restErr)
             _, err = scbeRestClient.ServiceExist(profileName)
             Expect(err).To(HaveOccurred())
             Expect(err).To(MatchError(restErr))
@@ -45,14 +45,14 @@ var _ = Describe("ScbeRestClient", func() {
         It("detect service exists", func() {
             services := make([]scbe.ScbeStorageService, 1)
             services[0].Name = profileName
-            simpleRestClient.GetStub = OverrideGetStub(services)
+            fakeSimpleRestClient.GetStub = OverrideGetStub(services)
             exist, err := scbeRestClient.ServiceExist(profileName)
             Expect(err).NotTo(HaveOccurred())
             Expect(exist).To(Equal(true))
         })
         It("detect service does not exists", func() {
             services := make([]scbe.ScbeStorageService, 0)
-            simpleRestClient.GetStub = OverrideGetStub(services)
+            fakeSimpleRestClient.GetStub = OverrideGetStub(services)
             exist, err := scbeRestClient.ServiceExist(profileName)
             Expect(err).NotTo(HaveOccurred())
             Expect(exist).To(Equal(false))
@@ -62,9 +62,9 @@ var _ = Describe("ScbeRestClient", func() {
         It("succeed and return ScbeVolumeInfo object", func() {
             services := make([]scbe.ScbeStorageService, 1)
             services[0].Name = profileName
-            simpleRestClient.GetStub = OverrideGetStub(services)
+            fakeSimpleRestClient.GetStub = OverrideGetStub(services)
             volResponse := scbe.ScbeResponseVolume{Name: volName, ScsiIdentifier: volIdentifier}
-            simpleRestClient.PostStub = OverridePostStub(volResponse)
+            fakeSimpleRestClient.PostStub = OverridePostStub(volResponse)
             scbeVolumeInfo, err := scbeRestClient.CreateVolume(volName, profileName, volSize)
             Expect(err).NotTo(HaveOccurred())
             Expect(scbeVolumeInfo.Name).To(Equal(volName))
@@ -72,7 +72,7 @@ var _ = Describe("ScbeRestClient", func() {
             Expect(scbeVolumeInfo.ServiceName).To(Equal(profileName))
         })
         It("fail upon service list error", func() {
-            simpleRestClient.GetReturns(restErr)
+            fakeSimpleRestClient.GetReturns(restErr)
             _, err := scbeRestClient.CreateVolume(volName, profileName, volSize)
             Expect(err).To(HaveOccurred())
             Expect(err).To(MatchError(restErr))
@@ -80,17 +80,46 @@ var _ = Describe("ScbeRestClient", func() {
         It("fail upon service list name mismatch", func() {
             services := make([]scbe.ScbeStorageService, 1)
             services[0].Name = "fakeProfileName"
-            simpleRestClient.GetStub = OverrideGetStub(services)
+            fakeSimpleRestClient.GetStub = OverrideGetStub(services)
             _, err := scbeRestClient.CreateVolume(volName, profileName, volSize)
             Expect(err).To(HaveOccurred())
         })
         It("fail upon provision volume error", func() {
             services := make([]scbe.ScbeStorageService, 1)
             services[0].Name = profileName
-            simpleRestClient.GetStub = OverrideGetStub(services)
-            simpleRestClient.PostReturns(restErr)
+            fakeSimpleRestClient.GetStub = OverrideGetStub(services)
+            fakeSimpleRestClient.PostReturns(restErr)
             _, err := scbeRestClient.CreateVolume(volName, profileName, volSize)
             Expect(err).To(HaveOccurred())
+        })
+    })
+    Context(".Login", func() {
+        It("succeed upon simple rest client success", func() {
+            err = scbeRestClient.Login()
+            Expect(err).NotTo(HaveOccurred())
+            Expect(fakeSimpleRestClient.LoginCallCount()).To(Equal(1))
+        })
+        It("fail upon simple rest client error", func() {
+            fakeSimpleRestClient.LoginReturns(restErr)
+            err = scbeRestClient.Login()
+            Expect(err).To(HaveOccurred())
+            Expect(err).To(MatchError(restErr))
+        })
+        Context(".DeleteVolume", func() {
+            It("succeed upon simple rest client success", func() {
+                err = scbeRestClient.DeleteVolume(volName)
+                Expect(err).NotTo(HaveOccurred())
+                Expect(fakeSimpleRestClient.DeleteCallCount()).To(Equal(1))
+                url, payload, status := fakeSimpleRestClient.DeleteArgsForCall(0)
+                Expect(url).To(Equal(scbe.UrlScbeResourceVolume + "/" + volName))
+                Expect(payload).To(Equal([]byte{}))
+                Expect(status).To(Equal(scbe.HTTP_SUCCEED_DELETED))
+            })
+            It("fail upon simple rest client error", func() {
+                fakeSimpleRestClient.DeleteReturns(restErr)
+                err = scbeRestClient.DeleteVolume(volName)
+                Expect(err).To(HaveOccurred())
+            })
         })
     })
 })
