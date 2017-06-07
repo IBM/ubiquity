@@ -187,7 +187,6 @@ func (s *remoteClient) Attach(attachRequest resources.AttachRequest) (string, er
 	if err != nil {
 		return "", err
 	}
-	//needs to return actual client mounted path
 
 	return mountpoint, nil
 }

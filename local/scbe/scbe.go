@@ -27,6 +27,11 @@ const (
 	AttachedToNothing               = ""                   // during provisioning the volume is not attached to any host
 	PathToMountUbiquityBlockDevices = "/ubiquity/%s"       // %s is the WWN of the volume
 	EmptyHost                       = ""
+
+	VolConfigKeyWWN      = "wwn"
+	VolConfigKeyProfile  = "profile"
+	VolConfigKeyID       = "id"
+	VolConfigKeyVolumeID = "volume_id"
 )
 
 var (
@@ -223,7 +228,7 @@ func (s *scbeLocalClient) GetVolumeConfig(name string) (map[string]interface{}, 
 	s.logger.Println("scbeLocalClient: GetVolumeConfig start")
 	defer s.logger.Println("scbeLocalClient: GetVolumeConfig finish")
 
-	_, volExists, err := s.dataModel.GetVolume(name)
+	scbeVolume, volExists, err := s.dataModel.GetVolume(name)
 
 	if err != nil {
 		s.logger.Println(err.Error())
@@ -235,7 +240,11 @@ func (s *scbeLocalClient) GetVolumeConfig(name string) (map[string]interface{}, 
 	}
 
 	volumeConfigDetails := make(map[string]interface{})
-	//TODO fill the configDetails
+	volumeConfigDetails[VolConfigKeyWWN] = scbeVolume.WWN
+	volumeConfigDetails[VolConfigKeyProfile] = scbeVolume.Profile
+	volumeConfigDetails[VolConfigKeyID] = scbeVolume.ID
+	volumeConfigDetails[VolConfigKeyVolumeID] = scbeVolume.VolumeID
+
 	return volumeConfigDetails, nil
 
 }
