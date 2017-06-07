@@ -120,7 +120,7 @@ func (s *scbeRestClient) GetVolume(wwn string) (ScbeVolumeInfo, error) {
 }
 func (s *scbeRestClient) DeleteVolume(wwn string) error {
 	urlToDelete := fmt.Sprintf("%s/%s", UrlScbeResourceVolume, wwn)
-	err := s.client.Delete(urlToDelete, nil, HTTP_SUCCEED_DELETED, nil)
+	err := s.client.Delete(urlToDelete, []byte{}, HTTP_SUCCEED_DELETED)
 	if err != nil {
 		msg := fmt.Sprintf("Fail to delete volume WWN %#v, due to error: %#v", wwn, err)
 		s.logger.Printf(msg)
@@ -165,7 +165,7 @@ func (s *scbeRestClient) UnmapVolume(wwn string, host string) error {
 		s.logger.Printf(msg)
 		return fmt.Errorf(msg)
 	}
-	err = s.client.Delete(UrlScbeResourceMapping, payloadMarshal, HTTP_SUCCEED_DELETED, nil)
+	err = s.client.Delete(UrlScbeResourceMapping, payloadMarshal, HTTP_SUCCEED_DELETED)
 	if err != nil {
 		return err
 	}

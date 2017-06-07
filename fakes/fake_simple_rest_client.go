@@ -45,13 +45,12 @@ type FakeSimpleRestClient struct {
 	getReturnsOnCall map[int]struct {
 		result1 error
 	}
-	DeleteStub        func(resource_url string, payload []byte, exitStatus int, v interface{}) error
+	DeleteStub        func(resource_url string, payload []byte, exitStatus int) error
 	deleteMutex       sync.RWMutex
 	deleteArgsForCall []struct {
 		resource_url string
 		payload      []byte
 		exitStatus   int
-		v            interface{}
 	}
 	deleteReturns struct {
 		result1 error
@@ -210,7 +209,7 @@ func (fake *FakeSimpleRestClient) GetReturnsOnCall(i int, result1 error) {
 	}{result1}
 }
 
-func (fake *FakeSimpleRestClient) Delete(resource_url string, payload []byte, exitStatus int, v interface{}) error {
+func (fake *FakeSimpleRestClient) Delete(resource_url string, payload []byte, exitStatus int) error {
 	var payloadCopy []byte
 	if payload != nil {
 		payloadCopy = make([]byte, len(payload))
@@ -222,12 +221,11 @@ func (fake *FakeSimpleRestClient) Delete(resource_url string, payload []byte, ex
 		resource_url string
 		payload      []byte
 		exitStatus   int
-		v            interface{}
-	}{resource_url, payloadCopy, exitStatus, v})
-	fake.recordInvocation("Delete", []interface{}{resource_url, payloadCopy, exitStatus, v})
+	}{resource_url, payloadCopy, exitStatus})
+	fake.recordInvocation("Delete", []interface{}{resource_url, payloadCopy, exitStatus})
 	fake.deleteMutex.Unlock()
 	if fake.DeleteStub != nil {
-		return fake.DeleteStub(resource_url, payload, exitStatus, v)
+		return fake.DeleteStub(resource_url, payload, exitStatus)
 	}
 	if specificReturn {
 		return ret.result1
@@ -241,10 +239,10 @@ func (fake *FakeSimpleRestClient) DeleteCallCount() int {
 	return len(fake.deleteArgsForCall)
 }
 
-func (fake *FakeSimpleRestClient) DeleteArgsForCall(i int) (string, []byte, int, interface{}) {
+func (fake *FakeSimpleRestClient) DeleteArgsForCall(i int) (string, []byte, int) {
 	fake.deleteMutex.RLock()
 	defer fake.deleteMutex.RUnlock()
-	return fake.deleteArgsForCall[i].resource_url, fake.deleteArgsForCall[i].payload, fake.deleteArgsForCall[i].exitStatus, fake.deleteArgsForCall[i].v
+	return fake.deleteArgsForCall[i].resource_url, fake.deleteArgsForCall[i].payload, fake.deleteArgsForCall[i].exitStatus
 }
 
 func (fake *FakeSimpleRestClient) DeleteReturns(result1 error) {

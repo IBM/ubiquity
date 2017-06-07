@@ -18,14 +18,14 @@ type SimpleRestClient interface {
     // Authenticate the server, prepare headers and save the token
     Login() error
 
-    // Paper the payload, send post request and check expected status response and returned parsed response
+    // send POST request with optional payload and check expected status of response
     Post(resource_url string, payload []byte, exitStatus int, v interface{}) error
 
-    // Paper the payload, send get request and check expected status response and returned parsed response
+    // send GET request with optional params and check expected status of response
     Get(resource_url string, params map[string]string, exitStatus int, v interface{}) error
 
-    // Paper the payload, send delete request and check expected status respon		se and returned parsed response
-    Delete(resource_url string, payload []byte, exitStatus int, v interface{}) error
+    // send DELETE request with optional payload and check expected status of response
+    Delete(resource_url string, payload []byte, exitStatus int) error
 }
 
 const (
@@ -200,9 +200,9 @@ func (s *simpleRestClient) Get(resource_url string, params map[string]string, ex
 }
 
 // Delete request
-func (s *simpleRestClient) Delete(resource_url string, payload []byte, exitStatus int, v interface{}) error {
+func (s *simpleRestClient) Delete(resource_url string, payload []byte, exitStatus int) error {
     if exitStatus < 0 {
         exitStatus = HTTP_SUCCEED_DELETED // Default value
     }
-    return s.genericAction("DELETE", resource_url, payload, nil, exitStatus, v)
+    return s.genericAction("DELETE", resource_url, payload, nil, exitStatus, nil)
 }
