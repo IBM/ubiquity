@@ -28,13 +28,13 @@ var _ = Describe("block_device_mounter_utils_test", func() {
 
 	Context(".MountDeviceFlow", func() {
 		It("should fail if checkfs failed", func() {
-			fakeBlockDeviceUtils.CheckFsReturns(false, fmt.Errorf("error"))
+			fakeBlockDeviceUtils.CheckFsReturns(true, fmt.Errorf("error"))
 			err = blockDeviceMounterUtils.MountDeviceFlow("fake_device", "fake_fstype", "fake_mountp")
 			Expect(err).To(HaveOccurred())
 			Expect(err.Error()).To(Equal("error"))
 		})
 		It("should fail if mkfs failed", func() {
-			fakeBlockDeviceUtils.CheckFsReturns(false, nil)
+			fakeBlockDeviceUtils.CheckFsReturns(true, nil)
 			fakeBlockDeviceUtils.MakeFsReturns(fmt.Errorf("error"))
 			err = blockDeviceMounterUtils.MountDeviceFlow("fake_device", "fake_fstype", "fake_mountp")
 			Expect(err).To(HaveOccurred())
@@ -43,7 +43,7 @@ var _ = Describe("block_device_mounter_utils_test", func() {
 
 		})
 		It("should fail if mkfs failed", func() {
-			fakeBlockDeviceUtils.CheckFsReturns(false, nil)
+			fakeBlockDeviceUtils.CheckFsReturns(true, nil)
 			fakeBlockDeviceUtils.MakeFsReturns(fmt.Errorf("error"))
 			err = blockDeviceMounterUtils.MountDeviceFlow("fake_device", "fake_fstype", "fake_mountp")
 			Expect(err).To(HaveOccurred())
@@ -52,7 +52,7 @@ var _ = Describe("block_device_mounter_utils_test", func() {
 
 		})
 		It("should fail if mountfs failed", func() {
-			fakeBlockDeviceUtils.CheckFsReturns(false, nil)
+			fakeBlockDeviceUtils.CheckFsReturns(true, nil)
 			fakeBlockDeviceUtils.MakeFsReturns(nil)
 			fakeBlockDeviceUtils.MountFsReturns(fmt.Errorf("error"))
 			err = blockDeviceMounterUtils.MountDeviceFlow("fake_device", "fake_fstype", "fake_mountp")
@@ -61,7 +61,7 @@ var _ = Describe("block_device_mounter_utils_test", func() {
 			Expect(fakeBlockDeviceUtils.MountFsCallCount()).To(Equal(1))
 		})
 		It("should succeed (with create fs) if all if cool", func() {
-			fakeBlockDeviceUtils.CheckFsReturns(false, nil)
+			fakeBlockDeviceUtils.CheckFsReturns(true, nil)
 			fakeBlockDeviceUtils.MakeFsReturns(nil)
 			fakeBlockDeviceUtils.MountFsReturns(nil)
 			err = blockDeviceMounterUtils.MountDeviceFlow("fake_device", "fake_fstype", "fake_mountp")
@@ -70,7 +70,7 @@ var _ = Describe("block_device_mounter_utils_test", func() {
 			Expect(fakeBlockDeviceUtils.MountFsCallCount()).To(Equal(1))
 		})
 		It("should succeed (without create fs) if all if cool", func() {
-			fakeBlockDeviceUtils.CheckFsReturns(true, nil)
+			fakeBlockDeviceUtils.CheckFsReturns(false, nil)
 			fakeBlockDeviceUtils.MountFsReturns(nil)
 			err = blockDeviceMounterUtils.MountDeviceFlow("fake_device", "fake_fstype", "fake_mountp")
 			Expect(err).NotTo(HaveOccurred())
@@ -139,6 +139,31 @@ var _ = Describe("block_device_mounter_utils_test", func() {
 			Expect(fakeBlockDeviceUtils.ReloadMultipathCallCount()).To(Equal(1))
 		})
 	})
+	Context(".UnmountDeviceFlow", func() {
+		It("should fail if unmount failed", func() {
+			fakeBlockDeviceUtils.UmountFsReturns(fmt.Errorf("error"))
+			err = blockDeviceMounterUtils.UnmountDeviceFlow("fake_device")
+			Expect(err).To(HaveOccurred())
+			Expect(err.Error()).To(Equal("error"))
+		})
+		It("should fail if Cleanup failed", func() {
+			fakeBlockDeviceUtils.UmountFsReturns(nil)
+			fakeBlockDeviceUtils.CleanupReturns(fmt.Errorf("error"))
+			err = blockDeviceMounterUtils.UnmountDeviceFlow("fake_device")
+			Expect(err).To(HaveOccurred())
+			Expect(err.Error()).To(Equal("error"))
+			Expect(fakeBlockDeviceUtils.CleanupCallCount()).To(Equal(1))
+		})
+		It("should succees if all is cool", func() {
+			fakeBlockDeviceUtils.UmountFsReturns(nil)
+			fakeBlockDeviceUtils.CleanupReturns(nil)
+			err = blockDeviceMounterUtils.UnmountDeviceFlow("fake_device")
+			Expect(err).NotTo(HaveOccurred())
+			Expect(fakeBlockDeviceUtils.CleanupCallCount()).To(Equal(1))
+		})
+
+	})
+
 })
 
 func TestGetBlockDeviceUtils(t *testing.T) {

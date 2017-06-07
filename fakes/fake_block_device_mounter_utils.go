@@ -45,6 +45,17 @@ type FakeBlockDeviceMounterUtils struct {
 		result1 string
 		result2 error
 	}
+	UnmountDeviceFlowStub        func(devicePath string) error
+	unmountDeviceFlowMutex       sync.RWMutex
+	unmountDeviceFlowArgsForCall []struct {
+		devicePath string
+	}
+	unmountDeviceFlowReturns struct {
+		result1 error
+	}
+	unmountDeviceFlowReturnsOnCall map[int]struct {
+		result1 error
+	}
 	invocations      map[string][][]interface{}
 	invocationsMutex sync.RWMutex
 }
@@ -198,6 +209,54 @@ func (fake *FakeBlockDeviceMounterUtils) DiscoverReturnsOnCall(i int, result1 st
 	}{result1, result2}
 }
 
+func (fake *FakeBlockDeviceMounterUtils) UnmountDeviceFlow(devicePath string) error {
+	fake.unmountDeviceFlowMutex.Lock()
+	ret, specificReturn := fake.unmountDeviceFlowReturnsOnCall[len(fake.unmountDeviceFlowArgsForCall)]
+	fake.unmountDeviceFlowArgsForCall = append(fake.unmountDeviceFlowArgsForCall, struct {
+		devicePath string
+	}{devicePath})
+	fake.recordInvocation("UnmountDeviceFlow", []interface{}{devicePath})
+	fake.unmountDeviceFlowMutex.Unlock()
+	if fake.UnmountDeviceFlowStub != nil {
+		return fake.UnmountDeviceFlowStub(devicePath)
+	}
+	if specificReturn {
+		return ret.result1
+	}
+	return fake.unmountDeviceFlowReturns.result1
+}
+
+func (fake *FakeBlockDeviceMounterUtils) UnmountDeviceFlowCallCount() int {
+	fake.unmountDeviceFlowMutex.RLock()
+	defer fake.unmountDeviceFlowMutex.RUnlock()
+	return len(fake.unmountDeviceFlowArgsForCall)
+}
+
+func (fake *FakeBlockDeviceMounterUtils) UnmountDeviceFlowArgsForCall(i int) string {
+	fake.unmountDeviceFlowMutex.RLock()
+	defer fake.unmountDeviceFlowMutex.RUnlock()
+	return fake.unmountDeviceFlowArgsForCall[i].devicePath
+}
+
+func (fake *FakeBlockDeviceMounterUtils) UnmountDeviceFlowReturns(result1 error) {
+	fake.UnmountDeviceFlowStub = nil
+	fake.unmountDeviceFlowReturns = struct {
+		result1 error
+	}{result1}
+}
+
+func (fake *FakeBlockDeviceMounterUtils) UnmountDeviceFlowReturnsOnCall(i int, result1 error) {
+	fake.UnmountDeviceFlowStub = nil
+	if fake.unmountDeviceFlowReturnsOnCall == nil {
+		fake.unmountDeviceFlowReturnsOnCall = make(map[int]struct {
+			result1 error
+		})
+	}
+	fake.unmountDeviceFlowReturnsOnCall[i] = struct {
+		result1 error
+	}{result1}
+}
+
 func (fake *FakeBlockDeviceMounterUtils) Invocations() map[string][][]interface{} {
 	fake.invocationsMutex.RLock()
 	defer fake.invocationsMutex.RUnlock()
@@ -207,6 +266,8 @@ func (fake *FakeBlockDeviceMounterUtils) Invocations() map[string][][]interface{
 	defer fake.mountDeviceFlowMutex.RUnlock()
 	fake.discoverMutex.RLock()
 	defer fake.discoverMutex.RUnlock()
+	fake.unmountDeviceFlowMutex.RLock()
+	defer fake.unmountDeviceFlowMutex.RUnlock()
 	copiedInvocations := map[string][][]interface{}{}
 	for key, value := range fake.invocations {
 		copiedInvocations[key] = value

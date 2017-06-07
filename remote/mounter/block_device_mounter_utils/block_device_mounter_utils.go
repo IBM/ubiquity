@@ -8,21 +8,39 @@ import (
 // MountDeviceFlow create filesystem on the device (if needed) and then mount it on a given mountpoint
 func (s *blockDeviceMounterUtils) MountDeviceFlow(devicePath string, fsType string, mountPoint string) error {
 	s.logger.Printf(
-		fmt.Sprintf("MountDevice: start to mount device [%s] (required with fstype [%s]) on mountpoint [%s]",
+		fmt.Sprintf("MountDeviceFlow: start to mount device [%s] (required with fstype [%s]) on mountpoint [%s]",
 			devicePath, fsType, mountPoint))
-	fsAlreadyExist, err := s.BlockDeviceUtilsInst.CheckFs(devicePath)
+	NeedToCreateFS, err := s.BlockDeviceUtilsInst.CheckFs(devicePath)
 	if err != nil {
 		return err
 	}
-	if !fsAlreadyExist {
+	if NeedToCreateFS {
 		if err := s.BlockDeviceUtilsInst.MakeFs(devicePath, fsType); err != nil {
 			return err
 		}
 	}
+
 	if err := s.BlockDeviceUtilsInst.MountFs(devicePath, mountPoint); err != nil {
 		return err
 	}
 	fmt.Sprintf("MountDevice: Successfully mount device ", devicePath)
+	return nil
+}
+
+// UnmountDeviceFlow umount device, clean device and remove mountpoint folder
+func (s *blockDeviceMounterUtils) UnmountDeviceFlow(devicePath string) error {
+	s.logger.Printf(fmt.Sprintf("UnmountDeviceFlow: start to unmount device and clean multipath device [%s]", devicePath))
+	err := s.BlockDeviceUtilsInst.UmountFs(devicePath)
+	if err != nil {
+		return err
+	}
+
+	if err := s.BlockDeviceUtilsInst.Cleanup(devicePath); err != nil {
+		return err
+	}
+	fmt.Sprintf("MountDevice: Successfully umount device and clean multipath device", devicePath)
+
+	// TODO delete the directory here
 	return nil
 }
 
