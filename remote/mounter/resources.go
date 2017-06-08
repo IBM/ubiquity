@@ -14,11 +14,14 @@ type Mounter interface {
 	Unmount(volumeConfig map[string]interface{}) error
 }
 
+// TODO why this Get function in resource file instead of client.go ?
 func GetMounterForVolume(logger *log.Logger, volume resources.Volume) (Mounter, error) {
 	if volume.Backend == resources.SPECTRUM_SCALE {
 		return NewSpectrumScaleMounter(logger), nil
 	} else if volume.Backend == resources.SOFTLAYER_NFS || volume.Backend == resources.SPECTRUM_SCALE_NFS {
 		return NewNfsMounter(logger), nil
+	} else if volume.Backend == resources.SCBE || volume.Backend == resources.SCBE {
+		return NewScbeMounter(logger), nil
 	}
 	return nil, fmt.Errorf("Mounter not found for volume: %s", volume.Name)
 }

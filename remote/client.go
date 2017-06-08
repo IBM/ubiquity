@@ -186,7 +186,6 @@ func (s *remoteClient) Attach(name string) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	//needs to return actual client mounted path
 
 	return mountpoint, nil
 }

@@ -28,7 +28,7 @@ func (e *executor) Execute(command string, args []string) ([]byte, error) {
 	cmd := exec.Command(command, args...)
 	output, err := cmd.Output()
 	if err != nil {
-		e.logger.Printf("Error executing command %v", err)
+		e.logger.Printf("Error executing command [%s %#v]. Error is %v, output [%s]", command, args, err, string(output[:]))
 		return nil, err
 	}
 	return output, err
