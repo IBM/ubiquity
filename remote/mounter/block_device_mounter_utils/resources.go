@@ -2,6 +2,7 @@ package block_device_mounter_utils
 
 import (
 	"github.com/IBM/ubiquity/remote/mounter/block_device_utils"
+	"github.com/IBM/ubiquity/utils"
 	"log"
 )
 
@@ -21,7 +22,7 @@ type blockDeviceMounterUtils struct {
 func NewBlockDeviceMounterUtils(logger *log.Logger) BlockDeviceMounterUtils {
 	return &blockDeviceMounterUtils{
 		logger:               logger,
-		BlockDeviceUtilsInst: block_device_utils.NewBlockDeviceUtils(logger),
+		BlockDeviceUtilsInst: block_device_utils.NewBlockDeviceUtils(utils.NewExecutor(logger)),
 	}
 }
 
