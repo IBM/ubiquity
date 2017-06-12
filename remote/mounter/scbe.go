@@ -20,7 +20,7 @@ func (s *scbeMounter) Mount(mountpoint string, volumeConfig map[string]interface
 	defer s.logger.Println("scbeMounter: Mount end")
 
 	// Rescan OS
-	blockDeviceMounterUtils := block_device_mounter_utils.NewBlockDeviceMounterUtils(s.logger)
+	blockDeviceMounterUtils := block_device_mounter_utils.NewBlockDeviceMounterUtils()
 	if err := blockDeviceMounterUtils.RescanAll(true); err != nil {
 		s.logger.Printf("RescanAll failed")
 		return "", err
@@ -35,7 +35,7 @@ func (s *scbeMounter) Mount(mountpoint string, volumeConfig map[string]interface
 	}
 
 	// Create mount point if needed   // TODO consider to move it inside the util
-	exec := utils.NewExecutor(s.logger)
+	exec := utils.NewExecutor()
 	if _, err := exec.Stat(mountpoint); err != nil {
 		s.logger.Printf("Create mountpoint directory " + mountpoint)
 		// TODO consider to add the prefix of the wwn in the OS (multipath -ll output)
@@ -61,7 +61,7 @@ func (s *scbeMounter) Unmount(volumeConfig map[string]interface{}) error {
 
 	volumeWWN := volumeConfig["wwn"].(string) // TODO use the const from local/scbe
 	mountpoint := "/ubiquity/" + volumeWWN    // TODO get the ubiquity prefix from const
-	blockDeviceMounterUtils := block_device_mounter_utils.NewBlockDeviceMounterUtils(s.logger)
+	blockDeviceMounterUtils := block_device_mounter_utils.NewBlockDeviceMounterUtils()
 	devicePath, err := blockDeviceMounterUtils.Discover(volumeWWN)
 	if err != nil {
 		s.logger.Printf(fmt.Sprintf("Discover device WWN [%s] failed", volumeWWN))
@@ -74,7 +74,7 @@ func (s *scbeMounter) Unmount(volumeConfig map[string]interface{}) error {
 	}
 
 	// TODO move this part to the util
-	exec := utils.NewExecutor(s.logger)
+	exec := utils.NewExecutor()
 	if _, err := exec.Stat(mountpoint); err == nil {
 		s.logger.Printf("delete mountpoint directory " + mountpoint)
 		// TODO consider to add the prefix of the wwn in the OS (multipath -ll output)

@@ -7,23 +7,21 @@ import (
 	"github.com/IBM/ubiquity/remote/mounter/block_device_utils"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
-	"log"
-	"os"
 	"testing"
+	"github.com/IBM/ubiquity/logutil"
 )
 
 var _ = Describe("block_device_mounter_utils_test", func() {
 	var (
-		logger                  *log.Logger
 		fakeBlockDeviceUtils    *fakes.FakeBlockDeviceUtils
 		blockDeviceMounterUtils block_device_mounter_utils.BlockDeviceMounterUtils
 		err                     error
 	)
 
 	BeforeEach(func() {
-		logger = log.New(os.Stdout, "block_device_mounter_utils: ", log.Lshortfile|log.LstdFlags)
+		defer logutil.InitStdoutLogger(logutil.DEBUG)()
 		fakeBlockDeviceUtils = new(fakes.FakeBlockDeviceUtils)
-		blockDeviceMounterUtils = block_device_mounter_utils.NewBlockDeviceMounterUtilsWithExecutor(logger, fakeBlockDeviceUtils)
+		blockDeviceMounterUtils = block_device_mounter_utils.NewBlockDeviceMounterUtilsWithBlockDeviceUtils(fakeBlockDeviceUtils)
 	})
 
 	Context(".MountDeviceFlow", func() {

@@ -2,8 +2,7 @@ package block_device_mounter_utils
 
 import (
 	"github.com/IBM/ubiquity/remote/mounter/block_device_utils"
-	"github.com/IBM/ubiquity/utils"
-	"log"
+	"github.com/IBM/ubiquity/logutil"
 )
 
 //go:generate counterfeiter -o ../fakes/fake_block_device_mounter_utils.go . BlockDeviceMounterUtils
@@ -15,20 +14,18 @@ type BlockDeviceMounterUtils interface {
 }
 
 type blockDeviceMounterUtils struct {
-	logger               *log.Logger
-	BlockDeviceUtilsInst block_device_utils.BlockDeviceUtils
+	logger               logutil.Logger
+	blockDeviceUtils     block_device_utils.BlockDeviceUtils
 }
 
-func NewBlockDeviceMounterUtils(logger *log.Logger) BlockDeviceMounterUtils {
-	return &blockDeviceMounterUtils{
-		logger:               logger,
-		BlockDeviceUtilsInst: block_device_utils.NewBlockDeviceUtils(utils.NewExecutor(logger)),
-	}
+func NewBlockDeviceMounterUtilsWithBlockDeviceUtils(blockDeviceUtilsInst block_device_utils.BlockDeviceUtils) BlockDeviceMounterUtils {
+	mounterUtils := blockDeviceMounterUtils{blockDeviceUtils: blockDeviceUtilsInst}
+	mounterUtils.logger = logutil.GetLogger()
+	return &mounterUtils
 }
 
-func NewBlockDeviceMounterUtilsWithExecutor(logger *log.Logger, blockDeviceUtils block_device_utils.BlockDeviceUtils) BlockDeviceMounterUtils {
-	return &blockDeviceMounterUtils{
-		logger:               logger,
-		BlockDeviceUtilsInst: blockDeviceUtils,
-	}
+func NewBlockDeviceMounterUtils() BlockDeviceMounterUtils {
+	mounterUtils := blockDeviceMounterUtils{blockDeviceUtils: block_device_utils.NewBlockDeviceUtils()}
+	mounterUtils.logger = logutil.GetLogger()
+	return &mounterUtils
 }

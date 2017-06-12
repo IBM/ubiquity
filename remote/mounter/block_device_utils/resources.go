@@ -29,7 +29,13 @@ type impBlockDeviceUtils struct {
 	exec   utils.Executor
 }
 
-func NewBlockDeviceUtils(executor utils.Executor) BlockDeviceUtils {
+func NewBlockDeviceUtils() BlockDeviceUtils {
+	blockDeviceUtils := impBlockDeviceUtils{exec: utils.NewExecutor()}
+	blockDeviceUtils.logger = logutil.GetLogger()
+	return &blockDeviceUtils
+}
+
+func NewBlockDeviceUtilsWithExecutor(executor utils.Executor) BlockDeviceUtils {
 	blockDeviceUtils := impBlockDeviceUtils{exec: executor}
 	blockDeviceUtils.logger = logutil.GetLogger()
 	return &blockDeviceUtils
