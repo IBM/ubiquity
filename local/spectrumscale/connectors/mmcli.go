@@ -17,7 +17,7 @@ type spectrum_mmcli struct {
 }
 
 func NewSpectrumMMCLI(logger *log.Logger) (SpectrumScaleConnector, error) {
-	return &spectrum_mmcli{logger: logger, executor: utils.NewExecutor(logger)}, nil
+	return &spectrum_mmcli{logger: logger, executor: utils.NewExecutor()}, nil
 }
 
 func NewSpectrumMMCLIWithExecutor(logger *log.Logger, executor utils.Executor) (SpectrumScaleConnector, error) {

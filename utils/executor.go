@@ -1,9 +1,9 @@
 package utils
 
 import (
-	"log"
 	"os"
 	"os/exec"
+	"github.com/IBM/ubiquity/logutil"
 )
 
 //go:generate counterfeiter -o ../fakes/fake_executor.go . Executor
@@ -18,18 +18,17 @@ type Executor interface { // basic host dependent functions
 }
 
 type executor struct {
-	logger *log.Logger
+	logger logutil.Logger
 }
 
-func NewExecutor(logger *log.Logger) Executor {
-	return &executor{logger: logger}
+func NewExecutor() Executor {
+	return &executor{}
 }
 
 func (e *executor) Execute(command string, args []string) ([]byte, error) {
 	cmd := exec.Command(command, args...)
 	output, err := cmd.Output()
 	if err != nil {
-		e.logger.Printf("Error executing command [%s %#v]. Error is %v, output [%s]", command, args, err, string(output[:]))
 		return nil, err
 	}
 	return output, err

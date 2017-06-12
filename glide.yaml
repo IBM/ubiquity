@@ -15,10 +15,8 @@ import:
 - package: github.com/openstack/golang-client
   subpackages:
   - openstack
-- package: k8s.io/kubernetes
-  version: ^1.6.0-alpha.3
-  subpackages:
-  - staging/src/k8s.io/client-go/_vendor/github.com/golang/glog
+- package: github.com/op/go-logging
+  version: 970db520ece77730c7e4724c61121037378659d9
 testImport:
 - package: github.com/onsi/ginkgo
   version: bb93381d543b0e5725244abe752214a110791d01
@@ -26,4 +24,3 @@ testImport:
   version: c463cd2a8578290d4be7a25cba69de81cf35785e
 - package: github.com/jarcoal/httpmock
   version: 4442edb3db31196622da56482fd8d0fa375fba4d
-

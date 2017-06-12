@@ -18,6 +18,7 @@ import (
 	"github.com/IBM/ubiquity/web_server"
 	"github.com/jinzhu/gorm"
 	_ "github.com/jinzhu/gorm/dialects/sqlite"
+	"github.com/IBM/ubiquity/logutil"
 )
 
 var configFile = flag.String(
@@ -45,10 +46,11 @@ func main() {
 		return
 	}
 
+	defer logutil.InitFileLogger(logutil.INFO, path.Join(config.LogPath, "ubiquity.log"))
 	logger, logFile := utils.SetupLogger(config.LogPath, "ubiquity")
 	defer utils.CloseLogs(logFile)
 
-	spectrumExecutor := utils.NewExecutor(logger)
+	spectrumExecutor := utils.NewExecutor()
 	ubiquityConfigPath, err := utils.SetupConfigDirectory(logger, spectrumExecutor, config.SpectrumScaleConfig.ConfigPath)
 	if err != nil {
 		panic(err.Error())

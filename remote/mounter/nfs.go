@@ -31,7 +31,7 @@ func (s *nfsMounter) Mount(mountpoint string, volumeConfig map[string]interface{
 	s.logger.Printf("nfsMounter: mkdir -p %s\n", remoteMountpoint)
 	args := []string{"mkdir", "-p", remoteMountpoint}
 
-	executor := utils.NewExecutor(s.logger)
+	executor := utils.NewExecutor()
 	_, err := executor.Execute("sudo", args)
 	if err != nil {
 		return "", fmt.Errorf("nfsMounter: Failed to mkdir for remote mountpoint %s (share %s, error '%s')\n", remoteMountpoint, mountpoint, err.Error())
@@ -41,7 +41,7 @@ func (s *nfsMounter) Mount(mountpoint string, volumeConfig map[string]interface{
 	if isPreexistingSpecified && isPreexisting.(bool) == false {
 		uid, uidSpecified := volumeConfig["uid"]
 		gid, gidSpecified := volumeConfig["gid"]
-		executor := utils.NewExecutor(s.logger)
+		executor := utils.NewExecutor()
 		if uidSpecified || gidSpecified {
 			args := []string{"chown", fmt.Sprintf("%s:%s", uid, gid), remoteMountpoint}
 			_, err = executor.Execute("sudo", args)
@@ -86,7 +86,7 @@ func (s *nfsMounter) mount(nfsShare, remoteMountpoint string) (string, error) {
 	s.logger.Printf("nfsMounter: - mount start nfsShare=%s\n", nfsShare)
 	defer s.logger.Printf("nfsMounter: - mount end nfsShare=%s\n", nfsShare)
 
-	executor := utils.NewExecutor(s.logger)
+	executor := utils.NewExecutor()
 	args := []string{"mount", "-t", "nfs", nfsShare, remoteMountpoint}
 	output, err := executor.Execute("sudo", args)
 	if err != nil {
@@ -111,7 +111,7 @@ func (s *nfsMounter) isMounted(nfsShare, remoteMountpoint string) bool {
 func (s *nfsMounter) unmount(remoteMountpoint string) error {
 	s.logger.Printf("nfsMounter: - unmount start remoteMountpoint=%s\n", remoteMountpoint)
 	defer s.logger.Printf("nfsMounter: - unmount end remoteMountpoint=%s\n", remoteMountpoint)
-	executor := utils.NewExecutor(s.logger)
+	executor := utils.NewExecutor()
 	args := []string{"umount", remoteMountpoint}
 	output, err := executor.Execute("sudo", args)
 	if err != nil {

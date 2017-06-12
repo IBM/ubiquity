@@ -20,7 +20,7 @@ func GetMounterForVolume(logger *log.Logger, volume resources.Volume) (Mounter, 
 		return NewSpectrumScaleMounter(logger), nil
 	} else if volume.Backend == resources.SOFTLAYER_NFS || volume.Backend == resources.SPECTRUM_SCALE_NFS {
 		return NewNfsMounter(logger), nil
-	} else if volume.Backend == resources.SCBE || volume.Backend == resources.SCBE {
+	} else if volume.Backend == resources.SCBE {
 		return NewScbeMounter(logger), nil
 	}
 	return nil, fmt.Errorf("Mounter not found for volume: %s", volume.Name)

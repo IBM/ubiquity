@@ -35,7 +35,7 @@ func NewSpectrumNfsLocalClient(logger *log.Logger, config resources.SpectrumScal
 	if err != nil {
 		return nil, err
 	}
-	return &spectrumNfsLocalClient{config: config, spectrumClient: spectrumClient, executor: utils.NewExecutor(logger)}, nil
+	return &spectrumNfsLocalClient{config: config, spectrumClient: spectrumClient, executor: utils.NewExecutor()}, nil
 }
 
 func (s *spectrumNfsLocalClient) Activate() error {

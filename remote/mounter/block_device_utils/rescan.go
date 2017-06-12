@@ -3,6 +3,7 @@ package block_device_utils
 import (
 	"errors"
 	"fmt"
+	"github.com/IBM/ubiquity/logutil"
 )
 
 
@@ -20,12 +21,12 @@ func (s *impBlockDeviceUtils) Rescan(protocol Protocol) error {
 func (s *impBlockDeviceUtils) RescanISCSI() error {
 	rescanCmd := "iscsiadm"
 	if err := s.exec.IsExecutable(rescanCmd); err != nil {
-		s.logger.Printf("RescanISCSI: %v", err)
+		s.logger.Error("IsExecutable failed", logutil.Param{"cmd", rescanCmd}, logutil.Param{"error", err})
 		return err
 	}
 	args := []string{rescanCmd, "-m", "session", "--rescan"}
 	if _, err := s.exec.Execute("sudo", args); err != nil {
-		s.logger.Printf("RescanISCSI: %v", err)
+		s.logger.Error("Execute failed", logutil.Param{"cmd", rescanCmd}, logutil.Param{"error", err})
 		return err
 	}
 	return nil
@@ -42,12 +43,12 @@ func (s *impBlockDeviceUtils) RescanSCSI() error {
 	}
 	if rescanCmd == "" {
 		err := errors.New("rescan-scsi-bus command not found")
-		s.logger.Printf("RescanSCSI: %v", err)
+		s.logger.Error("failed", logutil.Param{"error", err})
 		return err
 	}
 	args := []string{rescanCmd, "-r"} // TODO should use -r only in clean up
 	if _, err := s.exec.Execute("sudo", args); err != nil {
-		s.logger.Printf("RescanSCSI: %v", err)
+		s.logger.Error("Execute failed", logutil.Param{"cmd", rescanCmd}, logutil.Param{"error", err})
 		return err
 	}
 	return nil

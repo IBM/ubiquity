@@ -17,6 +17,8 @@ imports:
   version: 1c35d901db3da928c72a72d8458480cc9ade058f
 - name: github.com/mattn/go-sqlite3
   version: ca5e3819723d8eeaf170ad510e7da1d6d2e94a08
+- name: github.com/op/go-logging
+  version: b2cb9fa56473e98db8caba80237377e83fe44db5
 - name: github.com/openstack/golang-client
   version: f8471e433432b26dd29aa1c1cd42317a9d79a551
   subpackages:
@@ -25,10 +27,6 @@ imports:
   version: e90d6d0afc4c315a0d87a568ae68577cc15149a0
   subpackages:
   - context
-- name: k8s.io/kubernetes
-  version: 98d693e9d24f585cb4e6615efdb3d07ec3a1616b
-  subpackages:
-  - staging/src/k8s.io/client-go/_vendor/github.com/golang/glog
 testImports:
 - name: github.com/onsi/ginkgo
   version: bb93381d543b0e5725244abe752214a110791d01

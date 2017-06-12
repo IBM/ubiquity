@@ -1,22 +1,20 @@
 package block_device_utils_test
 
 import (
-    "log"
     "github.com/IBM/ubiquity/remote/mounter/block_device_utils"
     "github.com/IBM/ubiquity/fakes"
     "github.com/IBM/ubiquity/utils"
+    "github.com/IBM/ubiquity/logutil"
     . "github.com/onsi/gomega"
     . "github.com/onsi/ginkgo"
     "testing"
     "errors"
     "fmt"
-    "os"
     "io/ioutil"
 )
 
 var _ = Describe("block_device_utils_test", func() {
     var (
-        logger        *log.Logger
         fakeExec      *fakes.FakeExecutor
         bdUtils       block_device_utils.BlockDeviceUtils
         err           error
@@ -24,9 +22,9 @@ var _ = Describe("block_device_utils_test", func() {
     )
 
     BeforeEach(func() {
-        logger = log.New(os.Stdout, "block_device_utils: ", log.Lshortfile|log.LstdFlags)
+        defer logutil.InitStdoutLogger(logutil.DEBUG)()
         fakeExec = new(fakes.FakeExecutor)
-        bdUtils = block_device_utils.NewBlockDeviceUtilsWithExecutor(logger, fakeExec)
+        bdUtils = block_device_utils.NewBlockDeviceUtilsWithExecutor(fakeExec)
     })
 
     Context(".Rescan", func() {
@@ -190,7 +188,7 @@ var _ = Describe("block_device_utils_test", func() {
         It("CheckFs detects empty device", func() {
             err = ioutil.WriteFile("/tmp/tst.sh", []byte("exit 2"), 0777)
             Expect(err).ToNot(HaveOccurred())
-            executor := utils.NewExecutor(logger)
+            executor := utils.NewExecutor()
             _, exitErr2 := executor.Execute("sh", []string{"/tmp/tst.sh"})
             Expect(exitErr2).To(HaveOccurred())
             mpath := "mpath"

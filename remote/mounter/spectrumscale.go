@@ -23,7 +23,7 @@ func (s *spectrumScaleMounter) Mount(mountpoint string, volumeConfig map[string]
 	if isPreexistingSpecified && isPreexisting.(bool) == false {
 		uid, uidSpecified := volumeConfig["uid"]
 		gid, gidSpecified := volumeConfig["gid"]
-		executor := utils.NewExecutor(s.logger)
+		executor := utils.NewExecutor()
 		if uidSpecified || gidSpecified {
 			args := []string{"chown", fmt.Sprintf("%s:%s", uid, gid), mountpoint}
 			_, err := executor.Execute("sudo", args)

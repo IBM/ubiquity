@@ -22,7 +22,7 @@ func NewSpectrumSSH(logger *log.Logger, sshConfig resources.SshConfig) (Spectrum
 	user := sshConfig.User
 	host := sshConfig.Host
 	port := sshConfig.Port
-	return &spectrum_ssh{logger: logger, executor: utils.NewExecutor(logger), user: user, host: host, port: port}, nil
+	return &spectrum_ssh{logger: logger, executor: utils.NewExecutor(), user: user, host: host, port: port}, nil
 }
 func NewSpectrumSSHWithExecutor(logger *log.Logger, sshConfig resources.SshConfig, executor utils.Executor) (SpectrumScaleConnector, error) {
 	user := sshConfig.User
