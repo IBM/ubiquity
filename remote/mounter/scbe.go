@@ -38,8 +38,7 @@ func (s *scbeMounter) Mount(mountpoint string, volumeConfig map[string]interface
 	exec := utils.NewExecutor(s.logger)
 	if _, err := exec.Stat(mountpoint); err != nil {
 		s.logger.Printf("Create mountpoint directory " + mountpoint)
-		// TODO consider to add the prefix of the wwn in the OS (multipath -ll output)
-		if err := exec.Mkdir(mountpoint, 0700); err != nil {
+		if err := exec.MkdirAll(mountpoint, 0700); err != nil {
 			s.logger.Printf("Fail to create mountpoint " + mountpoint)
 			return "", err
 		}
@@ -82,6 +81,11 @@ func (s *scbeMounter) Unmount(volumeConfig map[string]interface{}) error {
 			s.logger.Printf("Fail to remove mountpoint " + mountpoint)
 			return err
 		}
+	}
+
+	if err := blockDeviceMounterUtils.RescanAll(true); err != nil {
+		s.logger.Printf("RescanAll failed")
+		return err
 	}
 
 	return nil

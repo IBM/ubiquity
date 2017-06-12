@@ -14,4 +14,5 @@ Cannot create volume [%s] on service [%s]. Reason : Service does not exist or no
 	MsgCannotDetachVolThatAlreadyDetached = "Cannot detach volume [%s] from host [%s], because the volume is already detached"
 	MsgVolumeNotInUbiquityDB              = "because the volume does not exist in ubiquity DB"
 	MsgVolumeNotFoundInUbiquityDB         = "Cannot %s on volume [%s] " + MsgVolumeNotInUbiquityDB
+	MsgVolumeAlreadyAttached              = "Volume already attach to the host %s, so skip backend volume attach."
 )
