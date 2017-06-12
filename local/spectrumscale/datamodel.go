@@ -140,7 +140,6 @@ func (d *spectrumDataModel) InsertFilesetQuotaVolume(fileset, quota, volumeName 
 func (d *spectrumDataModel) insertVolume(volume SpectrumScaleVolume) error {
 	d.log.Println("SpectrumDataModel: insertVolume start")
 	defer d.log.Println("SpectrumDataModel: insertVolume end")
-
 	if err := d.database.Create(&volume).Error; err != nil {
 		return err
 	}

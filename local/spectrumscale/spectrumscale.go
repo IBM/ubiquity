@@ -45,14 +45,14 @@ const (
 	Cluster string = "clusterId"
 )
 
-func NewSpectrumLocalClient(logger *log.Logger, config resources.SpectrumScaleConfig, database *gorm.DB) (resources.StorageClient, error) {
+func NewSpectrumLocalClient(logger *log.Logger, config resources.UbiquityServerConfig, database *gorm.DB) (resources.StorageClient, error) {
 	if config.ConfigPath == "" {
 		return nil, fmt.Errorf("spectrumLocalClient: init: missing required parameter 'spectrumConfigPath'")
 	}
-	if config.DefaultFilesystemName == "" {
+	if config.SpectrumScaleConfig.DefaultFilesystemName == "" {
 		return nil, fmt.Errorf("spectrumLocalClient: init: missing required parameter 'spectrumDefaultFileSystem'")
 	}
-	return newSpectrumLocalClient(logger, config, database, resources.SpectrumScale)
+	return newSpectrumLocalClient(logger, config.SpectrumScaleConfig, database, resources.SpectrumScale)
 }
 
 func NewSpectrumLocalClientWithConnectors(logger *log.Logger, connector connectors.SpectrumScaleConnector, spectrumExecutor utils.Executor, config resources.SpectrumScaleConfig, datamodel SpectrumDataModel) (resources.StorageClient, error) {

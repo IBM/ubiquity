@@ -11,6 +11,7 @@ const (
 type UbiquityServerConfig struct {
 	Port                int
 	LogPath             string
+	ConfigPath          string
 	SpectrumScaleConfig SpectrumScaleConfig
 	BrokerConfig        BrokerConfig
 	DefaultBackend      string
@@ -18,7 +19,6 @@ type UbiquityServerConfig struct {
 
 type SpectrumScaleConfig struct {
 	DefaultFilesystemName string
-	ConfigPath            string
 	NfsServerAddr         string
 	SshConfig             SshConfig
 	RestConfig            RestConfig

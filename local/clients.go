@@ -13,14 +13,14 @@ import (
 func GetLocalClients(logger *log.Logger, config resources.UbiquityServerConfig, database *gorm.DB) (map[string]resources.StorageClient, error) {
 
 	clients := make(map[string]resources.StorageClient)
-	spectrumClient, err := spectrumscale.NewSpectrumLocalClient(logger, config.SpectrumScaleConfig, database)
+	spectrumClient, err := spectrumscale.NewSpectrumLocalClient(logger, config, database)
 	if err != nil {
 		logger.Printf("Not enough params to initialize '%s' client", resources.SpectrumScale)
 	} else {
 		clients[resources.SpectrumScale] = spectrumClient
 	}
 
-	spectrumNfsClient, err := spectrumscale.NewSpectrumNfsLocalClient(logger, config.SpectrumScaleConfig, database)
+	spectrumNfsClient, err := spectrumscale.NewSpectrumNfsLocalClient(logger, config, database)
 	if err != nil {
 		logger.Printf("Not enough params to initialize '%s' client", resources.SpectrumScaleNFS)
 	} else {

@@ -15,7 +15,7 @@ type spectrumNfsLocalClient struct {
 	executor       utils.Executor
 }
 
-func NewSpectrumNfsLocalClient(logger *log.Logger, config resources.SpectrumScaleConfig, db *gorm.DB) (resources.StorageClient, error) {
+func NewSpectrumNfsLocalClient(logger *log.Logger, config resources.UbiquityServerConfig, db *gorm.DB) (resources.StorageClient, error) {
 	logger.Println("spectrumNfsLocalClient: init start")
 	defer logger.Println("spectrumNfsLocalClient: init end")
 
@@ -23,19 +23,19 @@ func NewSpectrumNfsLocalClient(logger *log.Logger, config resources.SpectrumScal
 		return nil, fmt.Errorf("spectrumNfsLocalClient: init: missing required parameter 'spectrumConfigPath'")
 	}
 
-	if config.DefaultFilesystemName == "" {
+	if config.SpectrumScaleConfig.DefaultFilesystemName == "" {
 		return nil, fmt.Errorf("spectrumNfsLocalClient: init: missing required parameter 'spectrumDefaultFileSystem'")
 	}
 
-	if config.NfsServerAddr == "" {
+	if config.SpectrumScaleConfig.NfsServerAddr == "" {
 		return nil, fmt.Errorf("spectrumNfsLocalClient: init: missing required parameter 'spectrumNfsServerAddr'")
 	}
 
-	spectrumClient, err := newSpectrumLocalClient(logger, config, db, resources.SpectrumScaleNFS)
+	spectrumClient, err := newSpectrumLocalClient(logger, config.SpectrumScaleConfig, db, resources.SpectrumScaleNFS)
 	if err != nil {
 		return nil, err
 	}
-	return &spectrumNfsLocalClient{config: config, spectrumClient: spectrumClient, executor: utils.NewExecutor(logger)}, nil
+	return &spectrumNfsLocalClient{config: config.SpectrumScaleConfig, spectrumClient: spectrumClient, executor: utils.NewExecutor(logger)}, nil
 }
 
 func (s *spectrumNfsLocalClient) Activate(activateRequest resources.ActivateRequest) error {

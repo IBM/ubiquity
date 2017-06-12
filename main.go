@@ -48,7 +48,7 @@ func main() {
 	defer utils.CloseLogs(logFile)
 
 	spectrumExecutor := utils.NewExecutor(logger)
-	ubiquityConfigPath, err := utils.SetupConfigDirectory(logger, spectrumExecutor, config.SpectrumScaleConfig.ConfigPath)
+	ubiquityConfigPath, err := utils.SetupConfigDirectory(logger, spectrumExecutor, config.ConfigPath)
 	if err != nil {
 		panic(err.Error())
 	}
