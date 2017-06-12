@@ -4,6 +4,7 @@ import (
     "github.com/op/go-logging"
 )
 
+
 const (
     DEBUG = logging.DEBUG
     INFO = logging.INFO
@@ -17,10 +18,12 @@ type Param struct {
     Value interface{}
 }
 
+type Args []Param
+
 type Logger interface {
-    Debug(str string, param ...Param)
-    Info(str string, param ...Param)
-    Error(str string, param ...Param)
+    Debug(str string, args ...Args)
+    Info(str string, args ...Args)
+    Error(str string, args ...Args)
 }
 
 type impLogger struct {
