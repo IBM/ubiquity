@@ -48,6 +48,18 @@ type FakeExecutor struct {
 	mkdirReturnsOnCall map[int]struct {
 		result1 error
 	}
+	MkdirAllStub        func(string, os.FileMode) error
+	mkdirAllMutex       sync.RWMutex
+	mkdirAllArgsForCall []struct {
+		arg1 string
+		arg2 os.FileMode
+	}
+	mkdirAllReturns struct {
+		result1 error
+	}
+	mkdirAllReturnsOnCall map[int]struct {
+		result1 error
+	}
 	RemoveAllStub        func(string) error
 	removeAllMutex       sync.RWMutex
 	removeAllArgsForCall []struct {
@@ -242,6 +254,55 @@ func (fake *FakeExecutor) MkdirReturnsOnCall(i int, result1 error) {
 	}{result1}
 }
 
+func (fake *FakeExecutor) MkdirAll(arg1 string, arg2 os.FileMode) error {
+	fake.mkdirAllMutex.Lock()
+	ret, specificReturn := fake.mkdirAllReturnsOnCall[len(fake.mkdirAllArgsForCall)]
+	fake.mkdirAllArgsForCall = append(fake.mkdirAllArgsForCall, struct {
+		arg1 string
+		arg2 os.FileMode
+	}{arg1, arg2})
+	fake.recordInvocation("MkdirAll", []interface{}{arg1, arg2})
+	fake.mkdirAllMutex.Unlock()
+	if fake.MkdirAllStub != nil {
+		return fake.MkdirAllStub(arg1, arg2)
+	}
+	if specificReturn {
+		return ret.result1
+	}
+	return fake.mkdirAllReturns.result1
+}
+
+func (fake *FakeExecutor) MkdirAllCallCount() int {
+	fake.mkdirAllMutex.RLock()
+	defer fake.mkdirAllMutex.RUnlock()
+	return len(fake.mkdirAllArgsForCall)
+}
+
+func (fake *FakeExecutor) MkdirAllArgsForCall(i int) (string, os.FileMode) {
+	fake.mkdirAllMutex.RLock()
+	defer fake.mkdirAllMutex.RUnlock()
+	return fake.mkdirAllArgsForCall[i].arg1, fake.mkdirAllArgsForCall[i].arg2
+}
+
+func (fake *FakeExecutor) MkdirAllReturns(result1 error) {
+	fake.MkdirAllStub = nil
+	fake.mkdirAllReturns = struct {
+		result1 error
+	}{result1}
+}
+
+func (fake *FakeExecutor) MkdirAllReturnsOnCall(i int, result1 error) {
+	fake.MkdirAllStub = nil
+	if fake.mkdirAllReturnsOnCall == nil {
+		fake.mkdirAllReturnsOnCall = make(map[int]struct {
+			result1 error
+		})
+	}
+	fake.mkdirAllReturnsOnCall[i] = struct {
+		result1 error
+	}{result1}
+}
+
 func (fake *FakeExecutor) RemoveAll(arg1 string) error {
 	fake.removeAllMutex.Lock()
 	ret, specificReturn := fake.removeAllReturnsOnCall[len(fake.removeAllArgsForCall)]
@@ -390,6 +451,8 @@ func (fake *FakeExecutor) Invocations() map[string][][]interface{} {
 	defer fake.statMutex.RUnlock()
 	fake.mkdirMutex.RLock()
 	defer fake.mkdirMutex.RUnlock()
+	fake.mkdirAllMutex.RLock()
+	defer fake.mkdirAllMutex.RUnlock()
 	fake.removeAllMutex.RLock()
 	defer fake.removeAllMutex.RUnlock()
 	fake.hostnameMutex.RLock()
