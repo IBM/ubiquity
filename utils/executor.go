@@ -1,11 +1,11 @@
 package utils
 
 import (
-	"log"
 	"os"
 	"os/exec"
 	"bytes"
 	"fmt"
+	"github.com/IBM/ubiquity/logutil"
 )
 
 //go:generate counterfeiter -o ../fakes/fake_executor.go . Executor
