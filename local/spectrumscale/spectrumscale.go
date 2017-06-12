@@ -366,6 +366,13 @@ func (s *spectrumLocalClient) Attach(attachRequest resources.AttachRequest) (vol
 
 	existingVolume.Volume.Mountpoint = volumeMountpoint
 
+	err = s.dataModel.UpdateVolumeMountpoint(attachRequest.Name, volumeMountpoint)
+
+	if err != nil {
+		s.logger.Println(err.Error())
+		return "", err
+	}
+
 	return volumeMountpoint, nil
 }
 
@@ -396,6 +403,12 @@ func (s *spectrumLocalClient) Detach(detachRequest resources.DetachRequest) (err
 	}
 	if isFilesetLinked == false {
 		return fmt.Errorf("volume not attached")
+	}
+
+	err = s.dataModel.UpdateVolumeMountpoint(detachRequest.Name, "")
+	if err != nil {
+		s.logger.Println(err.Error())
+		return err
 	}
 
 	return nil

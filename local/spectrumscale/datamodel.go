@@ -22,6 +22,7 @@ type SpectrumDataModel interface {
 	InsertFilesetQuotaVolume(fileset, quota, volumeName string, filesystem string, isPreexisting bool, opts map[string]interface{}) error
 	GetVolume(name string) (SpectrumScaleVolume, bool, error)
 	ListVolumes() ([]resources.Volume, error)
+	UpdateVolumeMountpoint(name string, mountpoint string) error
 }
 
 type spectrumDataModel struct {
@@ -185,6 +186,21 @@ func (d *spectrumDataModel) ListVolumes() ([]resources.Volume, error) {
 	}
 
 	return volumes, nil
+}
+
+func (d *spectrumDataModel) UpdateVolumeMountpoint(name string, mountpoint string) error {
+	d.log.Println("SpectrumDataModel: UpdateVolumeMountpoint start")
+	defer d.log.Println("SpectrumDataModel: UpdateVolumeMountpoint end")
+
+	volume, err := model.GetVolume(d.database, name, d.backend)
+	if err != nil {
+		return err
+	}
+
+	if err = model.UpdateVolumeMountpoint(d.database, &volume, mountpoint); err != nil {
+		return fmt.Errorf("Error updating mountpoint of volume %s to %s: %s", volume.Name, mountpoint, err.Error())
+	}
+	return nil
 }
 
 func addPermissionsForVolume(volume *SpectrumScaleVolume, opts map[string]interface{}) {

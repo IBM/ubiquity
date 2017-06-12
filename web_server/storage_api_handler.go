@@ -82,6 +82,9 @@ func (h *StorageApiHandler) CreateVolume() http.HandlerFunc {
 			utils.WriteResponse(w, 409, &resources.GenericResponse{Err: err.Error()})
 			return
 		}
+		if len(createVolumeRequest.Backend) == 0 {
+			createVolumeRequest.Backend = h.config.DefaultBackend
+		}
 		backend, ok := h.backends[createVolumeRequest.Backend]
 		if !ok {
 			h.logger.Printf("error-backend-not-found%s", createVolumeRequest.Backend)

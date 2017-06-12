@@ -32,3 +32,8 @@ func VolumeExists(db *gorm.DB, name string) (bool, error) {
 func DeleteVolume(db *gorm.DB, volume *resources.Volume) *gorm.DB {
 	return db.Delete(volume)
 }
+
+func UpdateVolumeMountpoint(db *gorm.DB, volume *resources.Volume, mountpoint string) error {
+	err := db.Model(volume).Update("mountpoint", mountpoint).Error
+	return err
+}
