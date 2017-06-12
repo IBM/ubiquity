@@ -226,6 +226,10 @@ func (s *remoteClient) Detach(detachRequest resources.DetachRequest) error {
 		return utils.ExtractErrorResponse(response)
 	}
 
+	if err := mounter.ActionAfterDetach(volumeConfig); err != nil {
+		s.logger.Printf(fmt.Sprintf("Error execute action after detaching the volume : %#v", err))
+		return err
+	}
 	return nil
 
 }
