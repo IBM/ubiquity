@@ -208,7 +208,7 @@ func (h *StorageApiHandler) GetVolumeConfig() http.HandlerFunc {
 		backend, err := h.getBackend(getVolumeConfigRequest.Name)
 		if err != nil {
 			h.logger.Printf("error-backend-not-found-for-volume:%s", getVolumeConfigRequest.Name)
-			utils.WriteResponse(w, http.StatusNotFound, &resources.GenericResponse{Err: "backend-not-found"})
+			utils.WriteResponse(w, http.StatusNotFound, &resources.GenericResponse{Err: err.Error()})
 			return
 		}
 
