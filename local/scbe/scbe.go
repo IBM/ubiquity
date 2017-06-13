@@ -260,7 +260,13 @@ func (s *scbeLocalClient) Attach(name string) (string, error) {
 		return "", err
 	}
 
-	if existingVolume.AttachTo != "" {
+	if existingVolume.AttachTo == host2attach {
+		// if already map to the given host then just ignore and succeed to attach
+		s.logger.Info(fmt.Sprintf(MsgVolumeAlreadyAttached, host2attach))
+		volumeMountpoint := fmt.Sprintf(PathToMountUbiquityBlockDevices, existingVolume.WWN)
+		return volumeMountpoint, nil
+	} else if existingVolume.AttachTo != "" {
+		// if it attached to other node , then exit with error
 		err = fmt.Errorf(MsgCannotAttachVolThatAlreadyAttached, name, host2attach, existingVolume.AttachTo)
 		s.logger.Error("failed", logutil.Args{{"error", err}})
 		return "", err

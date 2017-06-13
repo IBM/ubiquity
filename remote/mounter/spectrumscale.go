@@ -60,3 +60,8 @@ func (s *spectrumScaleMounter) Unmount(volumeConfig map[string]interface{}) erro
 	return nil
 
 }
+
+func (s *spectrumScaleMounter) ActionAfterDetach(volumeConfig map[string]interface{}) error {
+	// no action needed for SSc
+	return nil
+}

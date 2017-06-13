@@ -12,6 +12,7 @@ import (
 type Mounter interface {
 	Mount(mountpoint string, volumeConfig map[string]interface{}) (string, error)
 	Unmount(volumeConfig map[string]interface{}) error
+	ActionAfterDetach(volumeConfig map[string]interface{}) error
 }
 
 // TODO why this Get function in resource file instead of client.go ?

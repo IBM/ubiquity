@@ -11,6 +11,7 @@ type Executor interface { // basic host dependent functions
 	Execute(command string, args []string) ([]byte, error)
 	Stat(string) (os.FileInfo, error)
 	Mkdir(string, os.FileMode) error
+	MkdirAll(string, os.FileMode) error
 	RemoveAll(string) error
 	Hostname() (string, error)
 	IsExecutable(string) error
@@ -38,6 +39,10 @@ func (e *executor) Stat(path string) (os.FileInfo, error) {
 
 func (e *executor) Mkdir(path string, mode os.FileMode) error {
 	return os.Mkdir(path, mode)
+}
+
+func (e *executor) MkdirAll(path string, mode os.FileMode) error {
+	return os.MkdirAll(path, mode)
 }
 
 func (e *executor) RemoveAll(path string) error {

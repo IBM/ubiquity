@@ -236,7 +236,7 @@ var _ = Describe("scbeLocalClient", func() {
 		})
 		It("should fail to attach the volume if vol already attached in DB", func() {
 			fakeScbeDataModel.GetVolumeReturns(
-				scbe.ScbeVolume{AttachTo: fakeHost}, true, nil)
+				scbe.ScbeVolume{AttachTo: "fakevol1"}, true, nil)
 			_, err := client.Attach("fakevol")
 			Expect(err).To(HaveOccurred())
 			Expect(err.Error()).To(MatchRegexp("Cannot attach volume"))
@@ -269,6 +269,13 @@ var _ = Describe("scbeLocalClient", func() {
 			_, err := client.Attach("fakevol")
 			Expect(err).NotTo(HaveOccurred())
 			Expect(fakeScbeDataModel.UpdateVolumeAttachToCallCount()).To(Equal(1))
+		})
+		It("should succeed to attach the volume if vol already attach to this host", func() {
+			fakeScbeDataModel.GetVolumeReturns(
+				scbe.ScbeVolume{AttachTo: fakeHost}, true, nil)
+			_, err := client.Attach("fakevol")
+			Expect(err).NotTo(HaveOccurred())
+			Expect(fakeScbeDataModel.UpdateVolumeAttachToCallCount()).To(Equal(0))
 		})
 
 	})

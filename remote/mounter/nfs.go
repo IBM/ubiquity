@@ -121,3 +121,8 @@ func (s *nfsMounter) unmount(remoteMountpoint string) error {
 
 	return nil
 }
+
+func (s *nfsMounter) ActionAfterDetach(volumeConfig map[string]interface{}) error {
+	// no action needed for SSc
+	return nil
+}
