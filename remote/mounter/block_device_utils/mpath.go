@@ -15,6 +15,7 @@ const multipathCmd = "multipath"
 
 
 func (s *impBlockDeviceUtils) ReloadMultipath() (error) {
+    defer s.logger.Trace(logutil.DEBUG)()
     if err := s.exec.IsExecutable(multipathCmd); err != nil {
         s.logger.Error("IsExecutable failed", logutil.Args{{"cmd", multipathCmd}, {"error", err}})
         return err
@@ -29,6 +30,7 @@ func (s *impBlockDeviceUtils) ReloadMultipath() (error) {
 
 
 func (s *impBlockDeviceUtils) Discover(volumeWwn string) (string, error) {
+    defer s.logger.Trace(logutil.DEBUG)()
     if err := s.exec.IsExecutable(multipathCmd); err != nil {
         s.logger.Error("IsExecutable failed", logutil.Args{{"cmd", multipathCmd}, {"error", err}})
         return "", err
@@ -69,6 +71,7 @@ func (s *impBlockDeviceUtils) Discover(volumeWwn string) (string, error) {
 
 
 func (s *impBlockDeviceUtils) Cleanup(mpath string) (error) {
+    defer s.logger.Trace(logutil.DEBUG)()
     dev := path.Base(mpath)
     dmsetupCmd := "dmsetup"
     if err := s.exec.IsExecutable(dmsetupCmd); err != nil {

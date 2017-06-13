@@ -8,6 +8,7 @@ import (
 
 
 func (s *impBlockDeviceUtils) Rescan(protocol Protocol) error {
+	defer s.logger.Trace(logutil.DEBUG)()
 	switch protocol {
 	case SCSI:
 		return s.RescanSCSI()
@@ -19,6 +20,7 @@ func (s *impBlockDeviceUtils) Rescan(protocol Protocol) error {
 }
 
 func (s *impBlockDeviceUtils) RescanISCSI() error {
+	defer s.logger.Trace(logutil.DEBUG)()
 	rescanCmd := "iscsiadm"
 	if err := s.exec.IsExecutable(rescanCmd); err != nil {
 		s.logger.Error("IsExecutable failed", logutil.Args{{"cmd", rescanCmd}, {"error", err}})
@@ -33,6 +35,7 @@ func (s *impBlockDeviceUtils) RescanISCSI() error {
 }
 
 func (s *impBlockDeviceUtils) RescanSCSI() error {
+	defer s.logger.Trace(logutil.DEBUG)()
 	commands := []string{"rescan-scsi-bus", "rescan-scsi-bus.sh"}
 	rescanCmd := ""
 	for _, cmd := range commands {

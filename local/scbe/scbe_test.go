@@ -7,8 +7,6 @@ import (
 	"github.com/IBM/ubiquity/resources"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
-	"log"
-	"os"
 )
 
 const (
@@ -20,19 +18,16 @@ const (
 var _ = Describe("scbeLocalClient", func() {
 	var (
 		client             resources.StorageClient
-		logger             *log.Logger
 		fakeScbeDataModel  *fakes.FakeScbeDataModel
 		fakeScbeRestClient *fakes.FakeScbeRestClient
 		fakeConfig         resources.ScbeConfig
 		err                error
 	)
 	BeforeEach(func() {
-		logger = log.New(os.Stdout, "ubiquity scbe: ", log.Lshortfile|log.LstdFlags)
 		fakeScbeDataModel = new(fakes.FakeScbeDataModel)
 		fakeScbeRestClient = new(fakes.FakeScbeRestClient)
 		fakeConfig = resources.ScbeConfig{ConfigPath: "/tmp", DefaultService: fakeDefaultProfile} // TODO add more details
 		client, err = scbe.NewScbeLocalClientWithNewScbeRestClientAndDataModel(
-			logger,
 			fakeConfig,
 			fakeScbeDataModel,
 			fakeScbeRestClient)
@@ -45,10 +40,8 @@ var _ = Describe("scbeLocalClient", func() {
 			fakeScbeRestClient.LoginReturns(fmt.Errorf("Fail to SCBE login during activation"))
 			err = client.Activate()
 			Expect(err).To(HaveOccurred())
-			Expect(err.Error()).To(Equal("Error in login remote call"))
 			Expect(fakeScbeRestClient.LoginCallCount()).To(Equal(1))
 			Expect(fakeScbeRestClient.ServiceExistCallCount()).To(Equal(0))
-
 		})
 
 		It("should fail when service exist fail", func() {
@@ -56,7 +49,6 @@ var _ = Describe("scbeLocalClient", func() {
 			fakeScbeRestClient.ServiceExistReturns(false, fmt.Errorf("Fail to run service exist"))
 			err = client.Activate()
 			Expect(err).To(HaveOccurred())
-			Expect(err.Error()).To(MatchRegexp("^Error in activate SCBE backend while checking default service"))
 			Expect(fakeScbeRestClient.LoginCallCount()).To(Equal(1))
 			Expect(fakeScbeRestClient.ServiceExistCallCount()).To(Equal(1))
 
@@ -201,14 +193,12 @@ var _ = Describe("scbeLocalClient", func() {
 var _ = Describe("scbeLocalClient", func() {
 	var (
 		client             resources.StorageClient
-		logger             *log.Logger
 		fakeScbeDataModel  *fakes.FakeScbeDataModel
 		fakeScbeRestClient *fakes.FakeScbeRestClient
 		fakeConfig         resources.ScbeConfig
 		err                error
 	)
 	BeforeEach(func() {
-		logger = log.New(os.Stdout, "ubiquity scbe: ", log.Lshortfile|log.LstdFlags)
 		fakeScbeDataModel = new(fakes.FakeScbeDataModel)
 		fakeScbeRestClient = new(fakes.FakeScbeRestClient)
 		fakeConfig = resources.ScbeConfig{
@@ -216,7 +206,6 @@ var _ = Describe("scbeLocalClient", func() {
 			DefaultService: fakeDefaultProfile,
 			HostnameTmp:    fakeHost} // TODO its workaround to issue #23
 		client, err = scbe.NewScbeLocalClientWithNewScbeRestClientAndDataModel(
-			logger,
 			fakeConfig,
 			fakeScbeDataModel,
 			fakeScbeRestClient)

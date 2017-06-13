@@ -7,9 +7,7 @@ import (
 	"github.com/jarcoal/httpmock"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega" // including the whole package inside the file
-	"log"
 	"net/http"
-	"os"
 )
 
 const (
@@ -49,13 +47,11 @@ var fakeServiceJsonResponse string = `
 
 var _ = Describe("restClient", func() {
 	var (
-		logger *log.Logger
 		client scbe.SimpleRestClient
 		err    error
 	)
 	BeforeEach(func() {
-		logger = log.New(os.Stdout, "ubiquity scbe: ", log.Lshortfile|log.LstdFlags)
-		client = scbe.NewSimpleRestClient(logger, resources.ConnectionInfo{}, fakeScbeUrlBase+"/"+suffix, fakeScbeUrlAuth, fakeScbeUrlReferer)
+		client = scbe.NewSimpleRestClient(resources.ConnectionInfo{}, fakeScbeUrlBase+"/"+suffix, fakeScbeUrlAuth, fakeScbeUrlReferer)
 	})
 
 	Context(".Login", func() {
@@ -84,7 +80,7 @@ var _ = Describe("restClient", func() {
 			httpmock.RegisterResponder("POST", fakeScbeUrlAuthFull, httpmock.NewStringResponder(http.StatusBadRequest, "{}"))
 			err = client.Login()
 			Expect(err).To(HaveOccurred())
-			Expect(err.Error()).To(MatchRegexp("^Error, bad status code"))
+			Expect(err.Error()).To(MatchRegexp("^bad status code"))
 		})
 		It("should fail when httpClient.Post returns invalid json", func() {
 			httpmock.RegisterResponder("POST", fakeScbeUrlAuthFull, httpmock.NewStringResponder(http.StatusOK, "yyy"))
@@ -98,13 +94,11 @@ var _ = Describe("restClient", func() {
 
 var _ = Describe("restClient", func() {
 	var (
-		logger *log.Logger
 		client scbe.SimpleRestClient
 		err    error
 	)
 	BeforeEach(func() {
-		logger = log.New(os.Stdout, "ubiquity scbe: ", log.Lshortfile|log.LstdFlags)
-		client = scbe.NewSimpleRestClient(logger, resources.ConnectionInfo{}, fakeScbeUrlBase+"/"+suffix, fakeScbeUrlAuth, fakeScbeUrlReferer)
+		client = scbe.NewSimpleRestClient(resources.ConnectionInfo{}, fakeScbeUrlBase+"/"+suffix, fakeScbeUrlAuth, fakeScbeUrlReferer)
 		loginResponse := scbe.LoginResponse{Token: "fake-token"}
 		marshalledResponse, err := json.Marshal(loginResponse)
 		Expect(err).ToNot(HaveOccurred())
@@ -139,7 +133,7 @@ var _ = Describe("restClient", func() {
 			var services []scbe.ScbeStorageService
 			err = client.Get(scbe.UrlScbeResourceService, nil, -1, &services)
 			Expect(err).To(HaveOccurred())
-			Expect(err.Error()).To(MatchRegexp("^Error, bad status code"))
+			Expect(err.Error()).To(MatchRegexp("^bad status code"))
 		})
 		It("should fail when httpClient.Get returns invalid json", func() {
 			httpmock.RegisterResponder(
@@ -170,35 +164,7 @@ var _ = Describe("restClient", func() {
 	})
 })
 
-/*
-var _ = Describe("ScbeRestClient", func() {
-	var (
-		logger *log.Logger
-		client scbe.RestClient
-		err    error
-	)
-	BeforeEach(func() {
-		logger = log.New(os.Stdout, "ubiquity scbe: ", log.Lshortfile|log.LstdFlags)
-		credentialInfo := resources.CredentialInfo{"user", "password", "flocker"}
-		conInfo := resources.ConnectionInfo{credentialInfo, 8440, "ip", true}
-		scbeRestClient, err := scbe.NewScbeRestClient(logger, conInfo)
-				Expect(err).ToNot(HaveOccurred())
-				httpmock.RegisterResponder(
-					"POST",
-					scbeRestClient.,
-					httpmock.NewStringResponder(http.StatusOK, string(marshalledResponse)),
-				)
-				err = client.Login()
-				Expect(err).ToNot(HaveOccurred())
-	})
 
-	Context(".Get", func() {
-		It("should succeed when Get succeed and return an expacted struct back", func() {
-			logger.Printf("aaa")
-		})
-	})
-})
-*/
 func CountLoginResponder(num *int, loginResp string) httpmock.Responder {
 	*num = 0
 	return func(req *http.Request) (*http.Response, error) {
