@@ -19,7 +19,6 @@ var _ = Describe("block_device_mounter_utils_test", func() {
 	)
 
 	BeforeEach(func() {
-		defer logutil.InitStdoutLogger(logutil.DEBUG)()
 		fakeBlockDeviceUtils = new(fakes.FakeBlockDeviceUtils)
 		blockDeviceMounterUtils = block_device_mounter_utils.NewBlockDeviceMounterUtilsWithBlockDeviceUtils(fakeBlockDeviceUtils)
 	})
@@ -166,5 +165,6 @@ var _ = Describe("block_device_mounter_utils_test", func() {
 
 func TestGetBlockDeviceUtils(t *testing.T) {
 	RegisterFailHandler(Fail)
+	defer logutil.InitStdoutLogger(logutil.DEBUG)()
 	RunSpecs(t, "BlockDeviceUtils Test Suite")
 }

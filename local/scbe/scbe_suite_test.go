@@ -6,10 +6,12 @@ import (
 	"testing"
 
 	"github.com/jarcoal/httpmock"
+	"github.com/IBM/ubiquity/logutil"
 )
 
-func TestSpectrum(t *testing.T) {
+func TestScbe(t *testing.T) {
 	RegisterFailHandler(Fail)
+	defer logutil.InitStdoutLogger(logutil.DEBUG)()
 	RunSpecs(t, "SCBE Test Suite")
 }
 

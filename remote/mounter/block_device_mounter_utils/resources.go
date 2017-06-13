@@ -19,13 +19,13 @@ type blockDeviceMounterUtils struct {
 }
 
 func NewBlockDeviceMounterUtilsWithBlockDeviceUtils(blockDeviceUtilsInst block_device_utils.BlockDeviceUtils) BlockDeviceMounterUtils {
-	mounterUtils := blockDeviceMounterUtils{blockDeviceUtils: blockDeviceUtilsInst}
-	mounterUtils.logger = logutil.GetLogger()
-	return &mounterUtils
+	return newBlockDeviceMounterUtils(blockDeviceUtilsInst)
 }
 
 func NewBlockDeviceMounterUtils() BlockDeviceMounterUtils {
-	mounterUtils := blockDeviceMounterUtils{blockDeviceUtils: block_device_utils.NewBlockDeviceUtils()}
-	mounterUtils.logger = logutil.GetLogger()
-	return &mounterUtils
+	return newBlockDeviceMounterUtils(block_device_utils.NewBlockDeviceUtils())
+}
+
+func newBlockDeviceMounterUtils(blockDeviceUtilsInst block_device_utils.BlockDeviceUtils) BlockDeviceMounterUtils {
+	return &blockDeviceMounterUtils{logger: logutil.GetLogger(), blockDeviceUtils: blockDeviceUtilsInst}
 }

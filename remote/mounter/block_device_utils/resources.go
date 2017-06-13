@@ -30,13 +30,13 @@ type impBlockDeviceUtils struct {
 }
 
 func NewBlockDeviceUtils() BlockDeviceUtils {
-	blockDeviceUtils := impBlockDeviceUtils{exec: utils.NewExecutor()}
-	blockDeviceUtils.logger = logutil.GetLogger()
-	return &blockDeviceUtils
+	return newBlockDeviceUtils(utils.NewExecutor())
 }
 
 func NewBlockDeviceUtilsWithExecutor(executor utils.Executor) BlockDeviceUtils {
-	blockDeviceUtils := impBlockDeviceUtils{exec: executor}
-	blockDeviceUtils.logger = logutil.GetLogger()
-	return &blockDeviceUtils
+	return newBlockDeviceUtils(executor)
+}
+
+func newBlockDeviceUtils(executor utils.Executor) BlockDeviceUtils {
+	return &impBlockDeviceUtils{logger:logutil.GetLogger(), exec: executor}
 }

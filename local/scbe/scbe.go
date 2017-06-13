@@ -5,13 +5,14 @@ import (
 	"fmt"
 	"github.com/IBM/ubiquity/resources"
 	"github.com/jinzhu/gorm"
-	"log"
 	"strconv"
 	"sync"
+	"github.com/IBM/ubiquity/logutil"
+	"errors"
 )
 
 type scbeLocalClient struct {
-	logger         *log.Logger
+	logger         logutil.Logger
 	dataModel      ScbeDataModel
 	scbeRestClient ScbeRestClient
 	isActivated    bool
@@ -40,20 +41,20 @@ var (
 
 // prefix_ubiquityIntanceName_northboundVolumeName
 
-func NewScbeLocalClient(logger *log.Logger, config resources.ScbeConfig, database *gorm.DB) (resources.StorageClient, error) {
+func NewScbeLocalClient(config resources.ScbeConfig, database *gorm.DB) (resources.StorageClient, error) {
 	if config.ConfigPath == "" {
 		return nil, fmt.Errorf("scbeLocalClient: init: missing required parameter 'spectrumConfigPath'")
 	}
 
-	return newScbeLocalClient(logger, config, database, resources.SCBE)
+	return newScbeLocalClient(config, database, resources.SCBE)
 }
 
-func NewScbeLocalClientWithNewScbeRestClientAndDataModel(logger *log.Logger, config resources.ScbeConfig, dataModel ScbeDataModel, scbeRestClient ScbeRestClient) (resources.StorageClient, error) {
+func NewScbeLocalClientWithNewScbeRestClientAndDataModel(config resources.ScbeConfig, dataModel ScbeDataModel, scbeRestClient ScbeRestClient) (resources.StorageClient, error) {
 	if config.ConfigPath == "" {
 		return nil, fmt.Errorf("scbeLocalClient: init: missing required parameter 'spectrumConfigPath'")
 	}
 	return &scbeLocalClient{
-		logger:         logger,
+		logger:         logutil.GetLogger(),
 		scbeRestClient: scbeRestClient, // TODO need to mock it in more advance way
 		dataModel:      dataModel,
 		config:         config,
@@ -61,20 +62,19 @@ func NewScbeLocalClientWithNewScbeRestClientAndDataModel(logger *log.Logger, con
 	}, nil
 }
 
-func newScbeLocalClient(logger *log.Logger, config resources.ScbeConfig, database *gorm.DB, backend resources.Backend) (*scbeLocalClient, error) {
-	logger.Println("scbeLocalClient: init start")
-	defer logger.Println("scbeLocalClient: init end")
+func newScbeLocalClient(config resources.ScbeConfig, database *gorm.DB, backend resources.Backend) (*scbeLocalClient, error) {
+	defer logutil.GetLogger().Trace(logutil.DEBUG)()
 
-	datamodel := NewScbeDataModel(logger, database, backend)
+	datamodel := NewScbeDataModel(database, backend)
 	err := datamodel.CreateVolumeTable()
 	if err != nil {
 		return &scbeLocalClient{}, err
 	}
 
-	scbeRestClient := NewScbeRestClient(logger, config.ConnectionInfo)
+	scbeRestClient := NewScbeRestClient(config.ConnectionInfo)
 
 	client := &scbeLocalClient{
-		logger:         logger,
+		logger:         logutil.GetLogger(),
 		scbeRestClient: scbeRestClient,
 		dataModel:      datamodel,
 		config:         config,
@@ -84,8 +84,7 @@ func newScbeLocalClient(logger *log.Logger, config resources.ScbeConfig, databas
 }
 
 func (s *scbeLocalClient) Activate() error {
-	s.logger.Println("scbeLocalClient: Activate start")
-	defer s.logger.Println("scbeLocalClient: Activate end")
+	defer s.logger.Trace(logutil.DEBUG)()
 
 	s.activationLock.RLock()
 	if s.isActivated {
@@ -98,33 +97,25 @@ func (s *scbeLocalClient) Activate() error {
 	defer s.activationLock.Unlock()
 
 	//do any needed configuration
-	err := s.scbeRestClient.Login()
-	if err != nil {
-		s.logger.Printf("Error in login remote call %#v", err)
-		return fmt.Errorf("Error in login remote call")
-	} else {
-		s.logger.Printf("Succeeded to login to SCBE %s", s.config.ConnectionInfo.ManagementIP)
+	if err := s.scbeRestClient.Login(); err != nil {
+		s.logger.Error("scbeRestClient.Login() failed", logutil.Args{{"error", err}})
+		return err
 	}
+	s.logger.Info("scbeRestClient.Login() succeeded", logutil.Args{{"SCBE",s.config.ConnectionInfo.ManagementIP}})
 
-	var isExist bool
-	isExist, err = s.scbeRestClient.ServiceExist(s.config.DefaultService)
+	isExist, err := s.scbeRestClient.ServiceExist(s.config.DefaultService)
 	if err != nil {
-		msg := fmt.Sprintf("Error in activate SCBE backend while checking default service. (%#v)", err)
-		s.logger.Printf(msg)
-		return fmt.Errorf(msg)
+		s.logger.Error("scbeRestClient.ServiceExist failed", logutil.Args{{"error", err}})
+		return err
 	}
 
 	if isExist == false {
 		msg := fmt.Sprintf("Error in activate SCBE backend %#v. The default service %s does not exist in SCBE %s",
 			err, s.config.DefaultService, s.config.ConnectionInfo.ManagementIP)
-		s.logger.Printf(msg)
+		s.logger.Error(msg)
 		return fmt.Errorf(msg)
-	} else {
-		s.logger.Printf("The default service [%s] exist in SCBE %s",
-			s.config.DefaultService, s.config.ConnectionInfo.ManagementIP)
 	}
-
-	s.logger.Println("scbe remoteClient: Activate success")
+	s.logger.Info("The default service exist in SCBE", logutil.Args{	{s.config.ConnectionInfo.ManagementIP, s.config.DefaultService}})
 
 	s.isActivated = true
 	return nil
@@ -132,30 +123,35 @@ func (s *scbeLocalClient) Activate() error {
 
 // CreateVolume parse and validate the given options and trigger the volume creation
 func (s *scbeLocalClient) CreateVolume(name string, opts map[string]interface{}) (err error) {
-	s.logger.Println("scbeLocalClient: create start")
-	defer s.logger.Println("scbeLocalClient: create end")
+	defer s.logger.Trace(logutil.DEBUG)()
 
 	_, volExists, err := s.dataModel.GetVolume(name)
 	if err != nil {
-		s.logger.Println(err.Error())
+		s.logger.Error("dataModel.GetVolume failed", logutil.Args{{"name", name}, {"error", err}})
 		return err
 	}
 
-	// validate service exist
+	// validate volume doesn't exist
 	if volExists {
-		return fmt.Errorf(MsgVolumeAlreadyExistInDB, name)
+		err = fmt.Errorf(MsgVolumeAlreadyExistInDB, name)
+		s.logger.Error("failed", logutil.Args{{"error", err}})
+		return err
 	}
 
 	// validate size option given
 	sizeStr := opts[OptionNameForVolumeSize]
 	if sizeStr == "" || sizeStr == nil {
-		return fmt.Errorf(MsgOptionSizeIsMissing)
+		err = errors.New(MsgOptionSizeIsMissing)
+		s.logger.Error("failed", logutil.Args{{"error", err}})
+		return err
 	}
 
 	// validate size is a number
 	size, err := strconv.Atoi(sizeStr.(string))
 	if err != nil {
-		return fmt.Errorf(MsgOptionMustBeNumber, sizeStr)
+		err = fmt.Errorf(MsgOptionMustBeNumber, sizeStr)
+		s.logger.Error("failed", logutil.Args{{"error", err}})
+		return err
 	}
 	// Get the profile option
 	profile := s.config.DefaultService
@@ -168,41 +164,42 @@ func (s *scbeLocalClient) CreateVolume(name string, opts map[string]interface{})
 	volInfo := ScbeVolumeInfo{}
 	volInfo, err = s.scbeRestClient.CreateVolume(volNameToCreate, profile, size)
 	if err != nil {
+		s.logger.Error("scbeRestClient.CreateVolume failed", logutil.Args{{"error", err}})
 		return err
 	}
 
 	err = s.dataModel.InsertVolume(name, volInfo.Wwn, profile, AttachedToNothing)
 	if err != nil {
+		s.logger.Error("dataModel.InsertVolume failed", logutil.Args{{"error", err}})
 		return err
 	}
-	msg := fmt.Sprintf("scbeLocalClient: Successfully create volume %s on profile %s", name, profile)
-	defer s.logger.Println(msg)
 
+	s.logger.Info("succeeded", logutil.Args{{"volume", name}, {"profile", profile}})
 	return nil
 }
 
 func (s *scbeLocalClient) RemoveVolume(name string) (err error) {
-	s.logger.Println("scbeLocalClient: remove start")
-	defer s.logger.Println("scbeLocalClient: remove end")
+	defer s.logger.Trace(logutil.DEBUG)()
 
 	existingVolume, volExists, err := s.dataModel.GetVolume(name)
 	if err != nil {
-		s.logger.Println(err.Error())
+		s.logger.Error("dataModel.GetVolume failed", logutil.Args{{"error", err}})
 		return err
 	}
 
 	if volExists == false {
-		return fmt.Errorf("Volume [%s] not found", name)
-	}
-
-	err = s.dataModel.DeleteVolume(name)
-
-	if err != nil {
-		s.logger.Println(err.Error())
+		err = fmt.Errorf("Volume [%s] not found", name)
+		s.logger.Error("failed", logutil.Args{{"error", err}})
 		return err
 	}
-	err = s.scbeRestClient.DeleteVolume(existingVolume.WWN)
-	if err != nil {
+
+	if err = s.dataModel.DeleteVolume(name); err != nil {
+		s.logger.Error("failed", logutil.Args{{"error", err}})
+		return err
+	}
+
+	if err = s.scbeRestClient.DeleteVolume(existingVolume.WWN); err != nil {
+		s.logger.Error("failed", logutil.Args{{"error", err}})
 		return err
 	}
 
@@ -210,8 +207,7 @@ func (s *scbeLocalClient) RemoveVolume(name string) (err error) {
 }
 
 func (s *scbeLocalClient) GetVolume(name string) (resources.Volume, error) {
-	s.logger.Println("scbeLocalClient: GetVolume start")
-	defer s.logger.Println("scbeLocalClient: GetVolume finish")
+	defer s.logger.Trace(logutil.DEBUG)()
 
 	existingVolume, volExists, err := s.dataModel.GetVolume(name)
 	if err != nil {
@@ -225,18 +221,19 @@ func (s *scbeLocalClient) GetVolume(name string) (resources.Volume, error) {
 }
 
 func (s *scbeLocalClient) GetVolumeConfig(name string) (map[string]interface{}, error) {
-	s.logger.Println("scbeLocalClient: GetVolumeConfig start")
-	defer s.logger.Println("scbeLocalClient: GetVolumeConfig finish")
+	defer s.logger.Trace(logutil.DEBUG)()
 
 	scbeVolume, volExists, err := s.dataModel.GetVolume(name)
 
 	if err != nil {
-		s.logger.Println(err.Error())
+		s.logger.Error("dataModel.GetVolume failed", logutil.Args{{"error", err}})
 		return nil, err
 	}
 
 	if !volExists {
-		return nil, fmt.Errorf("Volume not found")
+		err = fmt.Errorf("Volume not found")
+		s.logger.Error("failed", logutil.Args{{"error", err}})
+		return nil, err
 	}
 
 	volumeConfigDetails := make(map[string]interface{})
@@ -249,18 +246,19 @@ func (s *scbeLocalClient) GetVolumeConfig(name string) (map[string]interface{}, 
 
 }
 func (s *scbeLocalClient) Attach(name string) (string, error) {
-	s.logger.Println("scbeLocalClient: attach start")
-	defer s.logger.Println("scbeLocalClient: attach end")
+	defer s.logger.Trace(logutil.DEBUG)()
 	host2attach := s.config.HostnameTmp // TODO this is workaround for issue #23 (remove it when #23 will be fixed and use the host that will be given as argument to the interface)
 
 	existingVolume, volExists, err := s.dataModel.GetVolume(name)
 	if err != nil {
-		s.logger.Println(err.Error())
+		s.logger.Error("dataModel.GetVolume failed", logutil.Args{{"error", err}})
 		return "", err
 	}
 
 	if !volExists {
-		return "", fmt.Errorf(fmt.Sprintf(MsgVolumeNotFoundInUbiquityDB, "detach", name))
+		err = fmt.Errorf(fmt.Sprintf(MsgVolumeNotFoundInUbiquityDB, "detach", name))
+		s.logger.Error("failed", logutil.Args{{"error", err}})
+		return "", err
 	}
 
 	if existingVolume.AttachTo == host2attach {
@@ -275,14 +273,14 @@ func (s *scbeLocalClient) Attach(name string) (string, error) {
 		return "", fmt.Errorf(msg)
 	}
 
-	s.logger.Printf("Attaching vol %#v", existingVolume)
-	_, err = s.scbeRestClient.MapVolume(existingVolume.WWN, host2attach)
-	if err != nil {
+	s.logger.Debug("Attaching", logutil.Args{{"volume", existingVolume}})
+	if _, err = s.scbeRestClient.MapVolume(existingVolume.WWN, host2attach); err != nil {
+		s.logger.Error("scbeRestClient.MapVolume failed", logutil.Args{{"error", err}})
 		return "", err
 	}
 
-	err = s.dataModel.UpdateVolumeAttachTo(name, existingVolume, host2attach)
-	if err != nil {
+	if err = s.dataModel.UpdateVolumeAttachTo(name, existingVolume, host2attach); err != nil {
+		s.logger.Error("dataModel.UpdateVolumeAttachTo failed", logutil.Args{{"error", err}})
 		return "", err
 	}
 
@@ -291,35 +289,36 @@ func (s *scbeLocalClient) Attach(name string) (string, error) {
 }
 
 func (s *scbeLocalClient) Detach(name string) (err error) {
-	s.logger.Println("scbeLocalClient: detach start")
-	defer s.logger.Println("scbeLocalClient: detach end")
+	defer s.logger.Trace(logutil.DEBUG)()
 	host2detach := s.config.HostnameTmp // TODO this is workaround for issue #23 (remove it when #23 will be fixed and use the host that will be given as argument to the interface)
 
 	existingVolume, volExists, err := s.dataModel.GetVolume(name)
 	if err != nil {
-		s.logger.Println(err.Error())
+		s.logger.Error("dataModel.GetVolume failed", logutil.Args{{"error", err}})
 		return err
 	}
 
 	if !volExists {
-		return fmt.Errorf(fmt.Sprintf(MsgVolumeNotFoundInUbiquityDB, "detach", name))
+		err = fmt.Errorf(fmt.Sprintf(MsgVolumeNotFoundInUbiquityDB, "detach", name))
+		s.logger.Error("failed", logutil.Args{{"error", err}})
+		return err
 	}
 
 	// Fail if vol already detach
 	if existingVolume.AttachTo == EmptyHost {
-		msg := fmt.Sprintf(MsgCannotDetachVolThatAlreadyDetached, name, host2detach)
-		s.logger.Printf(msg)
-		return fmt.Errorf(msg)
-	}
-
-	s.logger.Printf("Detach vol %#v", existingVolume)
-	err = s.scbeRestClient.UnmapVolume(existingVolume.WWN, host2detach)
-	if err != nil {
+		err = fmt.Errorf(fmt.Sprintf(MsgCannotDetachVolThatAlreadyDetached, name, host2detach))
+		s.logger.Error("failed", logutil.Args{{"error", err}})
 		return err
 	}
 
-	err = s.dataModel.UpdateVolumeAttachTo(name, existingVolume, EmptyHost)
-	if err != nil {
+	s.logger.Debug("Detaching", logutil.Args{{"volume", existingVolume}})
+	if err = s.scbeRestClient.UnmapVolume(existingVolume.WWN, host2detach); err != nil {
+		s.logger.Error("scbeRestClient.UnmapVolume failed", logutil.Args{{"error", err}})
+		return err
+	}
+
+	if err = s.dataModel.UpdateVolumeAttachTo(name, existingVolume, EmptyHost); err != nil {
+		s.logger.Error("dataModel.UpdateVolumeAttachTo failed", logutil.Args{{"error", err}})
 		return err
 	}
 
@@ -327,24 +326,22 @@ func (s *scbeLocalClient) Detach(name string) (err error) {
 }
 
 func (s *scbeLocalClient) ListVolumes() ([]resources.VolumeMetadata, error) {
-	s.logger.Println("scbeLocalClient: list start")
-	defer s.logger.Println("scbeLocalClient: list end")
+	defer s.logger.Trace(logutil.DEBUG)()
 	var err error
 
 	volumesInDb, err := s.dataModel.ListVolumes()
-
 	if err != nil {
-		s.logger.Printf("error retrieving volumes from db %#v\n", err)
+		s.logger.Error("dataModel.ListVolumes failed", logutil.Args{{"error", err}})
 		return nil, err
 	}
-	s.logger.Printf("Volumes in db: %d\n", len(volumesInDb))
+
+	s.logger.Debug("Volumes in db", logutil.Args{{"num", len(volumesInDb)}})
 	var volumes []resources.VolumeMetadata
 	for _, volume := range volumesInDb {
-		s.logger.Printf("Volume from db: %#v\n", volume)
-
+		s.logger.Debug("Volumes from db", logutil.Args{{"volume", volume}})
 		volumeMountpoint, err := s.getVolumeMountPoint(volume)
 		if err != nil {
-			s.logger.Println(err.Error())
+			s.logger.Error("getVolumeMountPoint failed", logutil.Args{{"error", err}})
 			return nil, err
 		}
 
@@ -355,21 +352,17 @@ func (s *scbeLocalClient) ListVolumes() ([]resources.VolumeMetadata, error) {
 }
 
 func (s *scbeLocalClient) createVolume(name string, wwn string, profile string) error {
-	s.logger.Println("scbeLocalClient: createVolume start")
-	defer s.logger.Println("scbeLocalClient: createVolume end")
+	defer s.logger.Trace(logutil.DEBUG)()
 
-	err := s.dataModel.InsertVolume(name, wwn, profile, "")
-
-	if err != nil {
-		s.logger.Printf("Error inserting volume %v", err)
+	if err := s.dataModel.InsertVolume(name, wwn, profile, ""); err != nil {
+		s.logger.Error("dataModel.InsertVolume failed", logutil.Args{{"error", err}})
 		return err
 	}
 
 	return nil
 }
 func (s *scbeLocalClient) getVolumeMountPoint(volume ScbeVolume) (string, error) {
-	s.logger.Println("scbeLocalClient getVolumeMountPoint start")
-	defer s.logger.Println("scbeLocalClient getVolumeMountPoint end")
+	defer s.logger.Trace(logutil.DEBUG)()
 
 	//TODO return mountpoint
 	return "some mount point", nil

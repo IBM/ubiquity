@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/IBM/ubiquity/resources"
-	"log"
+	"github.com/IBM/ubiquity/logutil"
 )
 
 //go:generate counterfeiter -o ../fakes/fake_scbe_rest_client.go . ScbeRestClient
@@ -21,7 +21,7 @@ type ScbeRestClient interface {
 }
 
 type scbeRestClient struct {
-	logger         *log.Logger
+	logger         logutil.Logger
 	connectionInfo resources.ConnectionInfo
 	client         SimpleRestClient
 }
@@ -40,16 +40,16 @@ const (
 )
 
 
-func NewScbeRestClient(logger *log.Logger, conInfo resources.ConnectionInfo) ScbeRestClient {
-	return newScbeRestClient(logger, conInfo, nil)
+func NewScbeRestClient(conInfo resources.ConnectionInfo) ScbeRestClient {
+	return newScbeRestClient(conInfo, nil)
 }
 
 // NewScbeRestClientWithNewRestClient for mocking during test # TODO consider to remove it to test file
-func NewScbeRestClientWithSimpleRestClient(logger *log.Logger, conInfo resources.ConnectionInfo, simpleClient SimpleRestClient) ScbeRestClient {
-	return newScbeRestClient(logger, conInfo, simpleClient)
+func NewScbeRestClientWithSimpleRestClient(conInfo resources.ConnectionInfo, simpleClient SimpleRestClient) ScbeRestClient {
+	return newScbeRestClient(conInfo, simpleClient)
 }
 
-func newScbeRestClient(logger *log.Logger, conInfo resources.ConnectionInfo, simpleClient SimpleRestClient) ScbeRestClient {
+func newScbeRestClient(conInfo resources.ConnectionInfo, simpleClient SimpleRestClient) ScbeRestClient {
 	// Set default SCBE port if not mentioned
 	if conInfo.Port == 0 {
 		conInfo.Port = DEFAULT_SCBE_PORT
@@ -60,13 +60,14 @@ func newScbeRestClient(logger *log.Logger, conInfo resources.ConnectionInfo, sim
 	if simpleClient == nil {
 		referrer := fmt.Sprintf(URL_SCBE_REFERER, conInfo.ManagementIP, conInfo.Port)
 		baseUrl := referrer + URL_SCBE_BASE_SUFFIX
-		simpleClient = NewSimpleRestClient(logger, conInfo, baseUrl, URL_SCBE_RESOURCE_GET_AUTH, referrer)
+		simpleClient = NewSimpleRestClient(conInfo, baseUrl, URL_SCBE_RESOURCE_GET_AUTH, referrer)
 	}
-	return &scbeRestClient{logger, conInfo, simpleClient}
+	return &scbeRestClient{logutil.GetLogger(), conInfo, simpleClient}
 }
 
 
 func (s *scbeRestClient) Login() error {
+	defer s.logger.Trace(logutil.DEBUG)()
 	return s.client.Login()
 }
 
@@ -76,6 +77,7 @@ func (s *scbeRestClient) Login() error {
 //	if service don't exist
 //	if fail to create the volume
 func (s *scbeRestClient) CreateVolume(volName string, serviceName string, size int) (ScbeVolumeInfo, error) {
+	defer s.logger.Trace(logutil.DEBUG)()
 	// find the service in order to validate and also to get the service id
 	services, err := s.serviceList(serviceName)
 	if err != nil {
@@ -97,38 +99,37 @@ func (s *scbeRestClient) CreateVolume(volName string, serviceName string, size i
 
 	payloadMarshaled, err := json.Marshal(payload)
 	if err != nil {
-		msg := fmt.Sprintf("Error in marshalling payload for create volume %#v", err)
-		s.logger.Printf(msg)
-		return ScbeVolumeInfo{}, fmt.Errorf(msg)
+		s.logger.Error("json.Marshal failed", logutil.Args{{"payload", payload}, {"error", err}})
+		return ScbeVolumeInfo{}, err
 	}
 	volResponse := ScbeResponseVolume{}
-	err = s.client.Post(UrlScbeResourceVolume, payloadMarshaled, HTTP_SUCCEED_POST, &volResponse)
-	if err != nil {
-		msg := fmt.Sprintf("Fail to provision volume %#v on service %s, due to error: %#v", volName, serviceName, err)
-		s.logger.Printf(msg)
-		return ScbeVolumeInfo{}, fmt.Errorf(msg)
+	if err = s.client.Post(UrlScbeResourceVolume, payloadMarshaled, HTTP_SUCCEED_POST, &volResponse); err != nil {
+		s.logger.Error("client.Post failed", logutil.Args{{"payload", payload}, {"error", err}})
+		return ScbeVolumeInfo{}, err
 	}
 
 	return ScbeVolumeInfo{volResponse.Name, volResponse.ScsiIdentifier, serviceName}, nil
 }
 
 func (s *scbeRestClient) GetAllVolumes() ([]ScbeVolumeInfo, error) {
+	defer s.logger.Trace(logutil.DEBUG)()
 	return nil, nil
 }
 func (s *scbeRestClient) GetVolume(wwn string) (ScbeVolumeInfo, error) {
+	defer s.logger.Trace(logutil.DEBUG)()
 	return ScbeVolumeInfo{}, nil
 }
 func (s *scbeRestClient) DeleteVolume(wwn string) error {
+	defer s.logger.Trace(logutil.DEBUG)()
 	urlToDelete := fmt.Sprintf("%s/%s", UrlScbeResourceVolume, wwn)
-	err := s.client.Delete(urlToDelete, []byte{}, HTTP_SUCCEED_DELETED)
-	if err != nil {
-		msg := fmt.Sprintf("Fail to delete volume WWN %#v, due to error: %#v", wwn, err)
-		s.logger.Printf(msg)
-		return fmt.Errorf(msg)
+	if err := s.client.Delete(urlToDelete, []byte{}, HTTP_SUCCEED_DELETED); err != nil {
+		s.logger.Error("client.Delete failed", logutil.Args{{"url", urlToDelete}, {"error", err}})
+		return err
 	}
 	return nil
 }
 func (s *scbeRestClient) MapVolume(wwn string, host string) (ScbeResponseMapping, error) {
+	defer s.logger.Trace(logutil.DEBUG)()
 	hostId, err := s.getHostIdByVol(wwn, host)
 	if err != nil {
 		return ScbeResponseMapping{}, err
@@ -136,23 +137,24 @@ func (s *scbeRestClient) MapVolume(wwn string, host string) (ScbeResponseMapping
 	payload := ScbeMapVolumePostParams{VolumeId: wwn, HostId: hostId}
 	payloadMarshal, err := json.Marshal(payload)
 	if err != nil {
-		s.logger.Printf("Error in marshalling ScbeMapVolumePostParams %#v", err)
-		return ScbeResponseMapping{}, fmt.Errorf("Error in marshalling ScbeMapVolumePostParams")
+		s.logger.Error("json.Marshal failed", logutil.Args{{"payload", payload}, {"error", err}})
+		return ScbeResponseMapping{}, err
 	}
 	mappingsResponse := ScbeResponseMappings{}
-	err = s.client.Post(UrlScbeResourceMapping, payloadMarshal, HTTP_SUCCEED_POST, &mappingsResponse)
-	if err != nil {
+	if err = s.client.Post(UrlScbeResourceMapping, payloadMarshal, HTTP_SUCCEED_POST, &mappingsResponse); err != nil {
+		s.logger.Error("client.Post failed", logutil.Args{{"payload", payload}, {"error", err}})
 		return ScbeResponseMapping{}, err
 	}
 	if len(mappingsResponse.Mappings) != 1 {
 		msg := fmt.Sprintf(MsgMappingDoneButResponseNotOk, mappingsResponse.Mappings)
-		s.logger.Printf(msg)
+		s.logger.Error(msg)
 		return ScbeResponseMapping{}, fmt.Errorf(msg)
 	}
 	return mappingsResponse.Mappings[0], nil
 }
 
 func (s *scbeRestClient) UnmapVolume(wwn string, host string) error {
+	defer s.logger.Trace(logutil.DEBUG)()
 	// TODO consider to return the unmap SCBE response
 	hostId, err := s.getHostIdByVol(wwn, host)
 	if err != nil {
@@ -161,22 +163,24 @@ func (s *scbeRestClient) UnmapVolume(wwn string, host string) error {
 	payload := ScbeUnMapVolumePostParams{VolumeId: wwn, HostId: hostId}
 	payloadMarshal, err := json.Marshal(payload)
 	if err != nil {
-		msg := fmt.Sprintf("Error in marshalling ScbeMapVolumePostParams %#v", err)
-		s.logger.Printf(msg)
-		return fmt.Errorf(msg)
+		s.logger.Error("json.Marshal failed", logutil.Args{{"payload", payload}, {"error", err}})
+		return err
 	}
-	err = s.client.Delete(UrlScbeResourceMapping, payloadMarshal, HTTP_SUCCEED_DELETED)
-	if err != nil {
+	if err = s.client.Delete(UrlScbeResourceMapping, payloadMarshal, HTTP_SUCCEED_DELETED); err != nil {
+		s.logger.Error("client.Delete failed", logutil.Args{{"url", UrlScbeResourceMapping}, {"error", err}})
+
 		return err
 	}
 	return nil
 }
 
 func (s *scbeRestClient) GetVolMapping(wwn string) (string, error) {
+	defer s.logger.Trace(logutil.DEBUG)()
 	return "", nil
 }
 
 func (s *scbeRestClient) ServiceExist(serviceName string) (exist bool, err error) {
+	defer s.logger.Trace(logutil.DEBUG)()
 	var services []ScbeStorageService
 	services, err = s.serviceList(serviceName)
 	if err == nil {
@@ -186,6 +190,7 @@ func (s *scbeRestClient) ServiceExist(serviceName string) (exist bool, err error
 }
 
 func (s *scbeRestClient) serviceList(serviceName string) ([]ScbeStorageService, error) {
+	defer s.logger.Trace(logutil.DEBUG)()
 	payload := make(map[string]string)
 	var err error
 	if serviceName == "" {
@@ -202,6 +207,7 @@ func (s *scbeRestClient) serviceList(serviceName string) ([]ScbeStorageService, 
 	return services, nil
 }
 func (s *scbeRestClient) volumeList(wwn string) ([]ScbeResponseVolume, error) {
+	defer s.logger.Trace(logutil.DEBUG)()
 	payload := make(map[string]string)
 	var err error
 	if wwn == "" {
@@ -219,6 +225,7 @@ func (s *scbeRestClient) volumeList(wwn string) ([]ScbeResponseVolume, error) {
 }
 
 func (s *scbeRestClient) hostList(payload map[string]string) ([]ScbeResponseHost, error) {
+	defer s.logger.Trace(logutil.DEBUG)()
 	var hosts []ScbeResponseHost
 	err := s.client.Get(UrlScbeResourceHost, payload, -1, &hosts)
 	if err != nil {
@@ -229,15 +236,16 @@ func (s *scbeRestClient) hostList(payload map[string]string) ([]ScbeResponseHost
 
 //getHostIdByVol return the host ID from the storage system of the given volume(wwn)
 func (s *scbeRestClient) getHostIdByVol(wwn string, host string) (int, error) {
+	defer s.logger.Trace(logutil.DEBUG)()
 	vols, err := s.volumeList(wwn)
 	if err != nil {
-		s.logger.Printf("Fail to get volume of wwn ", wwn, " due to error ", err)
+		s.logger.Error("volumeList failed", logutil.Args{{"wwn", wwn}, {"error ", err}})
 		return 0, err
 	}
 
 	if len(vols) == 0 {
 		msg := fmt.Sprintf(MsgVolumeWWNNotFound, wwn)
-		s.logger.Printf(msg)
+		s.logger.Error(msg)
 		return 0, fmt.Errorf(msg)
 	}
 	vol := vols[0]
@@ -247,7 +255,7 @@ func (s *scbeRestClient) getHostIdByVol(wwn string, host string) (int, error) {
 	hosts, err := s.hostList(payload)
 	if len(hosts) != 1 {
 		msg := fmt.Sprintf(MsgHostIDNotFoundByVolWWNOnArray, host, vol.Array, wwn, hosts)
-		s.logger.Printf(msg)
+		s.logger.Error(msg)
 		return 0, fmt.Errorf(msg)
 	}
 

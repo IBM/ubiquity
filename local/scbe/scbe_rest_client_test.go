@@ -7,8 +7,6 @@ import (
     "github.com/IBM/ubiquity/fakes"
     "github.com/IBM/ubiquity/local/scbe"
     "github.com/IBM/ubiquity/resources"
-    "log"
-    "os"
     "errors"
     "encoding/json"
 )
@@ -16,7 +14,6 @@ import (
 
 var _ = Describe("ScbeRestClient", func() {
     var (
-        logger                *log.Logger
         scbeRestClient        scbe.ScbeRestClient
         fakeSimpleRestClient  *fakes.FakeSimpleRestClient
         err                   error
@@ -27,11 +24,10 @@ var _ = Describe("ScbeRestClient", func() {
         restErr               error = errors.New("rest error")
     )
     BeforeEach(func() {
-        logger = log.New(os.Stdout, "ubiquity scbe: ", log.Lshortfile|log.LstdFlags)
         fakeSimpleRestClient = new(fakes.FakeSimpleRestClient)
         credentialInfo := resources.CredentialInfo{"user", "password", "flocker"}
         conInfo := resources.ConnectionInfo{credentialInfo, 8440, "ip", true}
-        scbeRestClient = scbe.NewScbeRestClientWithSimpleRestClient(logger, conInfo, fakeSimpleRestClient)
+        scbeRestClient = scbe.NewScbeRestClientWithSimpleRestClient(conInfo, fakeSimpleRestClient)
     })
 
 
