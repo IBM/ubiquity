@@ -8,20 +8,21 @@ import (
 )
 
 type FakeStorageClient struct {
-	ActivateStub        func() error
+	ActivateStub        func(activateRequest resources.ActivateRequest) error
 	activateMutex       sync.RWMutex
-	activateArgsForCall []struct{}
-	activateReturns     struct {
+	activateArgsForCall []struct {
+		activateRequest resources.ActivateRequest
+	}
+	activateReturns struct {
 		result1 error
 	}
 	activateReturnsOnCall map[int]struct {
 		result1 error
 	}
-	CreateVolumeStub        func(name string, opts map[string]interface{}) error
+	CreateVolumeStub        func(createVolumeRequest resources.CreateVolumeRequest) error
 	createVolumeMutex       sync.RWMutex
 	createVolumeArgsForCall []struct {
-		name string
-		opts map[string]interface{}
+		createVolumeRequest resources.CreateVolumeRequest
 	}
 	createVolumeReturns struct {
 		result1 error
@@ -29,10 +30,10 @@ type FakeStorageClient struct {
 	createVolumeReturnsOnCall map[int]struct {
 		result1 error
 	}
-	RemoveVolumeStub        func(name string) error
+	RemoveVolumeStub        func(removeVolumeRequest resources.RemoveVolumeRequest) error
 	removeVolumeMutex       sync.RWMutex
 	removeVolumeArgsForCall []struct {
-		name string
+		removeVolumeRequest resources.RemoveVolumeRequest
 	}
 	removeVolumeReturns struct {
 		result1 error
@@ -40,21 +41,23 @@ type FakeStorageClient struct {
 	removeVolumeReturnsOnCall map[int]struct {
 		result1 error
 	}
-	ListVolumesStub        func() ([]resources.VolumeMetadata, error)
+	ListVolumesStub        func(listVolumeRequest resources.ListVolumesRequest) ([]resources.Volume, error)
 	listVolumesMutex       sync.RWMutex
-	listVolumesArgsForCall []struct{}
-	listVolumesReturns     struct {
-		result1 []resources.VolumeMetadata
+	listVolumesArgsForCall []struct {
+		listVolumeRequest resources.ListVolumesRequest
+	}
+	listVolumesReturns struct {
+		result1 []resources.Volume
 		result2 error
 	}
 	listVolumesReturnsOnCall map[int]struct {
-		result1 []resources.VolumeMetadata
+		result1 []resources.Volume
 		result2 error
 	}
-	GetVolumeStub        func(name string) (resources.Volume, error)
+	GetVolumeStub        func(getVolumeRequest resources.GetVolumeRequest) (resources.Volume, error)
 	getVolumeMutex       sync.RWMutex
 	getVolumeArgsForCall []struct {
-		name string
+		getVolumeRequest resources.GetVolumeRequest
 	}
 	getVolumeReturns struct {
 		result1 resources.Volume
@@ -64,10 +67,10 @@ type FakeStorageClient struct {
 		result1 resources.Volume
 		result2 error
 	}
-	GetVolumeConfigStub        func(name string) (map[string]interface{}, error)
+	GetVolumeConfigStub        func(getVolumeConfigRequest resources.GetVolumeConfigRequest) (map[string]interface{}, error)
 	getVolumeConfigMutex       sync.RWMutex
 	getVolumeConfigArgsForCall []struct {
-		name string
+		getVolumeConfigRequest resources.GetVolumeConfigRequest
 	}
 	getVolumeConfigReturns struct {
 		result1 map[string]interface{}
@@ -77,10 +80,10 @@ type FakeStorageClient struct {
 		result1 map[string]interface{}
 		result2 error
 	}
-	AttachStub        func(name string) (string, error)
+	AttachStub        func(attachRequest resources.AttachRequest) (string, error)
 	attachMutex       sync.RWMutex
 	attachArgsForCall []struct {
-		name string
+		attachRequest resources.AttachRequest
 	}
 	attachReturns struct {
 		result1 string
@@ -90,10 +93,10 @@ type FakeStorageClient struct {
 		result1 string
 		result2 error
 	}
-	DetachStub        func(name string) error
+	DetachStub        func(detachRequest resources.DetachRequest) error
 	detachMutex       sync.RWMutex
 	detachArgsForCall []struct {
-		name string
+		detachRequest resources.DetachRequest
 	}
 	detachReturns struct {
 		result1 error
@@ -105,14 +108,16 @@ type FakeStorageClient struct {
 	invocationsMutex sync.RWMutex
 }
 
-func (fake *FakeStorageClient) Activate() error {
+func (fake *FakeStorageClient) Activate(activateRequest resources.ActivateRequest) error {
 	fake.activateMutex.Lock()
 	ret, specificReturn := fake.activateReturnsOnCall[len(fake.activateArgsForCall)]
-	fake.activateArgsForCall = append(fake.activateArgsForCall, struct{}{})
-	fake.recordInvocation("Activate", []interface{}{})
+	fake.activateArgsForCall = append(fake.activateArgsForCall, struct {
+		activateRequest resources.ActivateRequest
+	}{activateRequest})
+	fake.recordInvocation("Activate", []interface{}{activateRequest})
 	fake.activateMutex.Unlock()
 	if fake.ActivateStub != nil {
-		return fake.ActivateStub()
+		return fake.ActivateStub(activateRequest)
 	}
 	if specificReturn {
 		return ret.result1
@@ -124,6 +129,12 @@ func (fake *FakeStorageClient) ActivateCallCount() int {
 	fake.activateMutex.RLock()
 	defer fake.activateMutex.RUnlock()
 	return len(fake.activateArgsForCall)
+}
+
+func (fake *FakeStorageClient) ActivateArgsForCall(i int) resources.ActivateRequest {
+	fake.activateMutex.RLock()
+	defer fake.activateMutex.RUnlock()
+	return fake.activateArgsForCall[i].activateRequest
 }
 
 func (fake *FakeStorageClient) ActivateReturns(result1 error) {
@@ -145,17 +156,16 @@ func (fake *FakeStorageClient) ActivateReturnsOnCall(i int, result1 error) {
 	}{result1}
 }
 
-func (fake *FakeStorageClient) CreateVolume(name string, opts map[string]interface{}) error {
+func (fake *FakeStorageClient) CreateVolume(createVolumeRequest resources.CreateVolumeRequest) error {
 	fake.createVolumeMutex.Lock()
 	ret, specificReturn := fake.createVolumeReturnsOnCall[len(fake.createVolumeArgsForCall)]
 	fake.createVolumeArgsForCall = append(fake.createVolumeArgsForCall, struct {
-		name string
-		opts map[string]interface{}
-	}{name, opts})
-	fake.recordInvocation("CreateVolume", []interface{}{name, opts})
+		createVolumeRequest resources.CreateVolumeRequest
+	}{createVolumeRequest})
+	fake.recordInvocation("CreateVolume", []interface{}{createVolumeRequest})
 	fake.createVolumeMutex.Unlock()
 	if fake.CreateVolumeStub != nil {
-		return fake.CreateVolumeStub(name, opts)
+		return fake.CreateVolumeStub(createVolumeRequest)
 	}
 	if specificReturn {
 		return ret.result1
@@ -169,10 +179,10 @@ func (fake *FakeStorageClient) CreateVolumeCallCount() int {
 	return len(fake.createVolumeArgsForCall)
 }
 
-func (fake *FakeStorageClient) CreateVolumeArgsForCall(i int) (string, map[string]interface{}) {
+func (fake *FakeStorageClient) CreateVolumeArgsForCall(i int) resources.CreateVolumeRequest {
 	fake.createVolumeMutex.RLock()
 	defer fake.createVolumeMutex.RUnlock()
-	return fake.createVolumeArgsForCall[i].name, fake.createVolumeArgsForCall[i].opts
+	return fake.createVolumeArgsForCall[i].createVolumeRequest
 }
 
 func (fake *FakeStorageClient) CreateVolumeReturns(result1 error) {
@@ -194,16 +204,16 @@ func (fake *FakeStorageClient) CreateVolumeReturnsOnCall(i int, result1 error) {
 	}{result1}
 }
 
-func (fake *FakeStorageClient) RemoveVolume(name string) error {
+func (fake *FakeStorageClient) RemoveVolume(removeVolumeRequest resources.RemoveVolumeRequest) error {
 	fake.removeVolumeMutex.Lock()
 	ret, specificReturn := fake.removeVolumeReturnsOnCall[len(fake.removeVolumeArgsForCall)]
 	fake.removeVolumeArgsForCall = append(fake.removeVolumeArgsForCall, struct {
-		name string
-	}{name})
-	fake.recordInvocation("RemoveVolume", []interface{}{name})
+		removeVolumeRequest resources.RemoveVolumeRequest
+	}{removeVolumeRequest})
+	fake.recordInvocation("RemoveVolume", []interface{}{removeVolumeRequest})
 	fake.removeVolumeMutex.Unlock()
 	if fake.RemoveVolumeStub != nil {
-		return fake.RemoveVolumeStub(name)
+		return fake.RemoveVolumeStub(removeVolumeRequest)
 	}
 	if specificReturn {
 		return ret.result1
@@ -217,10 +227,10 @@ func (fake *FakeStorageClient) RemoveVolumeCallCount() int {
 	return len(fake.removeVolumeArgsForCall)
 }
 
-func (fake *FakeStorageClient) RemoveVolumeArgsForCall(i int) string {
+func (fake *FakeStorageClient) RemoveVolumeArgsForCall(i int) resources.RemoveVolumeRequest {
 	fake.removeVolumeMutex.RLock()
 	defer fake.removeVolumeMutex.RUnlock()
-	return fake.removeVolumeArgsForCall[i].name
+	return fake.removeVolumeArgsForCall[i].removeVolumeRequest
 }
 
 func (fake *FakeStorageClient) RemoveVolumeReturns(result1 error) {
@@ -242,14 +252,16 @@ func (fake *FakeStorageClient) RemoveVolumeReturnsOnCall(i int, result1 error) {
 	}{result1}
 }
 
-func (fake *FakeStorageClient) ListVolumes() ([]resources.VolumeMetadata, error) {
+func (fake *FakeStorageClient) ListVolumes(listVolumeRequest resources.ListVolumesRequest) ([]resources.Volume, error) {
 	fake.listVolumesMutex.Lock()
 	ret, specificReturn := fake.listVolumesReturnsOnCall[len(fake.listVolumesArgsForCall)]
-	fake.listVolumesArgsForCall = append(fake.listVolumesArgsForCall, struct{}{})
-	fake.recordInvocation("ListVolumes", []interface{}{})
+	fake.listVolumesArgsForCall = append(fake.listVolumesArgsForCall, struct {
+		listVolumeRequest resources.ListVolumesRequest
+	}{listVolumeRequest})
+	fake.recordInvocation("ListVolumes", []interface{}{listVolumeRequest})
 	fake.listVolumesMutex.Unlock()
 	if fake.ListVolumesStub != nil {
-		return fake.ListVolumesStub()
+		return fake.ListVolumesStub(listVolumeRequest)
 	}
 	if specificReturn {
 		return ret.result1, ret.result2
@@ -263,38 +275,44 @@ func (fake *FakeStorageClient) ListVolumesCallCount() int {
 	return len(fake.listVolumesArgsForCall)
 }
 
-func (fake *FakeStorageClient) ListVolumesReturns(result1 []resources.VolumeMetadata, result2 error) {
+func (fake *FakeStorageClient) ListVolumesArgsForCall(i int) resources.ListVolumesRequest {
+	fake.listVolumesMutex.RLock()
+	defer fake.listVolumesMutex.RUnlock()
+	return fake.listVolumesArgsForCall[i].listVolumeRequest
+}
+
+func (fake *FakeStorageClient) ListVolumesReturns(result1 []resources.Volume, result2 error) {
 	fake.ListVolumesStub = nil
 	fake.listVolumesReturns = struct {
-		result1 []resources.VolumeMetadata
+		result1 []resources.Volume
 		result2 error
 	}{result1, result2}
 }
 
-func (fake *FakeStorageClient) ListVolumesReturnsOnCall(i int, result1 []resources.VolumeMetadata, result2 error) {
+func (fake *FakeStorageClient) ListVolumesReturnsOnCall(i int, result1 []resources.Volume, result2 error) {
 	fake.ListVolumesStub = nil
 	if fake.listVolumesReturnsOnCall == nil {
 		fake.listVolumesReturnsOnCall = make(map[int]struct {
-			result1 []resources.VolumeMetadata
+			result1 []resources.Volume
 			result2 error
 		})
 	}
 	fake.listVolumesReturnsOnCall[i] = struct {
-		result1 []resources.VolumeMetadata
+		result1 []resources.Volume
 		result2 error
 	}{result1, result2}
 }
 
-func (fake *FakeStorageClient) GetVolume(name string) (resources.Volume, error) {
+func (fake *FakeStorageClient) GetVolume(getVolumeRequest resources.GetVolumeRequest) (resources.Volume, error) {
 	fake.getVolumeMutex.Lock()
 	ret, specificReturn := fake.getVolumeReturnsOnCall[len(fake.getVolumeArgsForCall)]
 	fake.getVolumeArgsForCall = append(fake.getVolumeArgsForCall, struct {
-		name string
-	}{name})
-	fake.recordInvocation("GetVolume", []interface{}{name})
+		getVolumeRequest resources.GetVolumeRequest
+	}{getVolumeRequest})
+	fake.recordInvocation("GetVolume", []interface{}{getVolumeRequest})
 	fake.getVolumeMutex.Unlock()
 	if fake.GetVolumeStub != nil {
-		return fake.GetVolumeStub(name)
+		return fake.GetVolumeStub(getVolumeRequest)
 	}
 	if specificReturn {
 		return ret.result1, ret.result2
@@ -308,10 +326,10 @@ func (fake *FakeStorageClient) GetVolumeCallCount() int {
 	return len(fake.getVolumeArgsForCall)
 }
 
-func (fake *FakeStorageClient) GetVolumeArgsForCall(i int) string {
+func (fake *FakeStorageClient) GetVolumeArgsForCall(i int) resources.GetVolumeRequest {
 	fake.getVolumeMutex.RLock()
 	defer fake.getVolumeMutex.RUnlock()
-	return fake.getVolumeArgsForCall[i].name
+	return fake.getVolumeArgsForCall[i].getVolumeRequest
 }
 
 func (fake *FakeStorageClient) GetVolumeReturns(result1 resources.Volume, result2 error) {
@@ -336,16 +354,16 @@ func (fake *FakeStorageClient) GetVolumeReturnsOnCall(i int, result1 resources.V
 	}{result1, result2}
 }
 
-func (fake *FakeStorageClient) GetVolumeConfig(name string) (map[string]interface{}, error) {
+func (fake *FakeStorageClient) GetVolumeConfig(getVolumeConfigRequest resources.GetVolumeConfigRequest) (map[string]interface{}, error) {
 	fake.getVolumeConfigMutex.Lock()
 	ret, specificReturn := fake.getVolumeConfigReturnsOnCall[len(fake.getVolumeConfigArgsForCall)]
 	fake.getVolumeConfigArgsForCall = append(fake.getVolumeConfigArgsForCall, struct {
-		name string
-	}{name})
-	fake.recordInvocation("GetVolumeConfig", []interface{}{name})
+		getVolumeConfigRequest resources.GetVolumeConfigRequest
+	}{getVolumeConfigRequest})
+	fake.recordInvocation("GetVolumeConfig", []interface{}{getVolumeConfigRequest})
 	fake.getVolumeConfigMutex.Unlock()
 	if fake.GetVolumeConfigStub != nil {
-		return fake.GetVolumeConfigStub(name)
+		return fake.GetVolumeConfigStub(getVolumeConfigRequest)
 	}
 	if specificReturn {
 		return ret.result1, ret.result2
@@ -359,10 +377,10 @@ func (fake *FakeStorageClient) GetVolumeConfigCallCount() int {
 	return len(fake.getVolumeConfigArgsForCall)
 }
 
-func (fake *FakeStorageClient) GetVolumeConfigArgsForCall(i int) string {
+func (fake *FakeStorageClient) GetVolumeConfigArgsForCall(i int) resources.GetVolumeConfigRequest {
 	fake.getVolumeConfigMutex.RLock()
 	defer fake.getVolumeConfigMutex.RUnlock()
-	return fake.getVolumeConfigArgsForCall[i].name
+	return fake.getVolumeConfigArgsForCall[i].getVolumeConfigRequest
 }
 
 func (fake *FakeStorageClient) GetVolumeConfigReturns(result1 map[string]interface{}, result2 error) {
@@ -387,16 +405,16 @@ func (fake *FakeStorageClient) GetVolumeConfigReturnsOnCall(i int, result1 map[s
 	}{result1, result2}
 }
 
-func (fake *FakeStorageClient) Attach(name string) (string, error) {
+func (fake *FakeStorageClient) Attach(attachRequest resources.AttachRequest) (string, error) {
 	fake.attachMutex.Lock()
 	ret, specificReturn := fake.attachReturnsOnCall[len(fake.attachArgsForCall)]
 	fake.attachArgsForCall = append(fake.attachArgsForCall, struct {
-		name string
-	}{name})
-	fake.recordInvocation("Attach", []interface{}{name})
+		attachRequest resources.AttachRequest
+	}{attachRequest})
+	fake.recordInvocation("Attach", []interface{}{attachRequest})
 	fake.attachMutex.Unlock()
 	if fake.AttachStub != nil {
-		return fake.AttachStub(name)
+		return fake.AttachStub(attachRequest)
 	}
 	if specificReturn {
 		return ret.result1, ret.result2
@@ -410,10 +428,10 @@ func (fake *FakeStorageClient) AttachCallCount() int {
 	return len(fake.attachArgsForCall)
 }
 
-func (fake *FakeStorageClient) AttachArgsForCall(i int) string {
+func (fake *FakeStorageClient) AttachArgsForCall(i int) resources.AttachRequest {
 	fake.attachMutex.RLock()
 	defer fake.attachMutex.RUnlock()
-	return fake.attachArgsForCall[i].name
+	return fake.attachArgsForCall[i].attachRequest
 }
 
 func (fake *FakeStorageClient) AttachReturns(result1 string, result2 error) {
@@ -438,16 +456,16 @@ func (fake *FakeStorageClient) AttachReturnsOnCall(i int, result1 string, result
 	}{result1, result2}
 }
 
-func (fake *FakeStorageClient) Detach(name string) error {
+func (fake *FakeStorageClient) Detach(detachRequest resources.DetachRequest) error {
 	fake.detachMutex.Lock()
 	ret, specificReturn := fake.detachReturnsOnCall[len(fake.detachArgsForCall)]
 	fake.detachArgsForCall = append(fake.detachArgsForCall, struct {
-		name string
-	}{name})
-	fake.recordInvocation("Detach", []interface{}{name})
+		detachRequest resources.DetachRequest
+	}{detachRequest})
+	fake.recordInvocation("Detach", []interface{}{detachRequest})
 	fake.detachMutex.Unlock()
 	if fake.DetachStub != nil {
-		return fake.DetachStub(name)
+		return fake.DetachStub(detachRequest)
 	}
 	if specificReturn {
 		return ret.result1
@@ -461,10 +479,10 @@ func (fake *FakeStorageClient) DetachCallCount() int {
 	return len(fake.detachArgsForCall)
 }
 
-func (fake *FakeStorageClient) DetachArgsForCall(i int) string {
+func (fake *FakeStorageClient) DetachArgsForCall(i int) resources.DetachRequest {
 	fake.detachMutex.RLock()
 	defer fake.detachMutex.RUnlock()
-	return fake.detachArgsForCall[i].name
+	return fake.detachArgsForCall[i].detachRequest
 }
 
 func (fake *FakeStorageClient) DetachReturns(result1 error) {

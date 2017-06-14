@@ -12,7 +12,6 @@ import (
 
 	"github.com/BurntSushi/toml"
 	"github.com/IBM/ubiquity/local"
-	"github.com/IBM/ubiquity/model"
 	"github.com/IBM/ubiquity/resources"
 	"github.com/IBM/ubiquity/utils"
 	"github.com/IBM/ubiquity/web_server"
@@ -27,7 +26,7 @@ var configFile = flag.String(
 )
 
 const (
-	HEARTBEAT_INTERVAL = 5 //seconds
+	HeartbeatInterval = 5 //seconds
 )
 
 func main() {
@@ -49,7 +48,7 @@ func main() {
 	defer utils.CloseLogs(logFile)
 
 	spectrumExecutor := utils.NewExecutor(logger)
-	ubiquityConfigPath, err := utils.SetupConfigDirectory(logger, spectrumExecutor, config.SpectrumScaleConfig.ConfigPath)
+	ubiquityConfigPath, err := utils.SetupConfigDirectory(logger, spectrumExecutor, config.ConfigPath)
 	if err != nil {
 		panic(err.Error())
 	}
@@ -74,7 +73,7 @@ func main() {
 	}
 	defer db.Close()
 
-	if err := db.AutoMigrate(&model.Volume{}).Error; err != nil {
+	if err := db.AutoMigrate(&resources.Volume{}).Error; err != nil {
 		panic(err)
 	}
 
@@ -97,7 +96,7 @@ func keepAlive(heartbeat utils.Heartbeat) {
 		if err != nil {
 			panic("Failed updating heartbeat...aborting")
 		}
-		time.Sleep(HEARTBEAT_INTERVAL * time.Second)
+		time.Sleep(HeartbeatInterval * time.Second)
 	}
 }
 func probeHeartbeatUntilFree(heartbeat utils.Heartbeat) {
@@ -117,9 +116,9 @@ func probeHeartbeatUntilFree(heartbeat utils.Heartbeat) {
 			panic("Unable to determine state of heartbeat...aborting")
 		}
 
-		if currentTime.Sub(lastUpdateTimestamp).Seconds() > HEARTBEAT_INTERVAL {
+		if currentTime.Sub(lastUpdateTimestamp).Seconds() > HeartbeatInterval {
 			break
 		}
-		time.Sleep(HEARTBEAT_INTERVAL * time.Second)
+		time.Sleep(HeartbeatInterval * time.Second)
 	}
 }
