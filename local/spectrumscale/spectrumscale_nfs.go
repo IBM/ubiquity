@@ -15,7 +15,7 @@ type spectrumNfsLocalClient struct {
 	executor       utils.Executor
 }
 
-func NewSpectrumNfsLocalClient(logger *log.Logger, config resources.SpectrumScaleConfig, db *gorm.DB) (resources.StorageClient, error) {
+func NewSpectrumNfsLocalClient(logger *log.Logger, config resources.UbiquityServerConfig, db *gorm.DB) (resources.StorageClient, error) {
 	logger.Println("spectrumNfsLocalClient: init start")
 	defer logger.Println("spectrumNfsLocalClient: init end")
 
@@ -23,72 +23,74 @@ func NewSpectrumNfsLocalClient(logger *log.Logger, config resources.SpectrumScal
 		return nil, fmt.Errorf("spectrumNfsLocalClient: init: missing required parameter 'spectrumConfigPath'")
 	}
 
-	if config.DefaultFilesystemName == "" {
+	if config.SpectrumScaleConfig.DefaultFilesystemName == "" {
 		return nil, fmt.Errorf("spectrumNfsLocalClient: init: missing required parameter 'spectrumDefaultFileSystem'")
 	}
 
-	if config.NfsServerAddr == "" {
+	if config.SpectrumScaleConfig.NfsServerAddr == "" {
 		return nil, fmt.Errorf("spectrumNfsLocalClient: init: missing required parameter 'spectrumNfsServerAddr'")
 	}
 
-	spectrumClient, err := newSpectrumLocalClient(logger, config, db, resources.SPECTRUM_SCALE_NFS)
+	spectrumClient, err := newSpectrumLocalClient(logger, config.SpectrumScaleConfig, db, resources.SpectrumScaleNFS)
 	if err != nil {
 		return nil, err
 	}
-	return &spectrumNfsLocalClient{config: config, spectrumClient: spectrumClient, executor: utils.NewExecutor(logger)}, nil
+	return &spectrumNfsLocalClient{config: config.SpectrumScaleConfig, spectrumClient: spectrumClient, executor: utils.NewExecutor(logger)}, nil
 }
 
-func (s *spectrumNfsLocalClient) Activate() error {
+func (s *spectrumNfsLocalClient) Activate(activateRequest resources.ActivateRequest) error {
 	s.spectrumClient.logger.Println("spectrumNfsLocalClient: Activate-start")
 	defer s.spectrumClient.logger.Println("spectrumNfsLocalClient: Activate-end")
 
-	return s.spectrumClient.Activate()
+	return s.spectrumClient.Activate(activateRequest)
 }
 
-func (s *spectrumNfsLocalClient) ListVolumes() ([]resources.VolumeMetadata, error) {
+func (s *spectrumNfsLocalClient) ListVolumes(listVolumesRequest resources.ListVolumesRequest) ([]resources.Volume, error) {
 	s.spectrumClient.logger.Println("spectrumNfsLocalClient: List-volumes-start")
 	defer s.spectrumClient.logger.Println("spectrumNfsLocalClient: List-volumes-end")
 
-	return s.spectrumClient.ListVolumes()
+	return s.spectrumClient.ListVolumes(listVolumesRequest)
 
 }
-func (s *spectrumNfsLocalClient) Attach(name string) (string, error) {
+func (s *spectrumNfsLocalClient) Attach(attachRequest resources.AttachRequest) (string, error) {
 	s.spectrumClient.logger.Println("spectrumNfsLocalClient: Attach-start")
 	defer s.spectrumClient.logger.Println("spectrumNfsLocalClient: Attach-end")
 
-	volumeConfig, err := s.GetVolumeConfig(name)
+	getVolumeConfigRequest := resources.GetVolumeConfigRequest{Name: attachRequest.Name}
+	volumeConfig, err := s.GetVolumeConfig(getVolumeConfigRequest)
 	if err != nil {
 		return "", err
 	}
 	nfsShare, ok := volumeConfig["nfs_share"].(string)
 	if !ok {
-		err = fmt.Errorf("error getting NFS share info from volume config for volume %s", name)
+		err = fmt.Errorf("error getting NFS share info from volume config for volume %s", attachRequest.Name)
 		s.spectrumClient.logger.Println("spectrumNfsLocalClient: error: %v", err.Error())
 		return "", err
 	}
 	return nfsShare, nil
 }
 
-func (s *spectrumNfsLocalClient) Detach(name string) error {
+func (s *spectrumNfsLocalClient) Detach(detachRequest resources.DetachRequest) error {
 	s.spectrumClient.logger.Println("spectrumNfsLocalClient: Detach-start")
 	defer s.spectrumClient.logger.Println("spectrumNfsLocalClient: Detach-end")
 
-	_, err := s.spectrumClient.GetVolumeConfig(name)
+	getVolumeConfigRequest := resources.GetVolumeConfigRequest{Name: detachRequest.Name}
+	_, err := s.spectrumClient.GetVolumeConfig(getVolumeConfigRequest)
 
 	if err != nil {
-		s.spectrumClient.logger.Printf("spectrumNfsLocalClient: error in no-op detach for volume %s: %#v\n", name, err)
+		s.spectrumClient.logger.Printf("spectrumNfsLocalClient: error in no-op detach for volume %s: %#v\n", detachRequest.Name, err)
 		return err
 	}
 
 	return nil
 }
 
-func (s *spectrumNfsLocalClient) CreateVolume(name string, opts map[string]interface{}) error {
+func (s *spectrumNfsLocalClient) CreateVolume(createVolumeRequest resources.CreateVolumeRequest) error {
 
-	s.spectrumClient.logger.Printf("spectrumNfsLocalClient: Create-start with name %s and opts %#v\n", name, opts)
+	s.spectrumClient.logger.Printf("spectrumNfsLocalClient: Create-start")
 	defer s.spectrumClient.logger.Println("spectrumNfsLocalClient: Create-end")
 
-	nfsClientConfig, ok := opts["nfsClientConfig"].(string)
+	nfsClientConfig, ok := createVolumeRequest.Opts["nfsClientConfig"].(string)
 	if !ok {
 		errorMsg := "Cannot create volume (opts missing required parameter 'nfsClientConfig')"
 		s.spectrumClient.logger.Printf("spectrumNfsLocalClient: Create: Error: %s", errorMsg)
@@ -96,71 +98,77 @@ func (s *spectrumNfsLocalClient) CreateVolume(name string, opts map[string]inter
 	}
 
 	spectrumOpts := make(map[string]interface{})
-	for k, v := range opts {
+	for k, v := range createVolumeRequest.Opts {
 		if k != "nfsClientConfig" {
 			spectrumOpts[k] = v
 		}
 	}
 
-	if err := s.spectrumClient.CreateVolume(name, spectrumOpts); err != nil {
+	if err := s.spectrumClient.CreateVolume(createVolumeRequest); err != nil {
 		s.spectrumClient.logger.Printf("spectrumNfsLocalClient: error creating volume %#v\n", err)
 		return err
 	}
-
-	if _, err := s.spectrumClient.Attach(name); err != nil {
+	attachRequest := resources.AttachRequest{Name: createVolumeRequest.Name}
+	if _, err := s.spectrumClient.Attach(attachRequest); err != nil {
 		s.spectrumClient.logger.Printf("spectrumNfsLocalClient: error attaching volume %#v\n; deleting volume", err)
-		s.spectrumClient.RemoveVolume(name)
+
+		removeVolumeRequest := resources.RemoveVolumeRequest{Name: createVolumeRequest.Name}
+		s.spectrumClient.RemoveVolume(removeVolumeRequest)
 		return err
 	}
 
-	if err := s.spectrumClient.updatePermissions(name); err != nil {
+	if err := s.spectrumClient.updatePermissions(createVolumeRequest.Name); err != nil {
 		s.spectrumClient.logger.Printf("spectrumNfsLocalClient: error updating permissions of volume %#v\n; deleting volume", err)
-		s.spectrumClient.RemoveVolume(name)
+		removeVolumeRequest := resources.RemoveVolumeRequest{Name: createVolumeRequest.Name}
+		s.spectrumClient.RemoveVolume(removeVolumeRequest)
 		return err
 	}
 
-	if err := s.exportNfs(name, nfsClientConfig); err != nil {
+	if err := s.exportNfs(createVolumeRequest.Name, nfsClientConfig); err != nil {
 		s.spectrumClient.logger.Printf("spectrumNfsLocalClient: error exporting volume %#v\n; deleting volume", err)
-		s.spectrumClient.RemoveVolume(name)
+		removeVolumeRequest := resources.RemoveVolumeRequest{Name: createVolumeRequest.Name}
+		s.spectrumClient.RemoveVolume(removeVolumeRequest)
 		return err
 	}
 	return nil
 }
 
-func (s *spectrumNfsLocalClient) RemoveVolume(name string) error {
+func (s *spectrumNfsLocalClient) RemoveVolume(removeVolumeRequest resources.RemoveVolumeRequest) error {
 	s.spectrumClient.logger.Println("spectrumNfsLocalClient: Remove-start")
 	defer s.spectrumClient.logger.Println("spectrumNfsLocalClient: Remove-end")
 
-	if err := s.unexportNfs(name); err != nil {
-		s.spectrumClient.logger.Printf("spectrumNfsLocalClient: Could not unexport volume %s (error=%s)", name, err.Error())
+	if err := s.unexportNfs(removeVolumeRequest.Name); err != nil {
+		s.spectrumClient.logger.Printf("spectrumNfsLocalClient: Could not unexport volume %s (error=%s)", removeVolumeRequest.Name, err.Error())
 	}
-	if err := s.spectrumClient.Detach(name); err != nil {
-		s.spectrumClient.logger.Printf("spectrumNfsLocalClient: Could not detach volume %s (error=%s)", name, err.Error())
+	detachRequest := resources.DetachRequest{Name: removeVolumeRequest.Name}
+	if err := s.spectrumClient.Detach(detachRequest); err != nil {
+		s.spectrumClient.logger.Printf("spectrumNfsLocalClient: Could not detach volume %s (error=%s)", removeVolumeRequest.Name, err.Error())
 	}
-	return s.spectrumClient.RemoveVolume(name)
+
+	return s.spectrumClient.RemoveVolume(removeVolumeRequest)
 }
 
-func (s *spectrumNfsLocalClient) GetVolumeConfig(name string) (map[string]interface{}, error) {
+func (s *spectrumNfsLocalClient) GetVolumeConfig(getVolumeConfigRequest resources.GetVolumeConfigRequest) (map[string]interface{}, error) {
 	s.spectrumClient.logger.Println("spectrumNfsLocalClient: GetVolumeConfig-start")
 	defer s.spectrumClient.logger.Println("spectrumNfsLocalClient: GetVolumeConfig-end")
 
-	volumeConfig, err := s.spectrumClient.GetVolumeConfig(name)
+	volumeConfig, err := s.spectrumClient.GetVolumeConfig(getVolumeConfigRequest)
 	if err != nil {
 		return volumeConfig, err
 	}
 	mountpoint, exists := volumeConfig["mountpoint"]
 	if exists == false {
-		return nil, fmt.Errorf("Volume :%s not found", name)
+		return nil, fmt.Errorf("Volume :%s not found", getVolumeConfigRequest.Name)
 	}
 	nfsShare := fmt.Sprintf("%s:%s", s.config.NfsServerAddr, mountpoint)
 	volumeConfig["nfs_share"] = nfsShare
-	s.spectrumClient.logger.Printf("spectrumNfsLocalClient: GetVolume: Adding nfs_share %s to volume config for volume %s\n", nfsShare, name)
+	s.spectrumClient.logger.Printf("spectrumNfsLocalClient: GetVolume: Adding nfs_share %s to volume config for volume %s\n", nfsShare, getVolumeConfigRequest.Name)
 	return volumeConfig, nil
 }
-func (s *spectrumNfsLocalClient) GetVolume(name string) (resources.Volume, error) {
+func (s *spectrumNfsLocalClient) GetVolume(getVolumeRequest resources.GetVolumeRequest) (resources.Volume, error) {
 	s.spectrumClient.logger.Println("spectrumNfsLocalClient: GetVolume start")
 	defer s.spectrumClient.logger.Println("spectrumNfsLocalClient: GetVolume finish")
-	return s.spectrumClient.GetVolume(name)
+	return s.spectrumClient.GetVolume(getVolumeRequest)
 }
 
 func (s *spectrumNfsLocalClient) exportNfs(name, clientConfig string) error {

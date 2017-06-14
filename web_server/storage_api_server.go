@@ -16,7 +16,7 @@ type StorageApiServer struct {
 	logger            *log.Logger
 }
 
-func NewStorageApiServer(logger *log.Logger, backends map[resources.Backend]resources.StorageClient, config resources.UbiquityServerConfig, database *gorm.DB) (*StorageApiServer, error) {
+func NewStorageApiServer(logger *log.Logger, backends map[string]resources.StorageClient, config resources.UbiquityServerConfig, database *gorm.DB) (*StorageApiServer, error) {
 	return &StorageApiServer{storageApiHandler: NewStorageApiHandler(logger, backends, database, config), logger: logger}, nil
 }
 

@@ -5,26 +5,26 @@ import (
 
 	"fmt"
 
-	"github.com/jinzhu/gorm"
 	"github.com/IBM/ubiquity/local/spectrumscale"
 	"github.com/IBM/ubiquity/resources"
+	"github.com/jinzhu/gorm"
 )
 
-func GetLocalClients(logger *log.Logger, config resources.UbiquityServerConfig, database *gorm.DB) (map[resources.Backend]resources.StorageClient, error) {
+func GetLocalClients(logger *log.Logger, config resources.UbiquityServerConfig, database *gorm.DB) (map[string]resources.StorageClient, error) {
 
-	clients := make(map[resources.Backend]resources.StorageClient)
-	spectrumClient, err := spectrumscale.NewSpectrumLocalClient(logger, config.SpectrumScaleConfig, database)
+	clients := make(map[string]resources.StorageClient)
+	spectrumClient, err := spectrumscale.NewSpectrumLocalClient(logger, config, database)
 	if err != nil {
-		logger.Printf("Not enough params to initialize '%s' client", resources.SPECTRUM_SCALE)
+		logger.Printf("Not enough params to initialize '%s' client", resources.SpectrumScale)
 	} else {
-		clients[resources.SPECTRUM_SCALE] = spectrumClient
+		clients[resources.SpectrumScale] = spectrumClient
 	}
 
-	spectrumNfsClient, err := spectrumscale.NewSpectrumNfsLocalClient(logger, config.SpectrumScaleConfig, database)
+	spectrumNfsClient, err := spectrumscale.NewSpectrumNfsLocalClient(logger, config, database)
 	if err != nil {
-		logger.Printf("Not enough params to initialize '%s' client", resources.SPECTRUM_SCALE_NFS)
+		logger.Printf("Not enough params to initialize '%s' client", resources.SpectrumScaleNFS)
 	} else {
-		clients[resources.SPECTRUM_SCALE_NFS] = spectrumNfsClient
+		clients[resources.SpectrumScaleNFS] = spectrumNfsClient
 	}
 
 	if len(clients) == 0 {

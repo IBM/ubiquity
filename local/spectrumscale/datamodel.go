@@ -5,10 +5,10 @@ import (
 
 	"fmt"
 
-	"github.com/jinzhu/gorm"
-	_ "github.com/mattn/go-sqlite3"
 	"github.com/IBM/ubiquity/model"
 	"github.com/IBM/ubiquity/resources"
+	"github.com/jinzhu/gorm"
+	_ "github.com/mattn/go-sqlite3"
 )
 
 //go:generate counterfeiter -o ../../fakes/fake_SpectrumDataModel.go . SpectrumDataModel
@@ -21,32 +21,33 @@ type SpectrumDataModel interface {
 	InsertLightweightVolume(fileset, directory, volumeName string, filesystem string, isPreexisting bool, opts map[string]interface{}) error
 	InsertFilesetQuotaVolume(fileset, quota, volumeName string, filesystem string, isPreexisting bool, opts map[string]interface{}) error
 	GetVolume(name string) (SpectrumScaleVolume, bool, error)
-	ListVolumes() ([]SpectrumScaleVolume, error)
+	ListVolumes() ([]resources.Volume, error)
+	UpdateVolumeMountpoint(name string, mountpoint string) error
 }
 
 type spectrumDataModel struct {
 	log       *log.Logger
 	database  *gorm.DB
 	clusterId string
-	backend   resources.Backend
+	backend   string
 }
 
 type VolumeType int
 
 const (
-	FILESET VolumeType = iota
-	LIGHTWEIGHT
-	FILESET_WITH_QUOTA
+	Fileset VolumeType = iota
+	Lightweight
+	FilesetWithQuota
 )
 
 const (
-	USER_SPECIFIED_UID string = "uid"
-	USER_SPECIFIED_GID string = "gid"
+	UserSpecifiedUID string = "uid"
+	UserSpecifiedGID string = "gid"
 )
 
 type SpectrumScaleVolume struct {
 	ID            uint
-	Volume        model.Volume
+	Volume        resources.Volume
 	VolumeID      uint
 	Type          VolumeType
 	ClusterId     string
@@ -59,7 +60,7 @@ type SpectrumScaleVolume struct {
 	IsPreexisting bool
 }
 
-func NewSpectrumDataModel(log *log.Logger, db *gorm.DB, backend resources.Backend) SpectrumDataModel {
+func NewSpectrumDataModel(log *log.Logger, db *gorm.DB, backend string) SpectrumDataModel {
 	return &spectrumDataModel{log: log, database: db, backend: backend}
 }
 
@@ -105,7 +106,7 @@ func (d *spectrumDataModel) InsertFilesetVolume(fileset, volumeName string, file
 	d.log.Println("SpectrumDataModel: InsertFilesetVolume start")
 	defer d.log.Println("SpectrumDataModel: InsertFilesetVolume end")
 
-	volume := SpectrumScaleVolume{Volume: model.Volume{Name: volumeName, Backend: fmt.Sprintf("%s", d.backend)}, Type: FILESET, ClusterId: d.clusterId, FileSystem: filesystem,
+	volume := SpectrumScaleVolume{Volume: resources.Volume{Name: volumeName, Backend: d.backend}, Type: Fileset, ClusterId: d.clusterId, FileSystem: filesystem,
 		Fileset: fileset, IsPreexisting: isPreexisting}
 
 	addPermissionsForVolume(&volume, opts)
@@ -117,7 +118,7 @@ func (d *spectrumDataModel) InsertLightweightVolume(fileset, directory, volumeNa
 	d.log.Println("SpectrumDataModel: InsertLightweightVolume start")
 	defer d.log.Println("SpectrumDataModel: InsertLightweightVolume end")
 
-	volume := SpectrumScaleVolume{Volume: model.Volume{Name: volumeName, Backend: fmt.Sprintf("%s", d.backend)}, Type: LIGHTWEIGHT, ClusterId: d.clusterId, FileSystem: filesystem,
+	volume := SpectrumScaleVolume{Volume: resources.Volume{Name: volumeName, Backend: d.backend}, Type: Lightweight, ClusterId: d.clusterId, FileSystem: filesystem,
 		Fileset: fileset, Directory: directory, IsPreexisting: isPreexisting}
 
 	addPermissionsForVolume(&volume, opts)
@@ -129,7 +130,7 @@ func (d *spectrumDataModel) InsertFilesetQuotaVolume(fileset, quota, volumeName 
 	d.log.Println("SpectrumDataModel: InsertFilesetQuotaVolume start")
 	defer d.log.Println("SpectrumDataModel: InsertFilesetQuotaVolume end")
 
-	volume := SpectrumScaleVolume{Volume: model.Volume{Name: volumeName, Backend: fmt.Sprintf("%s", d.backend)}, Type: FILESET_WITH_QUOTA, ClusterId: d.clusterId, FileSystem: filesystem,
+	volume := SpectrumScaleVolume{Volume: resources.Volume{Name: volumeName, Backend: d.backend}, Type: FilesetWithQuota, ClusterId: d.clusterId, FileSystem: filesystem,
 		Fileset: fileset, Quota: quota, IsPreexisting: isPreexisting}
 
 	addPermissionsForVolume(&volume, opts)
@@ -140,7 +141,6 @@ func (d *spectrumDataModel) InsertFilesetQuotaVolume(fileset, quota, volumeName 
 func (d *spectrumDataModel) insertVolume(volume SpectrumScaleVolume) error {
 	d.log.Println("SpectrumDataModel: insertVolume start")
 	defer d.log.Println("SpectrumDataModel: insertVolume end")
-
 	if err := d.database.Create(&volume).Error; err != nil {
 		return err
 	}
@@ -169,7 +169,7 @@ func (d *spectrumDataModel) GetVolume(name string) (SpectrumScaleVolume, bool, e
 	return spectrumVolume, true, nil
 }
 
-func (d *spectrumDataModel) ListVolumes() ([]SpectrumScaleVolume, error) {
+func (d *spectrumDataModel) ListVolumes() ([]resources.Volume, error) {
 	d.log.Println("SpectrumDataModel: ListVolumes start")
 	defer d.log.Println("SpectrumDataModel: ListVolumes end")
 
@@ -178,21 +178,36 @@ func (d *spectrumDataModel) ListVolumes() ([]SpectrumScaleVolume, error) {
 		return nil, err
 	}
 	// hack: to be replaced by proper DB filtering (joins)
-	var volumes []SpectrumScaleVolume
+	var volumes []resources.Volume
 	for _, volume := range volumesInDb {
-		if resources.Backend(volume.Volume.Backend) == d.backend {
-			volumes = append(volumes, volume)
+		if volume.Volume.Backend == d.backend {
+			volumes = append(volumes, volume.Volume)
 		}
 	}
 
 	return volumes, nil
 }
 
+func (d *spectrumDataModel) UpdateVolumeMountpoint(name string, mountpoint string) error {
+	d.log.Println("SpectrumDataModel: UpdateVolumeMountpoint start")
+	defer d.log.Println("SpectrumDataModel: UpdateVolumeMountpoint end")
+
+	volume, err := model.GetVolume(d.database, name, d.backend)
+	if err != nil {
+		return err
+	}
+
+	if err = model.UpdateVolumeMountpoint(d.database, &volume, mountpoint); err != nil {
+		return fmt.Errorf("Error updating mountpoint of volume %s to %s: %s", volume.Name, mountpoint, err.Error())
+	}
+	return nil
+}
+
 func addPermissionsForVolume(volume *SpectrumScaleVolume, opts map[string]interface{}) {
 
 	if len(opts) > 0 {
-		uid, uidSpecified := opts[USER_SPECIFIED_UID]
-		gid, gidSpecified := opts[USER_SPECIFIED_GID]
+		uid, uidSpecified := opts[UserSpecifiedUID]
+		gid, gidSpecified := opts[UserSpecifiedGID]
 
 		if uidSpecified && gidSpecified {
 			volume.UID = uid.(string)

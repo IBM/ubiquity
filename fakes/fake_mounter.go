@@ -4,15 +4,14 @@ package fakes
 import (
 	"sync"
 
-	"github.com/IBM/ubiquity/remote/mounter"
+	"github.com/IBM/ubiquity/resources"
 )
 
 type FakeMounter struct {
-	MountStub        func(mountpoint string, volumeConfig map[string]interface{}) (string, error)
+	MountStub        func(mountRequest resources.MountRequest) (string, error)
 	mountMutex       sync.RWMutex
 	mountArgsForCall []struct {
-		mountpoint   string
-		volumeConfig map[string]interface{}
+		mountRequest resources.MountRequest
 	}
 	mountReturns struct {
 		result1 string
@@ -22,10 +21,10 @@ type FakeMounter struct {
 		result1 string
 		result2 error
 	}
-	UnmountStub        func(volumeConfig map[string]interface{}) error
+	UnmountStub        func(unmountRequest resources.UnmountRequest) error
 	unmountMutex       sync.RWMutex
 	unmountArgsForCall []struct {
-		volumeConfig map[string]interface{}
+		unmountRequest resources.UnmountRequest
 	}
 	unmountReturns struct {
 		result1 error
@@ -37,17 +36,16 @@ type FakeMounter struct {
 	invocationsMutex sync.RWMutex
 }
 
-func (fake *FakeMounter) Mount(mountpoint string, volumeConfig map[string]interface{}) (string, error) {
+func (fake *FakeMounter) Mount(mountRequest resources.MountRequest) (string, error) {
 	fake.mountMutex.Lock()
 	ret, specificReturn := fake.mountReturnsOnCall[len(fake.mountArgsForCall)]
 	fake.mountArgsForCall = append(fake.mountArgsForCall, struct {
-		mountpoint   string
-		volumeConfig map[string]interface{}
-	}{mountpoint, volumeConfig})
-	fake.recordInvocation("Mount", []interface{}{mountpoint, volumeConfig})
+		mountRequest resources.MountRequest
+	}{mountRequest})
+	fake.recordInvocation("Mount", []interface{}{mountRequest})
 	fake.mountMutex.Unlock()
 	if fake.MountStub != nil {
-		return fake.MountStub(mountpoint, volumeConfig)
+		return fake.MountStub(mountRequest)
 	}
 	if specificReturn {
 		return ret.result1, ret.result2
@@ -61,10 +59,10 @@ func (fake *FakeMounter) MountCallCount() int {
 	return len(fake.mountArgsForCall)
 }
 
-func (fake *FakeMounter) MountArgsForCall(i int) (string, map[string]interface{}) {
+func (fake *FakeMounter) MountArgsForCall(i int) resources.MountRequest {
 	fake.mountMutex.RLock()
 	defer fake.mountMutex.RUnlock()
-	return fake.mountArgsForCall[i].mountpoint, fake.mountArgsForCall[i].volumeConfig
+	return fake.mountArgsForCall[i].mountRequest
 }
 
 func (fake *FakeMounter) MountReturns(result1 string, result2 error) {
@@ -89,16 +87,16 @@ func (fake *FakeMounter) MountReturnsOnCall(i int, result1 string, result2 error
 	}{result1, result2}
 }
 
-func (fake *FakeMounter) Unmount(volumeConfig map[string]interface{}) error {
+func (fake *FakeMounter) Unmount(unmountRequest resources.UnmountRequest) error {
 	fake.unmountMutex.Lock()
 	ret, specificReturn := fake.unmountReturnsOnCall[len(fake.unmountArgsForCall)]
 	fake.unmountArgsForCall = append(fake.unmountArgsForCall, struct {
-		volumeConfig map[string]interface{}
-	}{volumeConfig})
-	fake.recordInvocation("Unmount", []interface{}{volumeConfig})
+		unmountRequest resources.UnmountRequest
+	}{unmountRequest})
+	fake.recordInvocation("Unmount", []interface{}{unmountRequest})
 	fake.unmountMutex.Unlock()
 	if fake.UnmountStub != nil {
-		return fake.UnmountStub(volumeConfig)
+		return fake.UnmountStub(unmountRequest)
 	}
 	if specificReturn {
 		return ret.result1
@@ -112,10 +110,10 @@ func (fake *FakeMounter) UnmountCallCount() int {
 	return len(fake.unmountArgsForCall)
 }
 
-func (fake *FakeMounter) UnmountArgsForCall(i int) map[string]interface{} {
+func (fake *FakeMounter) UnmountArgsForCall(i int) resources.UnmountRequest {
 	fake.unmountMutex.RLock()
 	defer fake.unmountMutex.RUnlock()
-	return fake.unmountArgsForCall[i].volumeConfig
+	return fake.unmountArgsForCall[i].unmountRequest
 }
 
 func (fake *FakeMounter) UnmountReturns(result1 error) {
@@ -159,4 +157,4 @@ func (fake *FakeMounter) recordInvocation(key string, args []interface{}) {
 	fake.invocations[key] = append(fake.invocations[key], args)
 }
 
-var _ mounter.Mounter = new(FakeMounter)
+var _ resources.Mounter = new(FakeMounter)

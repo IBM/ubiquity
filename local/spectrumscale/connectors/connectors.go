@@ -20,8 +20,8 @@ type SpectrumScaleConnector interface {
 	DeleteFileset(filesystemName string, filesetName string) error
 	LinkFileset(filesystemName string, filesetName string) error
 	UnlinkFileset(filesystemName string, filesetName string) error
-	ListFilesets(filesystemName string) ([]resources.VolumeMetadata, error)
-	ListFileset(filesystemName string, filesetName string) (resources.VolumeMetadata, error)
+	ListFilesets(filesystemName string) ([]resources.Volume, error)
+	ListFileset(filesystemName string, filesetName string) (resources.Volume, error)
 	IsFilesetLinked(filesystemName string, filesetName string) (bool, error)
 	//TODO modify quota from string to Capacity (see kubernetes)
 	ListFilesetQuota(filesystemName string, filesetName string) (string, error)
@@ -29,8 +29,8 @@ type SpectrumScaleConnector interface {
 }
 
 const (
-	USER_SPECIFIED_FILESET_TYPE string = "fileset-type"
-	USER_SPECIFIED_INODE_LIMIT  string = "inode-limit"
+	UserSpecifiedFilesetType string = "fileset-type"
+	UserSpecifiedInodeLimit  string = "inode-limit"
 )
 
 func GetSpectrumScaleConnector(logger *log.Logger, config resources.SpectrumScaleConfig) (SpectrumScaleConnector, error) {

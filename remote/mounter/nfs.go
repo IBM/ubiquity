@@ -6,25 +6,26 @@ import (
 	"path"
 	"strings"
 
+	"github.com/IBM/ubiquity/resources"
 	"github.com/IBM/ubiquity/utils"
 )
 
 type nfsMounter struct {
-	logger *log.Logger
-	executor  utils.Executor
+	logger   *log.Logger
+	executor utils.Executor
 }
 
-func NewNfsMounter(logger *log.Logger) Mounter {
+func NewNfsMounter(logger *log.Logger) resources.Mounter {
 	return &nfsMounter{logger: logger, executor: utils.NewExecutor(logger)}
 }
 
-func (s *nfsMounter) Mount(mountpoint string, volumeConfig map[string]interface{}) (string, error) {
+func (s *nfsMounter) Mount(mountRequest resources.MountRequest) (string, error) {
 	s.logger.Println("nfsMounter: Mount start")
 	defer s.logger.Println("nfsMounter: Mount end")
 
-	remoteMountpoint := path.Join("/mnt/", strings.Split(mountpoint, ":")[1])
-	if s.isMounted(mountpoint, remoteMountpoint) {
-		s.logger.Printf("nfsMounter: - mount: %s is already mounted at %s\n", mountpoint, remoteMountpoint)
+	remoteMountpoint := path.Join("/mnt/", strings.Split(mountRequest.Mountpoint, ":")[1])
+	if s.isMounted(mountRequest.Mountpoint, remoteMountpoint) {
+		s.logger.Printf("nfsMounter: - mount: %s is already mounted at %s\n", mountRequest.Mountpoint, remoteMountpoint)
 		return remoteMountpoint, nil
 	}
 
@@ -33,25 +34,25 @@ func (s *nfsMounter) Mount(mountpoint string, volumeConfig map[string]interface{
 
 	_, err := s.executor.Execute("sudo", args)
 	if err != nil {
-		return "", fmt.Errorf("nfsMounter: Failed to mkdir for remote mountpoint %s (share %s, error '%s')\n", remoteMountpoint, mountpoint, err.Error())
+		return "", fmt.Errorf("nfsMounter: Failed to mkdir for remote mountpoint %s (share %s, error '%s')\n", remoteMountpoint, mountRequest.Mountpoint, err.Error())
 	}
 
-	isPreexisting, isPreexistingSpecified := volumeConfig["isPreexisting"]
+	isPreexisting, isPreexistingSpecified := mountRequest.VolumeConfig["isPreexisting"]
 	if isPreexistingSpecified && isPreexisting.(bool) == false {
-		uid, uidSpecified := volumeConfig["uid"]
-		gid, gidSpecified := volumeConfig["gid"]
+		uid, uidSpecified := mountRequest.VolumeConfig["uid"]
+		gid, gidSpecified := mountRequest.VolumeConfig["gid"]
 		if uidSpecified || gidSpecified {
 			args := []string{"chown", fmt.Sprintf("%s:%s", uid, gid), remoteMountpoint}
 			_, err = s.executor.Execute("sudo", args)
 			if err != nil {
-				s.logger.Printf("Failed to change permissions of mountpoint %s: %s", mountpoint, err.Error())
+				s.logger.Printf("Failed to change permissions of mountpoint %s: %s", mountRequest.Mountpoint, err.Error())
 				return "", err
 			}
 			//set permissions to specific user
 			args = []string{"chmod", "og-rw", remoteMountpoint}
 			_, err = s.executor.Execute("sudo", args)
 			if err != nil {
-				s.logger.Printf("Failed to set user permissions of mountpoint %s: %s", mountpoint, err.Error())
+				s.logger.Printf("Failed to set user permissions of mountpoint %s: %s", mountRequest.Mountpoint, err.Error())
 				return "", err
 			}
 
@@ -60,19 +61,19 @@ func (s *nfsMounter) Mount(mountpoint string, volumeConfig map[string]interface{
 			args := []string{"chmod", "777", remoteMountpoint}
 			_, err = s.executor.Execute("sudo", args)
 			if err != nil {
-				s.logger.Printf("Failed to change permissions of mountpoint %s: %s", mountpoint, err.Error())
+				s.logger.Printf("Failed to change permissions of mountpoint %s: %s", mountRequest.Mountpoint, err.Error())
 				return "", err
 			}
 		}
 	}
-	return s.mount(mountpoint, remoteMountpoint)
+	return s.mount(mountRequest.Mountpoint, remoteMountpoint)
 }
 
-func (s *nfsMounter) Unmount(volumeConfig map[string]interface{}) error {
+func (s *nfsMounter) Unmount(unmountRequest resources.UnmountRequest) error {
 	s.logger.Println("nfsMounter: Unmount start")
 	defer s.logger.Println("nfsMounter: Unmount end")
 
-	nfs_share := volumeConfig["nfs_share"].(string)
+	nfs_share := unmountRequest.VolumeConfig["nfs_share"].(string)
 
 	// FIXME: What should be the local mount path? Should we be getting this from the volume config? Using same path as on ubiquity server below /mnt/ for now.
 	remoteMountpoint := path.Join("/mnt/", strings.Split(nfs_share, ":")[1])
