@@ -22,6 +22,12 @@ func (logger *impLogger) Error(str string, args ...Args) {
     logger.goLogger.Errorf(str + " %v", args)
 }
 
+func (logger *impLogger) ErrorRet(err error, str string, args ...Args) error {
+    logger.goLogger.Errorf(str + " %v ", append(args, Args{{"error", err}}))
+    return err
+}
+
+
 func (logger *impLogger) Trace(level logging.Level) func() {
     switch level {
     case DEBUG:

@@ -95,23 +95,19 @@ var _ = Describe("scbeLocalClient", func() {
 			fakeScbeDataModel.GetVolumeReturns(scbe.ScbeVolume{}, true, nil)
 			err = client.CreateVolume("fakevol", nil)
 			Expect(err).To(HaveOccurred())
-			Expect(err.Error()).To(Equal(fmt.Sprintf(scbe.MsgVolumeAlreadyExistInDB, "fakevol")))
 		})
 		It("should fail create volume if vol sise not provided in opts", func() {
 			fakeScbeDataModel.GetVolumeReturns(scbe.ScbeVolume{}, false, nil)
 			err = client.CreateVolume("fakevol", nil)
 			Expect(err).To(HaveOccurred())
-			Expect(err.Error()).To(Equal(scbe.MsgOptionSizeIsMissing))
 		})
 
 		It("should fail create volume if vol size is not number", func() {
 			fakeScbeDataModel.GetVolumeReturns(scbe.ScbeVolume{}, false, nil)
 			opts := make(map[string]interface{})
 			opts[scbe.OptionNameForVolumeSize] = "aaa"
-
 			err = client.CreateVolume("fakevol", opts)
 			Expect(err).To(HaveOccurred())
-			Expect(err.Error()).To(Equal(fmt.Sprintf(scbe.MsgOptionMustBeNumber, opts["size"])))
 		})
 		It("should fail create volume if vol creation failed with err", func() {
 			fakeScbeDataModel.GetVolumeReturns(scbe.ScbeVolume{}, false, nil)
@@ -232,14 +228,12 @@ var _ = Describe("scbeLocalClient", func() {
 				scbe.ScbeVolume{}, false, nil)
 			_, err := client.Attach("fakevol")
 			Expect(err).To(HaveOccurred())
-			Expect(err.Error()).To(MatchRegexp(scbe.MsgVolumeNotInUbiquityDB))
 		})
 		It("should fail to attach the volume if vol already attached in DB", func() {
 			fakeScbeDataModel.GetVolumeReturns(
 				scbe.ScbeVolume{AttachTo: "fakevol1"}, true, nil)
 			_, err := client.Attach("fakevol")
 			Expect(err).To(HaveOccurred())
-			Expect(err.Error()).To(MatchRegexp("Cannot attach volume"))
 		})
 		It("should fail to attach the volume if MapVolume failed", func() {
 			fakeScbeDataModel.GetVolumeReturns(
@@ -292,14 +286,12 @@ var _ = Describe("scbeLocalClient", func() {
 				scbe.ScbeVolume{}, false, nil)
 			_, err := client.Attach("fakevol")
 			Expect(err).To(HaveOccurred())
-			Expect(err.Error()).To(MatchRegexp(scbe.MsgVolumeNotInUbiquityDB))
 		})
 		It("should fail to detach the volume if vol already detached in DB", func() {
 			fakeScbeDataModel.GetVolumeReturns(
 				scbe.ScbeVolume{AttachTo: scbe.EmptyHost}, true, nil)
 			err := client.Detach("fakevol")
 			Expect(err).To(HaveOccurred())
-			Expect(err.Error()).To(MatchRegexp("Cannot detach volume"))
 		})
 		It("should fail to detach the volume if MapVolume failed", func() {
 			fakeScbeDataModel.GetVolumeReturns(

@@ -60,8 +60,7 @@ func NewSimpleRestClient(conInfo resources.ConnectionInfo, baseURL string, authU
 func (s *simpleRestClient) Login() error {
     defer s.logger.Trace(logutil.DEBUG)()
     if err := s.getToken(); err != nil {
-        s.logger.Error("getToken failed", logutil.Args{{"error", err}})
-        return err
+        return s.logger.ErrorRet(err, "getToken failed")
     }
     return nil
 }
@@ -72,17 +71,13 @@ func (s *simpleRestClient) getToken() error {
     var loginResponse = LoginResponse{}
     credentials, err := json.Marshal(s.connectionInfo.CredentialInfo)
     if err != nil {
-        s.logger.Error("json.Marshal failed", logutil.Args{{"error", err}})
-        return err
+        return s.logger.ErrorRet(err, "json.Marshal failed")
     }
     if err = s.Post(s.authURL, credentials, HTTP_SUCCEED, &loginResponse); err != nil {
-        s.logger.Error("Post failed", logutil.Args{{"error", err}})
-        return err
+        return s.logger.ErrorRet(err, "Post failed")
     }
     if loginResponse.Token == "" {
-        err = errors.New("Token is empty")
-        s.logger.Error("failed", logutil.Args{{"error", err}})
-        return err
+        return s.logger.ErrorRet(errors.New("Token is empty"), "Post failed")
     }
     s.headers[HTTP_AUTH_KEY] = "Token " + loginResponse.Token
     return nil
@@ -105,8 +100,7 @@ func (s *simpleRestClient) genericAction(actionName string, resource_url string,
         request, err = http.NewRequest(actionName, url, bytes.NewReader(payload))
     }
     if err != nil {
-        s.logger.Error("http.NewRequest failed", logutil.Args{{actionName, url}, {"error", err}})
-        return err
+        return s.logger.ErrorRet(err, "http.NewRequest failed", logutil.Args{{actionName, url}})
     }
     if actionName == "GET" {
         // append all the params into the request
@@ -124,8 +118,7 @@ func (s *simpleRestClient) genericAction(actionName string, resource_url string,
 
     response, err := s.httpClient.Do(request)
     if err != nil {
-        s.logger.Error("httpClient.Do failed", logutil.Args{{actionName, request.URL}, {"error", err}})
-        return err
+        return s.logger.ErrorRet(err, "httpClient.Do failed", logutil.Args{{actionName, request.URL}})
     }
 
     // check if client sent a token and it expired
@@ -133,35 +126,29 @@ func (s *simpleRestClient) genericAction(actionName string, resource_url string,
 
         // login
         if err = s.Login(); err != nil {
-            s.logger.Error("Login failed", logutil.Args{{"error", err}})
-            return err
+            return s.logger.ErrorRet(err, "Login failed")
         }
 
         // retry
         if response, err = s.httpClient.Do(request); err != nil {
-            s.logger.Error("httpClient.Do failed", logutil.Args{{actionName, url}, {"error", err}})
-            return err
+            return s.logger.ErrorRet(err, "httpClient.Do failed", logutil.Args{{actionName, url}})
         }
     }
 
     defer response.Body.Close()
     data, err := ioutil.ReadAll(response.Body)
     if err != nil {
-        s.logger.Error("ioutil.ReadAll failed", logutil.Args{{"error", err}})
-        return err
+        return s.logger.ErrorRet(err, "ioutil.ReadAll failed")
     }
 
     s.logger.Debug(actionName + " " + url, logutil.Args{{"data", string(data[:])}})
     if response.StatusCode != exitStatus {
-        err = errors.New("bad status code " + response.Status)
-        s.logger.Error("failed", logutil.Args{{actionName, url}, {"error", err}})
-        return err
+        return s.logger.ErrorRet(errors.New("bad status code " + response.Status), "failed", logutil.Args{{actionName, url}})
     }
 
     if v != nil {
         if err = json.Unmarshal(data, v); err != nil {
-            s.logger.Error("json.Unmarshal failed", logutil.Args{{actionName, url}, {"error", err}})
-            return err
+            return s.logger.ErrorRet(err, "json.Unmarshal failed", logutil.Args{{actionName, url}})
         }
     }
 
