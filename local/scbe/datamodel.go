@@ -43,7 +43,7 @@ func (d *scbeDataModel) CreateVolumeTable() error {
 	defer d.logger.Trace(logutil.DEBUG)()
 
 	if err := d.database.AutoMigrate(&ScbeVolume{}).Error; err != nil {
-		return err
+		return d.logger.ErrorRet(err, "failed")
 	}
 	return nil
 }
@@ -58,14 +58,16 @@ func (d *scbeDataModel) DeleteVolume(name string) error {
 		return err
 	}
 	if exists == false {
-		return fmt.Errorf("Volume : %s not found", name)
+		return d.logger.ErrorRet(&volumeNotFoundError{name}, "failed")
 	}
 
 	if err := d.database.Delete(&volume).Error; err != nil {
+		return d.logger.ErrorRet(err, "database.Delete failed")
+
 		return err
 	}
 	if err := model.DeleteVolume(d.database, &volume.Volume).Error; err != nil {
-		return err
+		return d.logger.ErrorRet(err, "model.DeleteVolume failed")
 	}
 	return nil
 }
@@ -83,7 +85,7 @@ func (d *scbeDataModel) InsertVolume(volumeName string, wwn string, profile stri
 	}
 
 	if err := d.database.Create(&volume).Error; err != nil {
-		return err
+		return d.logger.ErrorRet(err, "database.Create failed")
 	}
 	return nil
 }
@@ -97,7 +99,8 @@ func (d *scbeDataModel) GetVolume(name string) (ScbeVolume, bool, error) {
 		if err.Error() == "record not found" {
 			return ScbeVolume{}, false, nil
 		}
-		return ScbeVolume{}, false, err
+		return ScbeVolume{}, false, d.logger.ErrorRet(err, "model.GetVolume failed")
+
 	}
 
 	var scbeVolume ScbeVolume
@@ -105,7 +108,7 @@ func (d *scbeDataModel) GetVolume(name string) (ScbeVolume, bool, error) {
 		if err.Error() == "record not found" {
 			return ScbeVolume{}, false, nil
 		}
-		return ScbeVolume{}, false, err
+		return ScbeVolume{}, false, d.logger.ErrorRet(err, "failed")
 	}
 	return scbeVolume, true, nil
 }
@@ -115,7 +118,7 @@ func (d *scbeDataModel) ListVolumes() ([]ScbeVolume, error) {
 
 	var volumesInDb []ScbeVolume
 	if err := d.database.Preload("Volume").Find(&volumesInDb).Error; err != nil {
-		return nil, err
+		return nil, d.logger.ErrorRet(err, "failed")
 	}
 	// hack: to be replaced by proper DB filtering (joins)
 	var volumes []ScbeVolume
@@ -132,8 +135,7 @@ func (d *scbeDataModel) UpdateVolumeAttachTo(volumeName string, scbeVolume ScbeV
 
 	err := d.database.Table("scbe_volumes").Where("volume_id = ?", scbeVolume.ID).Update("attach_to", host2attach).Error
 	if err != nil {
-		d.logger.Error("failed", logutil.Args{{"volumeName", volumeName}, {"error", err}} )
-		return err
+		return d.logger.ErrorRet(err, "failed", logutil.Args{{"volumeName", volumeName}})
 	}
 	return nil
 }
