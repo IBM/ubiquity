@@ -28,17 +28,17 @@ func (logger *impLogger) ErrorRet(err error, str string, args ...Args) error {
 }
 
 
-func (logger *impLogger) Trace(level logging.Level) func() {
+func (logger *impLogger) Trace(level logging.Level, args ...Args) func() {
     switch level {
     case DEBUG:
-        logger.goLogger.Debug(traceEnter)
-        return func() { logger.goLogger.Debug(traceExit) }
+        logger.goLogger.Debug(traceEnter, args)
+        return func() { logger.goLogger.Debug(traceExit, args) }
     case INFO:
-        logger.goLogger.Info(traceEnter)
-        return func() { logger.goLogger.Info(traceExit) }
+        logger.goLogger.Info(traceEnter, args)
+        return func() { logger.goLogger.Info(traceExit, args) }
     case ERROR:
-        logger.goLogger.Error(traceEnter)
-        return func() { logger.goLogger.Error(traceExit) }
+        logger.goLogger.Error(traceEnter, args)
+        return func() { logger.goLogger.Error(traceExit, args) }
     default:
         panic("unknown level")
     }

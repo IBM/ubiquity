@@ -23,7 +23,7 @@ type Logger interface {
     Info(str string, args ...Args)
     Error(str string, args ...Args)
     ErrorRet(err error, str string, args ...Args) error
-    Trace(level logging.Level) func()
+    Trace(level logging.Level, args ...Args) func()
 }
 
 type impLogger struct {
