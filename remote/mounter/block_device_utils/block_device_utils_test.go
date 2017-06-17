@@ -47,7 +47,7 @@ var _ = Describe("block_device_utils_test", func() {
             fakeExec.IsExecutableReturns(cmdErr)
             err = bdUtils.Rescan(block_device_utils.ISCSI)
             Expect(err).To(HaveOccurred())
-            Expect(err).To(MatchError(cmdErr))
+            Expect(err.Error()).To(MatchRegexp(cmdErr.Error()))
             Expect(fakeExec.ExecuteCallCount()).To(Equal(0))
             Expect(fakeExec.IsExecutableCallCount()).To(Equal(1))
             Expect(fakeExec.IsExecutableArgsForCall(0)).To(Equal("iscsiadm"))
@@ -64,12 +64,12 @@ var _ = Describe("block_device_utils_test", func() {
         It("Rescan ISCSI fails if iscsiadm execution fails", func() {
             fakeExec.ExecuteReturns([]byte{}, cmdErr)
             err = bdUtils.Rescan(block_device_utils.ISCSI)
-            Expect(err).To(MatchError(cmdErr))
+            Expect(err.Error()).To(MatchRegexp(cmdErr.Error()))
         })
         It("Rescan SCSI fails if rescan-scsi-bus execution fails", func() {
             fakeExec.ExecuteReturns([]byte{}, cmdErr)
             err = bdUtils.Rescan(block_device_utils.SCSI)
-            Expect(err).To(MatchError(cmdErr))
+            Expect(err.Error()).To(MatchRegexp(cmdErr.Error()))
         })
     })
     Context(".ReloadMultipath", func() {
@@ -85,13 +85,13 @@ var _ = Describe("block_device_utils_test", func() {
             fakeExec.IsExecutableReturns(cmdErr)
             err = bdUtils.ReloadMultipath()
             Expect(err).To(HaveOccurred())
-            Expect(err).To(MatchError(cmdErr))
+            Expect(err.Error()).To(MatchRegexp(cmdErr.Error()))
         })
         It("ReloadMultipath fails if multipath command fails", func() {
             fakeExec.ExecuteReturns([]byte{}, cmdErr)
             err = bdUtils.ReloadMultipath()
             Expect(err).To(HaveOccurred())
-            Expect(err).To(MatchError(cmdErr))
+            Expect(err.Error()).To(MatchRegexp(cmdErr.Error()))
         })
     })
     Context(".Discover", func() {
@@ -112,14 +112,14 @@ var _ = Describe("block_device_utils_test", func() {
             fakeExec.IsExecutableReturns(cmdErr)
             _, err := bdUtils.Discover(volumeId)
             Expect(err).To(HaveOccurred())
-            Expect(err).To(MatchError(cmdErr))
+            Expect(err.Error()).To(MatchRegexp(cmdErr.Error()))
         })
         It("Discover fails if multipath -ll command fails", func() {
             volumeId := "volume-id"
             fakeExec.ExecuteReturns([]byte{}, cmdErr)
             _, err := bdUtils.Discover(volumeId)
             Expect(err).To(HaveOccurred())
-            Expect(err).To(MatchError(cmdErr))
+            Expect(err.Error()).To(MatchRegexp(cmdErr.Error()))
         })
         It("Discover fails if volume not found", func() {
             volumeId := "volume-id"
@@ -147,21 +147,21 @@ var _ = Describe("block_device_utils_test", func() {
             fakeExec.IsExecutableReturns(cmdErr)
             err = bdUtils.Cleanup(mpath)
             Expect(err).To(HaveOccurred())
-            Expect(err).To(MatchError(cmdErr))
+            Expect(err.Error()).To(MatchRegexp(cmdErr.Error()))
         })
         It("Cleanup fails if dmsetup command fails", func() {
             mpath := "mpath"
             fakeExec.ExecuteReturns([]byte{}, cmdErr)
             err = bdUtils.Cleanup(mpath)
             Expect(err).To(HaveOccurred())
-            Expect(err).To(MatchError(cmdErr))
+            Expect(err.Error()).To(MatchRegexp(cmdErr.Error()))
         })
         It("Cleanup fails if multipath command missing", func() {
             mpath := "/dev/mapper/mpath"
             fakeExec.IsExecutableReturnsOnCall(1, cmdErr)
             err = bdUtils.Cleanup(mpath)
             Expect(err).To(HaveOccurred())
-            Expect(err).To(MatchError(cmdErr))
+            Expect(err.Error()).To(MatchRegexp(cmdErr.Error()))
             Expect(fakeExec.IsExecutableCallCount()).To(Equal(2))
         })
         It("Cleanup fails if multipath command fails", func() {
@@ -169,7 +169,7 @@ var _ = Describe("block_device_utils_test", func() {
             fakeExec.ExecuteReturnsOnCall(1, []byte{}, cmdErr)
             err = bdUtils.Cleanup(mpath)
             Expect(err).To(HaveOccurred())
-            Expect(err).To(MatchError(cmdErr))
+            Expect(err.Error()).To(MatchRegexp(cmdErr.Error()))
         })
     })
     Context(".CheckFs", func() {
@@ -205,14 +205,14 @@ var _ = Describe("block_device_utils_test", func() {
             fakeExec.IsExecutableReturns(cmdErr)
             _, err = bdUtils.CheckFs(mpath)
             Expect(err).To(HaveOccurred())
-            Expect(err).To(MatchError(cmdErr))
+            Expect(err.Error()).To(MatchRegexp(cmdErr.Error()))
         })
         It("CheckFs fails if blkid fails", func() {
             mpath := "mpath"
             fakeExec.ExecuteReturns([]byte{}, cmdErr)
             _, err := bdUtils.CheckFs(mpath)
             Expect(err).To(HaveOccurred())
-            Expect(err).To(MatchError(cmdErr))
+            Expect(err.Error()).To(MatchRegexp(cmdErr.Error()))
         })
     })
     Context(".MakeFs", func() {
@@ -231,14 +231,14 @@ var _ = Describe("block_device_utils_test", func() {
             fakeExec.IsExecutableReturns(cmdErr)
             err = bdUtils.MakeFs(mpath, "")
             Expect(err).To(HaveOccurred())
-            Expect(err).To(MatchError(cmdErr))
+            Expect(err.Error()).To(MatchRegexp(cmdErr.Error()))
         })
         It("MakeFs fails if mkfs command fails", func() {
             mpath := "mpath"
             fakeExec.ExecuteReturns([]byte{}, cmdErr)
             err = bdUtils.MakeFs(mpath, "")
             Expect(err).To(HaveOccurred())
-            Expect(err).To(MatchError(cmdErr))
+            Expect(err.Error()).To(MatchRegexp(cmdErr.Error()))
         })
     })
     Context(".MountFs", func() {
@@ -258,7 +258,7 @@ var _ = Describe("block_device_utils_test", func() {
             fakeExec.IsExecutableReturns(cmdErr)
             err = bdUtils.MountFs(mpath, mpoint)
             Expect(err).To(HaveOccurred())
-            Expect(err).To(MatchError(cmdErr))
+            Expect(err.Error()).To(MatchRegexp(cmdErr.Error()))
         })
         It("MountFs fails if mount command fails", func() {
             mpath := "mpath"
@@ -266,7 +266,7 @@ var _ = Describe("block_device_utils_test", func() {
             fakeExec.ExecuteReturns([]byte{}, cmdErr)
             err = bdUtils.MountFs(mpath, mpoint)
             Expect(err).To(HaveOccurred())
-            Expect(err).To(MatchError(cmdErr))
+            Expect(err.Error()).To(MatchRegexp(cmdErr.Error()))
         })
 
     })
@@ -285,14 +285,14 @@ var _ = Describe("block_device_utils_test", func() {
             fakeExec.IsExecutableReturns(cmdErr)
             err = bdUtils.UmountFs(mpoint)
             Expect(err).To(HaveOccurred())
-            Expect(err).To(MatchError(cmdErr))
+            Expect(err.Error()).To(MatchRegexp(cmdErr.Error()))
         })
         It("UmountFs fails if umount command fails", func() {
             mpoint := "mpoint"
             fakeExec.ExecuteReturns([]byte{}, cmdErr)
             err = bdUtils.UmountFs(mpoint)
             Expect(err).To(HaveOccurred())
-            Expect(err).To(MatchError(cmdErr))
+            Expect(err.Error()).To(MatchRegexp(cmdErr.Error()))
         })
     })
 })

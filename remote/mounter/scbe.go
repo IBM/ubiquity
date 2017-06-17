@@ -21,16 +21,14 @@ func (s *scbeMounter) Mount(mountpoint string, volumeConfig map[string]interface
 
 	// Rescan OS
 	if err := s.blockDeviceMounterUtils.RescanAll(true); err != nil {
-		s.logger.Error("RescanAll failed", logutil.Args{{"error", err}})
-		return "", err
+		return "", s.logger.ErrorRet(err, "RescanAll failed")
 	}
 
 	// Discover device
 	volumeWWN := volumeConfig["wwn"].(string) // TODO use the const from local/scbe
 	devicePath, err := s.blockDeviceMounterUtils.Discover(volumeWWN)
 	if err != nil {
-		s.logger.Error("Discover failed", logutil.Args{{"volumeWWN", volumeWWN}, {"error", err}})
-		return "", err
+		return "", s.logger.ErrorRet(err, "Discover failed", logutil.Args{{"volumeWWN", volumeWWN}})
 	}
 
 	// Create mount point if needed   // TODO consider to move it inside the util
@@ -38,16 +36,14 @@ func (s *scbeMounter) Mount(mountpoint string, volumeConfig map[string]interface
 	if _, err := exec.Stat(mountpoint); err != nil {
 		s.logger.Info("Create mountpoint directory " + mountpoint)
 		if err := exec.MkdirAll(mountpoint, 0700); err != nil {
-			s.logger.Error("MkdirAll failed", logutil.Args{{"mountpoint", mountpoint}, {"error", err}})
-			return "", err
+			return "", s.logger.ErrorRet(err, "MkdirAll failed", logutil.Args{{"mountpoint", mountpoint}})
 		}
 	}
 
 	// Mount device and mkfs if needed
 	fstype := "ext4" // TODO uses volumeConfig['fstype']
 	if err := s.blockDeviceMounterUtils.MountDeviceFlow(devicePath, fstype, mountpoint); err != nil {
-		s.logger.Error("MountDeviceFlow failed", logutil.Args{{"devicePath", devicePath}, {"error", err}})
-		return "", err
+		return "", s.logger.ErrorRet(err, "MountDeviceFlow failed", logutil.Args{{"devicePath", devicePath}})
 	}
 
 	return mountpoint, nil
@@ -60,15 +56,12 @@ func (s *scbeMounter) Unmount(volumeConfig map[string]interface{}) error {
 	mountpoint := "/ubiquity/" + volumeWWN    // TODO get the ubiquity prefix from const
 	devicePath, err := s.blockDeviceMounterUtils.Discover(volumeWWN)
 	if err != nil {
-		s.logger.Error("Discover failed", logutil.Args{{"volumeWWN", volumeWWN}, {"error", err}})
-		return err
+		return s.logger.ErrorRet(err, "Discover failed", logutil.Args{{"volumeWWN", volumeWWN}})
 	}
 
 	if err := s.blockDeviceMounterUtils.UnmountDeviceFlow(devicePath); err != nil {
-		s.logger.Error("UnmountDeviceFlow failed", logutil.Args{{"devicePath", devicePath}, {"error", err}})
-		return err
+		return s.logger.ErrorRet(err, "UnmountDeviceFlow failed", logutil.Args{{"devicePath", devicePath}})
 	}
-
 
 	s.logger.Info("Delete mountpoint directory if exist", logutil.Args{{"mountpoint", mountpoint}})
 	// TODO move this part to the util
@@ -76,8 +69,7 @@ func (s *scbeMounter) Unmount(volumeConfig map[string]interface{}) error {
 	if _, err := exec.Stat(mountpoint); err == nil {
 		// TODO consider to add the prefix of the wwn in the OS (multipath -ll output)
 		if err := exec.RemoveAll(mountpoint); err != nil {
-			s.logger.Error("RemoveAll failed", logutil.Args{{"mountpoint", mountpoint}, {"error", err}})
-			return err
+			return s.logger.ErrorRet(err, "RemoveAll failed", logutil.Args{{"mountpoint", mountpoint}})
 		}
 	}
 
@@ -89,8 +81,7 @@ func (s *scbeMounter) ActionAfterDetach(volumeConfig map[string]interface{}) err
 
 	// Rescan OS
 	if err := s.blockDeviceMounterUtils.RescanAll(true); err != nil {
-		s.logger.Error("RescanAll failed", logutil.Args{{"error", err}})
-		return err
+		return s.logger.ErrorRet(err, "RescanAll failed")
 	}
 	return nil
 }
