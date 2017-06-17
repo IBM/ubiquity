@@ -2,7 +2,6 @@ package block_device_utils
 
 import (
 	"errors"
-	"fmt"
 	"github.com/IBM/ubiquity/logutil"
 )
 
@@ -15,7 +14,7 @@ func (s *impBlockDeviceUtils) Rescan(protocol Protocol) error {
 	case ISCSI:
 		return s.RescanISCSI()
 	default:
-		return fmt.Errorf("Rescan: unsupported protocol %v", protocol)
+		return s.logger.ErrorRet(&unsupportedProtocolError{protocol}, "failed")
 	}
 }
 
@@ -23,13 +22,11 @@ func (s *impBlockDeviceUtils) RescanISCSI() error {
 	defer s.logger.Trace(logutil.DEBUG)()
 	rescanCmd := "iscsiadm"
 	if err := s.exec.IsExecutable(rescanCmd); err != nil {
-		s.logger.Error("IsExecutable failed", logutil.Args{{"cmd", rescanCmd}, {"error", err}})
-		return err
+		return s.logger.ErrorRet(&commandNotFoundError{rescanCmd, err}, "failed")
 	}
 	args := []string{rescanCmd, "-m", "session", "--rescan"}
 	if _, err := s.exec.Execute("sudo", args); err != nil {
-		s.logger.Error("Execute failed", logutil.Args{{"cmd", rescanCmd}, {"error", err}})
-		return err
+		return s.logger.ErrorRet(&commandExecuteError{rescanCmd, err}, "failed")
 	}
 	return nil
 }
@@ -45,14 +42,11 @@ func (s *impBlockDeviceUtils) RescanSCSI() error {
 		}
 	}
 	if rescanCmd == "" {
-		err := errors.New("rescan-scsi-bus command not found")
-		s.logger.Error("failed", logutil.Args{{"error", err}})
-		return err
+		return s.logger.ErrorRet(&commandNotFoundError{commands[0], errors.New("")}, "failed")
 	}
 	args := []string{rescanCmd, "-r"} // TODO should use -r only in clean up
 	if _, err := s.exec.Execute("sudo", args); err != nil {
-		s.logger.Error("Execute failed", logutil.Args{{"cmd", rescanCmd}, {"error", err}})
-		return err
+		return s.logger.ErrorRet(&commandExecuteError{rescanCmd, err}, "failed")
 	}
 	return nil
 }

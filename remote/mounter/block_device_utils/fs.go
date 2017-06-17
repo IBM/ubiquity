@@ -12,8 +12,7 @@ func (s *impBlockDeviceUtils) CheckFs(mpath string) (bool, error) {
 	needFs := false
 	blkidCmd := "blkid"
 	if err := s.exec.IsExecutable(blkidCmd); err != nil {
-		s.logger.Error("IsExecutable failed", logutil.Args{{"cmd", blkidCmd}, {"error", err}})
-		return false, err
+		return false, s.logger.ErrorRet(&commandNotFoundError{blkidCmd, err}, "failed")
 	}
 	args := []string{blkidCmd, mpath}
 	outputBytes, err := s.exec.Execute("sudo", args)
@@ -22,8 +21,7 @@ func (s *impBlockDeviceUtils) CheckFs(mpath string) (bool, error) {
 			// TODO we can improve it by double check the fs type of this device and maybe log warning if its not the same fstype we expacted
 			needFs = true
 		} else {
-			s.logger.Error("failed", logutil.Args{{"cmd", blkidCmd}, {"error", err}})
-			return false, err
+			return false, s.logger.ErrorRet(&commandExecuteError{blkidCmd, err}, "failed")
 		}
 	}
 	s.logger.Info("checked", logutil.Args{{"needFs", needFs}, {"mpath", mpath}, {blkidCmd, outputBytes}})
@@ -34,13 +32,11 @@ func (s *impBlockDeviceUtils) MakeFs(mpath string, fsType string) error {
 	defer s.logger.Trace(logutil.DEBUG)()
 	mkfsCmd := "mkfs"
 	if err := s.exec.IsExecutable(mkfsCmd); err != nil {
-		s.logger.Error("IsExecutable failed", logutil.Args{{"cmd", mkfsCmd}, {"error", err}})
-		return err
+		return s.logger.ErrorRet(&commandNotFoundError{mkfsCmd, err}, "failed")
 	}
 	args := []string{mkfsCmd, "-t", fsType, mpath}
 	if _, err := s.exec.Execute("sudo", args); err != nil {
-		s.logger.Error("Execute failed", logutil.Args{{"cmd", mkfsCmd}, {"error", err}})
-		return err
+		return s.logger.ErrorRet(&commandExecuteError{mkfsCmd, err}, "failed")
 	}
 	s.logger.Info("created", logutil.Args{{"fsType", fsType}, {"mpath", mpath}})
 	return nil
@@ -50,13 +46,11 @@ func (s *impBlockDeviceUtils) MountFs(mpath string, mpoint string) error {
 	defer s.logger.Trace(logutil.DEBUG)()
 	mountCmd := "mount"
 	if err := s.exec.IsExecutable(mountCmd); err != nil {
-		s.logger.Error("IsExecutable failed", logutil.Args{{"cmd", mountCmd}, {"error", err}})
-		return err
+		return s.logger.ErrorRet(&commandNotFoundError{mountCmd, err}, "failed")
 	}
 	args := []string{mountCmd, mpath, mpoint}
 	if _, err := s.exec.Execute("sudo", args); err != nil {
-		s.logger.Error("Execute failed", logutil.Args{{"cmd", mountCmd}, {"error", err}})
-		return err
+		return s.logger.ErrorRet(&commandExecuteError{mountCmd, err}, "failed")
 	}
 	s.logger.Info("mounted", logutil.Args{{"mpoint", mpoint}})
 	return nil
@@ -66,13 +60,11 @@ func (s *impBlockDeviceUtils) UmountFs(mpoint string) error {
 	defer s.logger.Trace(logutil.DEBUG)()
 	umountCmd := "umount"
 	if err := s.exec.IsExecutable(umountCmd); err != nil {
-		s.logger.Error("IsExecutable failed", logutil.Args{{"cmd", umountCmd}, {"error", err}})
-		return err
+		return s.logger.ErrorRet(&commandNotFoundError{umountCmd, err}, "failed")
 	}
 	args := []string{umountCmd, mpoint}
 	if _, err := s.exec.Execute("sudo", args); err != nil {
-		s.logger.Error("Execute failed", logutil.Args{{"cmd", umountCmd}, {"error", err}})
-		return err
+		return s.logger.ErrorRet(&commandExecuteError{umountCmd, err}, "failed")
 	}
 	s.logger.Info("umounted", logutil.Args{{"mpoint", mpoint}})
 	return nil
