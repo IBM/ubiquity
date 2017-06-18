@@ -59,6 +59,8 @@ type ScbeConfig struct {
 
 const UbiquityInstanceNameMaxSize = 15
 const DefaultForScbeConfigParamDefaultVolumeSize = "1" // if customer don't mention size, then the default is 1gb
+const DefaultForScbeConfigParamDefaultFilesystem = "ext4" // if customer don't mention fstype, then the default is ext4
+const PathToMountUbiquityBlockDevices = "/ubiquity/%s" // %s is the WWN of the volume # TODO this should be moved to docker plugin side
 
 type SshConfig struct {
 	User string

@@ -1,9 +1,11 @@
 package mounter
 
 import (
-	"github.com/IBM/ubiquity/remote/mounter/block_device_mounter_utils"
-	"github.com/IBM/ubiquity/utils"
+	"fmt"
 	"github.com/IBM/ubiquity/logutil"
+	"github.com/IBM/ubiquity/remote/mounter/block_device_mounter_utils"
+	"github.com/IBM/ubiquity/resources"
+	"github.com/IBM/ubiquity/utils"
 )
 
 type scbeMounter struct {
@@ -41,7 +43,7 @@ func (s *scbeMounter) Mount(mountpoint string, volumeConfig map[string]interface
 	}
 
 	// Mount device and mkfs if needed
-	fstype := "ext4" // TODO uses volumeConfig['fstype']
+	fstype := resources.DefaultForScbeConfigParamDefaultFilesystem // TODO uses volumeConfig['fstype']
 	if err := s.blockDeviceMounterUtils.MountDeviceFlow(devicePath, fstype, mountpoint); err != nil {
 		return "", s.logger.ErrorRet(err, "MountDeviceFlow failed", logutil.Args{{"devicePath", devicePath}})
 	}
@@ -52,8 +54,8 @@ func (s *scbeMounter) Mount(mountpoint string, volumeConfig map[string]interface
 func (s *scbeMounter) Unmount(volumeConfig map[string]interface{}) error {
 	defer s.logger.Trace(logutil.DEBUG)()
 
-	volumeWWN := volumeConfig["wwn"].(string) // TODO use the const from local/scbe
-	mountpoint := "/ubiquity/" + volumeWWN    // TODO get the ubiquity prefix from const
+	volumeWWN := volumeConfig["wwn"].(string)
+	mountpoint := fmt.Sprintf(resources.PathToMountUbiquityBlockDevices, volumeWWN)
 	devicePath, err := s.blockDeviceMounterUtils.Discover(volumeWWN)
 	if err != nil {
 		return s.logger.ErrorRet(err, "Discover failed", logutil.Args{{"volumeWWN", volumeWWN}})
