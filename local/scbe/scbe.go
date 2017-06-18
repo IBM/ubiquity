@@ -155,7 +155,7 @@ func (s *scbeLocalClient) CreateVolume(name string, opts map[string]interface{})
 		return s.logger.ErrorRet(err, "scbeRestClient.CreateVolume failed")
 	}
 
-	err = s.dataModel.InsertVolume(name, volInfo.Wwn, profile, AttachedToNothing)
+	err = s.dataModel.InsertVolume(name, volInfo.Wwn, AttachedToNothing)
 	if err != nil {
 		return s.logger.ErrorRet(err, "dataModel.InsertVolume failed")
 	}
@@ -314,7 +314,7 @@ func (s *scbeLocalClient) ListVolumes() ([]resources.VolumeMetadata, error) {
 func (s *scbeLocalClient) createVolume(name string, wwn string, profile string) error {
 	defer s.logger.Trace(logutil.DEBUG)()
 
-	if err := s.dataModel.InsertVolume(name, wwn, profile, ""); err != nil {
+	if err := s.dataModel.InsertVolume(name, wwn, ""); err != nil {
 		return s.logger.ErrorRet(err, "dataModel.InsertVolume failed")
 	}
 

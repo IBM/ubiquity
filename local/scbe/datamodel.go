@@ -2,18 +2,18 @@ package scbe
 
 import (
 	"fmt"
+	"github.com/IBM/ubiquity/logutil"
 	"github.com/IBM/ubiquity/model"
 	"github.com/IBM/ubiquity/resources"
 	"github.com/jinzhu/gorm"
 	_ "github.com/mattn/go-sqlite3"
-	"github.com/IBM/ubiquity/logutil"
 )
 
 //go:generate counterfeiter -o ../../fakes/fake_ScbeDataModel.go . ScbeDataModel
 type ScbeDataModel interface {
 	CreateVolumeTable() error
 	DeleteVolume(name string) error
-	InsertVolume(volumeName string, wwn string, profile string, attachTo string) error
+	InsertVolume(volumeName string, wwn string, attachTo string) error
 	GetVolume(name string) (ScbeVolume, bool, error)
 	ListVolumes() ([]ScbeVolume, error)
 	UpdateVolumeAttachTo(volumeName string, scbeVolume ScbeVolume, host2attach string) error
@@ -73,14 +73,13 @@ func (d *scbeDataModel) DeleteVolume(name string) error {
 }
 
 // InsertVolume volume name and its details given in opts
-func (d *scbeDataModel) InsertVolume(volumeName string, wwn string, profile string, attachTo string) error {
+func (d *scbeDataModel) InsertVolume(volumeName string, wwn string, attachTo string) error {
 	defer d.logger.Trace(logutil.DEBUG)()
 
 	volume := ScbeVolume{
 		Volume: model.Volume{Name: volumeName,
 			Backend: fmt.Sprintf("%s", d.backend)},
 		WWN:      wwn,
-		Profile:  profile,
 		AttachTo: attachTo,
 	}
 
