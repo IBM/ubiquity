@@ -3,6 +3,7 @@ package scbe_test
 import (
 	"fmt"
 	"github.com/IBM/ubiquity/local/scbe"
+	"github.com/IBM/ubiquity/logutil"
 	"github.com/IBM/ubiquity/model"
 	"github.com/IBM/ubiquity/resources"
 	"github.com/jinzhu/gorm"
@@ -11,7 +12,6 @@ import (
 	"os"
 	"path"
 	"strconv"
-	"github.com/IBM/ubiquity/logutil"
 )
 
 var _ = Describe("restClient integration testing with existing SCBE instance", func() {
@@ -177,7 +177,7 @@ var _ = Describe("datamodel integration testing with live DB", func() {
 	Context(".table", func() {
 		It("Should to succeed to insert new volume raw and find it in DB", func() {
 			fakeVolName := "volname1"
-			err := datamodel.InsertVolume(fakeVolName, "www1", "fake_gold_profile", "host")
+			err := datamodel.InsertVolume(fakeVolName, "www1", "host")
 			Expect(err).NotTo(HaveOccurred())
 			ScbeVolume, exist, err := datamodel.GetVolume(fakeVolName)
 			Expect(err).NotTo(HaveOccurred())
@@ -187,7 +187,7 @@ var _ = Describe("datamodel integration testing with live DB", func() {
 		})
 		It("Should to succeed to insert new volume and delete it", func() {
 			fakeVolName := "volname1"
-			err := datamodel.InsertVolume(fakeVolName, "www1", "fake_gold_profile", "host")
+			err := datamodel.InsertVolume(fakeVolName, "www1", "host")
 			Expect(err).NotTo(HaveOccurred())
 			_, exist, err := datamodel.GetVolume(fakeVolName)
 			Expect(err).NotTo(HaveOccurred())
@@ -201,7 +201,7 @@ var _ = Describe("datamodel integration testing with live DB", func() {
 			num := 10
 			for i := 0; i < num; i++ {
 				volname = fmt.Sprintf("fakevol %d", i)
-				Expect(datamodel.InsertVolume(volname, "www1", "fake_gold_profile", "host")).NotTo(HaveOccurred())
+				Expect(datamodel.InsertVolume(volname, "www1", "host")).NotTo(HaveOccurred())
 			}
 			vols, err := datamodel.ListVolumes()
 			Expect(err).NotTo(HaveOccurred())
@@ -209,7 +209,7 @@ var _ = Describe("datamodel integration testing with live DB", func() {
 		})
 		It("Should to succeed to insert and then update the attach of the volume", func() {
 			fakeVolName := "volname1"
-			err := datamodel.InsertVolume(fakeVolName, "www1", "fake_gold_profile", "host")
+			err := datamodel.InsertVolume(fakeVolName, "www1", "host")
 			Expect(err).NotTo(HaveOccurred())
 			vol, exist, err := datamodel.GetVolume(fakeVolName)
 			Expect(err).NotTo(HaveOccurred())
