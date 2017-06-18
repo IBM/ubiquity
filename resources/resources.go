@@ -48,13 +48,17 @@ type ConnectionInfo struct {
 }
 
 type ScbeConfig struct {
-	ConfigPath        string // TODO consider to remove later
-	ConnectionInfo    ConnectionInfo
-	DefaultService    string // SCBE storage service to be used by default if not mentioned by plugin
-	DefaultVolumeSize string // The default volume size in case not specified by user
-	DefaultFilesystem string // The default filesystem to create on new volumes
-	HostnameTmp	  string // TODO this is a temp config param that workaround issue #23 (remove it when #23 will be fixed)
+	ConfigPath           string // TODO consider to remove later
+	ConnectionInfo       ConnectionInfo
+	DefaultService       string // SCBE storage service to be used by default if not mentioned by plugin
+	DefaultVolumeSize    string // The default volume size in case not specified by user
+	DefaultFilesystem    string // The default filesystem to create on new volumes
+	HostnameTmp          string // TODO this is a temp config param that workaround issue #23 (remove it when #23 will be fixed)
+	UbiquityInstanceName string // Prefix for the volume name in the storage side (max length 15 char)
 }
+
+const UbiquityInstanceNameMaxSize = 15
+const DefaultForScbeConfigParamDefaultVolumeSize = "1" // if customer don't mention size, then the default is 1gb
 
 type SshConfig struct {
 	User string
