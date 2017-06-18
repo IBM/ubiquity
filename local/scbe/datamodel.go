@@ -30,7 +30,6 @@ type ScbeVolume struct {
 	Volume   model.Volume
 	VolumeID uint
 	WWN      string
-	Profile  string
 	AttachTo string
 }
 

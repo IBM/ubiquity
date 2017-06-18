@@ -7,6 +7,7 @@ import (
 	"github.com/IBM/ubiquity/resources"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
+	"strings"
 )
 
 const (
@@ -166,6 +167,34 @@ var _ = Describe("scbeLocalClient", func() {
 			err = client.CreateVolume("fakevol", opts)
 			Expect(err).To(HaveOccurred())
 		})
+		It("should fail create volume if vol len exeeded", func() {
+			fakeScbeDataModel.GetVolumeReturns(scbe.ScbeVolume{}, false, nil)
+			opts := make(map[string]interface{})
+			opts[scbe.OptionNameForVolumeSize] = "100"
+			maxVolNameCapable := scbe.MaxVolumeNameLength - (len(fakeConfig.UbiquityInstanceName) + 3)
+
+			err = client.CreateVolume(strings.Repeat("x", maxVolNameCapable+1), opts)
+			Expect(err).To(HaveOccurred())
+			_, ok := err.(*scbe.VolumeNameExceededMaxLengthError)
+			Expect(ok).To(Equal(true))
+
+		})
+		It("should fail in create volume but succeed to validate vol name len", func() {
+			fakeScbeDataModel.GetVolumeReturns(scbe.ScbeVolume{}, false, nil)
+			fakeScbeRestClient.CreateVolumeReturns(scbe.ScbeVolumeInfo{}, fmt.Errorf("error"))
+
+			opts := make(map[string]interface{})
+			opts[scbe.OptionNameForVolumeSize] = "100"
+			maxVolNameCapable := scbe.MaxVolumeNameLength - (len(fakeConfig.UbiquityInstanceName) + 3)
+
+			err = client.CreateVolume(strings.Repeat("x", maxVolNameCapable), opts)
+			Expect(err).To(HaveOccurred())
+			_, ok := err.(*scbe.VolumeNameExceededMaxLengthError)
+			Expect(ok).To(Equal(false))
+			Expect(err.Error()).To(Equal("error"))
+
+		})
+
 		It("should fail create volume if vol creation failed with err", func() {
 			fakeScbeDataModel.GetVolumeReturns(scbe.ScbeVolume{}, false, nil)
 			fakeScbeRestClient.CreateVolumeReturns(scbe.ScbeVolumeInfo{}, fmt.Errorf("error"))
