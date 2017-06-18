@@ -189,10 +189,15 @@ type ScbeResponseMappings struct {
 */
 
 type ScbeVolumeInfo struct {
-	Name        string
-	Wwn         string
-	ServiceName string
-	// TODO later on we will want also size and maybe other stuff
+	Name        		string
+	Wwn         		string
+	Profile     		string
+	StorageType 		string
+	StorageName 		string
+	PoolName    		string
+	LogicalCapacity  	string
+	PhysicalCapacity 	string
+	UsedCapacity     	string
 }
 
 type ScbeResponseHost struct {

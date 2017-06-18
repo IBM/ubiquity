@@ -126,7 +126,7 @@ var _ = Describe("ScbeRestClient volume operations integration testing with exis
 			volInfo, err := scbeRestClient.CreateVolume(fakeName, profile, 10)
 			Expect(err).NotTo(HaveOccurred())
 			Expect(volInfo.Name).To(Equal(fakeName))
-			Expect(volInfo.ServiceName).To(Equal(profile))
+			Expect(volInfo.Profile).To(Equal(profile))
 			Expect(volInfo.Wwn).NotTo(Equal(""))
 			err = scbeRestClient.DeleteVolume(volInfo.Wwn)
 			Expect(err).NotTo(HaveOccurred())

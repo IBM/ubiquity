@@ -45,7 +45,7 @@ func main() {
 		return
 	}
 
-	defer logutil.InitFileLogger(logutil.INFO, path.Join(config.LogPath, "ubiquity.log"))()
+	defer logutil.InitFileLogger(logutil.DEBUG, path.Join(config.LogPath, "ubiquity.log"))()
 	logger, logFile := utils.SetupLogger(config.LogPath, "ubiquity")
 	defer utils.CloseLogs(logFile)
 
