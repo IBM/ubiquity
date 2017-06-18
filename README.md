@@ -21,8 +21,11 @@ The Ubiquity service can be run on one or more nodes in the cluster to create, m
 This code is provided "AS IS" and without warranty of any kind.  Any issues will be handled on a best effort basis.
 
 ## Sample Deployment Options
-The service can be deployed in a variety of ways.  In all options though, Ubiquity must be
-deployed on a system that has access (e.g., CLI, REST, ssh) to the supported storage system. We use the IBM SpectrumScale file system as an example.
+The service can be deployed in a variety of ways.  In all options,
+- Ubiquity must be deployed on a system that has access (e.g., CLI, REST, ssh) to the supported storage system
+- There is a single instance of the Ubiquity service deployed across the entire cluster.  All volume plugins on the docker or Kubernetes hosts will access this single Ubiquity service for volume management.
+
+We use the IBM Spectrum Scale file system as an example storage system.
 
 #### Single Node (All in One)
 ![Single node](images/singleNode.jpg)
