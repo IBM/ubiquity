@@ -112,3 +112,13 @@ func (e *ConfigScbeUbiquityInstanceNameWrongSize) Error() string {
 	return fmt.Sprintf("Error in config file. The parameter [%s] max length is [%d]",
 		"ScbeConfig.UbiquityInstanceName", resources.UbiquityInstanceNameMaxSize)
 }
+
+type VolumeNameExceededMaxLengthError struct {
+	volName         string
+	maxVolumeLength int
+}
+
+func (e *VolumeNameExceededMaxLengthError) Error() string {
+	return fmt.Sprintf("Volume name [%s] is too long(len=%d). Max length should be [%d]",
+		e.volName, len(e.volName), e.maxVolumeLength)
+}

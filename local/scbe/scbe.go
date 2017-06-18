@@ -31,6 +31,7 @@ const (
 	VolConfigKeyID       = "id"
 	VolConfigKeyVolumeID = "volume_id"
 	ComposeVolumeName    = volumeNamePrefix + "%s_%s" // e.g u_instance1_volName
+	MaxVolumeNameLength  = 63                         // IBM block storage max volume name cannot exceed this length
 )
 
 func NewScbeLocalClient(config resources.ScbeConfig, database *gorm.DB) (resources.StorageClient, error) {
@@ -145,8 +146,17 @@ func (s *scbeLocalClient) CreateVolume(name string, opts map[string]interface{})
 		profile = opts[OptionNameForServiceName].(string)
 	}
 
-	// Provision the volume on SCBE service
+	// Generate the designated volume name by template
 	volNameToCreate := fmt.Sprintf(ComposeVolumeName, s.config.UbiquityInstanceName, name)
+
+	// Validate volume length ok
+	volNamePrefixForCheckLength := fmt.Sprintf(ComposeVolumeName, s.config.UbiquityInstanceName, "")
+	volNamePrefixForCheckLengthLen := len(volNamePrefixForCheckLength)
+	if len(volNameToCreate) > MaxVolumeNameLength {
+		maxVolLength := MaxVolumeNameLength - volNamePrefixForCheckLengthLen // its dynamic because it depends on the UbiquityInstanceName len
+		return s.logger.ErrorRet(&VolumeNameExceededMaxLengthError{name, maxVolLength}, "failed")
+	}
+	// Provision the volume on SCBE service
 	volInfo := ScbeVolumeInfo{}
 	volInfo, err = s.scbeRestClient.CreateVolume(volNameToCreate, profile, size)
 	if err != nil {
@@ -213,7 +223,6 @@ func (s *scbeLocalClient) GetVolumeConfig(name string) (map[string]interface{}, 
 
 	volumeConfigDetails := make(map[string]interface{})
 	volumeConfigDetails[VolConfigKeyWWN] = scbeVolume.WWN
-	volumeConfigDetails[VolConfigKeyProfile] = scbeVolume.Profile
 	volumeConfigDetails[VolConfigKeyID] = scbeVolume.ID
 	volumeConfigDetails[VolConfigKeyVolumeID] = scbeVolume.VolumeID
 
