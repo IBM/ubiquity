@@ -15,6 +15,59 @@ const (
 	fakeError          = "error"
 )
 
+var _ = Describe("scbeLocalClient init", func() {
+	var (
+		client             resources.StorageClient
+		fakeScbeDataModel  *fakes.FakeScbeDataModel
+		fakeScbeRestClient *fakes.FakeScbeRestClient
+		fakeConfig         resources.ScbeConfig
+		err                error
+	)
+	BeforeEach(func() {
+		fakeScbeDataModel = new(fakes.FakeScbeDataModel)
+		fakeScbeRestClient = new(fakes.FakeScbeRestClient)
+	})
+	Context(".init", func() {
+		It("should fail because DefaultVolumeSize is not int", func() {
+			fakeConfig = resources.ScbeConfig{
+				DefaultVolumeSize: "badint",
+			}
+			client, err = scbe.NewScbeLocalClientWithNewScbeRestClientAndDataModel(
+				fakeConfig,
+				fakeScbeDataModel,
+				fakeScbeRestClient)
+			Expect(err).To(HaveOccurred())
+			_, ok := err.(*scbe.ConfigDefaultSizeNotNumError)
+			Expect(ok).To(Equal(true))
+		})
+		It("should fail because UbiquityInstanceName lenth is too long", func() {
+			fakeConfig = resources.ScbeConfig{
+				UbiquityInstanceName: "1234567890123456",
+				DefaultVolumeSize:    "1",
+			}
+			client, err = scbe.NewScbeLocalClientWithNewScbeRestClientAndDataModel(
+				fakeConfig,
+				fakeScbeDataModel,
+				fakeScbeRestClient)
+			Expect(err).To(HaveOccurred())
+			_, ok := err.(*scbe.ConfigScbeUbiquityInstanceNameWrongSize)
+			Expect(ok).To(Equal(true))
+		})
+		It("should succeed to init because config is ok", func() {
+			fakeConfig = resources.ScbeConfig{
+				UbiquityInstanceName: "123456789012345",
+				DefaultVolumeSize:    "1",
+			}
+			client, err = scbe.NewScbeLocalClientWithNewScbeRestClientAndDataModel(
+				fakeConfig,
+				fakeScbeDataModel,
+				fakeScbeRestClient)
+			Expect(err).NotTo(HaveOccurred())
+		})
+	})
+
+})
+
 var _ = Describe("scbeLocalClient", func() {
 	var (
 		client             resources.StorageClient
@@ -26,7 +79,11 @@ var _ = Describe("scbeLocalClient", func() {
 	BeforeEach(func() {
 		fakeScbeDataModel = new(fakes.FakeScbeDataModel)
 		fakeScbeRestClient = new(fakes.FakeScbeRestClient)
-		fakeConfig = resources.ScbeConfig{ConfigPath: "/tmp", DefaultService: fakeDefaultProfile} // TODO add more details
+		fakeConfig = resources.ScbeConfig{
+			ConfigPath:           "/tmp",
+			DefaultService:       fakeDefaultProfile,
+			UbiquityInstanceName: "fakeInstance1",
+		}
 		client, err = scbe.NewScbeLocalClientWithNewScbeRestClientAndDataModel(
 			fakeConfig,
 			fakeScbeDataModel,
@@ -123,7 +180,8 @@ var _ = Describe("scbeLocalClient", func() {
 			volname, profile, size := fakeScbeRestClient.CreateVolumeArgsForCall(0)
 			Expect(profile).To(Equal(fakeDefaultProfile))
 			Expect(size).To(Equal(100))
-			Expect(volname).To(Equal(fmt.Sprintf(scbe.ComposeVolumeName, scbe.DefaultUbiquityInstanceName, volFake)))
+			expectedVolName := fmt.Sprintf(scbe.ComposeVolumeName, fakeConfig.UbiquityInstanceName, volFake)
+			Expect(volname).To(Equal(expectedVolName))
 		})
 		It("should fail create volume if vol creation failed with err", func() {
 			fakeScbeDataModel.GetVolumeReturns(scbe.ScbeVolume{}, false, nil)
@@ -140,7 +198,8 @@ var _ = Describe("scbeLocalClient", func() {
 			volname, profile, size := fakeScbeRestClient.CreateVolumeArgsForCall(0)
 			Expect(profile).To(Equal("gold"))
 			Expect(size).To(Equal(100))
-			Expect(volname).To(Equal(fmt.Sprintf(scbe.ComposeVolumeName, scbe.DefaultUbiquityInstanceName, volFake)))
+			expectedVolName := fmt.Sprintf(scbe.ComposeVolumeName, fakeConfig.UbiquityInstanceName, volFake)
+			Expect(volname).To(Equal(expectedVolName))
 		})
 
 		It("should fail to insert vol to DB after create it", func() {

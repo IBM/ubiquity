@@ -1,13 +1,13 @@
 package scbe
 
 import (
+	"errors"
 	"fmt"
+	"github.com/IBM/ubiquity/logutil"
 	"github.com/IBM/ubiquity/resources"
 	"github.com/jinzhu/gorm"
 	"strconv"
 	"sync"
-	"github.com/IBM/ubiquity/logutil"
-	"errors"
 )
 
 type scbeLocalClient struct {
@@ -32,19 +32,12 @@ const (
 	VolConfigKeyProfile  = "profile"
 	VolConfigKeyID       = "id"
 	VolConfigKeyVolumeID = "volume_id"
+	ComposeVolumeName    = volumeNamePrefix + "%s_%s" // e.g u_instance1_volName
 )
-
-var (
-	ComposeVolumeName = volumeNamePrefix + "%s_%s"
-)
-
-// prefix_ubiquityIntanceName_northboundVolumeName
 
 func NewScbeLocalClient(config resources.ScbeConfig, database *gorm.DB) (resources.StorageClient, error) {
 	logger := logutil.GetLogger()
-	if config.ConfigPath == "" {
-		return nil, logger.ErrorRet(errors.New("missing required parameter 'spectrumConfigPath'"), "failed")
-	}
+	validateScbeConfig(config)
 	datamodel := NewScbeDataModel(database, resources.SCBE)
 	err := datamodel.CreateVolumeTable()
 	if err != nil {
@@ -55,6 +48,9 @@ func NewScbeLocalClient(config resources.ScbeConfig, database *gorm.DB) (resourc
 }
 
 func NewScbeLocalClientWithNewScbeRestClientAndDataModel(config resources.ScbeConfig, dataModel ScbeDataModel, scbeRestClient ScbeRestClient) (resources.StorageClient, error) {
+	if err := validateScbeConfig(config); err != nil {
+		return &scbeLocalClient{}, err
+	}
 	return &scbeLocalClient{
 		logger:         logutil.GetLogger(),
 		scbeRestClient: scbeRestClient, // TODO need to mock it in more advance way
@@ -62,6 +58,27 @@ func NewScbeLocalClientWithNewScbeRestClientAndDataModel(config resources.ScbeCo
 		config:         config,
 		activationLock: &sync.RWMutex{},
 	}, nil
+}
+
+func validateScbeConfig(config resources.ScbeConfig) error {
+	logger := logutil.GetLogger()
+
+	if config.DefaultVolumeSize == "" {
+		// means customer didn't configure the default
+		config.DefaultVolumeSize = resources.DefaultForScbeConfigParamDefaultVolumeSize
+		logger.Debug("No DefaultVolumeSize defined in conf file, so set the DefaultVolumeSize to value " + resources.DefaultForScbeConfigParamDefaultVolumeSize)
+	}
+	_, err := strconv.Atoi(config.DefaultVolumeSize)
+	if err != nil {
+		return logger.ErrorRet(&ConfigDefaultSizeNotNumError{}, "failed")
+	}
+
+	if len(config.UbiquityInstanceName) > resources.UbiquityInstanceNameMaxSize {
+		return logger.ErrorRet(&ConfigScbeUbiquityInstanceNameWrongSize{}, "failed")
+	}
+
+	// TODO add more verification on the config file.
+	return nil
 }
 
 func (s *scbeLocalClient) Activate() error {
@@ -81,7 +98,7 @@ func (s *scbeLocalClient) Activate() error {
 	if err := s.scbeRestClient.Login(); err != nil {
 		return s.logger.ErrorRet(err, "scbeRestClient.Login() failed")
 	}
-	s.logger.Info("scbeRestClient.Login() succeeded", logutil.Args{{"SCBE",s.config.ConnectionInfo.ManagementIP}})
+	s.logger.Info("scbeRestClient.Login() succeeded", logutil.Args{{"SCBE", s.config.ConnectionInfo.ManagementIP}})
 
 	isExist, err := s.scbeRestClient.ServiceExist(s.config.DefaultService)
 	if err != nil {
@@ -91,7 +108,7 @@ func (s *scbeLocalClient) Activate() error {
 	if isExist == false {
 		return s.logger.ErrorRet(&activateDefaultServiceError{s.config.DefaultService, s.config.ConnectionInfo.ManagementIP}, "failed")
 	}
-	s.logger.Info("The default service exist in SCBE", logutil.Args{	{s.config.ConnectionInfo.ManagementIP, s.config.DefaultService}})
+	s.logger.Info("The default service exist in SCBE", logutil.Args{{s.config.ConnectionInfo.ManagementIP, s.config.DefaultService}})
 
 	s.isActivated = true
 	return nil
@@ -112,9 +129,11 @@ func (s *scbeLocalClient) CreateVolume(name string, opts map[string]interface{})
 	}
 
 	// validate size option given
-	sizeStr := opts[OptionNameForVolumeSize]
-	if sizeStr == "" || sizeStr == nil {
-		return s.logger.ErrorRet(&provisionParamMissingError{name, OptionNameForVolumeSize}, "failed")
+	sizeStr, ok := opts[OptionNameForVolumeSize]
+	if !ok {
+		sizeStr = s.config.DefaultVolumeSize
+		s.logger.Debug("No size given to create volume, so using the default_size",
+			logutil.Args{{"volume", name}, {"default_size", sizeStr}})
 	}
 
 	// validate size is a number
@@ -129,7 +148,7 @@ func (s *scbeLocalClient) CreateVolume(name string, opts map[string]interface{})
 	}
 
 	// Provision the volume on SCBE service
-	volNameToCreate := fmt.Sprintf(ComposeVolumeName, DefaultUbiquityInstanceName, name) // TODO need to get real instance name
+	volNameToCreate := fmt.Sprintf(ComposeVolumeName, s.config.UbiquityInstanceName, name)
 	volInfo := ScbeVolumeInfo{}
 	volInfo, err = s.scbeRestClient.CreateVolume(volNameToCreate, profile, size)
 	if err != nil {
@@ -213,7 +232,7 @@ func (s *scbeLocalClient) Attach(name string) (string, error) {
 	}
 
 	if !volExists {
-		return  "", s.logger.ErrorRet(&volumeNotFoundError{name}, "failed")
+		return "", s.logger.ErrorRet(&volumeNotFoundError{name}, "failed")
 	}
 
 	if existingVolume.AttachTo == host2attach {
@@ -222,12 +241,12 @@ func (s *scbeLocalClient) Attach(name string) (string, error) {
 		volumeMountpoint := fmt.Sprintf(PathToMountUbiquityBlockDevices, existingVolume.WWN)
 		return volumeMountpoint, nil
 	} else if existingVolume.AttachTo != "" {
-		return  "", s.logger.ErrorRet(&volAlreadyAttachedError{name, existingVolume.AttachTo}, "failed")
+		return "", s.logger.ErrorRet(&volAlreadyAttachedError{name, existingVolume.AttachTo}, "failed")
 	}
 
 	s.logger.Debug("Attaching", logutil.Args{{"volume", existingVolume}})
 	if _, err = s.scbeRestClient.MapVolume(existingVolume.WWN, host2attach); err != nil {
-		return  "", s.logger.ErrorRet(err, "scbeRestClient.MapVolume failed")
+		return "", s.logger.ErrorRet(err, "scbeRestClient.MapVolume failed")
 	}
 
 	if err = s.dataModel.UpdateVolumeAttachTo(name, existingVolume, host2attach); err != nil {

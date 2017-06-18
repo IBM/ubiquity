@@ -146,8 +146,8 @@ defaultBackend = "scbe" # The "spectrum-scale" backend will be the default backe
 [ScbeConfig]
 configPath = "/opt/ubiquity-db" # Path in an existing filesystem where Ubiquity can create/store volume DB.
 DefaultService = "gold"         # SCBE storage service to be used by default if not mentioned by plugin
-DefaultVolumeSize = "50"        # The default volume size in case not specified by user (default is 80gb), possible UNITs gb,mb,b.
-DefaultFilesystem = "ext4"      # The default filesystem to create on new volumes (default ext4)
+DefaultVolumeSize = "5"         # The default volume size in case not specified by user (default is 1gb), possible UNITs gb,mb,b.
+UbiquityInstanceName = "instance1" # A prefix for any new created volume on the storage system side (default empty)
 
 [ScbeConfig.ConnectionInfo]
 managementIp = "IP Address"     # SCBE server IP or FQDN
