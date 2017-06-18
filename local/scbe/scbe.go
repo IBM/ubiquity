@@ -20,13 +20,11 @@ type scbeLocalClient struct {
 }
 
 const (
-	OptionNameForServiceName        = "profile"
-	OptionNameForVolumeSize         = "size"
-	volumeNamePrefix                = "u_"
-	DefaultUbiquityInstanceName     = "ubiquity_instance1" // TODO this should be part of the configuration
-	AttachedToNothing               = ""                   // during provisioning the volume is not attached to any host
-	PathToMountUbiquityBlockDevices = "/ubiquity/%s"       // %s is the WWN of the volume
-	EmptyHost                       = ""
+	OptionNameForServiceName = "profile"
+	OptionNameForVolumeSize  = "size"
+	volumeNamePrefix         = "u_"
+	AttachedToNothing        = "" // during provisioning the volume is not attached to any host
+	EmptyHost                = ""
 
 	VolConfigKeyWWN      = "wwn"
 	VolConfigKeyProfile  = "profile"
@@ -238,7 +236,7 @@ func (s *scbeLocalClient) Attach(name string) (string, error) {
 	if existingVolume.AttachTo == host2attach {
 		// if already map to the given host then just ignore and succeed to attach
 		s.logger.Info("Volume already attached, skip backend attach", logutil.Args{{"volume", name}, {"host", host2attach}})
-		volumeMountpoint := fmt.Sprintf(PathToMountUbiquityBlockDevices, existingVolume.WWN)
+		volumeMountpoint := fmt.Sprintf(resources.PathToMountUbiquityBlockDevices, existingVolume.WWN)
 		return volumeMountpoint, nil
 	} else if existingVolume.AttachTo != "" {
 		return "", s.logger.ErrorRet(&volAlreadyAttachedError{name, existingVolume.AttachTo}, "failed")
@@ -253,7 +251,7 @@ func (s *scbeLocalClient) Attach(name string) (string, error) {
 		return "", s.logger.ErrorRet(err, "dataModel.UpdateVolumeAttachTo failed")
 	}
 
-	volumeMountpoint := fmt.Sprintf(PathToMountUbiquityBlockDevices, existingVolume.WWN)
+	volumeMountpoint := fmt.Sprintf(resources.PathToMountUbiquityBlockDevices, existingVolume.WWN)
 	return volumeMountpoint, nil
 }
 
