@@ -221,5 +221,5 @@ func (s *spectrum_ssh) UnexportNfs(volumeMountpoint string) error {
 	spectrumCommand := "/usr/lpp/mmfs/bin/mmnfs"
 	userAndHost := fmt.Sprintf("%s@%s", s.user, s.host)
 	args := []string{userAndHost, "-p", s.port, "sudo", spectrumCommand, "export", "remove", volumeMountpoint, "--force"}
-        return UnexportNfsInternal(s.logger, s.executor, "ssh", args)
+	return UnexportNfsInternal(s.logger, s.executor, "ssh", args)
 }

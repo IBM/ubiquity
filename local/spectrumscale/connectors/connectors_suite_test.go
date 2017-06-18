@@ -5,9 +5,9 @@ import (
 	. "github.com/onsi/gomega"
 
 	"testing"
+
 	"github.com/jarcoal/httpmock"
 )
-
 
 func TestConnectors(t *testing.T) {
 	RegisterFailHandler(Fail)

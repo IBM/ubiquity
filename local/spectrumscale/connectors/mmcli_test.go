@@ -277,7 +277,7 @@ var _ = Describe("spectrum_mmcli", func() {
 
 			err = spectrumMMCLI.LinkFileset(filesystem, fileset)
 			Expect(err).ToNot(HaveOccurred())
-			Expect(fakeExec.ExecuteCallCount()).To(Equal(3))
+			Expect(fakeExec.ExecuteCallCount()).To(Equal(2))
 		})
 	})
 
@@ -372,7 +372,7 @@ var _ = Describe("spectrum_mmcli", func() {
 
 			err = spectrumMMCLI.SetFilesetQuota(filesystem, fileset, "fake-quota")
 			Expect(err).To(HaveOccurred())
-			Expect(err.Error()).To(Equal(errorMsg))
+			Expect(err.Error()).To(Equal(fmt.Sprintf("Failed to set quota 'fake-quota' for fileset '%s': %s", fileset, errorMsg)))
 		})
 
 		It("should succeed when execute command does not error", func() {

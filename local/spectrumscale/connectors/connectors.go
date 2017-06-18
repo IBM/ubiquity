@@ -26,8 +26,8 @@ type SpectrumScaleConnector interface {
 	//TODO modify quota from string to Capacity (see kubernetes)
 	ListFilesetQuota(filesystemName string, filesetName string) (string, error)
 	SetFilesetQuota(filesystemName string, filesetName string, quota string) error
-        ExportNfs(volumeMountpoint string, clientConfig string) error
-        UnexportNfs(volumeMountpoint string) error
+	ExportNfs(volumeMountpoint string, clientConfig string) error
+	UnexportNfs(volumeMountpoint string) error
 }
 
 const (

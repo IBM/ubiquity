@@ -1,33 +1,32 @@
 package connectors
 
 import (
+	"crypto/tls"
 	"fmt"
+	"github.com/IBM/ubiquity/resources"
+	"github.com/IBM/ubiquity/utils"
 	"log"
 	"net/http"
 	"os"
 	"path"
-        "crypto/tls"
-	"github.com/IBM/ubiquity/resources"
-	"github.com/IBM/ubiquity/utils"
 )
 
 type spectrum_rest struct {
 	logger     *log.Logger
 	httpClient *http.Client
 	endpoint   string
-        user       string
-        password   string
+	user       string
+	password   string
 }
-
 
 func NewSpectrumRest(logger *log.Logger, restConfig resources.RestConfig) (SpectrumScaleConnector, error) {
 	endpoint := restConfig.Endpoint
-        user := restConfig.User
-        password := restConfig.Password
+	user := restConfig.User
+	password := restConfig.Password
 
-        tr := &http.Transport{
-                TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
-        }
+	tr := &http.Transport{
+		TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
+	}
 
 	return &spectrum_rest{logger: logger, httpClient: &http.Client{Transport: tr}, endpoint: endpoint, user: user, password: password}, nil
 }
@@ -56,7 +55,7 @@ func (s *spectrum_rest) GetClusterId() (string, error) {
 
 	getClusterResponse = cidResponse.(GetClusterResponse)
 
-	return fmt.Sprintf("%v",getClusterResponse.Cluster.ClusterSummary.ClusterID), nil
+	return fmt.Sprintf("%v", getClusterResponse.Cluster.ClusterSummary.ClusterID), nil
 }
 
 func (s *spectrum_rest) IsFilesystemMounted(filesystemName string) (bool, error) {

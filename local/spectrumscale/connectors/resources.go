@@ -72,24 +72,23 @@ type Job struct {
 	Result    Respresult  `json:"result,omitempty"`
 	Request   Resprequest `json:"request,omitempty"`
 	JobID     uint64      `json:"jobid,omitempty"`
-        Submitted string      `json:"submitted,omitempty"`
+	Submitted string      `json:"submitted,omitempty"`
 	Completed string      `json:"completed,omitempty"`
-	Status    string      `json:"status,omitempty"` 
+	Status    string      `json:"status,omitempty"`
 }
-
 
 type Respresult struct {
 	Commands string `json:"commands,omitempty"`
-        Progress string `json:"progress,omitempty"`
+	Progress string `json:"progress,omitempty"`
 	ExitCode int    `json:"exitCode,omitempty"`
 	Stderr   string `json:"stderr,omitempty"`
 	Stdout   string `json:"stdout,omitempty"`
 }
 
 type Resprequest struct {
-	Type string     `json:"type,omitempty"`
-	Url  string     `json:"url,omitempty"`
-	Data map[string]interface{}     `json:"data,omitempty"`
+	Type string                 `json:"type,omitempty"`
+	Url  string                 `json:"url,omitempty"`
+	Data map[string]interface{} `json:"data,omitempty"`
 }
 
 type GetFilesystemResponse struct {
@@ -162,23 +161,23 @@ type Fileset struct {
 }
 
 type AFM struct {
-        AFMAsyncDelay                int    `json:"afmAsyncDelay"`
-        AFMDirLookupRefreshInterval  int    `json:"afmDirLookupRefreshInterval"`
-        AFMDirOpenRefreshInterval    int    `json:"afmDirOpenRefreshInterval"`
-        AFMEnableAutoEviction        bool   `json:"afmEnableAutoEviction"`
-        AFMExpirationTimeout         int    `json:"afmExpirationTimeout"`
-        AFMFileLookupRefreshInterval int    `json:"afmFileLookupRefreshInterval"`
-        AFMMode                      string `json:"afmMode"`
-        AFMNumFlushThreads           int    `json:"afmNumFlushThreads"`
-        AFMParallelReadChunkSize     int    `json:"afmParallelReadChunkSize"`
-        AFMParallelReadThreshold     int    `json:"afmParallelReadThreshold"`
-        AFMParallelWriteChunkSize    int    `json:"afmParallelWriteChunkSize"`
-        AFMParallelWriteThreshold    int    `json:"afmParallelWriteThreshold"`
-        AFMPrefetchThreshold         int    `json:"afmPrefetchThreshold"`
-        AFMPrimaryID                 string `json:"afmPrimaryID"`
-        AFMRPO                       int    `json:"afmRPO"`
-        AFMShowHomeSnapshots         bool   `json:"afmShowHomeSnapshots"`
-        AFMTarget                    string `json:"afmTarget"`
+	AFMAsyncDelay                int    `json:"afmAsyncDelay"`
+	AFMDirLookupRefreshInterval  int    `json:"afmDirLookupRefreshInterval"`
+	AFMDirOpenRefreshInterval    int    `json:"afmDirOpenRefreshInterval"`
+	AFMEnableAutoEviction        bool   `json:"afmEnableAutoEviction"`
+	AFMExpirationTimeout         int    `json:"afmExpirationTimeout"`
+	AFMFileLookupRefreshInterval int    `json:"afmFileLookupRefreshInterval"`
+	AFMMode                      string `json:"afmMode"`
+	AFMNumFlushThreads           int    `json:"afmNumFlushThreads"`
+	AFMParallelReadChunkSize     int    `json:"afmParallelReadChunkSize"`
+	AFMParallelReadThreshold     int    `json:"afmParallelReadThreshold"`
+	AFMParallelWriteChunkSize    int    `json:"afmParallelWriteChunkSize"`
+	AFMParallelWriteThreshold    int    `json:"afmParallelWriteThreshold"`
+	AFMPrefetchThreshold         int    `json:"afmPrefetchThreshold"`
+	AFMPrimaryID                 string `json:"afmPrimaryID"`
+	AFMRPO                       int    `json:"afmRPO"`
+	AFMShowHomeSnapshots         bool   `json:"afmShowHomeSnapshots"`
+	AFMTarget                    string `json:"afmTarget"`
 }
 
 type FilesetConfig struct {
@@ -215,12 +214,12 @@ type CreateFilesetResquest struct {
 }
 type GenericResponse struct {
 	Status Status `json:"status,omitempty"`
-        Jobs   []Job  `json:"jobs,omitempty"`
+	Jobs   []Job  `json:"jobs,omitempty"`
 }
 
 type nfsExportRequest struct {
-	Path             string `json:"path,omitempty"`
-	ClientDetail   []string `json:"nfsClients,omitempty"`
+	Path         string   `json:"path,omitempty"`
+	ClientDetail []string `json:"nfsClients,omitempty"`
 }
 
 type GetQuotaResponse struct {
@@ -290,243 +289,236 @@ type Node struct {
 /* Version 2*/
 
 type GetFilesystemResponse_v2 struct {
-        FileSystems	    	[]FileSystem_v2    `json:"filesystems,omitempty"`
-        Status              	Status             `json:"status,omitempty"`
-	Paging	            	Pages	           `json:"paging,omitempty"`
+	FileSystems []FileSystem_v2 `json:"filesystems,omitempty"`
+	Status      Status          `json:"status,omitempty"`
+	Paging      Pages           `json:"paging,omitempty"`
 }
 
-
 type BlockInfo struct {
-	Pools 	            	string             `json:"pools,omitempty"`
-	Disks	            	string             `json:"disks,omitempty"`
-	BlockSize           	int                `json:"blockSize,omitempty"`
-	MetaDataBlockSize   	int 	       	   `json:"metaDataBlockSize,omitempty"`
-	IndirectBlockSize   	int 	           `json:"indirectBlockSize,omitempty"`
-	MinFragmentSize     	int 	           `json:"minFragmentSize,omitempty"`
-	InodeSize	    	int 	           `json:"inodeSize,omitempty"`
-	LogfileSize	    	int 	           `json:"logfileSize,omitempty"`
-	WriteCacheThreshold 	int 	           `json:"writeCacheThreshold,omitempty"`
+	Pools               string `json:"pools,omitempty"`
+	Disks               string `json:"disks,omitempty"`
+	BlockSize           int    `json:"blockSize,omitempty"`
+	MetaDataBlockSize   int    `json:"metaDataBlockSize,omitempty"`
+	IndirectBlockSize   int    `json:"indirectBlockSize,omitempty"`
+	MinFragmentSize     int    `json:"minFragmentSize,omitempty"`
+	InodeSize           int    `json:"inodeSize,omitempty"`
+	LogfileSize         int    `json:"logfileSize,omitempty"`
+	WriteCacheThreshold int    `json:"writeCacheThreshold,omitempty"`
 }
 
 type MountInfo struct {
-	MountPoint 	  	string             `json:"mountPoint,omitempty"`
-	AutomaticMountOption 	string 		   `json:"automaticMountOption,omitempty"`
-	AdditionalMountOptions	string 		   `json:"additionalMountOptions,omitempty"`
-	MountPriority		int                `json:"mountPriority,omitempty"`
-	DriveLetter	        string             `json:"driveLetter,omitempty"`
-	RemoteDeviceName 	string             `json:"remoteDeviceName,omitempty"`
-	ReadOnly		bool 	           `json:"readOnly,omitempty"`
+	MountPoint             string `json:"mountPoint,omitempty"`
+	AutomaticMountOption   string `json:"automaticMountOption,omitempty"`
+	AdditionalMountOptions string `json:"additionalMountOptions,omitempty"`
+	MountPriority          int    `json:"mountPriority,omitempty"`
+	DriveLetter            string `json:"driveLetter,omitempty"`
+	RemoteDeviceName       string `json:"remoteDeviceName,omitempty"`
+	ReadOnly               bool   `json:"readOnly,omitempty"`
 }
 
 type QuotaInfo struct {
-	QuotasAccountingEnabled	string 	           `json:"quotasAccountingEnabled,omitempty"`
-	QuotasEnforced	        string             `json:"quotasEnforced,omitempty"`
-	DefaultQuotasEnabled    string             `json:"defaultQuotasEnabled,omitempty"`
-	PerfilesetQuotas	bool               `json:"perfilesetQuotas,omitempty"`
-	FilesetdfEnabled	bool               `json:"filesetdfEnabled,omitempty"`
+	QuotasAccountingEnabled string `json:"quotasAccountingEnabled,omitempty"`
+	QuotasEnforced          string `json:"quotasEnforced,omitempty"`
+	DefaultQuotasEnabled    string `json:"defaultQuotasEnabled,omitempty"`
+	PerfilesetQuotas        bool   `json:"perfilesetQuotas,omitempty"`
+	FilesetdfEnabled        bool   `json:"filesetdfEnabled,omitempty"`
 }
 
 type SettingInfo struct {
-	BlockAllocationType	string 	           `json:"blockAllocationType,omitempty"`
-	FileLockingSemantics	string             `json:"fileLockingSemantics,omitempty"`
-	NumNodes		int  	           `json:"numNodes,omitempty"`
-	ExactMTime		bool 	           `json:"exactMTime,omitempty"`
-	SuppressATime		string 	           `json:"suppressATime,omitempty"`
-	FastEAEnabled		bool 	           `json:"fastEAEnabled,omitempty"`
-	Encryption		bool 	           `json:"encryption,omitempty"`
-	MaxNumberOfInodes 	int  	           `json:"maxNumberOfInodes,omitempty"`
-	Is4KAligned		bool 	           `json:"is4KAligned,omitempty"`
-	RapidRepairEnabled 	bool 	           `json:"rapidRepairEnabled,omitempty"`
-	StripeMethod		string 	           `json:"stripeMethod"`
-	StripedLogs		bool 	           `json:"stripedLogs,omitempty"`
-	ACLSemantics		string 	           `json:"ACLSemantics,omitempty"`
-	DMAPIEnabled   		bool 	           `json:"DMAPIEnabled,omitempty"`
+	BlockAllocationType  string `json:"blockAllocationType,omitempty"`
+	FileLockingSemantics string `json:"fileLockingSemantics,omitempty"`
+	NumNodes             int    `json:"numNodes,omitempty"`
+	ExactMTime           bool   `json:"exactMTime,omitempty"`
+	SuppressATime        string `json:"suppressATime,omitempty"`
+	FastEAEnabled        bool   `json:"fastEAEnabled,omitempty"`
+	Encryption           bool   `json:"encryption,omitempty"`
+	MaxNumberOfInodes    int    `json:"maxNumberOfInodes,omitempty"`
+	Is4KAligned          bool   `json:"is4KAligned,omitempty"`
+	RapidRepairEnabled   bool   `json:"rapidRepairEnabled,omitempty"`
+	StripeMethod         string `json:"stripeMethod"`
+	StripedLogs          bool   `json:"stripedLogs,omitempty"`
+	ACLSemantics         string `json:"ACLSemantics,omitempty"`
+	DMAPIEnabled         bool   `json:"DMAPIEnabled,omitempty"`
 }
 
 type ReplicationInfo struct {
-	DefaultMetadataReplicas int 		   `json:"defaultMetadataReplicas,omitempty"`
-	MaxMetadataReplicas     int 		   `json:"maxMetadataReplicas,omitempty"`
-	DefaultDataReplicas 	int	           `json:"defaultDataReplicas,omitempty"`
-	MaxDataReplicas		int 		   `json:"maxDataReplicas,omitempty"`
-	StrictReplication	string 		   `json:"strictReplication,omitempty"`
-	LogReplicas		int 		   `json:"logReplicas,omitempty"`
+	DefaultMetadataReplicas int    `json:"defaultMetadataReplicas,omitempty"`
+	MaxMetadataReplicas     int    `json:"maxMetadataReplicas,omitempty"`
+	DefaultDataReplicas     int    `json:"defaultDataReplicas,omitempty"`
+	MaxDataReplicas         int    `json:"maxDataReplicas,omitempty"`
+	StrictReplication       string `json:"strictReplication,omitempty"`
+	LogReplicas             int    `json:"logReplicas,omitempty"`
 }
 
 type FileSystem_v2 struct {
-	Oid 		       int 		    `json:"oid,omitempty"`
-	UUID		       string               `json:"uuid,omitempty"`
-	Name		       string               `json:"name,omitempty"`
-	Version	               string               `json:"version,omitempty"`
-	Type 	               string               `json:"type,omitempty"`
-	CreateTime 	       string               `json:"createTime,omitempty"`
-	Block                  BlockInfo            `json:"block,omitempty"`
-	Mount                  MountInfo            `json:"mount,omitempty"`
-	Replication            ReplicationInfo      `json:"replication,omitempty"`
-	Quota 	               QuotaInfo	    `json:"quota,omitempty"`
-	Settings               SettingInfo	    `json:"settings,omitempty"`
-		
+	Oid         int             `json:"oid,omitempty"`
+	UUID        string          `json:"uuid,omitempty"`
+	Name        string          `json:"name,omitempty"`
+	Version     string          `json:"version,omitempty"`
+	Type        string          `json:"type,omitempty"`
+	CreateTime  string          `json:"createTime,omitempty"`
+	Block       BlockInfo       `json:"block,omitempty"`
+	Mount       MountInfo       `json:"mount,omitempty"`
+	Replication ReplicationInfo `json:"replication,omitempty"`
+	Quota       QuotaInfo       `json:"quota,omitempty"`
+	Settings    SettingInfo     `json:"settings,omitempty"`
 }
 
 type Pages struct {
-	Next 		       string               `json:"next,omitempty"`
+	Next string `json:"next,omitempty"`
 }
 
 type GetNodesResponse_v2 struct {
-      Nodes                    []Node_v2            `json:"nodes,omitempty"`
-      Status                   Status               `json:"status,omitempty"`	
-      Paging                   Pages                `json:"paging,omitempty"`
+	Nodes  []Node_v2 `json:"nodes,omitempty"`
+	Status Status    `json:"status,omitempty"`
+	Paging Pages     `json:"paging,omitempty"`
 }
 
 type NodeConfig struct {
-      AdminLoginName           string              `json:"adminLoginName,omitempty"`
-      DesignatedLicense	       string              `json:"designatedLicense,omitempty"`
-      RequiredLicense	       string              `json:"requiredLicense,omitempty"`
+	AdminLoginName    string `json:"adminLoginName,omitempty"`
+	DesignatedLicense string `json:"designatedLicense,omitempty"`
+	RequiredLicense   string `json:"requiredLicense,omitempty"`
 }
 
 type NodeStatus struct {
-      OSName	               string 	           `json:"osName,omitempty"`
-      NodeState                string              `json:"nodeState,omitempty"`
-      GPFSState                string              `json:"gpfsState,omitempty"`
-      ProductVersion	       string              `json:"productVersion,omitempty"`
+	OSName         string `json:"osName,omitempty"`
+	NodeState      string `json:"nodeState,omitempty"`
+	GPFSState      string `json:"gpfsState,omitempty"`
+	ProductVersion string `json:"productVersion,omitempty"`
 }
 
 type Network struct {
-      AdminIPAddress           string              `json:"adminIPAddress,omitempty"`
-      DaemonNodeName	       string              `json:"daemonNodeName,omitempty"`
-      DaemonIPAddress          string              `json:"daemonIPAddress,omitempty"`
-      GetcnfsNodeName          string              `json:"getcnfsNodeName,omitempty"`
+	AdminIPAddress  string `json:"adminIPAddress,omitempty"`
+	DaemonNodeName  string `json:"daemonNodeName,omitempty"`
+	DaemonIPAddress string `json:"daemonIPAddress,omitempty"`
+	GetcnfsNodeName string `json:"getcnfsNodeName,omitempty"`
 }
 
 type NodeRoles struct {
-      SNMPNode                 string              `json:"snmpNode,omitempty"`
-      ManagerNode              string              `json:"managerNode,omitempty"`
-      GatewayNode              string              `json:"gatewayNode,omitempty"`
-      CNFSNode                 string              `json:"cnfsNode,omitempty"`
-      ClientNode               string              `json:"clientNode,omitempty"`
-      CESNode                  string              `json:"cesNode,omitempty"`
-      QuorumNode               string              `json:"quorumNode,omitempty"`
-      CloudGatewayNode         string              `json:"cloudGatewayNode,omitempty"`
-      OtherNodeRoles           string              `json:"otherNodeRoles,omitempty"`
-      Designation	       string              `json:"designation,omitempty"`
+	SNMPNode         string `json:"snmpNode,omitempty"`
+	ManagerNode      string `json:"managerNode,omitempty"`
+	GatewayNode      string `json:"gatewayNode,omitempty"`
+	CNFSNode         string `json:"cnfsNode,omitempty"`
+	ClientNode       string `json:"clientNode,omitempty"`
+	CESNode          string `json:"cesNode,omitempty"`
+	QuorumNode       string `json:"quorumNode,omitempty"`
+	CloudGatewayNode string `json:"cloudGatewayNode,omitempty"`
+	OtherNodeRoles   string `json:"otherNodeRoles,omitempty"`
+	Designation      string `json:"designation,omitempty"`
 }
 
-
 type Node_v2 struct {
-      AdminNodename            string 		    `json:"adminNodename,omitempty"`
-      NodeNumber               int  		    `json:"nodeNumber,omitempty"`
-      Config	               NodeConfig           `json:"config,omitempty"`
-      Status	               NodeStatus	    `json:"status,omitempty"`
-      Network	               Network	            `json:"network,omitempty"`
-      Roles	               NodeRoles	    `json:"roles,omitempty"`
-      CNFSInfo                 CNFSNode		    `json:"cnfsInfo,omitempty"`
-      CESInfo	               CESNode		    `json:"cesInfo,omitempty"`	
+	AdminNodename string     `json:"adminNodename,omitempty"`
+	NodeNumber    int        `json:"nodeNumber,omitempty"`
+	Config        NodeConfig `json:"config,omitempty"`
+	Status        NodeStatus `json:"status,omitempty"`
+	Network       Network    `json:"network,omitempty"`
+	Roles         NodeRoles  `json:"roles,omitempty"`
+	CNFSInfo      CNFSNode   `json:"cnfsInfo,omitempty"`
+	CESInfo       CESNode    `json:"cesInfo,omitempty"`
 }
 
 type Fileset_v2 struct {
-      AFM                      AFM                  `json:"afm,omitempty"`
-      Config                   FilesetConfig_v2     `json:"config,omitempty"`
+	AFM    AFM              `json:"afm,omitempty"`
+	Config FilesetConfig_v2 `json:"config,omitempty"`
 }
 
 type GetFilesetResponse_v2 struct {
-     Filesets                  []Fileset_v2         `json:"filesets,omitempty"`
-     Status                    Status               `json:"status,omitempty"`
-     Paging                    Pages                `json:"paging,omitempty"`
+	Filesets []Fileset_v2 `json:"filesets,omitempty"`
+	Status   Status       `json:"status,omitempty"`
+	Paging   Pages        `json:"paging,omitempty"`
 }
 
 type FilesetConfig_v2 struct {
-     FilesetName	       string               `json:"filesetName,omitempty"`
-     FilesystemName	       string               `json:"filesystemName,omitempty"`
-     Path	               string               `json:"path,omitempty"`
-     InodeSpace	               int                  `json:"inodeSpace,omitempty"`
-     MaxNumInodes	       int                  `json:"maxNumInodes,omitempty"`
-     PermissionChangeMode      string               `json:"permissionChangeMode,omitempty"`
-     Comment	               string	            `json:"comment,omitempty"`
-     IamMode	               string               `json:"iamMode,omitempty"`
-     Oid	               int                  `json:"oid,omitempty"`
-     Id	                       int                  `json:"id,omitempty"`
-     Status	               string               `json:"status,omitempty"`
-     ParentId                  int                  `json:"parentId,omitempty"`
-     Created	               string               `json:"created,omitempty"`
-     IsInodeSpaceOwner	       bool                 `json:"isInodeSpaceOwner,omitempty"`
-     InodeSpaceMask            int                  `json:"inodeSpaceMask,omitempty"`
-     SnapID	               int                  `json:"snapID,omitempty"`
-     RootInode	               int                  `json:"rootInode,omitempty"`
+	FilesetName          string `json:"filesetName,omitempty"`
+	FilesystemName       string `json:"filesystemName,omitempty"`
+	Path                 string `json:"path,omitempty"`
+	InodeSpace           int    `json:"inodeSpace,omitempty"`
+	MaxNumInodes         int    `json:"maxNumInodes,omitempty"`
+	PermissionChangeMode string `json:"permissionChangeMode,omitempty"`
+	Comment              string `json:"comment,omitempty"`
+	IamMode              string `json:"iamMode,omitempty"`
+	Oid                  int    `json:"oid,omitempty"`
+	Id                   int    `json:"id,omitempty"`
+	Status               string `json:"status,omitempty"`
+	ParentId             int    `json:"parentId,omitempty"`
+	Created              string `json:"created,omitempty"`
+	IsInodeSpaceOwner    bool   `json:"isInodeSpaceOwner,omitempty"`
+	InodeSpaceMask       int    `json:"inodeSpaceMask,omitempty"`
+	SnapID               int    `json:"snapID,omitempty"`
+	RootInode            int    `json:"rootInode,omitempty"`
 }
 
 type GetQuotaResponse_v2 struct {
-     Quotas                   []Quota_v2            `json:"quotas,omitempty"`
-     Status                   Status                `json:"status,omitempty"`
-     Paging                   string 	            `json:"paging,omitempty"`
+	Quotas []Quota_v2 `json:"quotas,omitempty"`
+	Status Status     `json:"status,omitempty"`
+	Paging string     `json:"paging,omitempty"`
 }
 
 type Quota_v2 struct {
-     QuotaID 	              string                `json:"quotaID,omitempty"`
-     FilesystemName	      string                `json:"filesystemName,omitempty"`
-     FilesetName	      string                `json:"filesetName,omitempty"`
-     QuotaType	              string                `json:"quotaType,omitempty"`
-     ObjectName	              string                `json:"objectName,omitempty"`
-     ObjectId	              string                `json:"objectId,omitempty"`
-     BlockUsage	              string                `json:"blockUsage,omitempty"`
-     BlockQuota	              string                `json:"blockQuota,omitempty"`
-     BlockInDoubt	      string                `json:"blockInDoubt,omitempty"`
-     BlockGrace	              string                `json:"blockGrace,omitempty"`
-     FilesUsage	              string                `json:"filesUsage,omitempty"`
-     FilesQuota	              string                `json:"filesQuota,omitempty"`
-     FilesLimit	              string                `json:"filesLimit,omitempty"`
-     FilesInDoubt	      string                `json:"filesInDoubt,omitempty"`
-     FilesGrace	              string                `json:"filesGrace,omitempty"`
-     DefaultQuota	      string                `json:"defaultQuota,omitempty"`
+	QuotaID        int    `json:"quotaID,omitempty"`
+	FilesystemName string `json:"filesystemName,omitempty"`
+	FilesetName    string `json:"filesetName,omitempty"`
+	QuotaType      string `json:"quotaType,omitempty"`
+	ObjectName     string `json:"objectName,omitempty"`
+	ObjectId       int    `json:"objectId,omitempty"`
+	BlockUsage     int    `json:"blockUsage,omitempty"`
+	BlockQuota     int    `json:"blockQuota,omitempty"`
+	BlockInDoubt   int    `json:"blockInDoubt,omitempty"`
+	BlockGrace     string `json:"blockGrace,omitempty"`
+	FilesUsage     int    `json:"filesUsage,omitempty"`
+	FilesQuota     int    `json:"filesQuota,omitempty"`
+	FilesLimit     int    `json:"filesLimit,omitempty"`
+	FilesInDoubt   int    `json:"filesInDoubt,omitempty"`
+	FilesGrace     string `json:"filesGrace,omitempty"`
+	DefaultQuota   string `json:"defaultQuota,omitempty"`
 }
-
 
 type SetQuotaRequest_v2 struct {
-     BlockGracePeriod        string                 `json:"blockGracePeriod,omitempty"`
-     BlockHardLimit          string                 `json:"blockHardLimit,omitempty"`
-     BlockSoftLimit          string                 `json:"blockSoftLimit,omitempty"`
-     FilesGracePeriod        string                 `json:"filesGracePeriod,omitempty"`
-     FilesHardLimit          string                 `json:"filesHardLimit,omitempty"`
-     FilesSoftLimit          string                 `json:"filesSoftLimit,omitempty"`
-     OperationType           string                 `json:"operationType,omitempty"`
-     QuotaType               string                 `json:"quotaType,omitempty"`
+	BlockGracePeriod string `json:"blockGracePeriod,omitempty"`
+	BlockHardLimit   string `json:"blockHardLimit,omitempty"`
+	BlockSoftLimit   string `json:"blockSoftLimit,omitempty"`
+	FilesGracePeriod string `json:"filesGracePeriod,omitempty"`
+	FilesHardLimit   string `json:"filesHardLimit,omitempty"`
+	FilesSoftLimit   string `json:"filesSoftLimit,omitempty"`
+	OperationType    string `json:"operationType,omitempty"`
+	QuotaType        string `json:"quotaType,omitempty"`
 }
 
-
 type LinkFilesetRequest struct {
-     Path	             string 		    `json:"path,omitempty"`
+	Path string `json:"path,omitempty"`
 }
 
 type UnlinkFilesetRequest struct {
-     Force 	            bool 		    `json:"force,omitempty"`
+	Force bool `json:"force,omitempty"`
 }
 
 type CreateFilesetRequest struct {
-     FilesetName 	    string	            `json:"filesetName,omitempty"`
-     Path	            string 		    `json:"path,omitempty"`
-     Owner 	            string 		    `json:"owner,omitempty"`
-     Permissions	    string	            `json:"permissions,omitempty"` 
-     InodeSpace	            string                  `json:"inodeSpace,omitempty"`
-     MaxNumInodes	    string	            `json:"maxNumInode,omitempty"`
-     AllocInodes	    string                  `json:"allocInodes,omitempty"`
-     PermissionChangeMode   string                  `json:"permissionChangeMode,omitempty"`
-     Comment		    string                  `json:"comment,omitempty"`
-     IamMode		    string                  `json:"iamMode,omitempty"`
-     AfmTarget	            string                  `json:"afmTarget,omitempty"`
-     AfmAsyncDelay	    string                  `json:"afmAsyncDelay,omitempty"`
-     AfmDirLookupRefreshInterval string             `json:"afmDirLookupRefreshInterval,omitempty"`
-     AfmDirOpenRefreshInterval	 string             `json:"afmDirOpenRefreshInterval,omitempty"`
-     AfmEnableAutoEviction	 string             `json:"afmEnableAutoEviction,omitempty"`
-     AfmExpirationTimeout	 string             `json:"afmExpirationTimeout,omitempty"`
-     AfmFileLookupRefreshInterval string            `json:"afmFileLookupRefreshInterval,omitempty"`
-     AfmMode	           string 		    `json:"afmMode,omitempty"`
-     AfmNumFlushThreads	   int                      `json:"afmNumFlushThreads,omitempty"`
-     AfmParallelReadChunkSize    int 	            `json:"afmParallelReadChunkSize,omitempty"`
-     AfmParallelReadThreshold    int                `json:"afmParallelReadThreshold,omitempty"`
-     AfmParallelWriteChunkSize   int                `json:"afmParallelWriteChunkSize,omitempty"`
-     AfmParallelWriteThreshold   int                `json:"afmParallelWriteThreshold,omitempty"`
-     AfmPrefetchThreshold        int                `json:"afmPrefetchThreshold,omitempty"`
-     AfmPrimaryID	         string 	    `json:"afmPrimaryID,omitempty"`
-     AfmRPO		         int 		    `json:"afmRPO,omitempty"`
-     AfmShowHomeSnapshots        string             `json:"afmShowHomeSnapshots,omitempty"` 
+	FilesetName                  string `json:"filesetName,omitempty"`
+	Path                         string `json:"path,omitempty"`
+	Owner                        string `json:"owner,omitempty"`
+	Permissions                  string `json:"permissions,omitempty"`
+	InodeSpace                   string `json:"inodeSpace,omitempty"`
+	MaxNumInodes                 string `json:"maxNumInode,omitempty"`
+	AllocInodes                  string `json:"allocInodes,omitempty"`
+	PermissionChangeMode         string `json:"permissionChangeMode,omitempty"`
+	Comment                      string `json:"comment,omitempty"`
+	IamMode                      string `json:"iamMode,omitempty"`
+	AfmTarget                    string `json:"afmTarget,omitempty"`
+	AfmAsyncDelay                string `json:"afmAsyncDelay,omitempty"`
+	AfmDirLookupRefreshInterval  string `json:"afmDirLookupRefreshInterval,omitempty"`
+	AfmDirOpenRefreshInterval    string `json:"afmDirOpenRefreshInterval,omitempty"`
+	AfmEnableAutoEviction        string `json:"afmEnableAutoEviction,omitempty"`
+	AfmExpirationTimeout         string `json:"afmExpirationTimeout,omitempty"`
+	AfmFileLookupRefreshInterval string `json:"afmFileLookupRefreshInterval,omitempty"`
+	AfmMode                      string `json:"afmMode,omitempty"`
+	AfmNumFlushThreads           int    `json:"afmNumFlushThreads,omitempty"`
+	AfmParallelReadChunkSize     int    `json:"afmParallelReadChunkSize,omitempty"`
+	AfmParallelReadThreshold     int    `json:"afmParallelReadThreshold,omitempty"`
+	AfmParallelWriteChunkSize    int    `json:"afmParallelWriteChunkSize,omitempty"`
+	AfmParallelWriteThreshold    int    `json:"afmParallelWriteThreshold,omitempty"`
+	AfmPrefetchThreshold         int    `json:"afmPrefetchThreshold,omitempty"`
+	AfmPrimaryID                 string `json:"afmPrimaryID,omitempty"`
+	AfmRPO                       int    `json:"afmRPO,omitempty"`
+	AfmShowHomeSnapshots         string `json:"afmShowHomeSnapshots,omitempty"`
 }
-
-
