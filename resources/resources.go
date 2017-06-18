@@ -33,9 +33,9 @@ type SshConfig struct {
 
 type RestConfig struct {
 	Endpoint string
-        User     string
-        Password string
-        Version  int
+	User     string
+	Password string
+	Version  int
 }
 
 type SpectrumNfsRemoteConfig struct {
