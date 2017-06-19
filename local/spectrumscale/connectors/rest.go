@@ -1,30 +1,47 @@
 package connectors
 
 import (
+	"crypto/tls"
 	"fmt"
+	"github.com/IBM/ubiquity/resources"
+	"github.com/IBM/ubiquity/utils"
 	"log"
 	"net/http"
 	"os"
 	"path"
-
-	"github.com/IBM/ubiquity/resources"
-	"github.com/IBM/ubiquity/utils"
 )
 
 type spectrum_rest struct {
 	logger     *log.Logger
 	httpClient *http.Client
 	endpoint   string
+	user       string
+	password   string
 }
 
 func NewSpectrumRest(logger *log.Logger, restConfig resources.RestConfig) (SpectrumScaleConnector, error) {
 	endpoint := restConfig.Endpoint
-	return &spectrum_rest{logger: logger, httpClient: &http.Client{}, endpoint: endpoint}, nil
+	user := restConfig.User
+	password := restConfig.Password
+
+	tr := &http.Transport{
+		TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
+	}
+
+	return &spectrum_rest{logger: logger, httpClient: &http.Client{Transport: tr}, endpoint: endpoint, user: user, password: password}, nil
 }
 
 func NewSpectrumRestWithClient(logger *log.Logger, restConfig resources.RestConfig, client *http.Client) (SpectrumScaleConnector, error) {
 	endpoint := restConfig.Endpoint
 	return &spectrum_rest{logger: logger, httpClient: client, endpoint: endpoint}, nil
+}
+
+func (s *spectrum_rest) ExportNfs(volumeMountpoint string, clientConfig string) error {
+	return nil
+}
+
+func (s *spectrum_rest) UnexportNfs(volumeMountpoint string) error {
+	return nil
 }
 
 func (s *spectrum_rest) GetClusterId() (string, error) {
@@ -38,7 +55,7 @@ func (s *spectrum_rest) GetClusterId() (string, error) {
 
 	getClusterResponse = cidResponse.(GetClusterResponse)
 
-	return getClusterResponse.Cluster.ClusterSummary.ClusterID, nil
+	return fmt.Sprintf("%v", getClusterResponse.Cluster.ClusterSummary.ClusterID), nil
 }
 
 func (s *spectrum_rest) IsFilesystemMounted(filesystemName string) (bool, error) {
@@ -122,15 +139,15 @@ func (s *spectrum_rest) CreateFileset(filesystemName string, filesetName string,
 
 	fileset := Fileset{Config: filesetConfig}
 	createFilesetURL := utils.FormatURL(s.endpoint, "scalemgmt/v1/filesets")
-	createFilesetResponse := CreateFilesetResponse{}
+	createFilesetResponse := GenericResponse{}
 	response, err := s.doHTTP(createFilesetURL, "POST", createFilesetResponse, fileset)
 	if err != nil {
 		s.logger.Printf("error in remote call %v", err)
 		return err
 	}
-	createFilesetResponse = response.(CreateFilesetResponse)
+	createFilesetResponse = response.(GenericResponse)
 	//TODO check the response message content and code
-	if createFilesetResponse.Status.Code != "0" {
+	if createFilesetResponse.Status.Code != 0 {
 		return fmt.Errorf("error creating fileset %v", createFilesetResponse)
 	}
 	return nil
@@ -138,15 +155,15 @@ func (s *spectrum_rest) CreateFileset(filesystemName string, filesetName string,
 
 func (s *spectrum_rest) DeleteFileset(filesystemName string, filesetName string) error {
 	deleteFilesetURL := utils.FormatURL(s.endpoint, fmt.Sprintf("scalemgmt/v1/filesets/%s/filesystemName=%s&qosClass=other", filesetName, filesystemName))
-	deleteFilesetResponse := DeleteFilesetResponse{}
+	deleteFilesetResponse := GenericResponse{}
 	response, err := s.doHTTP(deleteFilesetURL, "DELETE", deleteFilesetResponse, nil)
 	if err != nil {
 		s.logger.Printf("Error in delete remote call")
 		return err
 	}
 
-	deleteFilesetResponse = response.(DeleteFilesetResponse)
-	if deleteFilesetResponse.Status.Code != "0" {
+	deleteFilesetResponse = response.(GenericResponse)
+	if deleteFilesetResponse.Status.Code != 0 {
 		return fmt.Errorf("error deleting fileset %v", deleteFilesetResponse)
 	}
 
@@ -165,15 +182,15 @@ func (s *spectrum_rest) LinkFileset(filesystemName string, filesetName string) e
 	filesetConfig.Path = path.Join(fsMountpoint, filesetName)
 	fileset := Fileset{Config: filesetConfig}
 	linkFilesetURL := utils.FormatURL(s.endpoint, fmt.Sprintf("scalemgmt/v1/filesets/%s", filesetName))
-	linkFilesetResponse := CreateFilesetResponse{}
+	linkFilesetResponse := GenericResponse{}
 	response, err := s.doHTTP(linkFilesetURL, "PUT", linkFilesetResponse, fileset)
 	if err != nil {
 		s.logger.Printf("error in remote call %v", err)
 		return err
 	}
 
-	linkFilesetResponse = response.(CreateFilesetResponse)
-	if linkFilesetResponse.Status.Code != "0" {
+	linkFilesetResponse = response.(GenericResponse)
+	if linkFilesetResponse.Status.Code != 0 {
 		return fmt.Errorf("error linking fileset %v", linkFilesetResponse)
 	}
 	return nil
@@ -187,15 +204,15 @@ func (s *spectrum_rest) UnlinkFileset(filesystemName string, filesetName string)
 	filesetConfig.Path = ""
 	fileset := Fileset{Config: filesetConfig}
 	linkFilesetURL := utils.FormatURL(s.endpoint, fmt.Sprintf("scalemgmt/v1/filesets/%s", filesetName))
-	linkFilesetResponse := CreateFilesetResponse{}
+	linkFilesetResponse := GenericResponse{}
 	response, err := s.doHTTP(linkFilesetURL, "PUT", linkFilesetResponse, fileset)
 	if err != nil {
 		s.logger.Printf("error in remote call %v", err)
 		return err
 	}
 
-	linkFilesetResponse = response.(CreateFilesetResponse)
-	if linkFilesetResponse.Status.Code != "0" {
+	linkFilesetResponse = response.(GenericResponse)
+	if linkFilesetResponse.Status.Code != 0 {
 		return fmt.Errorf("error unlinking fileset %v", linkFilesetResponse)
 	}
 	return nil
@@ -275,21 +292,21 @@ func (s *spectrum_rest) SetFilesetQuota(filesystemName string, filesetName strin
 	quotaRequest.BlockSoftLimit = quota
 	quotaRequest.OperationType = "setQuota"
 	quotaRequest.QuotaType = "fileset"
-	setQuotaResponse := SetQuotaResponse{}
+	setQuotaResponse := GenericResponse{}
 	sqResponse, err := s.doHTTP(setQuotaURL, "POST", setQuotaResponse, quotaRequest)
 	if err != nil {
 		s.logger.Printf("error setting quota for fileset %v", err)
 		return err
 	}
-	setQuotaResponse = sqResponse.(SetQuotaResponse)
-	if setQuotaResponse.Status.Code != "0" {
+	setQuotaResponse = sqResponse.(GenericResponse)
+	if setQuotaResponse.Status.Code != 0 {
 		return fmt.Errorf("error unlinking fileset %v", setQuotaResponse)
 	}
 	return nil
 }
 
 func (s *spectrum_rest) doHTTP(endpoint string, method string, responseObject interface{}, param interface{}) (interface{}, error) {
-	response, err := utils.HttpExecute(s.httpClient, s.logger, method, endpoint, param)
+	response, err := utils.HttpExecuteUserAuth(s.httpClient, s.logger, method, endpoint, s.user, s.password, param)
 	if err != nil {
 		s.logger.Printf("Error in %s: %s remote call %#v", method, endpoint, err)
 		return nil, fmt.Errorf("Error in get filesystem remote call")
