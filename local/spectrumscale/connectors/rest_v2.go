@@ -246,6 +246,7 @@ func (s *spectrumRestV2) CreateFileset(filesystemName string, filesetName string
 
 	filesetreq := CreateFilesetRequest{}
 	filesetreq.FilesetName = filesetName
+	filesetreq.Comment = "fileset for container volume"	
 	filesetType, filesetTypeSpecified := opts[UserSpecifiedFilesetType]
 	inodeLimit, inodeLimitSpecified := opts[UserSpecifiedInodeLimit]
 	if filesetTypeSpecified && filesetType.(string) == "independent" {
