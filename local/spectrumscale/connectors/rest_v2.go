@@ -65,35 +65,30 @@ func (s *spectrumRestV2) waitForJobCompletion(statusCode int, jobID uint64) erro
 	defer s.logger.Println("spectrumRestConnector: waitForJobCompletion end")
 
 	if s.checkAsynchronousJob(statusCode) {
-		jobURL := utils.FormatURL(s.endpoint, fmt.Sprintf("scalemgmt/v2/jobs?filter=jobId=%d", jobID))
+		jobURL := utils.FormatURL(s.endpoint, fmt.Sprintf("scalemgmt/v2/jobs?filter=jobId=%d&fields=:all:", jobID))
 		s.logger.Println("Job URL: ", jobURL)
-		async_status, err := s.AsyncJobCompletion(jobURL)
+		err := s.AsyncJobCompletion(jobURL)
 		if err != nil {
-			return fmt.Errorf("Error %v  Completing Job %v", err, jobURL)
+			s.logger.Printf("%v\n",err)
+			return err
 		}
-		if async_status == "SUCCESS" {
-			return nil
-		} else {
-			return fmt.Errorf("Job %v Failed", jobURL)
-		}
-
 	}
 	return nil
 }
 
-func (s *spectrumRestV2) AsyncJobCompletion(jobURL string) (status string, err error) {
+func (s *spectrumRestV2) AsyncJobCompletion(jobURL string) error {
 	s.logger.Println("spectrumRestConnector: AsyncJobCompletion")
 	defer s.logger.Println("spectrumRestConnector: AsyncJobCompletion end")
 
 	jobQueryResponse := GenericResponse{}
 	for {
 		s.logger.Printf("jobUrl  %v", jobURL)
-		err = s.doHTTP(jobURL, "GET", &jobQueryResponse, nil)
+		err := s.doHTTP(jobURL, "GET", &jobQueryResponse, nil)
 		if err != nil {
-			return "FAILED", err
+			return err
 		}
 		if len(jobQueryResponse.Jobs) == 0 {
-			return "FAILED", fmt.Errorf("Unable to get Job %v details", jobURL)
+			return fmt.Errorf("Unable to get Job %v details", jobURL)
 		}
 
 		if jobQueryResponse.Jobs[0].Status == "RUNNING" {
@@ -103,9 +98,11 @@ func (s *spectrumRestV2) AsyncJobCompletion(jobURL string) (status string, err e
 		break
 	}
 	if jobQueryResponse.Jobs[0].Status == "COMPLETED" {
-		return "SUCCESS", nil
+		s.logger.Printf("Job %v Completed Successfully: %v\n",jobURL,jobQueryResponse.Jobs[0].Result)
+		return nil
+	} else {
+   	        return fmt.Errorf("Job %v Failed to Complete:\n %v",jobURL,jobQueryResponse.Jobs[0].Result)
 	}
-	return "FAILED", err
 }
 
 func NewSpectrumRestV2(logger *log.Logger, restConfig resources.RestConfig) (SpectrumScaleConnector, error) {
@@ -278,7 +275,7 @@ func (s *spectrumRestV2) CreateFileset(filesystemName string, filesetName string
 
 	err = s.waitForJobCompletion(createFilesetResponse.Status.Code, createFilesetResponse.Jobs[0].JobID)
 	if err != nil {
-		return err
+		return fmt.Errorf("Unable to create fileset %v. Please refer Ubiquity server logs for more details",filesetName)
 	}
 	return nil
 }
@@ -306,7 +303,7 @@ func (s *spectrumRestV2) DeleteFileset(filesystemName string, filesetName string
 
 	err = s.waitForJobCompletion(deleteFilesetResponse.Status.Code, deleteFilesetResponse.Jobs[0].JobID)
 	if err != nil {
-		return err
+		return fmt.Errorf("Unable to delete fileset %v. Please refer Ubiquity server logs for more details",filesetName)
 	}
 
 	return nil
@@ -343,7 +340,7 @@ func (s *spectrumRestV2) LinkFileset(filesystemName string, filesetName string) 
 
 	err = s.waitForJobCompletion(linkFilesetResponse.Status.Code, linkFilesetResponse.Jobs[0].JobID)
 	if err != nil {
-		return err
+		return fmt.Errorf("Unable to link fileset %v. Please refer Ubiquity server logs for more details",filesetName)
 	}
 	return nil
 }
@@ -375,7 +372,7 @@ func (s *spectrumRestV2) UnlinkFileset(filesystemName string, filesetName string
 
 	err = s.waitForJobCompletion(unlinkFilesetResponse.Status.Code, unlinkFilesetResponse.Jobs[0].JobID)
 	if err != nil {
-		return err
+		return fmt.Errorf("Unable to unlink fileset %v. Please refer Ubiquity server logs for more details",filesetName)
 	}
 
 	return nil
@@ -489,9 +486,8 @@ func (s *spectrumRestV2) SetFilesetQuota(filesystemName string, filesetName stri
 
 	err = s.waitForJobCompletion(setQuotaResponse.Status.Code, setQuotaResponse.Jobs[0].JobID)
 	if err != nil {
-		return err
+		return fmt.Errorf("Unable to set quota for fileset %v. Please refer Ubiquity server logs for more details",filesetName)
 	}
-
 	return nil
 }
 
@@ -546,7 +542,7 @@ func (s *spectrumRestV2) ExportNfs(volumeMountpoint string, clientConfig string)
 
 	err = s.waitForJobCompletion(nfsExportResp.Status.Code, nfsExportResp.Jobs[0].JobID)
 	if err != nil {
-		return err
+		return fmt.Errorf("Unable to export %v. Please refer Ubiquity server logs for more details",volumeMountpoint)
 	}
 	return nil
 }
@@ -576,7 +572,7 @@ func (s *spectrumRestV2) UnexportNfs(volumeMountpoint string) error {
 	err = s.waitForJobCompletion(unexportNfsResp.Status.Code, unexportNfsResp.Jobs[0].JobID)
 
 	if err != nil {
-		return err
+		return fmt.Errorf("Unable to remove export %v. Please refer Ubiquity server logs for more details",volumeMountpoint)
 	}
 	return nil
 }

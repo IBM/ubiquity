@@ -78,11 +78,11 @@ type Job struct {
 }
 
 type Respresult struct {
-	Commands string `json:"commands,omitempty"`
-	Progress string `json:"progress,omitempty"`
+	Commands []string `json:"commands,omitempty"`
+	Progress []string `json:"progress,omitempty"`
 	ExitCode int    `json:"exitCode,omitempty"`
-	Stderr   string `json:"stderr,omitempty"`
-	Stdout   string `json:"stdout,omitempty"`
+	Stderr   []string `json:"stderr,omitempty"`
+	Stdout   []string `json:"stdout,omitempty"`
 }
 
 type Resprequest struct {
