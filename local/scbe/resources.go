@@ -92,7 +92,7 @@ type ScbeResponseVolume struct {
 
 	// V9000 related attrs
 	Status           string `json:"status"`
-	CopyCount        string `json:"copy_count"`
+	CopyCount        int    `json:"copy_count"`
 	FcMapCount       int    `json:"fc_map_count"`
 	FastWriteState   string `json:"fast_write_state"`
 	OwnerType        string `json:"owner_type"`
