@@ -612,11 +612,7 @@ func (fake *FakeSpectrumDataModel) Invocations() map[string][][]interface{} {
 	defer fake.listVolumesMutex.RUnlock()
 	fake.updateVolumeMountpointMutex.RLock()
 	defer fake.updateVolumeMountpointMutex.RUnlock()
-	copiedInvocations := map[string][][]interface{}{}
-	for key, value := range fake.invocations {
-		copiedInvocations[key] = value
-	}
-	return copiedInvocations
+	return fake.invocations
 }
 
 func (fake *FakeSpectrumDataModel) recordInvocation(key string, args []interface{}) {

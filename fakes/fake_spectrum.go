@@ -185,6 +185,29 @@ type FakeSpectrumScaleConnector struct {
 	setFilesetQuotaReturnsOnCall map[int]struct {
 		result1 error
 	}
+	ExportNfsStub        func(volumeMountpoint string, clientConfig string) error
+	exportNfsMutex       sync.RWMutex
+	exportNfsArgsForCall []struct {
+		volumeMountpoint string
+		clientConfig     string
+	}
+	exportNfsReturns struct {
+		result1 error
+	}
+	exportNfsReturnsOnCall map[int]struct {
+		result1 error
+	}
+	UnexportNfsStub        func(volumeMountpoint string) error
+	unexportNfsMutex       sync.RWMutex
+	unexportNfsArgsForCall []struct {
+		volumeMountpoint string
+	}
+	unexportNfsReturns struct {
+		result1 error
+	}
+	unexportNfsReturnsOnCall map[int]struct {
+		result1 error
+	}
 	invocations      map[string][][]interface{}
 	invocationsMutex sync.RWMutex
 }
@@ -879,6 +902,103 @@ func (fake *FakeSpectrumScaleConnector) SetFilesetQuotaReturnsOnCall(i int, resu
 	}{result1}
 }
 
+func (fake *FakeSpectrumScaleConnector) ExportNfs(volumeMountpoint string, clientConfig string) error {
+	fake.exportNfsMutex.Lock()
+	ret, specificReturn := fake.exportNfsReturnsOnCall[len(fake.exportNfsArgsForCall)]
+	fake.exportNfsArgsForCall = append(fake.exportNfsArgsForCall, struct {
+		volumeMountpoint string
+		clientConfig     string
+	}{volumeMountpoint, clientConfig})
+	fake.recordInvocation("ExportNfs", []interface{}{volumeMountpoint, clientConfig})
+	fake.exportNfsMutex.Unlock()
+	if fake.ExportNfsStub != nil {
+		return fake.ExportNfsStub(volumeMountpoint, clientConfig)
+	}
+	if specificReturn {
+		return ret.result1
+	}
+	return fake.exportNfsReturns.result1
+}
+
+func (fake *FakeSpectrumScaleConnector) ExportNfsCallCount() int {
+	fake.exportNfsMutex.RLock()
+	defer fake.exportNfsMutex.RUnlock()
+	return len(fake.exportNfsArgsForCall)
+}
+
+func (fake *FakeSpectrumScaleConnector) ExportNfsArgsForCall(i int) (string, string) {
+	fake.exportNfsMutex.RLock()
+	defer fake.exportNfsMutex.RUnlock()
+	return fake.exportNfsArgsForCall[i].volumeMountpoint, fake.exportNfsArgsForCall[i].clientConfig
+}
+
+func (fake *FakeSpectrumScaleConnector) ExportNfsReturns(result1 error) {
+	fake.ExportNfsStub = nil
+	fake.exportNfsReturns = struct {
+		result1 error
+	}{result1}
+}
+
+func (fake *FakeSpectrumScaleConnector) ExportNfsReturnsOnCall(i int, result1 error) {
+	fake.ExportNfsStub = nil
+	if fake.exportNfsReturnsOnCall == nil {
+		fake.exportNfsReturnsOnCall = make(map[int]struct {
+			result1 error
+		})
+	}
+	fake.exportNfsReturnsOnCall[i] = struct {
+		result1 error
+	}{result1}
+}
+
+func (fake *FakeSpectrumScaleConnector) UnexportNfs(volumeMountpoint string) error {
+	fake.unexportNfsMutex.Lock()
+	ret, specificReturn := fake.unexportNfsReturnsOnCall[len(fake.unexportNfsArgsForCall)]
+	fake.unexportNfsArgsForCall = append(fake.unexportNfsArgsForCall, struct {
+		volumeMountpoint string
+	}{volumeMountpoint})
+	fake.recordInvocation("UnexportNfs", []interface{}{volumeMountpoint})
+	fake.unexportNfsMutex.Unlock()
+	if fake.UnexportNfsStub != nil {
+		return fake.UnexportNfsStub(volumeMountpoint)
+	}
+	if specificReturn {
+		return ret.result1
+	}
+	return fake.unexportNfsReturns.result1
+}
+
+func (fake *FakeSpectrumScaleConnector) UnexportNfsCallCount() int {
+	fake.unexportNfsMutex.RLock()
+	defer fake.unexportNfsMutex.RUnlock()
+	return len(fake.unexportNfsArgsForCall)
+}
+
+func (fake *FakeSpectrumScaleConnector) UnexportNfsArgsForCall(i int) string {
+	fake.unexportNfsMutex.RLock()
+	defer fake.unexportNfsMutex.RUnlock()
+	return fake.unexportNfsArgsForCall[i].volumeMountpoint
+}
+
+func (fake *FakeSpectrumScaleConnector) UnexportNfsReturns(result1 error) {
+	fake.UnexportNfsStub = nil
+	fake.unexportNfsReturns = struct {
+		result1 error
+	}{result1}
+}
+
+func (fake *FakeSpectrumScaleConnector) UnexportNfsReturnsOnCall(i int, result1 error) {
+	fake.UnexportNfsStub = nil
+	if fake.unexportNfsReturnsOnCall == nil {
+		fake.unexportNfsReturnsOnCall = make(map[int]struct {
+			result1 error
+		})
+	}
+	fake.unexportNfsReturnsOnCall[i] = struct {
+		result1 error
+	}{result1}
+}
+
 func (fake *FakeSpectrumScaleConnector) Invocations() map[string][][]interface{} {
 	fake.invocationsMutex.RLock()
 	defer fake.invocationsMutex.RUnlock()
@@ -910,11 +1030,11 @@ func (fake *FakeSpectrumScaleConnector) Invocations() map[string][][]interface{}
 	defer fake.listFilesetQuotaMutex.RUnlock()
 	fake.setFilesetQuotaMutex.RLock()
 	defer fake.setFilesetQuotaMutex.RUnlock()
-	copiedInvocations := map[string][][]interface{}{}
-	for key, value := range fake.invocations {
-		copiedInvocations[key] = value
-	}
-	return copiedInvocations
+	fake.exportNfsMutex.RLock()
+	defer fake.exportNfsMutex.RUnlock()
+	fake.unexportNfsMutex.RLock()
+	defer fake.unexportNfsMutex.RUnlock()
+	return fake.invocations
 }
 
 func (fake *FakeSpectrumScaleConnector) recordInvocation(key string, args []interface{}) {
