@@ -59,6 +59,9 @@ var _ = Describe("scbeLocalClient init", func() {
 				UbiquityInstanceName: "123456789012345",
 				DefaultVolumeSize:    "1",
 			}
+			fakeScbeRestClient.LoginReturns(nil)
+			fakeScbeRestClient.ServiceExistReturns(true, nil)
+
 			client, err = scbe.NewScbeLocalClientWithNewScbeRestClientAndDataModel(
 				fakeConfig,
 				fakeScbeDataModel,
@@ -85,18 +88,15 @@ var _ = Describe("scbeLocalClient", func() {
 			DefaultService:       fakeDefaultProfile,
 			UbiquityInstanceName: "fakeInstance1",
 		}
-		client, err = scbe.NewScbeLocalClientWithNewScbeRestClientAndDataModel(
-			fakeConfig,
-			fakeScbeDataModel,
-			fakeScbeRestClient)
-		Expect(err).ToNot(HaveOccurred())
-
 	})
 
 	Context(".Activate", func() {
 		It("should fail login to SCBE during activation", func() {
 			fakeScbeRestClient.LoginReturns(fmt.Errorf("Fail to SCBE login during activation"))
-			err = client.Activate()
+			client, err = scbe.NewScbeLocalClientWithNewScbeRestClientAndDataModel(
+				fakeConfig,
+				fakeScbeDataModel,
+				fakeScbeRestClient)
 			Expect(err).To(HaveOccurred())
 			Expect(fakeScbeRestClient.LoginCallCount()).To(Equal(1))
 			Expect(fakeScbeRestClient.ServiceExistCallCount()).To(Equal(0))
@@ -105,7 +105,10 @@ var _ = Describe("scbeLocalClient", func() {
 		It("should fail when service exist fail", func() {
 			fakeScbeRestClient.LoginReturns(nil)
 			fakeScbeRestClient.ServiceExistReturns(false, fmt.Errorf("Fail to run service exist"))
-			err = client.Activate()
+			client, err = scbe.NewScbeLocalClientWithNewScbeRestClientAndDataModel(
+				fakeConfig,
+				fakeScbeDataModel,
+				fakeScbeRestClient)
 			Expect(err).To(HaveOccurred())
 			Expect(fakeScbeRestClient.LoginCallCount()).To(Equal(1))
 			Expect(fakeScbeRestClient.ServiceExistCallCount()).To(Equal(1))
@@ -114,7 +117,10 @@ var _ = Describe("scbeLocalClient", func() {
 		It("should fail when service does NOT exist", func() {
 			fakeScbeRestClient.LoginReturns(nil)
 			fakeScbeRestClient.ServiceExistReturns(false, nil)
-			err = client.Activate()
+			client, err = scbe.NewScbeLocalClientWithNewScbeRestClientAndDataModel(
+				fakeConfig,
+				fakeScbeDataModel,
+				fakeScbeRestClient)
 			Expect(err).To(HaveOccurred())
 			Expect(err.Error()).To(MatchRegexp("^Error in activate .* does not exist in SCBE"))
 			Expect(fakeScbeRestClient.LoginCallCount()).To(Equal(1))
@@ -124,7 +130,10 @@ var _ = Describe("scbeLocalClient", func() {
 		It("should succeed when ServiceExist returns true", func() {
 			fakeScbeRestClient.LoginReturns(nil)
 			fakeScbeRestClient.ServiceExistReturns(true, nil)
-			err = client.Activate()
+			client, err = scbe.NewScbeLocalClientWithNewScbeRestClientAndDataModel(
+				fakeConfig,
+				fakeScbeDataModel,
+				fakeScbeRestClient)
 			Expect(err).ToNot(HaveOccurred())
 			Expect(fakeScbeRestClient.LoginCallCount()).To(Equal(1))
 			Expect(fakeScbeRestClient.ServiceExistCallCount()).To(Equal(1))
@@ -133,13 +142,42 @@ var _ = Describe("scbeLocalClient", func() {
 		It("should succeed when ServiceExist returns true", func() {
 			fakeScbeRestClient.LoginReturns(nil)
 			fakeScbeRestClient.ServiceExistReturns(true, nil)
-			err = client.Activate()
+			client, err = scbe.NewScbeLocalClientWithNewScbeRestClientAndDataModel(
+				fakeConfig,
+				fakeScbeDataModel,
+				fakeScbeRestClient)
 			Expect(err).ToNot(HaveOccurred())
 			Expect(fakeScbeRestClient.LoginCallCount()).To(Equal(1))
 			Expect(fakeScbeRestClient.ServiceExistCallCount()).To(Equal(1))
 
 		})
 
+	})
+})
+
+var _ = Describe("scbeLocalClient", func() {
+	var (
+		client             resources.StorageClient
+		fakeScbeDataModel  *fakes.FakeScbeDataModel
+		fakeScbeRestClient *fakes.FakeScbeRestClient
+		fakeConfig         resources.ScbeConfig
+		err                error
+	)
+	BeforeEach(func() {
+		fakeScbeDataModel = new(fakes.FakeScbeDataModel)
+		fakeScbeRestClient = new(fakes.FakeScbeRestClient)
+		fakeConfig = resources.ScbeConfig{
+			ConfigPath:           "/tmp",
+			DefaultService:       fakeDefaultProfile,
+			UbiquityInstanceName: "fakeInstance1",
+		}
+		fakeScbeRestClient.LoginReturns(nil)
+		fakeScbeRestClient.ServiceExistReturns(true, nil)
+		client, err = scbe.NewScbeLocalClientWithNewScbeRestClientAndDataModel(
+			fakeConfig,
+			fakeScbeDataModel,
+			fakeScbeRestClient)
+		Expect(err).ToNot(HaveOccurred())
 	})
 	Context(".CreateVolume", func() {
 		It("should fail create volume if error to get vol from DB", func() {
@@ -286,15 +324,13 @@ var _ = Describe("scbeLocalClient", func() {
 			ConfigPath:     "/tmp",
 			DefaultService: fakeDefaultProfile,
 			HostnameTmp:    fakeHost} // TODO its workaround to issue #23
+
+		fakeScbeRestClient.LoginReturns(nil)
+		fakeScbeRestClient.ServiceExistReturns(true, nil)
 		client, err = scbe.NewScbeLocalClientWithNewScbeRestClientAndDataModel(
 			fakeConfig,
 			fakeScbeDataModel,
 			fakeScbeRestClient)
-		Expect(err).ToNot(HaveOccurred())
-
-		fakeScbeRestClient.LoginReturns(nil)
-		fakeScbeRestClient.ServiceExistReturns(true, nil)
-		err = client.Activate()
 		Expect(err).ToNot(HaveOccurred())
 		Expect(fakeScbeRestClient.LoginCallCount()).To(Equal(1))
 		Expect(fakeScbeRestClient.ServiceExistCallCount()).To(Equal(1))
