@@ -27,7 +27,6 @@ const (
 	EmptyHost                = ""
 
 	VolConfigKeyWWN      = "wwn"
-	VolConfigKeyProfile  = "profile"
 	VolConfigKeyID       = "id"
 	VolConfigKeyVolumeID = "volume_id"
 	ComposeVolumeName    = volumeNamePrefix + "%s_%s" // e.g u_instance1_volName
@@ -36,7 +35,6 @@ const (
 
 func NewScbeLocalClient(config resources.ScbeConfig, database *gorm.DB) (resources.StorageClient, error) {
 	logger := logutil.GetLogger()
-	validateScbeConfig(config)
 	datamodel := NewScbeDataModel(database, resources.SCBE)
 	err := datamodel.CreateVolumeTable()
 	if err != nil {
@@ -45,18 +43,41 @@ func NewScbeLocalClient(config resources.ScbeConfig, database *gorm.DB) (resourc
 	scbeRestClient := NewScbeRestClient(config.ConnectionInfo)
 	return NewScbeLocalClientWithNewScbeRestClientAndDataModel(config, datamodel, scbeRestClient)
 }
-
 func NewScbeLocalClientWithNewScbeRestClientAndDataModel(config resources.ScbeConfig, dataModel ScbeDataModel, scbeRestClient ScbeRestClient) (resources.StorageClient, error) {
-	if err := validateScbeConfig(config); err != nil {
-		return &scbeLocalClient{}, err
-	}
-	return &scbeLocalClient{
+	client := &scbeLocalClient{
 		logger:         logutil.GetLogger(),
 		scbeRestClient: scbeRestClient, // TODO need to mock it in more advance way
 		dataModel:      dataModel,
 		config:         config,
 		activationLock: &sync.RWMutex{},
-	}, nil
+	}
+	if err := basicScbeLocalClientStartupAndValidation(client, config); err != nil {
+		return &scbeLocalClient{}, err
+	}
+	return client, nil
+}
+
+// basicScbeLocalClientStartup validate config params, login to SCBE and validate default exist
+func basicScbeLocalClientStartupAndValidation(s *scbeLocalClient, config resources.ScbeConfig) error {
+	if err := validateScbeConfig(config); err != nil {
+		return err
+	}
+
+	if err := s.scbeRestClient.Login(); err != nil {
+		return s.logger.ErrorRet(err, "scbeRestClient.Login() failed")
+	}
+	s.logger.Info("scbeRestClient.Login() succeeded", logutil.Args{{"SCBE", s.config.ConnectionInfo.ManagementIP}})
+
+	isExist, err := s.scbeRestClient.ServiceExist(s.config.DefaultService)
+	if err != nil {
+		return s.logger.ErrorRet(err, "scbeRestClient.ServiceExist failed")
+	}
+
+	if isExist == false {
+		return s.logger.ErrorRet(&activateDefaultServiceError{s.config.DefaultService, s.config.ConnectionInfo.ManagementIP}, "failed")
+	}
+	s.logger.Info("The default service exist in SCBE", logutil.Args{{s.config.ConnectionInfo.ManagementIP, s.config.DefaultService}})
+	return nil
 }
 
 func validateScbeConfig(config resources.ScbeConfig) error {
@@ -93,22 +114,7 @@ func (s *scbeLocalClient) Activate() error {
 	s.activationLock.Lock() //get a write lock to prevent others from repeating these actions
 	defer s.activationLock.Unlock()
 
-	//do any needed configuration
-	if err := s.scbeRestClient.Login(); err != nil {
-		return s.logger.ErrorRet(err, "scbeRestClient.Login() failed")
-	}
-	s.logger.Info("scbeRestClient.Login() succeeded", logutil.Args{{"SCBE", s.config.ConnectionInfo.ManagementIP}})
-
-	isExist, err := s.scbeRestClient.ServiceExist(s.config.DefaultService)
-	if err != nil {
-		return s.logger.ErrorRet(err, "scbeRestClient.ServiceExist failed")
-	}
-
-	if isExist == false {
-		return s.logger.ErrorRet(&activateDefaultServiceError{s.config.DefaultService, s.config.ConnectionInfo.ManagementIP}, "failed")
-	}
-	s.logger.Info("The default service exist in SCBE", logutil.Args{{s.config.ConnectionInfo.ManagementIP, s.config.DefaultService}})
-
+	// Nothing special to activate SCBE
 	s.isActivated = true
 	return nil
 }
