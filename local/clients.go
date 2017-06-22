@@ -2,11 +2,11 @@ package local
 
 import (
 	"fmt"
-
 	"github.com/IBM/ubiquity/local/scbe"
 	"github.com/IBM/ubiquity/local/spectrumscale"
 	"github.com/IBM/ubiquity/resources"
 	"github.com/jinzhu/gorm"
+	"log"
 )
 
 func GetLocalClients(logger *log.Logger, config resources.UbiquityServerConfig, database *gorm.DB) (map[string]resources.StorageClient, error) {

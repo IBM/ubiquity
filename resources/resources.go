@@ -34,15 +34,6 @@ type CredentialInfo struct {
 	Group    string `json:"group"`
 }
 
-<<<<<<< HEAD
-=======
-type CredentialInfo struct {
-	UserName string `json:"username"`
-	Password string `json:"password"`
-	Group    string `json:"group"`
-}
-
->>>>>>> cfb320bde574c5f058980aa74e6a922e429fca65
 type ConnectionInfo struct {
 	CredentialInfo CredentialInfo
 	Port           int
