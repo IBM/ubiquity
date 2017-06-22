@@ -11,8 +11,7 @@ import (
 type ScbeRestClient interface {
 	Login() error
 	CreateVolume(volName string, serviceName string, size int) (ScbeVolumeInfo, error)
-	GetAllVolumes() ([]ScbeVolumeInfo, error)
-	GetVolume(wwn string) (ScbeVolumeInfo, error)
+	GetVolumes(wwn string) ([]ScbeVolumeInfo, error)
 	DeleteVolume(wwn string) error
 	MapVolume(wwn string, host string) (ScbeResponseMapping, error)
 	UnmapVolume(wwn string, host string) error
@@ -104,17 +103,21 @@ func (s *scbeRestClient) CreateVolume(volName string, serviceName string, size i
 		return ScbeVolumeInfo{}, s.logger.ErrorRet(err, "client.Post failed", logutil.Args{{"payload", payload}})
 	}
 
-	return ScbeVolumeInfo{volResponse.Name, volResponse.ScsiIdentifier, serviceName}, nil
+	return NewScbeVolumeInfo(&volResponse), nil
 }
 
-func (s *scbeRestClient) GetAllVolumes() ([]ScbeVolumeInfo, error) {
+func (s *scbeRestClient) GetVolumes(wwn string) ([]ScbeVolumeInfo, error) {
 	defer s.logger.Trace(logutil.DEBUG)()
-	return nil, nil
-}
+	vols, err := s.volumeList(wwn)
+	if err != nil {
+		return nil, s.logger.ErrorRet(err, "volumeList failed", logutil.Args{{"wwn", wwn}})
+	}
+	scbeVolumes := []ScbeVolumeInfo{}
+	for _, volume := range vols {
+		scbeVolumes = append(scbeVolumes, NewScbeVolumeInfo(&volume))
+	}
 
-func (s *scbeRestClient) GetVolume(wwn string) (ScbeVolumeInfo, error) {
-	defer s.logger.Trace(logutil.DEBUG)()
-	return ScbeVolumeInfo{}, nil
+	return scbeVolumes, nil
 }
 
 func (s *scbeRestClient) DeleteVolume(wwn string) error {
@@ -182,16 +185,13 @@ func (s *scbeRestClient) ServiceExist(serviceName string) (exist bool, err error
 
 func (s *scbeRestClient) serviceList(serviceName string) ([]ScbeStorageService, error) {
 	defer s.logger.Trace(logutil.DEBUG)()
-	payload := make(map[string]string)
-	var err error
-	if serviceName == "" {
-		payload = nil
-	} else {
+	payload := map[string]string{}
+	if serviceName != "" {
 		payload["name"] = serviceName
 	}
+
 	var services []ScbeStorageService
-	err = s.client.Get(UrlScbeResourceService, payload, -1, &services)
-	if err != nil {
+	if err := s.client.Get(UrlScbeResourceService, payload, -1, &services); err != nil {
 		return nil, s.logger.ErrorRet(err, "client.Get failed")
 	}
 
@@ -199,16 +199,12 @@ func (s *scbeRestClient) serviceList(serviceName string) ([]ScbeStorageService, 
 }
 func (s *scbeRestClient) volumeList(wwn string) ([]ScbeResponseVolume, error) {
 	defer s.logger.Trace(logutil.DEBUG)()
-	payload := make(map[string]string)
-	var err error
-	if wwn == "" {
-		payload = nil
-	} else {
+	payload := map[string]string{}
+	if wwn != "" {
 		payload["scsi_identifier"] = wwn
 	}
 	var volumes []ScbeResponseVolume
-	err = s.client.Get(UrlScbeResourceVolume, payload, -1, &volumes)
-	if err != nil {
+	if err := s.client.Get(UrlScbeResourceVolume, payload, -1, &volumes); err != nil {
 		return nil, s.logger.ErrorRet(err, "client.Get failed")
 	}
 
