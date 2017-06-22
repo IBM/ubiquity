@@ -16,7 +16,7 @@ type nfsMounter struct {
 }
 
 func NewNfsMounter(logger *log.Logger) resources.Mounter {
-	return &nfsMounter{logger: logger, executor: utils.NewExecutor(logger)}
+	return &nfsMounter{logger: logger, executor: utils.NewExecutor()}
 }
 
 func (s *nfsMounter) Mount(mountRequest resources.MountRequest) (string, error) {

@@ -14,7 +14,7 @@ type spectrumScaleMounter struct {
 }
 
 func NewSpectrumScaleMounter(logger *log.Logger) resources.Mounter {
-	return &spectrumScaleMounter{logger: logger, executor: utils.NewExecutor(logger)}
+	return &spectrumScaleMounter{logger: logger, executor: utils.NewExecutor()}
 }
 
 func (s *spectrumScaleMounter) Mount(mountRequest resources.MountRequest) (string, error) {

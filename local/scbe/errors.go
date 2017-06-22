@@ -122,3 +122,19 @@ func (e *VolumeNameExceededMaxLengthError) Error() string {
 	return fmt.Sprintf("Volume name [%s] is too long(len=%d). Max length should be [%d]",
 		e.volName, len(e.volName), e.maxVolumeLength)
 }
+
+type InValidRequestError struct {
+	requestType       string
+	badParam          string
+	paramCurrentValue string
+	paramExpectedToBe string
+}
+
+func (e *InValidRequestError) Error() string {
+	return fmt.Sprintf(
+		"Request type [%s] not valid. Param [%s]=[%s] but expacted to be [%s]",
+		e.requestType,
+		e.badParam,
+		e.paramCurrentValue,
+		e.paramExpectedToBe)
+}

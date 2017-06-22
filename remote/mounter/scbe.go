@@ -13,12 +13,12 @@ type scbeMounter struct {
 	blockDeviceMounterUtils block_device_mounter_utils.BlockDeviceMounterUtils
 }
 
-func NewScbeMounter() Mounter {
+func NewScbeMounter() resources.Mounter {
 	blockDeviceMounterUtils := block_device_mounter_utils.NewBlockDeviceMounterUtils()
 	return &scbeMounter{logger: logutil.GetLogger(), blockDeviceMounterUtils: blockDeviceMounterUtils}
 }
 
-func (s *scbeMounter) Mount(mountpoint string, volumeConfig map[string]interface{}) (string, error) {
+func (s *scbeMounter) Mount(mountRequest resources.MountRequest) (string, error) {
 	defer s.logger.Trace(logutil.DEBUG)()
 
 	// Rescan OS
@@ -27,7 +27,7 @@ func (s *scbeMounter) Mount(mountpoint string, volumeConfig map[string]interface
 	}
 
 	// Discover device
-	volumeWWN := volumeConfig["wwn"].(string) // TODO use the const from local/scbe
+	volumeWWN := mountRequest.VolumeConfig["wwn"].(string) // TODO use the const from local/scbe
 	devicePath, err := s.blockDeviceMounterUtils.Discover(volumeWWN)
 	if err != nil {
 		return "", s.logger.ErrorRet(err, "Discover failed", logutil.Args{{"volumeWWN", volumeWWN}})
@@ -35,26 +35,26 @@ func (s *scbeMounter) Mount(mountpoint string, volumeConfig map[string]interface
 
 	// Create mount point if needed   // TODO consider to move it inside the util
 	exec := utils.NewExecutor()
-	if _, err := exec.Stat(mountpoint); err != nil {
-		s.logger.Info("Create mountpoint directory " + mountpoint)
-		if err := exec.MkdirAll(mountpoint, 0700); err != nil {
-			return "", s.logger.ErrorRet(err, "MkdirAll failed", logutil.Args{{"mountpoint", mountpoint}})
+	if _, err := exec.Stat(mountRequest.Mountpoint); err != nil {
+		s.logger.Info("Create mountpoint directory " + mountRequest.Mountpoint)
+		if err := exec.MkdirAll(mountRequest.Mountpoint, 0700); err != nil {
+			return "", s.logger.ErrorRet(err, "MkdirAll failed", logutil.Args{{"mountpoint", mountRequest.Mountpoint}})
 		}
 	}
 
 	// Mount device and mkfs if needed
 	fstype := resources.DefaultForScbeConfigParamDefaultFilesystem // TODO uses volumeConfig['fstype']
-	if err := s.blockDeviceMounterUtils.MountDeviceFlow(devicePath, fstype, mountpoint); err != nil {
+	if err := s.blockDeviceMounterUtils.MountDeviceFlow(devicePath, fstype, mountRequest.Mountpoint); err != nil {
 		return "", s.logger.ErrorRet(err, "MountDeviceFlow failed", logutil.Args{{"devicePath", devicePath}})
 	}
 
-	return mountpoint, nil
+	return mountRequest.Mountpoint, nil
 }
 
-func (s *scbeMounter) Unmount(volumeConfig map[string]interface{}) error {
+func (s *scbeMounter) Unmount(unmountRequest resources.UnmountRequest) error {
 	defer s.logger.Trace(logutil.DEBUG)()
 
-	volumeWWN := volumeConfig["wwn"].(string)
+	volumeWWN := unmountRequest.VolumeConfig["wwn"].(string)
 	mountpoint := fmt.Sprintf(resources.PathToMountUbiquityBlockDevices, volumeWWN)
 	devicePath, err := s.blockDeviceMounterUtils.Discover(volumeWWN)
 	if err != nil {

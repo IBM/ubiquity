@@ -11,7 +11,6 @@ import (
 
 	"github.com/IBM/ubiquity/model"
 	"github.com/jinzhu/gorm"
-	"regexp"
 )
 
 type StorageApiHandler struct {

@@ -3,10 +3,10 @@ package resources
 import "github.com/jinzhu/gorm"
 
 const (
-	SpectrumScale    string  = "spectrum-scale"
-	SpectrumScaleNFS string  = "spectrum-scale-nfs"
-	SoftlayerNFS     string  = "softlayer-nfs"
-	SCBE             Backend = "scbe"
+	SpectrumScale    string = "spectrum-scale"
+	SpectrumScaleNFS string = "spectrum-scale-nfs"
+	SoftlayerNFS     string = "softlayer-nfs"
+	SCBE             string = "scbe"
 )
 
 type UbiquityServerConfig struct {
@@ -47,14 +47,13 @@ type ScbeConfig struct {
 	DefaultService       string // SCBE storage service to be used by default if not mentioned by plugin
 	DefaultVolumeSize    string // The default volume size in case not specified by user
 	DefaultFilesystem    string // The default filesystem to create on new volumes
-	HostnameTmp          string // TODO this is a temp config param that workaround issue #23 (remove it when #23 will be fixed)
 	UbiquityInstanceName string // Prefix for the volume name in the storage side (max length 15 char)
 }
 
 const UbiquityInstanceNameMaxSize = 15
-const DefaultForScbeConfigParamDefaultVolumeSize = "1" // if customer don't mention size, then the default is 1gb
+const DefaultForScbeConfigParamDefaultVolumeSize = "1"    // if customer don't mention size, then the default is 1gb
 const DefaultForScbeConfigParamDefaultFilesystem = "ext4" // if customer don't mention fstype, then the default is ext4
-const PathToMountUbiquityBlockDevices = "/ubiquity/%s" // %s is the WWN of the volume # TODO this should be moved to docker plugin side
+const PathToMountUbiquityBlockDevices = "/ubiquity/%s"    // %s is the WWN of the volume # TODO this should be moved to docker plugin side
 
 type SshConfig struct {
 	User string
@@ -114,6 +113,7 @@ type StorageClient interface {
 type Mounter interface {
 	Mount(mountRequest MountRequest) (string, error)
 	Unmount(unmountRequest UnmountRequest) error
+	ActionAfterDetach(volumeConfig map[string]interface{}) error
 }
 
 type ActivateRequest struct {

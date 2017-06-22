@@ -22,18 +22,18 @@ type ScbeDataModel interface {
 type scbeDataModel struct {
 	logger   logutil.Logger
 	database *gorm.DB
-	backend  resources.Backend
+	backend  string
 }
 
 type ScbeVolume struct {
 	ID       uint
-	Volume   model.Volume
+	Volume   resources.Volume
 	VolumeID uint
 	WWN      string
 	AttachTo string
 }
 
-func NewScbeDataModel(db *gorm.DB, backend resources.Backend) ScbeDataModel {
+func NewScbeDataModel(db *gorm.DB, backend string) ScbeDataModel {
 	return &scbeDataModel{logger: logutil.GetLogger(), database: db, backend: backend}
 }
 
@@ -76,7 +76,7 @@ func (d *scbeDataModel) InsertVolume(volumeName string, wwn string, attachTo str
 	defer d.logger.Trace(logutil.DEBUG)()
 
 	volume := ScbeVolume{
-		Volume: model.Volume{Name: volumeName,
+		Volume: resources.Volume{Name: volumeName,
 			Backend: fmt.Sprintf("%s", d.backend)},
 		WWN:      wwn,
 		AttachTo: attachTo,
@@ -121,7 +121,7 @@ func (d *scbeDataModel) ListVolumes() ([]ScbeVolume, error) {
 	// hack: to be replaced by proper DB filtering (joins)
 	var volumes []ScbeVolume
 	for _, volume := range volumesInDb {
-		if resources.Backend(volume.Volume.Backend) == d.backend {
+		if volume.Volume.Backend == d.backend {
 			volumes = append(volumes, volume)
 		}
 	}

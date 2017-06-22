@@ -12,12 +12,12 @@ import (
 
 	"github.com/BurntSushi/toml"
 	"github.com/IBM/ubiquity/local"
+	"github.com/IBM/ubiquity/logutil"
 	"github.com/IBM/ubiquity/resources"
 	"github.com/IBM/ubiquity/utils"
 	"github.com/IBM/ubiquity/web_server"
 	"github.com/jinzhu/gorm"
 	_ "github.com/jinzhu/gorm/dialects/sqlite"
-	"github.com/IBM/ubiquity/logutil"
 )
 
 var configFile = flag.String(
@@ -49,7 +49,7 @@ func main() {
 	logger, logFile := utils.SetupLogger(config.LogPath, "ubiquity")
 	defer utils.CloseLogs(logFile)
 
-	spectrumExecutor := utils.NewExecutor(logger)
+	spectrumExecutor := utils.NewExecutor()
 	ubiquityConfigPath, err := utils.SetupConfigDirectory(logger, spectrumExecutor, config.ConfigPath)
 	if err != nil {
 		panic(err.Error())

@@ -1,11 +1,10 @@
 package utils
 
 import (
+	"bytes"
+	"github.com/IBM/ubiquity/logutil"
 	"os"
 	"os/exec"
-	"bytes"
-	"fmt"
-	"github.com/IBM/ubiquity/logutil"
 )
 
 //go:generate counterfeiter -o ../fakes/fake_executor.go . Executor
@@ -20,11 +19,11 @@ type Executor interface { // basic host dependent functions
 }
 
 type executor struct {
-	logger *log.Logger
+	logger logutil.Logger
 }
 
-func NewExecutor(logger *log.Logger) Executor {
-	return &executor{logger: logger}
+func NewExecutor() Executor {
+	return &executor{logutil.GetLogger()}
 }
 
 func (e *executor) Execute(command string, args []string) ([]byte, error) {
@@ -36,8 +35,14 @@ func (e *executor) Execute(command string, args []string) ([]byte, error) {
 	cmd.Stderr = &stderr
 	err := cmd.Run()
 	if err != nil {
-		e.logger.Printf("Error executing command: %#v, err: %s", cmd.Args,
-			fmt.Sprint(err) + ": " + stderr.String())
+		e.logger.Debug(
+			"Error executing command with args due to error and output",
+			logutil.Args{
+				{"command", command},
+				{"args", args},
+				{"error", err},
+				{"output", stdout},
+			})
 		return nil, err
 	}
 	return stdout.Bytes(), err

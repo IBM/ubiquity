@@ -4,15 +4,11 @@ import (
 	"fmt"
 	"github.com/IBM/ubiquity/local/scbe"
 	"github.com/IBM/ubiquity/logutil"
-	"github.com/IBM/ubiquity/model"
 	"github.com/IBM/ubiquity/resources"
-	"os"
-	"strconv"
-	//"github.com/jarcoal/httpmock"
-	"github.com/IBM/ubiquity/model"
 	"github.com/jinzhu/gorm"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega" // including the whole package inside the file
+	"os"
 	"path"
 	"strconv"
 )
@@ -171,7 +167,7 @@ var _ = Describe("datamodel integration testing with live DB", func() {
 		var err error
 		db, err = gorm.Open("sqlite3", path.Join(DBPath, "integration-ubiquity.db"))
 		Expect(err).NotTo(HaveOccurred(), "failed to connect database")
-		Expect(db.AutoMigrate(&model.Volume{}).Error).NotTo(HaveOccurred(), "fail to create Volume basic table")
+		Expect(db.AutoMigrate(&resources.Volume{}).Error).NotTo(HaveOccurred(), "fail to create Volume basic table")
 		datamodel = scbe.NewScbeDataModel(db, resources.SCBE)
 		Expect(datamodel.CreateVolumeTable()).ToNot(HaveOccurred())
 		Expect(db.HasTable(scbe.ScbeVolume{})).To(Equal(true))
@@ -238,7 +234,7 @@ var _ = Describe("datamodel integration testing with live DB", func() {
 
 	})
 	AfterEach(func() {
-		db.DropTable(&model.Volume{})
+		db.DropTable(&resources.Volume{})
 		db.DropTable(&scbe.ScbeVolume{})
 		db.Close()
 	})
