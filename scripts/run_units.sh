@@ -5,4 +5,4 @@ go get github.com/onsi/gomega
 
 cd local
 echo "Starting unit tests for local"
-ginkgo -cover
+ginkgo -r
