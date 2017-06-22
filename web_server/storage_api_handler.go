@@ -66,6 +66,9 @@ func (h *StorageApiHandler) Activate() http.HandlerFunc {
 			if errors != "" {
 				utils.WriteResponse(w, http.StatusInternalServerError, &resources.GenericResponse{Err: errors})
 				return
+			} else {
+				h.logger.Printf("Error - fail to activate due to error : [%s]", errors)
+				h.logger.Printf("But since SCBE succeeded lets ignore and finish activation. (TODO its a tmp hack)", errors)
 			}
 		}
 

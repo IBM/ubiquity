@@ -1,8 +1,6 @@
 package local
 
 import (
-	"log"
-
 	"fmt"
 
 	"github.com/IBM/ubiquity/local/scbe"
