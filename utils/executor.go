@@ -34,15 +34,16 @@ func (e *executor) Execute(command string, args []string) ([]byte, error) {
 	cmd.Stdout = &stdout
 	cmd.Stderr = &stderr
 	err := cmd.Run()
+	e.logger.Debug(
+		"Command executed with args and error and output",
+		logutil.Args{
+			{"command", command},
+			{"args", args},
+			{"error", err},
+			{"output", stdout},
+		})
+
 	if err != nil {
-		e.logger.Debug(
-			"Error executing command with args due to error and output",
-			logutil.Args{
-				{"command", command},
-				{"args", args},
-				{"error", err},
-				{"output", stdout},
-			})
 		return nil, err
 	}
 	return stdout.Bytes(), err

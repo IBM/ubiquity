@@ -27,7 +27,7 @@ func (s *scbeMounter) Mount(mountRequest resources.MountRequest) (string, error)
 	}
 
 	// Discover device
-	volumeWWN := mountRequest.VolumeConfig["wwn"].(string) // TODO use the const from local/scbe
+	volumeWWN := mountRequest.VolumeConfig["Wwn"].(string) // TODO use the const from local/scbe
 	devicePath, err := s.blockDeviceMounterUtils.Discover(volumeWWN)
 	if err != nil {
 		return "", s.logger.ErrorRet(err, "Discover failed", logutil.Args{{"volumeWWN", volumeWWN}})
@@ -54,7 +54,7 @@ func (s *scbeMounter) Mount(mountRequest resources.MountRequest) (string, error)
 func (s *scbeMounter) Unmount(unmountRequest resources.UnmountRequest) error {
 	defer s.logger.Trace(logutil.DEBUG)()
 
-	volumeWWN := unmountRequest.VolumeConfig["wwn"].(string)
+	volumeWWN := unmountRequest.VolumeConfig["Wwn"].(string)
 	mountpoint := fmt.Sprintf(resources.PathToMountUbiquityBlockDevices, volumeWWN)
 	devicePath, err := s.blockDeviceMounterUtils.Discover(volumeWWN)
 	if err != nil {
