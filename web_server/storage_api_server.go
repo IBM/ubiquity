@@ -20,7 +20,7 @@ func NewStorageApiServer(logger *log.Logger, backends map[string]resources.Stora
 	return &StorageApiServer{storageApiHandler: NewStorageApiHandler(logger, backends, database, config), logger: logger}, nil
 }
 
-func (s *StorageApiServer) InitializeHandler() http.Handler {
+func (s *StorageApiServer) InitializeHandler() *mux.Router {
 	router := mux.NewRouter()
 	router.HandleFunc("/ubiquity_storage/activate", s.storageApiHandler.Activate()).Methods("POST")
 	router.HandleFunc("/ubiquity_storage/volumes", s.storageApiHandler.CreateVolume()).Methods("POST")
@@ -40,4 +40,9 @@ func (s *StorageApiServer) Start(port int) error {
 	fmt.Println(fmt.Sprintf("Starting Storage API server on port %d ....", port))
 	fmt.Println("CTL-C to exit/stop Storage API server service")
 	return http.ListenAndServe(fmt.Sprintf(":%d", port), nil)
+}
+
+func (s *StorageApiServer) GetStorageApiHandler() *StorageApiHandler {
+	// Allow subprojects of Ubiquity to get a handle on the API handler so they can call Ubiquity functions internally
+	return s.storageApiHandler
 }
