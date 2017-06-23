@@ -41,3 +41,8 @@ func (s *StorageApiServer) Start(port int) error {
 	fmt.Println("CTL-C to exit/stop Storage API server service")
 	return http.ListenAndServe(fmt.Sprintf(":%d", port), nil)
 }
+
+func (s *StorageApiServer) GetStorageApiHandler() *StorageApiHandler {
+	// Allow subprojects of Ubiquity to get a handle on the API handler so they can call Ubiquity functions internally
+	return s.storageApiHandler
+}
