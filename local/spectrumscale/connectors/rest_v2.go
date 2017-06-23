@@ -92,7 +92,7 @@ func (s *spectrumRestV2) AsyncJobCompletion(jobURL string) error {
 		}
 
 		if jobQueryResponse.Jobs[0].Status == "RUNNING" {
-			time.Sleep(5000 * time.Millisecond)
+			time.Sleep(2000 * time.Millisecond)
 			continue
 		}
 		break
@@ -497,7 +497,7 @@ func (s *spectrumRestV2) ListFilesetQuota(filesystemName string, filesetName str
 	s.logger.Println("spectrumRestConnector: ListFilesetQuota")
 	defer s.logger.Println("spectrumRestConnector: ListFilesetQuota end")
 
-	listQuotaURL := utils.FormatURL(s.endpoint, fmt.Sprintf("scalemgmt/v2/filesystems/%s/filesets/%s/quotas", filesystemName, filesetName))
+	listQuotaURL := utils.FormatURL(s.endpoint, fmt.Sprintf("scalemgmt/v2/filesystems/%s/quotas?filter=objectName=%s", filesystemName, filesetName))
 	listQuotaResponse := GetQuotaResponse_v2{}
 
 	s.logger.Println("List Quota URL: ", listQuotaURL)
@@ -510,7 +510,7 @@ func (s *spectrumRestV2) ListFilesetQuota(filesystemName string, filesetName str
 
 	//TODO check which quota in quotas[] and which attribute
 	if len(listQuotaResponse.Quotas) > 0 {
-		return fmt.Sprintf("%d", listQuotaResponse.Quotas[0].BlockQuota), nil
+		return fmt.Sprintf("%dK", listQuotaResponse.Quotas[0].BlockQuota), nil
 	} else {
 		return "", fmt.Errorf("Unable to get Quota information")
 	}

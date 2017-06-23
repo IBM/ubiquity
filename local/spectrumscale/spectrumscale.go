@@ -613,10 +613,31 @@ func (s *spectrumLocalClient) updateDBWithExistingFilesetQuota(filesystem, name,
 		s.logger.Println(err.Error())
 		return err
 	}
-	if filesetQuota != quota {
-		s.logger.Printf("Mismatch between user-specified and listed quota for fileset %s", userSpecifiedFileset)
-		return fmt.Errorf("Mismatch between user-specified and listed quota for fileset %s", userSpecifiedFileset)
 
+	if s.config.RestConfig.Endpoint != "" {
+		s.logger.Printf("For REST connector converting quotas to bytes\n")
+		filesetQuotaBytes, err := utils.ConvertToBytes(s.logger, filesetQuota)
+		if err != nil {
+			s.logger.Printf("utils.ConvertToBytes failed %v", err)
+			return err
+		}
+		
+		quotasBytes, err := utils.ConvertToBytes(s.logger, quota)                   
+                if err != nil {
+                        s.logger.Printf("utils.ConvertToBytes failed %v", err)
+                        return err
+                }
+ 		
+		if filesetQuotaBytes != quotasBytes {
+			s.logger.Printf("Mismatch between user-specified %v and listed quota %v for fileset %s", quotasBytes, filesetQuotaBytes, userSpecifiedFileset)			
+			return fmt.Errorf("Mismatch between user-specified %v and listed quota %v for fileset %s", quotasBytes, filesetQuotaBytes, userSpecifiedFileset)
+		}		
+	} else {
+		if filesetQuota != quota {
+			s.logger.Printf("Mismatch between user-specified and listed quota for fileset %s", userSpecifiedFileset)
+			return fmt.Errorf("Mismatch between user-specified and listed quota for fileset %s", userSpecifiedFileset)
+
+		}
 	}
 
 	err = s.dataModel.InsertFilesetQuotaVolume(userSpecifiedFileset, quota, name, filesystem, true, opts)
