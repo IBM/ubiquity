@@ -1,6 +1,7 @@
 package scbe
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 	"github.com/IBM/ubiquity/logutil"
@@ -8,7 +9,6 @@ import (
 	"github.com/jinzhu/gorm"
 	"strconv"
 	"sync"
-	"encoding/json"
 )
 
 type scbeLocalClient struct {
@@ -26,8 +26,8 @@ const (
 	volumeNamePrefix         = "u_"
 	AttachedToNothing        = "" // during provisioning the volume is not attached to any host
 	EmptyHost                = ""
-	ComposeVolumeName    = volumeNamePrefix + "%s_%s" // e.g u_instance1_volName
-	MaxVolumeNameLength  = 63                         // IBM block storage max volume name cannot exceed this length
+	ComposeVolumeName        = volumeNamePrefix + "%s_%s" // e.g u_instance1_volName
+	MaxVolumeNameLength      = 63                         // IBM block storage max volume name cannot exceed this length
 )
 
 func NewScbeLocalClient(config resources.ScbeConfig, database *gorm.DB) (resources.StorageClient, error) {
@@ -209,7 +209,10 @@ func (s *scbeLocalClient) GetVolume(getVolumeRequest resources.GetVolumeRequest)
 		return resources.Volume{}, s.logger.ErrorRet(errors.New("Volume not found"), "failed")
 	}
 
-	return resources.Volume{Name: existingVolume.Volume.Name, Backend: existingVolume.Volume.Backend}, nil
+	return resources.Volume{
+		Name:       existingVolume.Volume.Name,
+		Backend:    existingVolume.Volume.Backend,
+		Mountpoint: existingVolume.Volume.Mountpoint}, nil
 }
 
 func (s *scbeLocalClient) GetVolumeConfig(getVolumeConfigRequest resources.GetVolumeConfigRequest) (map[string]interface{}, error) {
@@ -264,8 +267,6 @@ func (s *scbeLocalClient) Attach(attachRequest resources.AttachRequest) (string,
 			&InValidRequestError{"attachRequest", "Name", attachRequest.Name, "none empty string"}, "failed")
 	}
 
-	host2attach := attachRequest.Host
-
 	existingVolume, volExists, err := s.dataModel.GetVolume(attachRequest.Name)
 	if err != nil {
 		return "", s.logger.ErrorRet(err, "dataModel.GetVolume failed")
@@ -275,9 +276,9 @@ func (s *scbeLocalClient) Attach(attachRequest resources.AttachRequest) (string,
 		return "", s.logger.ErrorRet(&volumeNotFoundError{attachRequest.Name}, "failed")
 	}
 
-	if existingVolume.AttachTo == host2attach {
+	if existingVolume.AttachTo == attachRequest.Host {
 		// if already map to the given host then just ignore and succeed to attach
-		s.logger.Info("Volume already attached, skip backend attach", logutil.Args{{"volume", attachRequest.Name}, {"host", host2attach}})
+		s.logger.Info("Volume already attached, skip backend attach", logutil.Args{{"volume", attachRequest.Name}, {"host", attachRequest.Host}})
 		volumeMountpoint := fmt.Sprintf(resources.PathToMountUbiquityBlockDevices, existingVolume.WWN)
 		return volumeMountpoint, nil
 	} else if existingVolume.AttachTo != "" {
@@ -285,11 +286,11 @@ func (s *scbeLocalClient) Attach(attachRequest resources.AttachRequest) (string,
 	}
 
 	s.logger.Debug("Attaching", logutil.Args{{"volume", existingVolume}})
-	if _, err = s.scbeRestClient.MapVolume(existingVolume.WWN, host2attach); err != nil {
+	if _, err = s.scbeRestClient.MapVolume(existingVolume.WWN, attachRequest.Host); err != nil {
 		return "", s.logger.ErrorRet(err, "scbeRestClient.MapVolume failed")
 	}
 
-	if err = s.dataModel.UpdateVolumeAttachTo(attachRequest.Name, existingVolume, host2attach); err != nil {
+	if err = s.dataModel.UpdateVolumeAttachTo(attachRequest.Name, existingVolume, attachRequest.Host); err != nil {
 		return "", s.logger.ErrorRet(err, "dataModel.UpdateVolumeAttachTo failed")
 	}
 
@@ -340,12 +341,7 @@ func (s *scbeLocalClient) ListVolumes(listVolumesRequest resources.ListVolumesRe
 	var volumes []resources.Volume
 	for _, volume := range volumesInDb {
 		s.logger.Debug("Volumes from db", logutil.Args{{"volume", volume}})
-		volumeMountpoint, err := s.getVolumeMountPoint(volume)
-		if err != nil {
-			return nil, s.logger.ErrorRet(err, "getVolumeMountPoint failed")
-		}
-
-		volumes = append(volumes, resources.Volume{Name: volume.Volume.Name, Mountpoint: volumeMountpoint})
+		volumes = append(volumes, volume.Volume)
 	}
 
 	return volumes, nil

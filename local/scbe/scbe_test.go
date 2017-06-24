@@ -1,15 +1,15 @@
 package scbe_test
 
 import (
+	"errors"
 	"fmt"
 	"github.com/IBM/ubiquity/fakes"
 	"github.com/IBM/ubiquity/local/scbe"
 	"github.com/IBM/ubiquity/resources"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
-	"strings"
 	"reflect"
-	"errors"
+	"strings"
 )
 
 const (
@@ -20,8 +20,10 @@ const (
 	fakeVol            = "fakevol"
 )
 
-var fakeAttachRequest = resources.AttachRequest{Name: fakeVol, Host: fakeHost}
-var fakeDetachRequest = resources.DetachRequest{Name: fakeVol, Host: fakeHost}
+var (
+	fakeAttachRequest = resources.AttachRequest{Name: fakeVol, Host: fakeHost}
+	fakeDetachRequest = resources.DetachRequest{Name: fakeVol, Host: fakeHost}
+)
 
 var _ = Describe("scbeLocalClient init", func() {
 	var (
@@ -287,7 +289,7 @@ var _ = Describe("scbeLocalClient", func() {
 		It("should fail to insert vol to DB after create it", func() {
 			fakeScbeDataModel.GetVolumeReturns(scbe.ScbeVolume{}, false, nil)
 			fakeScbeRestClient.CreateVolumeReturns(scbe.ScbeVolumeInfo{
-				Name:"v1", Wwn: "wwn1", Profile: "gold"}, nil)
+				Name: "v1", Wwn: "wwn1", Profile: "gold"}, nil)
 			fakeScbeDataModel.InsertVolumeReturns(fmt.Errorf("error"))
 			opts := make(map[string]interface{})
 			opts[scbe.OptionNameForVolumeSize] = "100"
@@ -307,7 +309,7 @@ var _ = Describe("scbeLocalClient", func() {
 
 		It("should succeed to insert vol to DB after create it", func() {
 			fakeScbeDataModel.GetVolumeReturns(scbe.ScbeVolume{}, false, nil)
-			fakeScbeRestClient.CreateVolumeReturns(scbe.ScbeVolumeInfo{Name:"v1", Wwn: "wwn1", Profile: "gold"}, nil)
+			fakeScbeRestClient.CreateVolumeReturns(scbe.ScbeVolumeInfo{Name: "v1", Wwn: "wwn1", Profile: "gold"}, nil)
 			fakeScbeDataModel.InsertVolumeReturns(nil)
 			opts := make(map[string]interface{})
 			opts[scbe.OptionNameForVolumeSize] = "100"

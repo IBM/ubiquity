@@ -32,10 +32,10 @@ type FakeMounter struct {
 	unmountReturnsOnCall map[int]struct {
 		result1 error
 	}
-	ActionAfterDetachStub        func(volumeConfig map[string]interface{}) error
+	ActionAfterDetachStub        func(request resources.AfterDetachRequest) error
 	actionAfterDetachMutex       sync.RWMutex
 	actionAfterDetachArgsForCall []struct {
-		volumeConfig map[string]interface{}
+		request resources.AfterDetachRequest
 	}
 	actionAfterDetachReturns struct {
 		result1 error
@@ -146,16 +146,16 @@ func (fake *FakeMounter) UnmountReturnsOnCall(i int, result1 error) {
 	}{result1}
 }
 
-func (fake *FakeMounter) ActionAfterDetach(volumeConfig map[string]interface{}) error {
+func (fake *FakeMounter) ActionAfterDetach(request resources.AfterDetachRequest) error {
 	fake.actionAfterDetachMutex.Lock()
 	ret, specificReturn := fake.actionAfterDetachReturnsOnCall[len(fake.actionAfterDetachArgsForCall)]
 	fake.actionAfterDetachArgsForCall = append(fake.actionAfterDetachArgsForCall, struct {
-		volumeConfig map[string]interface{}
-	}{volumeConfig})
-	fake.recordInvocation("ActionAfterDetach", []interface{}{volumeConfig})
+		request resources.AfterDetachRequest
+	}{request})
+	fake.recordInvocation("ActionAfterDetach", []interface{}{request})
 	fake.actionAfterDetachMutex.Unlock()
 	if fake.ActionAfterDetachStub != nil {
-		return fake.ActionAfterDetachStub(volumeConfig)
+		return fake.ActionAfterDetachStub(request)
 	}
 	if specificReturn {
 		return ret.result1
@@ -169,10 +169,10 @@ func (fake *FakeMounter) ActionAfterDetachCallCount() int {
 	return len(fake.actionAfterDetachArgsForCall)
 }
 
-func (fake *FakeMounter) ActionAfterDetachArgsForCall(i int) map[string]interface{} {
+func (fake *FakeMounter) ActionAfterDetachArgsForCall(i int) resources.AfterDetachRequest {
 	fake.actionAfterDetachMutex.RLock()
 	defer fake.actionAfterDetachMutex.RUnlock()
-	return fake.actionAfterDetachArgsForCall[i].volumeConfig
+	return fake.actionAfterDetachArgsForCall[i].request
 }
 
 func (fake *FakeMounter) ActionAfterDetachReturns(result1 error) {

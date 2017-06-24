@@ -63,7 +63,7 @@ func (s *spectrumScaleMounter) Unmount(unmountRequest resources.UnmountRequest) 
 
 }
 
-func (s *spectrumScaleMounter) ActionAfterDetach(volumeConfig map[string]interface{}) error {
+func (s *spectrumScaleMounter) ActionAfterDetach(request resources.AfterDetachRequest) error {
 	// no action needed for SSc
 	return nil
 }

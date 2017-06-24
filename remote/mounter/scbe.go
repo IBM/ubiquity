@@ -11,11 +11,16 @@ import (
 type scbeMounter struct {
 	logger                  logutil.Logger
 	blockDeviceMounterUtils block_device_mounter_utils.BlockDeviceMounterUtils
+	exec                    utils.Executor
 }
 
 func NewScbeMounter() resources.Mounter {
 	blockDeviceMounterUtils := block_device_mounter_utils.NewBlockDeviceMounterUtils()
-	return &scbeMounter{logger: logutil.GetLogger(), blockDeviceMounterUtils: blockDeviceMounterUtils}
+	return &scbeMounter{
+		logger:                  logutil.GetLogger(),
+		blockDeviceMounterUtils: blockDeviceMounterUtils,
+		exec: utils.NewExecutor(),
+	}
 }
 
 func (s *scbeMounter) Mount(mountRequest resources.MountRequest) (string, error) {
@@ -34,10 +39,9 @@ func (s *scbeMounter) Mount(mountRequest resources.MountRequest) (string, error)
 	}
 
 	// Create mount point if needed   // TODO consider to move it inside the util
-	exec := utils.NewExecutor()
-	if _, err := exec.Stat(mountRequest.Mountpoint); err != nil {
+	if _, err := s.exec.Stat(mountRequest.Mountpoint); err != nil {
 		s.logger.Info("Create mountpoint directory " + mountRequest.Mountpoint)
-		if err := exec.MkdirAll(mountRequest.Mountpoint, 0700); err != nil {
+		if err := s.exec.MkdirAll(mountRequest.Mountpoint, 0700); err != nil {
 			return "", s.logger.ErrorRet(err, "MkdirAll failed", logutil.Args{{"mountpoint", mountRequest.Mountpoint}})
 		}
 	}
@@ -67,10 +71,9 @@ func (s *scbeMounter) Unmount(unmountRequest resources.UnmountRequest) error {
 
 	s.logger.Info("Delete mountpoint directory if exist", logutil.Args{{"mountpoint", mountpoint}})
 	// TODO move this part to the util
-	exec := utils.NewExecutor()
-	if _, err := exec.Stat(mountpoint); err == nil {
+	if _, err := s.exec.Stat(mountpoint); err == nil {
 		// TODO consider to add the prefix of the wwn in the OS (multipath -ll output)
-		if err := exec.RemoveAll(mountpoint); err != nil {
+		if err := s.exec.RemoveAll(mountpoint); err != nil {
 			return s.logger.ErrorRet(err, "RemoveAll failed", logutil.Args{{"mountpoint", mountpoint}})
 		}
 	}
@@ -78,7 +81,8 @@ func (s *scbeMounter) Unmount(unmountRequest resources.UnmountRequest) error {
 	return nil
 
 }
-func (s *scbeMounter) ActionAfterDetach(volumeConfig map[string]interface{}) error {
+
+func (s *scbeMounter) ActionAfterDetach(request resources.AfterDetachRequest) error {
 	defer s.logger.Trace(logutil.DEBUG)()
 
 	// Rescan OS

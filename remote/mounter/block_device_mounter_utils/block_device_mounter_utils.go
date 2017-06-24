@@ -5,6 +5,11 @@ import (
 	"github.com/IBM/ubiquity/logutil"
 )
 
+type blockDeviceMounterUtils struct {
+	logger               logutil.Logger
+	blockDeviceUtils     block_device_utils.BlockDeviceUtils
+}
+
 // MountDeviceFlow create filesystem on the device (if needed) and then mount it on a given mountpoint
 func (s *blockDeviceMounterUtils) MountDeviceFlow(devicePath string, fsType string, mountPoint string) error {
 	defer s.logger.Trace(logutil.INFO, logutil.Args{{"devicePath", devicePath}, {"fsType", fsType}, {"mountPoint", mountPoint}})()

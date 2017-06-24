@@ -33,14 +33,14 @@ func (e *volumeNotFoundError) Error() string {
 }
 
 type hostNotFoundvolumeNotFoundError struct {
-	volName  string
-	arrName  string
-	hostName string
+	volName   string
+	arrayName string
+	hostName  string
 }
 
 func (e *hostNotFoundvolumeNotFoundError) Error() string {
 	return fmt.Sprintf("Host name [%s] was not found on the storage system [%s] that related to volume with WWN [%s]",
-		e.hostName, e.arrName, e.volName)
+		e.hostName, e.arrayName, e.volName)
 }
 
 type activateDefaultServiceError struct {

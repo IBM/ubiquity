@@ -3,8 +3,8 @@ package scbe
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/IBM/ubiquity/resources"
 	"github.com/IBM/ubiquity/logutil"
+	"github.com/IBM/ubiquity/resources"
 )
 
 //go:generate counterfeiter -o ../fakes/fake_scbe_rest_client.go . ScbeRestClient
@@ -26,18 +26,17 @@ type scbeRestClient struct {
 }
 
 const (
-	DEFAULT_SCBE_PORT          = 8440
-	URL_SCBE_REFERER           = "https://%s:%d/"
-	URL_SCBE_BASE_SUFFIX       = "api/v1"
-	URL_SCBE_RESOURCE_GET_AUTH = "users/get-auth-token"
-	SCBE_FLOCKER_GROUP_PARAM   = "flocker"
-	UrlScbeResourceService     = "services"
-	UrlScbeResourceVolume      = "volumes"
-	UrlScbeResourceMapping     = "mappings"
-	UrlScbeResourceHost        = "hosts"
-	DefaultSizeUnit            = "gb"
+	DefaultScbePort        = 8440
+	UrlScbeReferer         = "https://%s:%d/"
+	UrlScbeBaseSuffix      = "api/v1"
+	UrlScbeResourceGetAuth = "users/get-auth-token"
+	ScbeFlockerGroupParam  = "flocker"
+	UrlScbeResourceService = "services"
+	UrlScbeResourceVolume  = "volumes"
+	UrlScbeResourceMapping = "mappings"
+	UrlScbeResourceHost    = "hosts"
+	DefaultSizeUnit        = "gb"
 )
-
 
 func NewScbeRestClient(conInfo resources.ConnectionInfo) ScbeRestClient {
 	return newScbeRestClient(conInfo, nil)
@@ -51,19 +50,18 @@ func NewScbeRestClientWithSimpleRestClient(conInfo resources.ConnectionInfo, sim
 func newScbeRestClient(conInfo resources.ConnectionInfo, simpleClient SimpleRestClient) ScbeRestClient {
 	// Set default SCBE port if not mentioned
 	if conInfo.Port == 0 {
-		conInfo.Port = DEFAULT_SCBE_PORT
+		conInfo.Port = DefaultScbePort
 	}
 	// Add the default SCBE Flocker group to the credentials  # TODO change to ubiquity interface
-	conInfo.CredentialInfo.Group = SCBE_FLOCKER_GROUP_PARAM
+	conInfo.CredentialInfo.Group = ScbeFlockerGroupParam
 
 	if simpleClient == nil {
-		referrer := fmt.Sprintf(URL_SCBE_REFERER, conInfo.ManagementIP, conInfo.Port)
-		baseUrl := referrer + URL_SCBE_BASE_SUFFIX
-		simpleClient = NewSimpleRestClient(conInfo, baseUrl, URL_SCBE_RESOURCE_GET_AUTH, referrer)
+		referrer := fmt.Sprintf(UrlScbeReferer, conInfo.ManagementIP, conInfo.Port)
+		baseUrl := referrer + UrlScbeBaseSuffix
+		simpleClient = NewSimpleRestClient(conInfo, baseUrl, UrlScbeResourceGetAuth, referrer)
 	}
 	return &scbeRestClient{logutil.GetLogger(), conInfo, simpleClient}
 }
-
 
 func (s *scbeRestClient) Login() error {
 	defer s.logger.Trace(logutil.DEBUG)()

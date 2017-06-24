@@ -15,11 +15,11 @@ type ScbeStorageService struct {
 	CapabilityValues                   string `json:"capability_values"`
 	Type                               string `json:"type"`
 	PhysicalSize                       int    `json:""`
-	Logical_size                       int    `json:"logical_size"`
-	Physical_free                      int    `json:"physical_free"`
-	Logical_free                       int    `json:"logical_free"`
-	Total_capacity                     int    `json:"total_capacity"`
-	Used_capacity                      int    `json:"used_capacity"`
+	LogicalSize                        int    `json:"logical_size"`
+	PhysicalFree                       int    `json:"physical_free"`
+	LogicalFree                        int    `json:"logical_free"`
+	TotalCapacity                      int    `json:"total_capacity"`
+	UsedCapacity                       int    `json:"used_capacity"`
 	MaxResourceLogicalFree             int    `json:"max_resource_logical_free"`
 	MaxResourceFreeSizeForProvisioning int    `json:"max_resource_free_size_for_provisioning"`
 	NumVolumes                         int    `json:"num_volumes"`
@@ -189,15 +189,15 @@ type ScbeResponseMappings struct {
 */
 
 type ScbeVolumeInfo struct {
-	Name        		string
-	Wwn         		string
-	Profile     		string
-	StorageType 		string
-	StorageName 		string
-	PoolName    		string
-	LogicalCapacity  	string
-	PhysicalCapacity 	string
-	UsedCapacity     	string
+	Name             string
+	Wwn              string
+	Profile          string
+	StorageType      string
+	StorageName      string
+	PoolName         string
+	LogicalCapacity  string
+	PhysicalCapacity string
+	UsedCapacity     string
 }
 
 type ScbeResponseHost struct {

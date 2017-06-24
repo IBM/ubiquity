@@ -30,7 +30,7 @@ var _ = Describe("restClient integration testing with existing SCBE instance", f
 		client = scbe.NewSimpleRestClient(
 			conInfo,
 			"https://"+scbeIP+":"+strconv.Itoa(scbePort)+"/api/v1",
-			scbe.URL_SCBE_RESOURCE_GET_AUTH,
+			scbe.UrlScbeResourceGetAuth,
 			"https://"+scbeIP+":"+strconv.Itoa(scbePort)+"/")
 	})
 

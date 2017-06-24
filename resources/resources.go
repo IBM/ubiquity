@@ -113,7 +113,7 @@ type StorageClient interface {
 type Mounter interface {
 	Mount(mountRequest MountRequest) (string, error)
 	Unmount(unmountRequest UnmountRequest) error
-	ActionAfterDetach(volumeConfig map[string]interface{}) error
+	ActionAfterDetach(request AfterDetachRequest) error
 }
 
 type ActivateRequest struct {
@@ -169,6 +169,9 @@ type MountRequest struct {
 	VolumeConfig map[string]interface{}
 }
 type UnmountRequest struct {
+	VolumeConfig map[string]interface{}
+}
+type AfterDetachRequest struct {
 	VolumeConfig map[string]interface{}
 }
 type AttachResponse struct {

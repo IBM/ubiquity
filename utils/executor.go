@@ -34,19 +34,21 @@ func (e *executor) Execute(command string, args []string) ([]byte, error) {
 	cmd.Stdout = &stdout
 	cmd.Stderr = &stderr
 	err := cmd.Run()
+	stdErr := stderr.Bytes()
+	stdOut := stdout.Bytes()
 	e.logger.Debug(
-		"Command executed with args and error and output",
+		"Command executed with args and error and output.",
 		logutil.Args{
 			{"command", command},
 			{"args", args},
-			{"error", err},
-			{"output", stdout},
+			{"error", string(stdErr[:])},
+			{"output", string(stdOut[:])},
 		})
 
 	if err != nil {
 		return nil, err
 	}
-	return stdout.Bytes(), err
+	return stdOut, err
 }
 func (e *executor) Stat(path string) (os.FileInfo, error) {
 	return os.Stat(path)
