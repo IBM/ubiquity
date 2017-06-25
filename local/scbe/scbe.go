@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"github.com/IBM/ubiquity/logutil"
 	"github.com/IBM/ubiquity/resources"
+	"github.com/IBM/ubiquity/utils"
 	"github.com/jinzhu/gorm"
 	"strconv"
 	"sync"
@@ -18,6 +19,7 @@ type scbeLocalClient struct {
 	isActivated    bool
 	config         resources.ScbeConfig
 	activationLock *sync.RWMutex
+	locker         utils.Locker
 }
 
 const (
@@ -47,6 +49,7 @@ func NewScbeLocalClientWithNewScbeRestClientAndDataModel(config resources.ScbeCo
 		dataModel:      dataModel,
 		config:         config,
 		activationLock: &sync.RWMutex{},
+		locker:         utils.NewLocker(),
 	}
 	if err := basicScbeLocalClientStartupAndValidation(client, config); err != nil {
 		return &scbeLocalClient{}, err
@@ -100,7 +103,6 @@ func validateScbeConfig(config resources.ScbeConfig) error {
 
 func (s *scbeLocalClient) Activate(activateRequest resources.ActivateRequest) error {
 	defer s.logger.Trace(logutil.DEBUG)()
-
 	s.activationLock.RLock()
 	if s.isActivated {
 		s.activationLock.RUnlock()
@@ -285,10 +287,13 @@ func (s *scbeLocalClient) Attach(attachRequest resources.AttachRequest) (string,
 		return "", s.logger.ErrorRet(&volAlreadyAttachedError{attachRequest.Name, existingVolume.AttachTo}, "failed")
 	}
 
+	// Lock will ensure no other caller attach a volume from the same host concurrently, Prevent SCBE race condition on get next available lun ID
+	s.locker.WriteLock(attachRequest.Host)
 	s.logger.Debug("Attaching", logutil.Args{{"volume", existingVolume}})
 	if _, err = s.scbeRestClient.MapVolume(existingVolume.WWN, attachRequest.Host); err != nil {
 		return "", s.logger.ErrorRet(err, "scbeRestClient.MapVolume failed")
 	}
+	s.locker.WriteUnlock(attachRequest.Host)
 
 	if err = s.dataModel.UpdateVolumeAttachTo(attachRequest.Name, existingVolume, attachRequest.Host); err != nil {
 		return "", s.logger.ErrorRet(err, "dataModel.UpdateVolumeAttachTo failed")

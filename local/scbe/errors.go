@@ -39,7 +39,7 @@ type hostNotFoundvolumeNotFoundError struct {
 }
 
 func (e *hostNotFoundvolumeNotFoundError) Error() string {
-	return fmt.Sprintf("Host name [%s] was not found on the storage system [%s] that related to volume with WWN [%s]",
+	return fmt.Sprintf("Host name [%s] was not found on the storage system [%s](according to SCBE caching) that related to volume with WWN [%s]",
 		e.hostName, e.arrayName, e.volName)
 }
 

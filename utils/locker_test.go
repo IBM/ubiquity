@@ -7,9 +7,9 @@ import (
 
 	"fmt"
 
+	"github.com/IBM/ubiquity/utils"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
-	"github.com/IBM/ubiquity/utils"
 )
 
 var _ = Describe("utils - locker", func() {
@@ -26,7 +26,7 @@ var _ = Describe("utils - locker", func() {
 
 	BeforeEach(func() {
 		logger = log.New(os.Stdout, "locker: ", log.Lshortfile|log.LstdFlags)
-		locker = utils.NewLocker(logger)
+		locker = utils.NewLocker()
 		c1 = make(chan int)
 		c2 = make(chan int)
 		c3 = make(chan int)

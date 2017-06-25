@@ -22,7 +22,7 @@ type StorageApiHandler struct {
 }
 
 func NewStorageApiHandler(logger *log.Logger, backends map[string]resources.StorageClient, database *gorm.DB, config resources.UbiquityServerConfig) *StorageApiHandler {
-	return &StorageApiHandler{logger: logger, backends: backends, database: database, config: config, locker: utils.NewLocker(logger)}
+	return &StorageApiHandler{logger: logger, backends: backends, database: database, config: config, locker: utils.NewLocker()}
 }
 
 func (h *StorageApiHandler) Activate() http.HandlerFunc {
