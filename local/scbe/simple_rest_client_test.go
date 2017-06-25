@@ -148,13 +148,9 @@ var _ = Describe("restClient", func() {
 		})
 		It("Login and retry rest call if token expired", func() {
 			var numLogin, numGetServices int
-			loginResponse := scbe.LoginResponse{Token: "fake-token-2"}
-			marshalledResponse, err := json.Marshal(loginResponse)
-			Expect(err).ToNot(HaveOccurred())
-			httpmock.RegisterResponder("POST", fakeScbeUrlAuthFull,
-				CountLoginResponder(&numLogin, string(marshalledResponse)))
-			httpmock.RegisterResponder("GET", fakeScbeUrlApi+"/"+scbe.UrlScbeResourceService,
-				TokenExpiredResponder(&numGetServices))
+			fakeTokenRetry := "fake-token-retry"
+			httpmock.RegisterResponder("POST", fakeScbeUrlAuthFull, CountLoginResponder(&numLogin, fakeTokenRetry))
+			httpmock.RegisterResponder("GET", fakeScbeUrlApi+"/"+scbe.UrlScbeResourceService, TokenExpiredResponder(&numGetServices, fakeTokenRetry))
 			var services []scbe.ScbeStorageService
 			err = client.Get(scbe.UrlScbeResourceService, nil, http.StatusOK, &services)
 			Expect(err).ToNot(HaveOccurred())
@@ -165,22 +161,26 @@ var _ = Describe("restClient", func() {
 })
 
 
-func CountLoginResponder(num *int, loginResp string) httpmock.Responder {
+func CountLoginResponder(num *int, retryToken string) httpmock.Responder {
 	*num = 0
+	loginResponse := scbe.LoginResponse{Token: retryToken}
+	marshResponse, err := json.Marshal(loginResponse)
+	Expect(err).ToNot(HaveOccurred())
 	return func(req *http.Request) (*http.Response, error) {
 		*num++
-		return httpmock.NewStringResponse(http.StatusOK, loginResp), nil
+		return httpmock.NewStringResponse(http.StatusOK, string(marshResponse)), nil
 	}
 }
 
-func TokenExpiredResponder(num *int) httpmock.Responder {
+func TokenExpiredResponder(num *int, retryToken string) httpmock.Responder {
 	*num = 0
 	return func(req *http.Request) (*http.Response, error) {
 		*num++
-		if *num == 1 {
-			return httpmock.NewStringResponse(http.StatusUnauthorized, ""), nil
-		} else {
+		auth := req.Header[scbe.HTTP_AUTH_KEY]
+		if len(auth) == 1 && auth[0] == "Token " + retryToken {
 			return httpmock.NewStringResponse(http.StatusOK, fakeServiceJsonResponse), nil
+		} else {
+			return httpmock.NewStringResponse(http.StatusUnauthorized, ""), nil
 		}
 	}
 }
