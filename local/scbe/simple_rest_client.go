@@ -89,6 +89,10 @@ func (s *simpleRestClient) getToken() error {
 // Then read the response, and if exist status as expacted it reads the body into the given struct(v)
 // The function return only error if accured and of cause the object(v) loaded with the response.
 func (s *simpleRestClient) genericAction(actionName string, resource_url string, payload []byte, params map[string]string, exitStatus int, v interface{}) error {
+    return s.genericActionInternal(actionName, resource_url, payload, params, exitStatus, v, true)
+}
+
+func (s *simpleRestClient) genericActionInternal(actionName string, resource_url string, payload []byte, params map[string]string, exitStatus int, v interface{}, retryUnauthorized bool) error {
     defer s.logger.Trace(logutil.DEBUG)()
     url := utils.FormatURL(s.baseURL, resource_url)
     var err error
@@ -122,7 +126,7 @@ func (s *simpleRestClient) genericAction(actionName string, resource_url string,
     }
 
     // check if client sent a token and it expired
-    if response.StatusCode == http.StatusUnauthorized && s.headers[HTTP_AUTH_KEY] != "" {
+    if response.StatusCode == http.StatusUnauthorized && s.headers[HTTP_AUTH_KEY] != "" && retryUnauthorized {
 
         // login
         if err = s.Login(); err != nil {
@@ -130,9 +134,7 @@ func (s *simpleRestClient) genericAction(actionName string, resource_url string,
         }
 
         // retry
-        if response, err = s.httpClient.Do(request); err != nil {
-            return s.logger.ErrorRet(err, "httpClient.Do failed", logutil.Args{{actionName, url}})
-        }
+        return s.genericActionInternal(actionName, resource_url, payload, params, exitStatus, v, false)
     }
 
     defer response.Body.Close()
