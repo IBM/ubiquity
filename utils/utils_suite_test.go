@@ -1,6 +1,7 @@
 package utils_test
 
 import (
+	"github.com/IBM/ubiquity/logutil"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 
@@ -9,5 +10,6 @@ import (
 
 func TestLocalStorage(t *testing.T) {
 	RegisterFailHandler(Fail)
+	defer logutil.InitStdoutLogger(logutil.DEBUG)()
 	RunSpecs(t, "Utils Test Suite")
 }
