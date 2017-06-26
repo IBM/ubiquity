@@ -291,6 +291,7 @@ func (s *scbeLocalClient) Attach(attachRequest resources.AttachRequest) (string,
 	s.locker.WriteLock(attachRequest.Host)
 	s.logger.Debug("Attaching", logutil.Args{{"volume", existingVolume}})
 	if _, err = s.scbeRestClient.MapVolume(existingVolume.WWN, attachRequest.Host); err != nil {
+		s.locker.WriteUnlock(attachRequest.Host)
 		return "", s.logger.ErrorRet(err, "scbeRestClient.MapVolume failed")
 	}
 	s.locker.WriteUnlock(attachRequest.Host)
