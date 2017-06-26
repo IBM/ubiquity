@@ -198,6 +198,7 @@ type Volume struct {
 	Name       string
 	Backend    string
 	Mountpoint string
+	Status     map[string]interface{}
 }
 
 type GetConfigResponse struct {
