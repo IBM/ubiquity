@@ -62,9 +62,8 @@ func (d *scbeDataModel) DeleteVolume(name string) error {
 
 	if err := d.database.Delete(&volume).Error; err != nil {
 		return d.logger.ErrorRet(err, "database.Delete failed")
-
-		return err
 	}
+
 	if err := model.DeleteVolume(d.database, &volume.Volume).Error; err != nil {
 		return d.logger.ErrorRet(err, "model.DeleteVolume failed")
 	}
