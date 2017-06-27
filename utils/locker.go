@@ -2,7 +2,7 @@ package utils
 
 import (
 	"fmt"
-	"github.com/IBM/ubiquity/logutil"
+	"github.com/IBM/ubiquity/utils/logs"
 	"sync"
 	"time"
 )
@@ -16,7 +16,7 @@ type Locker interface {
 }
 
 func NewLocker() Locker {
-	return &locker{locks: make(map[string]*sync.RWMutex), accessLock: &sync.Mutex{}, statsLock: &sync.Mutex{}, cleanupLock: &sync.Mutex{}, stats: make(map[string]time.Time), logger: logutil.GetLogger()}
+	return &locker{locks: make(map[string]*sync.RWMutex), accessLock: &sync.Mutex{}, statsLock: &sync.Mutex{}, cleanupLock: &sync.Mutex{}, stats: make(map[string]time.Time), logger: logs.GetLogger()}
 }
 
 const (
@@ -29,11 +29,11 @@ type locker struct {
 	statsLock   *sync.Mutex
 	stats       map[string]time.Time
 	cleanupLock *sync.Mutex
-	logger      logutil.Logger
+	logger      logs.Logger
 }
 
 func (l *locker) WriteLock(name string) {
-	defer l.logger.Trace(logutil.DEBUG, logutil.Args{{"lockName", name}})()
+	defer l.logger.Trace(logs.DEBUG, logs.Args{{"lockName", name}})()
 
 	defer l.updateStats(name)
 	l.accessLock.Lock()
@@ -49,7 +49,7 @@ func (l *locker) WriteLock(name string) {
 	l.accessLock.Unlock()
 }
 func (l *locker) WriteUnlock(name string) {
-	defer l.logger.Trace(logutil.DEBUG, logutil.Args{{"lockName", name}})()
+	defer l.logger.Trace(logs.DEBUG, logs.Args{{"lockName", name}})()
 	defer l.updateStats(name)
 	l.accessLock.Lock()
 	defer l.accessLock.Unlock()
@@ -60,7 +60,7 @@ func (l *locker) WriteUnlock(name string) {
 
 }
 func (l *locker) ReadLock(name string) {
-	defer l.logger.Trace(logutil.DEBUG, logutil.Args{{"lockName", name}})()
+	defer l.logger.Trace(logs.DEBUG, logs.Args{{"lockName", name}})()
 	defer l.updateStats(name)
 	l.accessLock.Lock()
 	if lock, exists := l.locks[name]; exists {
@@ -75,7 +75,7 @@ func (l *locker) ReadLock(name string) {
 	l.accessLock.Unlock()
 }
 func (l *locker) ReadUnlock(name string) {
-	defer l.logger.Trace(logutil.DEBUG, logutil.Args{{"lockName", name}})()
+	defer l.logger.Trace(logs.DEBUG, logs.Args{{"lockName", name}})()
 	defer l.updateStats(name)
 	l.accessLock.Lock()
 	defer l.accessLock.Unlock()
@@ -85,7 +85,7 @@ func (l *locker) ReadUnlock(name string) {
 	}
 }
 func (l *locker) updateStats(name string) {
-	defer l.logger.Trace(logutil.DEBUG, logutil.Args{{"lockName", name}})()
+	defer l.logger.Trace(logs.DEBUG, logs.Args{{"lockName", name}})()
 
 	l.statsLock.Lock()
 	defer l.cleanup()
@@ -99,7 +99,7 @@ func (l *locker) updateStats(name string) {
 	l.stats[name] = stat
 }
 func (l *locker) cleanup() {
-	defer l.logger.Trace(logutil.DEBUG)()
+	defer l.logger.Trace(logs.DEBUG)()
 
 	l.cleanupLock.Lock()
 	defer l.cleanupLock.Unlock()

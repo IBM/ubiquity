@@ -8,7 +8,7 @@ import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"testing"
-	"github.com/IBM/ubiquity/logutil"
+	"github.com/IBM/ubiquity/utils/logs"
 )
 
 var _ = Describe("block_device_mounter_utils_test", func() {
@@ -165,6 +165,6 @@ var _ = Describe("block_device_mounter_utils_test", func() {
 
 func TestGetBlockDeviceUtils(t *testing.T) {
 	RegisterFailHandler(Fail)
-	defer logutil.InitStdoutLogger(logutil.DEBUG)()
+	defer logs.InitStdoutLogger(logs.DEBUG)()
 	RunSpecs(t, "BlockDeviceUtils Test Suite")
 }

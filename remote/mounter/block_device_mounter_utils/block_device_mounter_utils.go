@@ -2,17 +2,17 @@ package block_device_mounter_utils
 
 import (
 	"github.com/IBM/ubiquity/remote/mounter/block_device_utils"
-	"github.com/IBM/ubiquity/logutil"
+	"github.com/IBM/ubiquity/utils/logs"
 )
 
 type blockDeviceMounterUtils struct {
-	logger               logutil.Logger
+	logger               logs.Logger
 	blockDeviceUtils     block_device_utils.BlockDeviceUtils
 }
 
 // MountDeviceFlow create filesystem on the device (if needed) and then mount it on a given mountpoint
 func (s *blockDeviceMounterUtils) MountDeviceFlow(devicePath string, fsType string, mountPoint string) error {
-	defer s.logger.Trace(logutil.INFO, logutil.Args{{"devicePath", devicePath}, {"fsType", fsType}, {"mountPoint", mountPoint}})()
+	defer s.logger.Trace(logs.INFO, logs.Args{{"devicePath", devicePath}, {"fsType", fsType}, {"mountPoint", mountPoint}})()
 
 	needToCreateFS, err := s.blockDeviceUtils.CheckFs(devicePath)
 	if err != nil {
@@ -32,7 +32,7 @@ func (s *blockDeviceMounterUtils) MountDeviceFlow(devicePath string, fsType stri
 
 // UnmountDeviceFlow umount device, clean device and remove mountpoint folder
 func (s *blockDeviceMounterUtils) UnmountDeviceFlow(devicePath string) error {
-	defer s.logger.Trace(logutil.INFO, logutil.Args{{"devicePath", devicePath}})
+	defer s.logger.Trace(logs.INFO, logs.Args{{"devicePath", devicePath}})
 
 	err := s.blockDeviceUtils.UmountFs(devicePath)
 	if err != nil {
@@ -53,15 +53,15 @@ func (s *blockDeviceMounterUtils) UnmountDeviceFlow(devicePath string) error {
 // 3. multipathing rescan
 // return error if one of the steps fail
 func (s *blockDeviceMounterUtils) RescanAll(withISCSI bool) error {
-	defer s.logger.Trace(logutil.INFO, logutil.Args{{"withISCSI", withISCSI}})
+	defer s.logger.Trace(logs.INFO, logs.Args{{"withISCSI", withISCSI}})
 
 	if withISCSI {
 		if err := s.blockDeviceUtils.Rescan(block_device_utils.ISCSI); err != nil {
-			return s.logger.ErrorRet(err, "Rescan failed", logutil.Args{{"protocol", block_device_utils.ISCSI}})
+			return s.logger.ErrorRet(err, "Rescan failed", logs.Args{{"protocol", block_device_utils.ISCSI}})
 		}
 	}
 	if err := s.blockDeviceUtils.Rescan(block_device_utils.SCSI); err != nil {
-		return s.logger.ErrorRet(err, "Rescan failed", logutil.Args{{"protocol", block_device_utils.SCSI}})
+		return s.logger.ErrorRet(err, "Rescan failed", logs.Args{{"protocol", block_device_utils.SCSI}})
 	}
 
 	if err := s.blockDeviceUtils.ReloadMultipath(); err != nil {

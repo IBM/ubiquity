@@ -2,7 +2,7 @@ package block_device_utils
 
 import (
 	"github.com/IBM/ubiquity/utils"
-	"github.com/IBM/ubiquity/logutil"
+	"github.com/IBM/ubiquity/utils/logs"
 )
 
 type Protocol int
@@ -25,7 +25,7 @@ type BlockDeviceUtils interface {
 }
 
 type impBlockDeviceUtils struct {
-	logger logutil.Logger
+	logger logs.Logger
 	exec   utils.Executor
 }
 
@@ -38,5 +38,5 @@ func NewBlockDeviceUtilsWithExecutor(executor utils.Executor) BlockDeviceUtils {
 }
 
 func newBlockDeviceUtils(executor utils.Executor) BlockDeviceUtils {
-	return &impBlockDeviceUtils{logger:logutil.GetLogger(), exec: executor}
+	return &impBlockDeviceUtils{logger:logs.GetLogger(), exec: executor}
 }

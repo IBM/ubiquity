@@ -4,7 +4,7 @@ import (
     "github.com/IBM/ubiquity/remote/mounter/block_device_utils"
     "github.com/IBM/ubiquity/fakes"
     "github.com/IBM/ubiquity/utils"
-    "github.com/IBM/ubiquity/logutil"
+    "github.com/IBM/ubiquity/utils/logs"
     . "github.com/onsi/gomega"
     . "github.com/onsi/ginkgo"
     "testing"
@@ -300,6 +300,6 @@ var _ = Describe("block_device_utils_test", func() {
 
 func TestGetBlockDeviceUtils(t *testing.T) {
     RegisterFailHandler(Fail)
-    defer logutil.InitStdoutLogger(logutil.DEBUG)()
+    defer logs.InitStdoutLogger(logs.DEBUG)()
     RunSpecs(t, "BlockDeviceUtils Test Suite")
 }

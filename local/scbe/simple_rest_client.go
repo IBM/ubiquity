@@ -3,7 +3,7 @@ package scbe
 import (
     "github.com/IBM/ubiquity/resources"
     "github.com/IBM/ubiquity/utils"
-    "github.com/IBM/ubiquity/logutil"
+    "github.com/IBM/ubiquity/utils/logs"
     "crypto/tls"
     "bytes"
     "io/ioutil"
@@ -39,7 +39,7 @@ const (
 // The implementation of each interface simplify the use of REST API by doing all the rest and json ops,
 // like pars the response result, handling json, marshaling, and token expire handling.
 type simpleRestClient struct {
-    logger         logutil.Logger
+    logger         logs.Logger
     baseURL        string
     authURL        string
     referrer       string
@@ -54,11 +54,11 @@ func NewSimpleRestClient(conInfo resources.ConnectionInfo, baseURL string, authU
     if conInfo.SkipVerifySSL {
         client.Transport = &http.Transport{TLSClientConfig: &tls.Config{InsecureSkipVerify: true}}
     }
-    return &simpleRestClient{logger: logutil.GetLogger(), connectionInfo: conInfo, baseURL: baseURL, authURL: authURL, referrer: referrer, httpClient: client, headers: headers}
+    return &simpleRestClient{logger: logs.GetLogger(), connectionInfo: conInfo, baseURL: baseURL, authURL: authURL, referrer: referrer, httpClient: client, headers: headers}
 }
 
 func (s *simpleRestClient) Login() error {
-    defer s.logger.Trace(logutil.DEBUG)()
+    defer s.logger.Trace(logs.DEBUG)()
     if err := s.getToken(); err != nil {
         return s.logger.ErrorRet(err, "getToken failed")
     }
@@ -66,7 +66,7 @@ func (s *simpleRestClient) Login() error {
 }
 
 func (s *simpleRestClient) getToken() error {
-    defer s.logger.Trace(logutil.DEBUG)()
+    defer s.logger.Trace(logs.DEBUG)()
     delete(s.headers, HTTP_AUTH_KEY) // because no need token to get the token only user\password
     var loginResponse = LoginResponse{}
     credentials, err := json.Marshal(s.connectionInfo.CredentialInfo)
@@ -93,7 +93,7 @@ func (s *simpleRestClient) genericAction(actionName string, resource_url string,
 }
 
 func (s *simpleRestClient) genericActionInternal(actionName string, resource_url string, payload []byte, params map[string]string, exitStatus int, v interface{}, retryUnauthorized bool) error {
-    defer s.logger.Trace(logutil.DEBUG)()
+    defer s.logger.Trace(logs.DEBUG)()
     url := utils.FormatURL(s.baseURL, resource_url)
     var err error
     var request *http.Request
@@ -104,7 +104,7 @@ func (s *simpleRestClient) genericActionInternal(actionName string, resource_url
         request, err = http.NewRequest(actionName, url, bytes.NewReader(payload))
     }
     if err != nil {
-        return s.logger.ErrorRet(err, "http.NewRequest failed", logutil.Args{{actionName, url}})
+        return s.logger.ErrorRet(err, "http.NewRequest failed", logs.Args{{actionName, url}})
     }
     if actionName == "GET" {
         // append all the params into the request
@@ -122,7 +122,7 @@ func (s *simpleRestClient) genericActionInternal(actionName string, resource_url
 
     response, err := s.httpClient.Do(request)
     if err != nil {
-        return s.logger.ErrorRet(err, "httpClient.Do failed", logutil.Args{{actionName, request.URL}})
+        return s.logger.ErrorRet(err, "httpClient.Do failed", logs.Args{{actionName, request.URL}})
     }
 
     // check if client sent a token and it expired
@@ -143,14 +143,14 @@ func (s *simpleRestClient) genericActionInternal(actionName string, resource_url
         return s.logger.ErrorRet(err, "ioutil.ReadAll failed")
     }
 
-    s.logger.Debug(actionName + " " + url, logutil.Args{{"data", string(data[:])}})
+    s.logger.Debug(actionName + " " + url, logs.Args{{"data", string(data[:])}})
     if response.StatusCode != exitStatus {
-        return s.logger.ErrorRet(errors.New("bad status code " + response.Status), "failed", logutil.Args{{actionName, url}})
+        return s.logger.ErrorRet(errors.New("bad status code " + response.Status), "failed", logs.Args{{actionName, url}})
     }
 
     if v != nil {
         if err = json.Unmarshal(data, v); err != nil {
-            return s.logger.ErrorRet(err, "json.Unmarshal failed", logutil.Args{{actionName, url}})
+            return s.logger.ErrorRet(err, "json.Unmarshal failed", logs.Args{{actionName, url}})
         }
     }
 
@@ -159,7 +159,7 @@ func (s *simpleRestClient) genericActionInternal(actionName string, resource_url
 
 // Post http request
 func (s *simpleRestClient) Post(resource_url string, payload []byte, exitStatus int, v interface{}) error {
-    defer s.logger.Trace(logutil.DEBUG)()
+    defer s.logger.Trace(logs.DEBUG)()
     if exitStatus < 0 {
         exitStatus = HTTP_SUCCEED_POST // Default value
     }
@@ -168,7 +168,7 @@ func (s *simpleRestClient) Post(resource_url string, payload []byte, exitStatus 
 
 // Get http request
 func (s *simpleRestClient) Get(resource_url string, params map[string]string, exitStatus int, v interface{}) error {
-    defer s.logger.Trace(logutil.DEBUG)()
+    defer s.logger.Trace(logs.DEBUG)()
     if exitStatus < 0 {
         exitStatus = HTTP_SUCCEED // Default value
     }
@@ -177,7 +177,7 @@ func (s *simpleRestClient) Get(resource_url string, params map[string]string, ex
 
 // Delete request
 func (s *simpleRestClient) Delete(resource_url string, payload []byte, exitStatus int) error {
-    defer s.logger.Trace(logutil.DEBUG)()
+    defer s.logger.Trace(logs.DEBUG)()
     if exitStatus < 0 {
         exitStatus = HTTP_SUCCEED_DELETED // Default value
     }

@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/IBM/ubiquity/logutil"
+	"github.com/IBM/ubiquity/utils/logs"
 	"github.com/IBM/ubiquity/resources"
 	"github.com/IBM/ubiquity/utils"
 	"github.com/jinzhu/gorm"
@@ -13,7 +13,7 @@ import (
 )
 
 type scbeLocalClient struct {
-	logger         logutil.Logger
+	logger         logs.Logger
 	dataModel      ScbeDataModel
 	scbeRestClient ScbeRestClient
 	isActivated    bool
@@ -33,7 +33,7 @@ const (
 )
 
 func NewScbeLocalClient(config resources.ScbeConfig, database *gorm.DB) (resources.StorageClient, error) {
-	logger := logutil.GetLogger()
+	logger := logs.GetLogger()
 	datamodel := NewScbeDataModel(database, resources.SCBE)
 	err := datamodel.CreateVolumeTable()
 	if err != nil {
@@ -44,7 +44,7 @@ func NewScbeLocalClient(config resources.ScbeConfig, database *gorm.DB) (resourc
 }
 func NewScbeLocalClientWithNewScbeRestClientAndDataModel(config resources.ScbeConfig, dataModel ScbeDataModel, scbeRestClient ScbeRestClient) (resources.StorageClient, error) {
 	client := &scbeLocalClient{
-		logger:         logutil.GetLogger(),
+		logger:         logs.GetLogger(),
 		scbeRestClient: scbeRestClient, // TODO need to mock it in more advance way
 		dataModel:      dataModel,
 		config:         config,
@@ -66,7 +66,7 @@ func basicScbeLocalClientStartupAndValidation(s *scbeLocalClient, config resourc
 	if err := s.scbeRestClient.Login(); err != nil {
 		return s.logger.ErrorRet(err, "scbeRestClient.Login() failed")
 	}
-	s.logger.Info("scbeRestClient.Login() succeeded", logutil.Args{{"SCBE", s.config.ConnectionInfo.ManagementIP}})
+	s.logger.Info("scbeRestClient.Login() succeeded", logs.Args{{"SCBE", s.config.ConnectionInfo.ManagementIP}})
 
 	isExist, err := s.scbeRestClient.ServiceExist(s.config.DefaultService)
 	if err != nil {
@@ -76,12 +76,12 @@ func basicScbeLocalClientStartupAndValidation(s *scbeLocalClient, config resourc
 	if isExist == false {
 		return s.logger.ErrorRet(&activateDefaultServiceError{s.config.DefaultService, s.config.ConnectionInfo.ManagementIP}, "failed")
 	}
-	s.logger.Info("The default service exist in SCBE", logutil.Args{{s.config.ConnectionInfo.ManagementIP, s.config.DefaultService}})
+	s.logger.Info("The default service exist in SCBE", logs.Args{{s.config.ConnectionInfo.ManagementIP, s.config.DefaultService}})
 	return nil
 }
 
 func validateScbeConfig(config resources.ScbeConfig) error {
-	logger := logutil.GetLogger()
+	logger := logs.GetLogger()
 
 	if config.DefaultVolumeSize == "" {
 		// means customer didn't configure the default
@@ -102,7 +102,7 @@ func validateScbeConfig(config resources.ScbeConfig) error {
 }
 
 func (s *scbeLocalClient) Activate(activateRequest resources.ActivateRequest) error {
-	defer s.logger.Trace(logutil.DEBUG)()
+	defer s.logger.Trace(logs.DEBUG)()
 	s.activationLock.RLock()
 	if s.isActivated {
 		s.activationLock.RUnlock()
@@ -120,11 +120,11 @@ func (s *scbeLocalClient) Activate(activateRequest resources.ActivateRequest) er
 
 // CreateVolume parse and validate the given options and trigger the volume creation
 func (s *scbeLocalClient) CreateVolume(createVolumeRequest resources.CreateVolumeRequest) (err error) {
-	defer s.logger.Trace(logutil.DEBUG)()
+	defer s.logger.Trace(logs.DEBUG)()
 
 	_, volExists, err := s.dataModel.GetVolume(createVolumeRequest.Name)
 	if err != nil {
-		return s.logger.ErrorRet(err, "dataModel.GetVolume failed", logutil.Args{{"name", createVolumeRequest.Name}})
+		return s.logger.ErrorRet(err, "dataModel.GetVolume failed", logs.Args{{"name", createVolumeRequest.Name}})
 	}
 
 	// validate volume doesn't exist
@@ -137,7 +137,7 @@ func (s *scbeLocalClient) CreateVolume(createVolumeRequest resources.CreateVolum
 	if !ok {
 		sizeStr = s.config.DefaultVolumeSize
 		s.logger.Debug("No size given to create volume, so using the default_size",
-			logutil.Args{{"volume", createVolumeRequest.Name}, {"default_size", sizeStr}})
+			logs.Args{{"volume", createVolumeRequest.Name}, {"default_size", sizeStr}})
 	}
 
 	// validate size is a number
@@ -173,12 +173,12 @@ func (s *scbeLocalClient) CreateVolume(createVolumeRequest resources.CreateVolum
 		return s.logger.ErrorRet(err, "dataModel.InsertVolume failed")
 	}
 
-	s.logger.Info("succeeded", logutil.Args{{"volume", createVolumeRequest.Name}, {"profile", profile}})
+	s.logger.Info("succeeded", logs.Args{{"volume", createVolumeRequest.Name}, {"profile", profile}})
 	return nil
 }
 
 func (s *scbeLocalClient) RemoveVolume(removeVolumeRequest resources.RemoveVolumeRequest) (err error) {
-	defer s.logger.Trace(logutil.DEBUG)()
+	defer s.logger.Trace(logs.DEBUG)()
 
 	existingVolume, volExists, err := s.dataModel.GetVolume(removeVolumeRequest.Name)
 	if err != nil {
@@ -201,7 +201,7 @@ func (s *scbeLocalClient) RemoveVolume(removeVolumeRequest resources.RemoveVolum
 }
 
 func (s *scbeLocalClient) GetVolume(getVolumeRequest resources.GetVolumeRequest) (resources.Volume, error) {
-	defer s.logger.Trace(logutil.DEBUG)()
+	defer s.logger.Trace(logs.DEBUG)()
 
 	existingVolume, volExists, err := s.dataModel.GetVolume(getVolumeRequest.Name)
 	if err != nil {
@@ -218,7 +218,7 @@ func (s *scbeLocalClient) GetVolume(getVolumeRequest resources.GetVolumeRequest)
 }
 
 func (s *scbeLocalClient) GetVolumeConfig(getVolumeConfigRequest resources.GetVolumeConfigRequest) (map[string]interface{}, error) {
-	defer s.logger.Trace(logutil.DEBUG)()
+	defer s.logger.Trace(logs.DEBUG)()
 
 	// get volume wwn from name
 	scbeVolume, volExists, err := s.dataModel.GetVolume(getVolumeConfigRequest.Name)
@@ -239,7 +239,7 @@ func (s *scbeLocalClient) GetVolumeConfig(getVolumeConfigRequest resources.GetVo
 
 	// verify volume is found
 	if len(volumeInfo) != 1 {
-		return nil, s.logger.ErrorRet(&volumeNotFoundError{getVolumeConfigRequest.Name}, "failed", logutil.Args{{"volumeInfo", volumeInfo}})
+		return nil, s.logger.ErrorRet(&volumeNotFoundError{getVolumeConfigRequest.Name}, "failed", logs.Args{{"volumeInfo", volumeInfo}})
 	}
 
 	// serialize scbeVolumeInfo to json
@@ -258,7 +258,7 @@ func (s *scbeLocalClient) GetVolumeConfig(getVolumeConfigRequest resources.GetVo
 }
 
 func (s *scbeLocalClient) Attach(attachRequest resources.AttachRequest) (string, error) {
-	defer s.logger.Trace(logutil.DEBUG)()
+	defer s.logger.Trace(logs.DEBUG)()
 
 	if attachRequest.Host == EmptyHost {
 		return "", s.logger.ErrorRet(
@@ -280,7 +280,7 @@ func (s *scbeLocalClient) Attach(attachRequest resources.AttachRequest) (string,
 
 	if existingVolume.AttachTo == attachRequest.Host {
 		// if already map to the given host then just ignore and succeed to attach
-		s.logger.Info("Volume already attached, skip backend attach", logutil.Args{{"volume", attachRequest.Name}, {"host", attachRequest.Host}})
+		s.logger.Info("Volume already attached, skip backend attach", logs.Args{{"volume", attachRequest.Name}, {"host", attachRequest.Host}})
 		volumeMountpoint := fmt.Sprintf(resources.PathToMountUbiquityBlockDevices, existingVolume.WWN)
 		return volumeMountpoint, nil
 	} else if existingVolume.AttachTo != "" {
@@ -289,7 +289,7 @@ func (s *scbeLocalClient) Attach(attachRequest resources.AttachRequest) (string,
 
 	// Lock will ensure no other caller attach a volume from the same host concurrently, Prevent SCBE race condition on get next available lun ID
 	s.locker.WriteLock(attachRequest.Host)
-	s.logger.Debug("Attaching", logutil.Args{{"volume", existingVolume}})
+	s.logger.Debug("Attaching", logs.Args{{"volume", existingVolume}})
 	if _, err = s.scbeRestClient.MapVolume(existingVolume.WWN, attachRequest.Host); err != nil {
 		s.locker.WriteUnlock(attachRequest.Host)
 		return "", s.logger.ErrorRet(err, "scbeRestClient.MapVolume failed")
@@ -305,7 +305,7 @@ func (s *scbeLocalClient) Attach(attachRequest resources.AttachRequest) (string,
 }
 
 func (s *scbeLocalClient) Detach(detachRequest resources.DetachRequest) (err error) {
-	defer s.logger.Trace(logutil.DEBUG)()
+	defer s.logger.Trace(logs.DEBUG)()
 	host2detach := detachRequest.Host
 
 	existingVolume, volExists, err := s.dataModel.GetVolume(detachRequest.Name)
@@ -322,7 +322,7 @@ func (s *scbeLocalClient) Detach(detachRequest resources.DetachRequest) (err err
 		return s.logger.ErrorRet(&volNotAttachedError{detachRequest.Name}, "failed")
 	}
 
-	s.logger.Debug("Detaching", logutil.Args{{"volume", existingVolume}})
+	s.logger.Debug("Detaching", logs.Args{{"volume", existingVolume}})
 	if err = s.scbeRestClient.UnmapVolume(existingVolume.WWN, host2detach); err != nil {
 		return s.logger.ErrorRet(err, "scbeRestClient.UnmapVolume failed")
 	}
@@ -335,7 +335,7 @@ func (s *scbeLocalClient) Detach(detachRequest resources.DetachRequest) (err err
 }
 
 func (s *scbeLocalClient) ListVolumes(listVolumesRequest resources.ListVolumesRequest) ([]resources.Volume, error) {
-	defer s.logger.Trace(logutil.DEBUG)()
+	defer s.logger.Trace(logs.DEBUG)()
 	var err error
 
 	volumesInDb, err := s.dataModel.ListVolumes()
@@ -343,10 +343,10 @@ func (s *scbeLocalClient) ListVolumes(listVolumesRequest resources.ListVolumesRe
 		return nil, s.logger.ErrorRet(err, "dataModel.ListVolumes failed")
 	}
 
-	s.logger.Debug("Volumes in db", logutil.Args{{"num", len(volumesInDb)}})
+	s.logger.Debug("Volumes in db", logs.Args{{"num", len(volumesInDb)}})
 	var volumes []resources.Volume
 	for _, volume := range volumesInDb {
-		s.logger.Debug("Volumes from db", logutil.Args{{"volume", volume}})
+		s.logger.Debug("Volumes from db", logs.Args{{"volume", volume}})
 		volumes = append(volumes, volume.Volume)
 	}
 
@@ -354,7 +354,7 @@ func (s *scbeLocalClient) ListVolumes(listVolumesRequest resources.ListVolumesRe
 }
 
 func (s *scbeLocalClient) createVolume(name string, wwn string, profile string) error {
-	defer s.logger.Trace(logutil.DEBUG)()
+	defer s.logger.Trace(logs.DEBUG)()
 
 	if err := s.dataModel.InsertVolume(name, wwn, ""); err != nil {
 		return s.logger.ErrorRet(err, "dataModel.InsertVolume failed")
@@ -363,7 +363,7 @@ func (s *scbeLocalClient) createVolume(name string, wwn string, profile string) 
 	return nil
 }
 func (s *scbeLocalClient) getVolumeMountPoint(volume ScbeVolume) (string, error) {
-	defer s.logger.Trace(logutil.DEBUG)()
+	defer s.logger.Trace(logs.DEBUG)()
 
 	//TODO return mountpoint
 	return "some mount point", nil

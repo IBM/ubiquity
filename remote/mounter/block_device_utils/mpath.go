@@ -7,14 +7,14 @@ import (
     "regexp"
     "path"
     "path/filepath"
-    "github.com/IBM/ubiquity/logutil"
+    "github.com/IBM/ubiquity/utils/logs"
 )
 
 const multipathCmd = "multipath"
 
 
 func (s *impBlockDeviceUtils) ReloadMultipath() (error) {
-    defer s.logger.Trace(logutil.DEBUG)()
+    defer s.logger.Trace(logs.DEBUG)()
     if err := s.exec.IsExecutable(multipathCmd); err != nil {
         return s.logger.ErrorRet(&commandNotFoundError{multipathCmd, err}, "failed")
     }
@@ -27,7 +27,7 @@ func (s *impBlockDeviceUtils) ReloadMultipath() (error) {
 
 
 func (s *impBlockDeviceUtils) Discover(volumeWwn string) (string, error) {
-    defer s.logger.Trace(logutil.DEBUG)()
+    defer s.logger.Trace(logs.DEBUG)()
     if err := s.exec.IsExecutable(multipathCmd); err != nil {
         return "", s.logger.ErrorRet(&commandNotFoundError{multipathCmd, err}, "failed")
     }
@@ -56,13 +56,13 @@ func (s *impBlockDeviceUtils) Discover(volumeWwn string) (string, error) {
     if _, err = s.exec.Stat(mpath); err != nil {
         return "", s.logger.ErrorRet(err, "Stat failed")
     }
-    s.logger.Info("discovered", logutil.Args{{"volumeWwn", volumeWwn}, {"mpath", mpath}})
+    s.logger.Info("discovered", logs.Args{{"volumeWwn", volumeWwn}, {"mpath", mpath}})
     return mpath, nil
 }
 
 
 func (s *impBlockDeviceUtils) Cleanup(mpath string) (error) {
-    defer s.logger.Trace(logutil.DEBUG)()
+    defer s.logger.Trace(logs.DEBUG)()
     dev := path.Base(mpath)
     dmsetupCmd := "dmsetup"
     if err := s.exec.IsExecutable(dmsetupCmd); err != nil {
@@ -79,6 +79,6 @@ func (s *impBlockDeviceUtils) Cleanup(mpath string) (error) {
     if _, err := s.exec.Execute("sudo", args); err != nil {
         return s.logger.ErrorRet(&commandExecuteError{multipathCmd, err}, "failed")
     }
-    s.logger.Info("flushed", logutil.Args{{"mpath", mpath}})
+    s.logger.Info("flushed", logs.Args{{"mpath", mpath}})
     return nil
 }

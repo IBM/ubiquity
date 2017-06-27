@@ -3,7 +3,7 @@ package scbe_test
 import (
 	"fmt"
 	"github.com/IBM/ubiquity/local/scbe"
-	"github.com/IBM/ubiquity/logutil"
+	"github.com/IBM/ubiquity/utils/logs"
 	"github.com/IBM/ubiquity/resources"
 	"github.com/jinzhu/gorm"
 	. "github.com/onsi/ginkgo"
@@ -163,7 +163,7 @@ var _ = Describe("datamodel integration testing with live DB", func() {
 		}
 
 		// create DB
-		logutil.GetLogger().Debug("Obtaining handle to DB")
+		logs.GetLogger().Debug("Obtaining handle to DB")
 		var err error
 		db, err = gorm.Open("sqlite3", path.Join(DBPath, "integration-ubiquity.db"))
 		Expect(err).NotTo(HaveOccurred(), "failed to connect database")

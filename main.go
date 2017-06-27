@@ -12,7 +12,7 @@ import (
 
 	"github.com/BurntSushi/toml"
 	"github.com/IBM/ubiquity/local"
-	"github.com/IBM/ubiquity/logutil"
+	"github.com/IBM/ubiquity/utils/logs"
 	"github.com/IBM/ubiquity/resources"
 	"github.com/IBM/ubiquity/utils"
 	"github.com/IBM/ubiquity/web_server"
@@ -45,7 +45,7 @@ func main() {
 		return
 	}
 
-	defer logutil.InitFileLogger(logutil.DEBUG, path.Join(config.LogPath, "ubiquity.log"))()
+	defer logs.InitFileLogger(logs.DEBUG, path.Join(config.LogPath, "ubiquity.log"))()
 	logger, logFile := utils.SetupLogger(config.LogPath, "ubiquity")
 	defer utils.CloseLogs(logFile)
 

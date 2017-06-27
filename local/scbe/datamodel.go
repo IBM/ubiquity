@@ -2,7 +2,7 @@ package scbe
 
 import (
 	"fmt"
-	"github.com/IBM/ubiquity/logutil"
+	"github.com/IBM/ubiquity/utils/logs"
 	"github.com/IBM/ubiquity/model"
 	"github.com/IBM/ubiquity/resources"
 	"github.com/jinzhu/gorm"
@@ -20,7 +20,7 @@ type ScbeDataModel interface {
 }
 
 type scbeDataModel struct {
-	logger   logutil.Logger
+	logger   logs.Logger
 	database *gorm.DB
 	backend  string
 }
@@ -34,12 +34,12 @@ type ScbeVolume struct {
 }
 
 func NewScbeDataModel(db *gorm.DB, backend string) ScbeDataModel {
-	return &scbeDataModel{logger: logutil.GetLogger(), database: db, backend: backend}
+	return &scbeDataModel{logger: logs.GetLogger(), database: db, backend: backend}
 }
 
 // CreateVolumeTable create the SCBE backend table
 func (d *scbeDataModel) CreateVolumeTable() error {
-	defer d.logger.Trace(logutil.DEBUG)()
+	defer d.logger.Trace(logs.DEBUG)()
 
 	if err := d.database.AutoMigrate(&ScbeVolume{}).Error; err != nil {
 		return d.logger.ErrorRet(err, "failed")
@@ -49,7 +49,7 @@ func (d *scbeDataModel) CreateVolumeTable() error {
 
 // DeleteVolume if vol exist in DB then delete it (both in the generic table and the specific one)
 func (d *scbeDataModel) DeleteVolume(name string) error {
-	defer d.logger.Trace(logutil.DEBUG)()
+	defer d.logger.Trace(logs.DEBUG)()
 
 	volume, exists, err := d.GetVolume(name)
 
@@ -72,7 +72,7 @@ func (d *scbeDataModel) DeleteVolume(name string) error {
 
 // InsertVolume volume name and its details given in opts
 func (d *scbeDataModel) InsertVolume(volumeName string, wwn string, attachTo string) error {
-	defer d.logger.Trace(logutil.DEBUG)()
+	defer d.logger.Trace(logs.DEBUG)()
 
 	volume := ScbeVolume{
 		Volume: resources.Volume{Name: volumeName,
@@ -89,7 +89,7 @@ func (d *scbeDataModel) InsertVolume(volumeName string, wwn string, attachTo str
 
 // GetVolume return ScbeVolume if exist in DB, else return false and err
 func (d *scbeDataModel) GetVolume(name string) (ScbeVolume, bool, error) {
-	defer d.logger.Trace(logutil.DEBUG)()
+	defer d.logger.Trace(logs.DEBUG)()
 
 	volume, err := model.GetVolume(d.database, name, d.backend)
 	if err != nil {
@@ -111,7 +111,7 @@ func (d *scbeDataModel) GetVolume(name string) (ScbeVolume, bool, error) {
 }
 
 func (d *scbeDataModel) ListVolumes() ([]ScbeVolume, error) {
-	defer d.logger.Trace(logutil.DEBUG)()
+	defer d.logger.Trace(logs.DEBUG)()
 
 	var volumesInDb []ScbeVolume
 	if err := d.database.Preload("Volume").Find(&volumesInDb).Error; err != nil {
@@ -128,11 +128,11 @@ func (d *scbeDataModel) ListVolumes() ([]ScbeVolume, error) {
 	return volumes, nil
 }
 func (d *scbeDataModel) UpdateVolumeAttachTo(volumeName string, scbeVolume ScbeVolume, host2attach string) error {
-	defer d.logger.Trace(logutil.DEBUG)()
+	defer d.logger.Trace(logs.DEBUG)()
 
 	err := d.database.Table("scbe_volumes").Where("volume_id = ?", scbeVolume.ID).Update("attach_to", host2attach).Error
 	if err != nil {
-		return d.logger.ErrorRet(err, "failed", logutil.Args{{"volumeName", volumeName}})
+		return d.logger.ErrorRet(err, "failed", logs.Args{{"volumeName", volumeName}})
 	}
 	return nil
 }

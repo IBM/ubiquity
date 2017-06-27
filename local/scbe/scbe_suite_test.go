@@ -6,12 +6,12 @@ import (
 	"testing"
 
 	"github.com/jarcoal/httpmock"
-	"github.com/IBM/ubiquity/logutil"
+	"github.com/IBM/ubiquity/utils/logs"
 )
 
 func TestScbe(t *testing.T) {
 	RegisterFailHandler(Fail)
-	defer logutil.InitStdoutLogger(logutil.DEBUG)()
+	defer logs.InitStdoutLogger(logs.DEBUG)()
 	RunSpecs(t, "SCBE Test Suite")
 }
 

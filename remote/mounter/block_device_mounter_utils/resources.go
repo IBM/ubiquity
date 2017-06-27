@@ -1,7 +1,7 @@
 package block_device_mounter_utils
 
 import (
-	"github.com/IBM/ubiquity/logutil"
+	"github.com/IBM/ubiquity/utils/logs"
 	"github.com/IBM/ubiquity/remote/mounter/block_device_utils"
 )
 
@@ -22,5 +22,5 @@ func NewBlockDeviceMounterUtils() BlockDeviceMounterUtils {
 }
 
 func newBlockDeviceMounterUtils(blockDeviceUtilsInst block_device_utils.BlockDeviceUtils) BlockDeviceMounterUtils {
-	return &blockDeviceMounterUtils{logger: logutil.GetLogger(), blockDeviceUtils: blockDeviceUtilsInst}
+	return &blockDeviceMounterUtils{logger: logs.GetLogger(), blockDeviceUtils: blockDeviceUtilsInst}
 }

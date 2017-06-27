@@ -2,7 +2,7 @@ package utils
 
 import (
 	"bytes"
-	"github.com/IBM/ubiquity/logutil"
+	"github.com/IBM/ubiquity/utils/logs"
 	"os"
 	"os/exec"
 )
@@ -19,11 +19,11 @@ type Executor interface { // basic host dependent functions
 }
 
 type executor struct {
-	logger logutil.Logger
+	logger logs.Logger
 }
 
 func NewExecutor() Executor {
-	return &executor{logutil.GetLogger()}
+	return &executor{logs.GetLogger()}
 }
 
 func (e *executor) Execute(command string, args []string) ([]byte, error) {
@@ -38,7 +38,7 @@ func (e *executor) Execute(command string, args []string) ([]byte, error) {
 	stdOut := stdout.Bytes()
 	e.logger.Debug(
 		"Command executed with args and error and output.",
-		logutil.Args{
+		logs.Args{
 			{"command", command},
 			{"args", args},
 			{"error", string(stdErr[:])},
