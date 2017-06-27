@@ -188,8 +188,9 @@ type GetResponse struct {
 	Volume Volume
 	Err    string
 }
+
 type DockerGetResponse struct {
-	Volume Volume
+	Volume map[string]interface{}
 	Err    string
 }
 
