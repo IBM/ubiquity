@@ -22,7 +22,7 @@ type StorageApiHandler struct {
 }
 
 func NewStorageApiHandler(logger *log.Logger, backends map[string]resources.StorageClient, database *gorm.DB, config resources.UbiquityServerConfig) *StorageApiHandler {
-	return &StorageApiHandler{logger: logger, backends: backends, database: database, config: config, locker: utils.NewLocker(logger)}
+	return &StorageApiHandler{logger: logger, backends: backends, database: database, config: config, locker: utils.NewLocker()}
 }
 
 func (h *StorageApiHandler) Activate() http.HandlerFunc {
@@ -66,8 +66,12 @@ func (h *StorageApiHandler) Activate() http.HandlerFunc {
 			if errors != "" {
 				utils.WriteResponse(w, http.StatusInternalServerError, &resources.GenericResponse{Err: errors})
 				return
+			} else {
+				h.logger.Printf("Error - fail to activate due to error : [%s]", errors)
+				h.logger.Printf("But since SCBE succeeded lets ignore and finish activation. (TODO its a tmp hack)", errors)
 			}
 		}
+
 		h.logger.Println("Activate success (on server)")
 		utils.WriteResponse(w, http.StatusOK, nil)
 	}

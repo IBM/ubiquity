@@ -3,51 +3,10 @@ package httpmock
 import (
 	"encoding/json"
 	"encoding/xml"
-	"errors"
 	"io/ioutil"
 	"net/http"
-	"reflect"
 	"testing"
 )
-
-func TestResponderFromResponse(t *testing.T) {
-	responder := ResponderFromResponse(NewStringResponse(200, "hello world"))
-
-	req, err := http.NewRequest(http.MethodGet, testUrl, nil)
-	if err != nil {
-		t.Fatal("Error creating request")
-	}
-	response1, err := responder(req)
-	if err != nil {
-		t.Error("Error should be nil")
-	}
-
-	testUrlWithQuery := testUrl + "?a=1"
-	req, err = http.NewRequest(http.MethodGet, testUrlWithQuery, nil)
-	if err != nil {
-		t.Fatal("Error creating request")
-	}
-	response2, err := responder(req)
-	if err != nil {
-		t.Error("Error should be nil")
-	}
-
-	// Body should be the same for both responses
-	assertBody(t, response1, "hello world")
-	assertBody(t, response2, "hello world")
-
-	// Request should be non-nil and different for each response
-	if response1.Request != nil && response2.Request != nil {
-		if response1.Request.URL.String() != testUrl {
-			t.Errorf("Expected request url %s, got: %s", testUrl, response1.Request.URL.String())
-		}
-		if response2.Request.URL.String() != testUrlWithQuery {
-			t.Errorf("Expected request url %s, got: %s", testUrlWithQuery, response2.Request.URL.String())
-		}
-	} else {
-		t.Error("response.Request should not be nil")
-	}
-}
 
 func TestNewStringResponse(t *testing.T) {
 	body := "hello world"
@@ -146,22 +105,6 @@ func TestNewXmlResponse(t *testing.T) {
 
 	if checkBody.Hello != body.Hello {
 		t.FailNow()
-	}
-}
-
-func TestNewErrorResponder(t *testing.T) {
-	responder := NewErrorResponder(errors.New("oh no"))
-	req, err := http.NewRequest(http.MethodGet, testUrl, nil)
-	if err != nil {
-		t.Fatal("Error creating request")
-	}
-	response, err := responder(req)
-	if response != nil {
-		t.Error("Response should be nil")
-	}
-	expected := errors.New("oh no")
-	if !reflect.DeepEqual(err, expected) {
-		t.Errorf("Expected error %#v, got: %#v", expected, err)
 	}
 }
 

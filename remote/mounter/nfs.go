@@ -16,7 +16,7 @@ type nfsMounter struct {
 }
 
 func NewNfsMounter(logger *log.Logger) resources.Mounter {
-	return &nfsMounter{logger: logger, executor: utils.NewExecutor(logger)}
+	return &nfsMounter{logger: logger, executor: utils.NewExecutor()}
 }
 
 func (s *nfsMounter) Mount(mountRequest resources.MountRequest) (string, error) {
@@ -122,5 +122,10 @@ func (s *nfsMounter) unmount(remoteMountpoint string) error {
 	}
 	s.logger.Printf("nfsMounter: umount output: %s\n", string(output))
 
+	return nil
+}
+
+func (s *nfsMounter) ActionAfterDetach(request resources.AfterDetachRequest) error {
+	// no action needed for SSc
 	return nil
 }

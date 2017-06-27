@@ -76,7 +76,7 @@ func newSpectrumLocalClient(logger *log.Logger, config resources.SpectrumScaleCo
 	if err != nil {
 		return &spectrumLocalClient{}, err
 	}
-	return &spectrumLocalClient{logger: logger, connector: client, dataModel: datamodel, config: config, executor: utils.NewExecutor(logger), activationLock: &sync.RWMutex{}}, nil
+	return &spectrumLocalClient{logger: logger, connector: client, dataModel: datamodel, config: config, executor: utils.NewExecutor(), activationLock: &sync.RWMutex{}}, nil
 }
 
 func (s *spectrumLocalClient) Activate(activateRequest resources.ActivateRequest) (err error) {
@@ -807,7 +807,7 @@ func (s *spectrumLocalClient) updatePermissions(name string) error {
 	if exists == false {
 		return fmt.Errorf("Cannot determine filesetId for volume: %s", name)
 	}
-
+	// executor := utils.NewExecutor() // TODO check why its here ( #39: new logger in block_device_mounter_utils)
 	filesetPath := path.Join(fsMountpoint, fileset.(string))
 	//chmod 777 mountpoint
 	args := []string{"chmod", "777", filesetPath}

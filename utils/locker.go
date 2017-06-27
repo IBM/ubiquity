@@ -1,7 +1,8 @@
 package utils
 
 import (
-	"log"
+	"fmt"
+	"github.com/IBM/ubiquity/utils/logs"
 	"sync"
 	"time"
 )
@@ -14,8 +15,8 @@ type Locker interface {
 	ReadUnlock(name string)
 }
 
-func NewLocker(logger *log.Logger) Locker {
-	return &locker{locks: make(map[string]*sync.RWMutex), accessLock: &sync.Mutex{}, statsLock: &sync.Mutex{}, cleanupLock: &sync.Mutex{}, stats: make(map[string]time.Time), logger: logger}
+func NewLocker() Locker {
+	return &locker{locks: make(map[string]*sync.RWMutex), accessLock: &sync.Mutex{}, statsLock: &sync.Mutex{}, cleanupLock: &sync.Mutex{}, stats: make(map[string]time.Time), logger: logs.GetLogger()}
 }
 
 const (
@@ -28,12 +29,11 @@ type locker struct {
 	statsLock   *sync.Mutex
 	stats       map[string]time.Time
 	cleanupLock *sync.Mutex
-	logger      *log.Logger
+	logger      logs.Logger
 }
 
 func (l *locker) WriteLock(name string) {
-	l.logger.Printf("WriteLock start for '%s'\n", name)
-	defer l.logger.Printf("WriteLock end for '%s'\n", name)
+	defer l.logger.Trace(logs.DEBUG, logs.Args{{"lockName", name}})()
 
 	defer l.updateStats(name)
 	l.accessLock.Lock()
@@ -49,8 +49,7 @@ func (l *locker) WriteLock(name string) {
 	l.accessLock.Unlock()
 }
 func (l *locker) WriteUnlock(name string) {
-	l.logger.Printf("WriteUnlock start for '%s'\n", name)
-	defer l.logger.Printf("WriteUnlock end for '%s'\n", name)
+	defer l.logger.Trace(logs.DEBUG, logs.Args{{"lockName", name}})()
 	defer l.updateStats(name)
 	l.accessLock.Lock()
 	defer l.accessLock.Unlock()
@@ -61,8 +60,7 @@ func (l *locker) WriteUnlock(name string) {
 
 }
 func (l *locker) ReadLock(name string) {
-	l.logger.Printf("ReadLock start for %s\n", name)
-	defer l.logger.Printf("ReadLock end for '%s'\n", name)
+	defer l.logger.Trace(logs.DEBUG, logs.Args{{"lockName", name}})()
 	defer l.updateStats(name)
 	l.accessLock.Lock()
 	if lock, exists := l.locks[name]; exists {
@@ -77,8 +75,7 @@ func (l *locker) ReadLock(name string) {
 	l.accessLock.Unlock()
 }
 func (l *locker) ReadUnlock(name string) {
-	l.logger.Printf("ReadUnlock start for '%s'\n", name)
-	defer l.logger.Printf("ReadUnlock end for '%s'\n", name)
+	defer l.logger.Trace(logs.DEBUG, logs.Args{{"lockName", name}})()
 	defer l.updateStats(name)
 	l.accessLock.Lock()
 	defer l.accessLock.Unlock()
@@ -88,6 +85,8 @@ func (l *locker) ReadUnlock(name string) {
 	}
 }
 func (l *locker) updateStats(name string) {
+	defer l.logger.Trace(logs.DEBUG, logs.Args{{"lockName", name}})()
+
 	l.statsLock.Lock()
 	defer l.cleanup()
 	defer l.statsLock.Unlock()
@@ -100,13 +99,16 @@ func (l *locker) updateStats(name string) {
 	l.stats[name] = stat
 }
 func (l *locker) cleanup() {
+	defer l.logger.Trace(logs.DEBUG)()
+
 	l.cleanupLock.Lock()
 	defer l.cleanupLock.Unlock()
 	currentTime := time.Now()
 	var statsToDelete []string
 	for name, stat := range l.stats {
 		if currentTime.Sub(stat).Seconds() > STALE_LOCK_TIMEOUT {
-			l.logger.Printf("Removing stalelock '%s' as it has exceeded configured timeout ('%d seconds')\n", name, STALE_LOCK_TIMEOUT)
+			msg := fmt.Sprint("Removing stalelock '%s' as it has exceeded configured timeout ('%d seconds')\n", name, STALE_LOCK_TIMEOUT)
+			l.logger.Debug(msg)
 			delete(l.locks, name)
 			statsToDelete = append(statsToDelete, name)
 		}

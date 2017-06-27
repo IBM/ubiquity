@@ -13,19 +13,7 @@ import (
 // ResponderFromResponse wraps an *http.Response in a Responder
 func ResponderFromResponse(resp *http.Response) Responder {
 	return func(req *http.Request) (*http.Response, error) {
-		res := new(http.Response)
-		*res = *resp
-		res.Request = req
-		return res, nil
-	}
-}
-
-// NewErrorResponder creates a Responder that returns an empty request and the
-// given error. This can be used to e.g. imitate more deep http errors for the
-// client.
-func NewErrorResponder(err error) Responder {
-	return func(req *http.Request) (*http.Response, error) {
-		return nil, err
+		return resp, nil
 	}
 }
 

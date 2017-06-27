@@ -187,7 +187,6 @@ func (s *remoteClient) Attach(attachRequest resources.AttachRequest) (string, er
 	if err != nil {
 		return "", err
 	}
-	//needs to return actual client mounted path
 
 	return mountpoint, nil
 }
@@ -227,6 +226,11 @@ func (s *remoteClient) Detach(detachRequest resources.DetachRequest) error {
 		return utils.ExtractErrorResponse(response)
 	}
 
+	afterDetachRequest := resources.AfterDetachRequest{VolumeConfig: volumeConfig}
+	if err := mounter.ActionAfterDetach(afterDetachRequest); err != nil {
+		s.logger.Printf(fmt.Sprintf("Error execute action after detaching the volume : %#v", err))
+		return err
+	}
 	return nil
 
 }
@@ -265,6 +269,8 @@ func (s *remoteClient) getMounterForBackend(backend string) (resources.Mounter, 
 		return mounter.NewSpectrumScaleMounter(s.logger), nil
 	} else if backend == resources.SoftlayerNFS || backend == resources.SpectrumScaleNFS {
 		return mounter.NewNfsMounter(s.logger), nil
+	} else if backend == resources.SCBE {
+		return mounter.NewScbeMounter(), nil
 	}
 	return nil, fmt.Errorf("Mounter not found for backend: %s", backend)
 }

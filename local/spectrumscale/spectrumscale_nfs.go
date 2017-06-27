@@ -35,7 +35,7 @@ func NewSpectrumNfsLocalClient(logger *log.Logger, config resources.UbiquityServ
 	if err != nil {
 		return nil, err
 	}
-	return &spectrumNfsLocalClient{config: config.SpectrumScaleConfig, spectrumClient: spectrumClient, executor: utils.NewExecutor(logger)}, nil
+	return &spectrumNfsLocalClient{config: config.SpectrumScaleConfig, spectrumClient: spectrumClient, executor: utils.NewExecutor()}, nil
 }
 
 func (s *spectrumNfsLocalClient) Activate(activateRequest resources.ActivateRequest) error {
@@ -191,7 +191,7 @@ func (s *spectrumNfsLocalClient) exportNfs(name, clientConfig string) error {
 		return err
 	}
 
-	return s.spectrumClient.connector.ExportNfs(volumeMountpoint,clientConfig)
+	return s.spectrumClient.connector.ExportNfs(volumeMountpoint, clientConfig)
 }
 
 func (s *spectrumNfsLocalClient) unexportNfs(name string) error {

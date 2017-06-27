@@ -14,7 +14,7 @@ type spectrumScaleMounter struct {
 }
 
 func NewSpectrumScaleMounter(logger *log.Logger) resources.Mounter {
-	return &spectrumScaleMounter{logger: logger, executor: utils.NewExecutor(logger)}
+	return &spectrumScaleMounter{logger: logger, executor: utils.NewExecutor()}
 }
 
 func (s *spectrumScaleMounter) Mount(mountRequest resources.MountRequest) (string, error) {
@@ -61,4 +61,9 @@ func (s *spectrumScaleMounter) Unmount(unmountRequest resources.UnmountRequest) 
 	// for spectrum-scale native: No Op for now
 	return nil
 
+}
+
+func (s *spectrumScaleMounter) ActionAfterDetach(request resources.AfterDetachRequest) error {
+	// no action needed for SSc
+	return nil
 }

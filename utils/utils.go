@@ -122,7 +122,7 @@ func SetupConfigDirectory(logger *log.Logger, executor Executor, configPath stri
 		args := []string{"mkdir", ubiquityConfigPath}
 		_, err := executor.Execute("sudo", args)
 		if err != nil {
-			logger.Printf("Error creating directory")
+			logger.Printf("Error creating directory %s", err.Error())
 			return "", err
 		}
 
