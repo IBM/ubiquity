@@ -88,6 +88,15 @@ func (e *volAlreadyAttachedError) Error() string {
 	return fmt.Sprintf("Volume [%s] already attached to [%s]", e.volName, e.hostName)
 }
 
+type CannotDeleteVolWhichAttachedToHostError struct {
+	volName  string
+	hostName string
+}
+
+func (e *CannotDeleteVolWhichAttachedToHostError) Error() string {
+	return fmt.Sprintf("Cannot delete a volume that is attached to a host. The volume [%s] currently attached to host [%s]", e.volName, e.hostName)
+}
+
 type volNotAttachedError struct {
 	volName string
 }

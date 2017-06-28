@@ -4,9 +4,9 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/IBM/ubiquity/utils/logs"
 	"github.com/IBM/ubiquity/resources"
 	"github.com/IBM/ubiquity/utils"
+	"github.com/IBM/ubiquity/utils/logs"
 	"github.com/jinzhu/gorm"
 	"strconv"
 	"sync"
@@ -188,13 +188,16 @@ func (s *scbeLocalClient) RemoveVolume(removeVolumeRequest resources.RemoveVolum
 	if volExists == false {
 		return s.logger.ErrorRet(fmt.Errorf("Volume [%s] not found", removeVolumeRequest.Name), "failed")
 	}
-
-	if err = s.dataModel.DeleteVolume(removeVolumeRequest.Name); err != nil {
-		return s.logger.ErrorRet(err, "dataModel.DeleteVolume failed")
+	if existingVolume.AttachTo != EmptyHost {
+		return s.logger.ErrorRet(&CannotDeleteVolWhichAttachedToHostError{removeVolumeRequest.Name, existingVolume.AttachTo}, "failed")
 	}
 
 	if err = s.scbeRestClient.DeleteVolume(existingVolume.WWN); err != nil {
 		return s.logger.ErrorRet(err, "scbeRestClient.DeleteVolume failed")
+	}
+
+	if err = s.dataModel.DeleteVolume(removeVolumeRequest.Name); err != nil {
+		return s.logger.ErrorRet(err, "dataModel.DeleteVolume failed")
 	}
 
 	return nil
