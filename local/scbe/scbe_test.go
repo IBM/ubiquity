@@ -23,6 +23,7 @@ const (
 var (
 	fakeAttachRequest = resources.AttachRequest{Name: fakeVol, Host: fakeHost}
 	fakeDetachRequest = resources.DetachRequest{Name: fakeVol, Host: fakeHost}
+	fakeRemoveRequest = resources.RemoveVolumeRequest{Name: fakeVol}
 )
 
 var _ = Describe("scbeLocalClient init", func() {
@@ -510,4 +511,57 @@ var _ = Describe("scbeLocalClient", func() {
 			Expect(err).To(HaveOccurred())
 		})
 	})
+	Context(".Remove", func() {
+		It("should fail to remove the volume if GetVolume failed", func() {
+			fakeScbeDataModel.GetVolumeReturns(scbe.ScbeVolume{}, false, fakeErr)
+			err := client.RemoveVolume(fakeRemoveRequest)
+			Expect(err).To(HaveOccurred())
+			Expect(err).To(MatchError(fakeErr))
+		})
+		It("should fail to detach the volume if vol not exist in DB", func() {
+			fakeScbeDataModel.GetVolumeReturns(scbe.ScbeVolume{}, false, nil)
+			err := client.RemoveVolume(fakeRemoveRequest)
+			Expect(err).To(HaveOccurred())
+		})
+		It("should fail to remove the volume if vol already attached in DB", func() {
+			fakeScbeDataModel.GetVolumeReturns(
+				scbe.ScbeVolume{AttachTo: fakeHost}, true, nil)
+			err := client.RemoveVolume(fakeRemoveRequest)
+			Expect(err).To(HaveOccurred())
+			_, ok := err.(*scbe.CannotDeleteVolWhichAttachedToHostError)
+			Expect(ok).To(Equal(true))
+		})
+		It("should fail to remove the volume if fail to delete vol from system", func() {
+			fakeScbeDataModel.GetVolumeReturns(
+				scbe.ScbeVolume{AttachTo: scbe.EmptyHost}, true, nil)
+			fakeScbeRestClient.DeleteVolumeReturns(fakeErr)
+
+			err := client.RemoveVolume(fakeRemoveRequest)
+			Expect(err).To(HaveOccurred())
+			Expect(err).To(MatchError(fakeErr))
+			Expect(fakeScbeRestClient.DeleteVolumeCallCount()).To(Equal(1))
+		})
+		It("should fail to remove the volume if fail to delete from DB", func() {
+			fakeScbeDataModel.GetVolumeReturns(
+				scbe.ScbeVolume{AttachTo: scbe.EmptyHost}, true, nil)
+			fakeScbeRestClient.DeleteVolumeReturns(nil)
+			fakeScbeDataModel.DeleteVolumeReturns(fakeErr)
+			err := client.RemoveVolume(fakeRemoveRequest)
+			Expect(err).To(HaveOccurred())
+			Expect(err).To(MatchError(fakeErr))
+			Expect(fakeScbeRestClient.DeleteVolumeCallCount()).To(Equal(1))
+			Expect(fakeScbeDataModel.DeleteVolumeCallCount()).To(Equal(1))
+		})
+		It("should succeed to remove the volume if all is cool", func() {
+			fakeScbeDataModel.GetVolumeReturns(
+				scbe.ScbeVolume{AttachTo: scbe.EmptyHost}, true, nil)
+			fakeScbeRestClient.DeleteVolumeReturns(nil)
+			fakeScbeDataModel.DeleteVolumeReturns(nil)
+			err := client.RemoveVolume(fakeRemoveRequest)
+			Expect(err).NotTo(HaveOccurred())
+			Expect(fakeScbeRestClient.DeleteVolumeCallCount()).To(Equal(1))
+			Expect(fakeScbeDataModel.DeleteVolumeCallCount()).To(Equal(1))
+		})
+	})
+
 })
