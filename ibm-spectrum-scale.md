@@ -1,4 +1,18 @@
-## IBM Spectrum Scale
+# IBM Spectrum Scale
+
+* [Introduction](#introduction)
+* [Deployment Options](#deployment-options)
+   * [Single Node](#single-node-all-in-one)
+   * [Multi Node using Native GPFS](#multi-node-using-native-gpfs-posix)
+   * [Multi Node using NFS](#multi-node-using-nfs-protocol)
+   * [Multi Node using Native GPFS with Docker Swarm](#multi-node-using-native-gpfsposix-and-docker-swarm)
+* [Configuration](#configuring-ubiquity-service-with-spectrum-scale)
+* [Volume Types](#supported-volume-types)
+* [Volume Creation Options](#supported-volume-creation-options)
+* [Spectrum Scale Accessibility](#ubiquity-service-access-to-ibm-spectrum-scale-cli)
+
+## Introduction
+
 With IBM Spectrum Scale, containers can have shared file system access to any number of containers from small clusters of a few hosts up to very large clusters with thousands of hosts.
 
 The current plugin supports the following protocols:
@@ -7,11 +21,11 @@ The current plugin supports the following protocols:
  
 **Note** that if option backend is not specified to Docker as an opt parameter, or to Kubernetes in the yaml file, the backend defaults to server side default specification.
 
-Spectrum Scale supports the following options for creating a volume.  ther the native or NFS driver is used, the set of options is exactly the same.  They are passed to Docker via the 'opt' option on the command line as a set of key-value pairs.  
+Spectrum Scale supports volume management using the native client or CES NFS and the set of options used for either of them are exactly the same.  They are passed to Docker via the 'opt' option on the command line as a set of key-value pairs.  
 
 Note that POSIX volumes are not accessible via NFS, but NFS volumes are accessible via POSIX.  This is because NFS requires the additional step of exporting the dataset on the storage server.  To make a POSIX volume accessible via NFS, simply create the volume using the 'spectrum-scale-nfs' backend using the same path or fileset name. 
 
-## Sample Deployment Options of Ubiquity Service with IBM Spectrum Scale
+## Deployment Options
 Ubiquity must be deployed on a node that has access(e.g CLI, REST, SSH) to the IBM Spectrum Scale Cluster
 
 #### Single Node (All in One)
