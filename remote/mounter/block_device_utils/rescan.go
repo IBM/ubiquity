@@ -5,9 +5,9 @@ import (
 	"github.com/IBM/ubiquity/utils/logs"
 )
 
-
 func (s *impBlockDeviceUtils) Rescan(protocol Protocol) error {
 	defer s.logger.Trace(logs.DEBUG)()
+
 	switch protocol {
 	case SCSI:
 		return s.RescanSCSI()

@@ -115,6 +115,7 @@ func PrintResponse(f resources.FlexVolumeResponse) error {
 func SetupConfigDirectory(logger *log.Logger, executor Executor, configPath string) (string, error) {
 	logger.Println("setupConfigPath start")
 	defer logger.Println("setupConfigPath end")
+
 	ubiquityConfigPath := path.Join(configPath, ".config")
 	logger.Printf("User specified config path: %s", configPath)
 

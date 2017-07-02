@@ -38,5 +38,5 @@ func NewBlockDeviceUtilsWithExecutor(executor utils.Executor) BlockDeviceUtils {
 }
 
 func newBlockDeviceUtils(executor utils.Executor) BlockDeviceUtils {
-	return &impBlockDeviceUtils{logger:logs.GetLogger(), exec: executor}
+	return &impBlockDeviceUtils{logger: logs.GetLogger(), exec: executor}
 }
