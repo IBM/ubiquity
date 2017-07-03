@@ -8,10 +8,12 @@ import (
 )
 
 type FakeBlockDeviceMounterUtils struct {
-	RescanAllStub        func(withISCSI bool) error
+	RescanAllStub        func(withISCSI bool, wwn string, rescanForCleanUp bool) error
 	rescanAllMutex       sync.RWMutex
 	rescanAllArgsForCall []struct {
-		withISCSI bool
+		withISCSI        bool
+		wwn              string
+		rescanForCleanUp bool
 	}
 	rescanAllReturns struct {
 		result1 error
@@ -60,16 +62,18 @@ type FakeBlockDeviceMounterUtils struct {
 	invocationsMutex sync.RWMutex
 }
 
-func (fake *FakeBlockDeviceMounterUtils) RescanAll(withISCSI bool) error {
+func (fake *FakeBlockDeviceMounterUtils) RescanAll(withISCSI bool, wwn string, rescanForCleanUp bool) error {
 	fake.rescanAllMutex.Lock()
 	ret, specificReturn := fake.rescanAllReturnsOnCall[len(fake.rescanAllArgsForCall)]
 	fake.rescanAllArgsForCall = append(fake.rescanAllArgsForCall, struct {
-		withISCSI bool
-	}{withISCSI})
-	fake.recordInvocation("RescanAll", []interface{}{withISCSI})
+		withISCSI        bool
+		wwn              string
+		rescanForCleanUp bool
+	}{withISCSI, wwn, rescanForCleanUp})
+	fake.recordInvocation("RescanAll", []interface{}{withISCSI, wwn, rescanForCleanUp})
 	fake.rescanAllMutex.Unlock()
 	if fake.RescanAllStub != nil {
-		return fake.RescanAllStub(withISCSI)
+		return fake.RescanAllStub(withISCSI, wwn, rescanForCleanUp)
 	}
 	if specificReturn {
 		return ret.result1
@@ -83,10 +87,10 @@ func (fake *FakeBlockDeviceMounterUtils) RescanAllCallCount() int {
 	return len(fake.rescanAllArgsForCall)
 }
 
-func (fake *FakeBlockDeviceMounterUtils) RescanAllArgsForCall(i int) bool {
+func (fake *FakeBlockDeviceMounterUtils) RescanAllArgsForCall(i int) (bool, string, bool) {
 	fake.rescanAllMutex.RLock()
 	defer fake.rescanAllMutex.RUnlock()
-	return fake.rescanAllArgsForCall[i].withISCSI
+	return fake.rescanAllArgsForCall[i].withISCSI, fake.rescanAllArgsForCall[i].wwn, fake.rescanAllArgsForCall[i].rescanForCleanUp
 }
 
 func (fake *FakeBlockDeviceMounterUtils) RescanAllReturns(result1 error) {

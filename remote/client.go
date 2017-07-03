@@ -15,16 +15,17 @@ import (
 )
 
 type remoteClient struct {
-	logger        *log.Logger
-	isActivated   bool
-	isMounted     bool
-	httpClient    *http.Client
-	storageApiURL string
-	config        resources.UbiquityPluginConfig
+	logger            *log.Logger
+	isActivated       bool
+	isMounted         bool
+	httpClient        *http.Client
+	storageApiURL     string
+	config            resources.UbiquityPluginConfig
+	mounterPerBackend map[string]resources.Mounter
 }
 
 func NewRemoteClient(logger *log.Logger, storageApiURL string, config resources.UbiquityPluginConfig) (resources.StorageClient, error) {
-	return &remoteClient{logger: logger, storageApiURL: storageApiURL, httpClient: &http.Client{}, config: config}, nil
+	return &remoteClient{logger: logger, storageApiURL: storageApiURL, httpClient: &http.Client{}, config: config, mounterPerBackend: make(map[string]resources.Mounter)}, nil
 }
 
 func (s *remoteClient) Activate(activateRequest resources.ActivateRequest) error {
@@ -262,15 +263,22 @@ func (s *remoteClient) ListVolumes(listVolumesRequest resources.ListVolumesReque
 
 }
 
+// Return the mounter object. If mounter object already used(in the map mounterPerBackend) then just reuse it
 func (s *remoteClient) getMounterForBackend(backend string) (resources.Mounter, error) {
 	s.logger.Println("remoteClient: getMounterForVolume start")
 	defer s.logger.Println("remoteClient: getMounterForVolume end")
-	if backend == resources.SpectrumScale {
-		return mounter.NewSpectrumScaleMounter(s.logger), nil
+	mounterInst, ok := s.mounterPerBackend[backend]
+	if ok {
+		s.logger.Printf("getMounterForVolume reuse existing mounter for backend " + backend)
+		return mounterInst, nil
+	} else if backend == resources.SpectrumScale {
+		s.mounterPerBackend[backend] = mounter.NewSpectrumScaleMounter(s.logger)
 	} else if backend == resources.SoftlayerNFS || backend == resources.SpectrumScaleNFS {
-		return mounter.NewNfsMounter(s.logger), nil
+		s.mounterPerBackend[backend] = mounter.NewNfsMounter(s.logger)
 	} else if backend == resources.SCBE {
-		return mounter.NewScbeMounter(), nil
+		s.mounterPerBackend[backend] = mounter.NewScbeMounter()
+	} else {
+		return nil, fmt.Errorf("Mounter not found for backend: %s", backend)
 	}
-	return nil, fmt.Errorf("Mounter not found for backend: %s", backend)
+	return s.mounterPerBackend[backend], nil
 }
