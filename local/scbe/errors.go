@@ -78,7 +78,7 @@ type FsTypeNotSupportedError struct {
 
 func (e *FsTypeNotSupportedError) Error() string {
 	return fmt.Sprintf("Fail to provision a volume [%s]. Supported filesystem types are [%s] (but given [%s])",
-		e.volName, e.supportedTypes, e.supportedTypes)
+		e.volName, e.supportedTypes, e.wrongFStype)
 }
 
 type provisionParamIsNotNumberError struct {
