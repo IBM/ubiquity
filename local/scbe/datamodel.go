@@ -2,9 +2,9 @@ package scbe
 
 import (
 	"fmt"
-	"github.com/IBM/ubiquity/utils/logs"
 	"github.com/IBM/ubiquity/model"
 	"github.com/IBM/ubiquity/resources"
+	"github.com/IBM/ubiquity/utils/logs"
 	"github.com/jinzhu/gorm"
 	_ "github.com/mattn/go-sqlite3"
 )
@@ -13,7 +13,7 @@ import (
 type ScbeDataModel interface {
 	CreateVolumeTable() error
 	DeleteVolume(name string) error
-	InsertVolume(volumeName string, wwn string, attachTo string) error
+	InsertVolume(volumeName string, wwn string, attachTo string, fstype string) error
 	GetVolume(name string) (ScbeVolume, bool, error)
 	ListVolumes() ([]ScbeVolume, error)
 	UpdateVolumeAttachTo(volumeName string, scbeVolume ScbeVolume, host2attach string) error
@@ -31,6 +31,7 @@ type ScbeVolume struct {
 	VolumeID uint
 	WWN      string
 	AttachTo string
+	FSType   string
 }
 
 func NewScbeDataModel(db *gorm.DB, backend string) ScbeDataModel {
@@ -71,7 +72,7 @@ func (d *scbeDataModel) DeleteVolume(name string) error {
 }
 
 // InsertVolume volume name and its details given in opts
-func (d *scbeDataModel) InsertVolume(volumeName string, wwn string, attachTo string) error {
+func (d *scbeDataModel) InsertVolume(volumeName string, wwn string, attachTo string, fstype string) error {
 	defer d.logger.Trace(logs.DEBUG)()
 
 	volume := ScbeVolume{
@@ -79,6 +80,7 @@ func (d *scbeDataModel) InsertVolume(volumeName string, wwn string, attachTo str
 			Backend: fmt.Sprintf("%s", d.backend)},
 		WWN:      wwn,
 		AttachTo: attachTo,
+		FSType:   fstype,
 	}
 
 	if err := d.database.Create(&volume).Error; err != nil {

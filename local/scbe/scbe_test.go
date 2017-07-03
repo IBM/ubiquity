@@ -51,6 +51,18 @@ var _ = Describe("scbeLocalClient init", func() {
 			_, ok := err.(*scbe.ConfigDefaultSizeNotNumError)
 			Expect(ok).To(Equal(true))
 		})
+		It("should fail because DefaultFilesystemType is not supported", func() {
+			fakeConfig = resources.ScbeConfig{
+				DefaultFilesystemType: "bad fstype",
+			}
+			client, err = scbe.NewScbeLocalClientWithNewScbeRestClientAndDataModel(
+				fakeConfig,
+				fakeScbeDataModel,
+				fakeScbeRestClient)
+			Expect(err).To(HaveOccurred())
+			_, ok := err.(*scbe.ConfigDefaultFilesystemTypeNotSupported)
+			Expect(ok).To(Equal(true))
+		})
 		It("should fail because UbiquityInstanceName lenth is too long", func() {
 			fakeConfig = resources.ScbeConfig{
 				UbiquityInstanceName: "1234567890123456",
@@ -78,6 +90,35 @@ var _ = Describe("scbeLocalClient init", func() {
 				fakeScbeRestClient)
 			Expect(err).NotTo(HaveOccurred())
 		})
+		It("should succeed to init because config is ok (ext4)", func() {
+			fakeConfig = resources.ScbeConfig{
+				UbiquityInstanceName:  "123456789012345",
+				DefaultVolumeSize:     "1",
+				DefaultFilesystemType: "ext4",
+			}
+			fakeScbeRestClient.LoginReturns(nil)
+			fakeScbeRestClient.ServiceExistReturns(true, nil)
+
+			client, err = scbe.NewScbeLocalClientWithNewScbeRestClientAndDataModel(
+				fakeConfig,
+				fakeScbeDataModel,
+				fakeScbeRestClient)
+			Expect(err).NotTo(HaveOccurred())
+		})
+		It("should succeed to init because config is ok (xsf)", func() {
+			fakeConfig = resources.ScbeConfig{
+				DefaultFilesystemType: "xfs",
+			}
+			fakeScbeRestClient.LoginReturns(nil)
+			fakeScbeRestClient.ServiceExistReturns(true, nil)
+
+			client, err = scbe.NewScbeLocalClientWithNewScbeRestClientAndDataModel(
+				fakeConfig,
+				fakeScbeDataModel,
+				fakeScbeRestClient)
+			Expect(err).NotTo(HaveOccurred())
+		})
+
 	})
 })
 
@@ -203,13 +244,6 @@ var _ = Describe("scbeLocalClient", func() {
 			err = client.CreateVolume(req)
 			Expect(err).To(HaveOccurred())
 		})
-		It("should fail create volume if vol sise not provided in opts", func() {
-			fakeScbeDataModel.GetVolumeReturns(scbe.ScbeVolume{}, false, nil)
-			req := resources.CreateVolumeRequest{Name: "fakevol", Backend: resources.SCBE, Opts: nil}
-			err = client.CreateVolume(req)
-			Expect(err).To(HaveOccurred())
-		})
-
 		It("should fail create volume if vol size is not number", func() {
 			fakeScbeDataModel.GetVolumeReturns(scbe.ScbeVolume{}, false, nil)
 			opts := make(map[string]interface{})
@@ -218,6 +252,17 @@ var _ = Describe("scbeLocalClient", func() {
 			err = client.CreateVolume(req)
 			Expect(err).To(HaveOccurred())
 		})
+		It("should fail create volume if vol size is not number", func() {
+			fakeScbeDataModel.GetVolumeReturns(scbe.ScbeVolume{}, false, nil)
+			opts := make(map[string]interface{})
+			opts[resources.OptionNameForVolumeFsType] = "bad-fs-type"
+			req := resources.CreateVolumeRequest{Name: "fakevol", Backend: resources.SCBE, Opts: opts}
+			err = client.CreateVolume(req)
+			Expect(err).To(HaveOccurred())
+			_, ok := err.(*scbe.FsTypeNotSupportedError)
+			Expect(ok).To(Equal(true))
+		})
+
 		It("should fail create volume if vol len exeeded", func() {
 			fakeScbeDataModel.GetVolumeReturns(scbe.ScbeVolume{}, false, nil)
 			opts := make(map[string]interface{})
@@ -302,10 +347,11 @@ var _ = Describe("scbeLocalClient", func() {
 			Expect(err).To(HaveOccurred())
 			Expect(err.Error()).To(Equal("error"))
 			Expect(fakeScbeDataModel.InsertVolumeCallCount()).To(Equal(1))
-			name, wwn, host := fakeScbeDataModel.InsertVolumeArgsForCall(0)
+			name, wwn, host, fstype := fakeScbeDataModel.InsertVolumeArgsForCall(0)
 			Expect(name).To(Equal(volFake))
 			Expect(wwn).To(Equal("wwn1"))
 			Expect(host).To(Equal(scbe.AttachedToNothing))
+			Expect(fstype).To(Equal("ext4"))
 		})
 
 		It("should succeed to insert vol to DB after create it", func() {
@@ -321,11 +367,51 @@ var _ = Describe("scbeLocalClient", func() {
 			err = client.CreateVolume(req)
 			Expect(err).NotTo(HaveOccurred())
 			Expect(fakeScbeDataModel.InsertVolumeCallCount()).To(Equal(1))
-			name, wwn, host := fakeScbeDataModel.InsertVolumeArgsForCall(0)
+			name, wwn, host, fstype := fakeScbeDataModel.InsertVolumeArgsForCall(0)
 			Expect(name).To(Equal(volFake))
 			Expect(wwn).To(Equal("wwn1"))
+			Expect(fstype).To(Equal("ext4"))
 			Expect(host).To(Equal(scbe.AttachedToNothing))
 		})
+		It("should succeed to insert vol to DB even if size not provided", func() {
+			fakeScbeDataModel.GetVolumeReturns(scbe.ScbeVolume{}, false, nil)
+			fakeScbeRestClient.CreateVolumeReturns(scbe.ScbeVolumeInfo{Name: "v1", Wwn: "wwn1", Profile: "gold"}, nil)
+			fakeScbeDataModel.InsertVolumeReturns(nil)
+			opts := make(map[string]interface{})
+			//opts[scbe.OptionNameForVolumeSize] = "10"
+			opts[scbe.OptionNameForServiceName] = "gold"
+
+			volFake := "fakevol"
+			req := resources.CreateVolumeRequest{Name: volFake, Backend: resources.SCBE, Opts: opts}
+			err = client.CreateVolume(req)
+			Expect(err).NotTo(HaveOccurred())
+			Expect(fakeScbeDataModel.InsertVolumeCallCount()).To(Equal(1))
+			name, wwn, host, fstype := fakeScbeDataModel.InsertVolumeArgsForCall(0)
+			Expect(name).To(Equal(volFake))
+			Expect(wwn).To(Equal("wwn1"))
+			Expect(fstype).To(Equal("ext4"))
+			Expect(host).To(Equal(scbe.AttachedToNothing))
+		})
+		It("should succeed to insert vol to DB even if size not provided (xfs)", func() {
+			fakeScbeDataModel.GetVolumeReturns(scbe.ScbeVolume{}, false, nil)
+			fakeScbeRestClient.CreateVolumeReturns(scbe.ScbeVolumeInfo{Name: "v1", Wwn: "wwn1", Profile: "gold"}, nil)
+			fakeScbeDataModel.InsertVolumeReturns(nil)
+			opts := make(map[string]interface{})
+			opts[resources.OptionNameForVolumeFsType] = "xfs"
+			opts[scbe.OptionNameForServiceName] = "gold"
+
+			volFake := "fakevol"
+			req := resources.CreateVolumeRequest{Name: volFake, Backend: resources.SCBE, Opts: opts}
+			err = client.CreateVolume(req)
+			Expect(err).NotTo(HaveOccurred())
+			Expect(fakeScbeDataModel.InsertVolumeCallCount()).To(Equal(1))
+			name, wwn, host, fstype := fakeScbeDataModel.InsertVolumeArgsForCall(0)
+			Expect(name).To(Equal(volFake))
+			Expect(wwn).To(Equal("wwn1"))
+			Expect(fstype).To(Equal("xfs"))
+			Expect(host).To(Equal(scbe.AttachedToNothing))
+		})
+
 	})
 })
 
@@ -475,12 +561,19 @@ var _ = Describe("scbeLocalClient", func() {
 			for i := 0; i < val.Type().NumField(); i++ {
 				reflect.ValueOf(vol).Elem().Field(i).SetString(val.Type().Field(i).Name)
 			}
-			fakeScbeDataModel.GetVolumeReturns(scbe.ScbeVolume{WWN: "wwn"}, true, nil)
+			fakeScbeDataModel.GetVolumeReturns(scbe.ScbeVolume{WWN: "wwn", FSType: "ext4"}, true, nil)
 			fakeScbeRestClient.GetVolumesReturns(volumes, nil)
 			volConfig, err := client.GetVolumeConfig(resources.GetVolumeConfigRequest{"name"})
 			Expect(err).To(Not(HaveOccurred()))
-			Expect(len(volConfig)).To(Equal(val.Type().NumField()))
+			Expect(len(volConfig)).To(Equal(val.Type().NumField() + scbe.GetVolumeConfigExtraParams))
+			fstype, ok := volConfig[resources.OptionNameForVolumeFsType]
+			Expect(ok).To(Equal(true))
+			Expect(fstype).To(Equal("ext4"))
+
 			for k, v := range volConfig {
+				if k == resources.OptionNameForVolumeFsType {
+					continue
+				}
 				Expect(k).To(Not(Equal("")))
 				Expect(k).To(Equal(v))
 			}

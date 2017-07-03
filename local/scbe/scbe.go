@@ -9,6 +9,7 @@ import (
 	"github.com/IBM/ubiquity/utils/logs"
 	"github.com/jinzhu/gorm"
 	"strconv"
+	"strings"
 	"sync"
 )
 
@@ -30,6 +31,12 @@ const (
 	EmptyHost                = ""
 	ComposeVolumeName        = volumeNamePrefix + "%s_%s" // e.g u_instance1_volName
 	MaxVolumeNameLength      = 63                         // IBM block storage max volume name cannot exceed this length
+
+	GetVolumeConfigExtraParams = 1 // number of extra params added to the VolumeConfig beyond the scbe volume struct
+)
+
+var (
+	SupportedFSTypes = []string{"ext4", "xfs"}
 )
 
 func NewScbeLocalClient(config resources.ScbeConfig, database *gorm.DB) (resources.StorageClient, error) {
@@ -43,6 +50,10 @@ func NewScbeLocalClient(config resources.ScbeConfig, database *gorm.DB) (resourc
 	return NewScbeLocalClientWithNewScbeRestClientAndDataModel(config, datamodel, scbeRestClient)
 }
 func NewScbeLocalClientWithNewScbeRestClientAndDataModel(config resources.ScbeConfig, dataModel ScbeDataModel, scbeRestClient ScbeRestClient) (resources.StorageClient, error) {
+	if err := validateScbeConfig(&config); err != nil {
+		return &scbeLocalClient{}, err
+	}
+
 	client := &scbeLocalClient{
 		logger:         logs.GetLogger(),
 		scbeRestClient: scbeRestClient, // TODO need to mock it in more advance way
@@ -51,18 +62,14 @@ func NewScbeLocalClientWithNewScbeRestClientAndDataModel(config resources.ScbeCo
 		activationLock: &sync.RWMutex{},
 		locker:         utils.NewLocker(),
 	}
-	if err := basicScbeLocalClientStartupAndValidation(client, config); err != nil {
+	if err := basicScbeLocalClientStartupAndValidation(client); err != nil {
 		return &scbeLocalClient{}, err
 	}
 	return client, nil
 }
 
 // basicScbeLocalClientStartup validate config params, login to SCBE and validate default exist
-func basicScbeLocalClientStartupAndValidation(s *scbeLocalClient, config resources.ScbeConfig) error {
-	if err := validateScbeConfig(config); err != nil {
-		return err
-	}
-
+func basicScbeLocalClientStartupAndValidation(s *scbeLocalClient) error {
 	if err := s.scbeRestClient.Login(); err != nil {
 		return s.logger.ErrorRet(err, "scbeRestClient.Login() failed")
 	}
@@ -80,7 +87,7 @@ func basicScbeLocalClientStartupAndValidation(s *scbeLocalClient, config resourc
 	return nil
 }
 
-func validateScbeConfig(config resources.ScbeConfig) error {
+func validateScbeConfig(config *resources.ScbeConfig) error {
 	logger := logs.GetLogger()
 
 	if config.DefaultVolumeSize == "" {
@@ -93,10 +100,20 @@ func validateScbeConfig(config resources.ScbeConfig) error {
 		return logger.ErrorRet(&ConfigDefaultSizeNotNumError{}, "failed")
 	}
 
+	if config.DefaultFilesystemType == "" {
+		// means customer didn't configure the default
+		config.DefaultFilesystemType = resources.DefaultForScbeConfigParamDefaultFilesystem
+		logger.Debug("No DefaultFileSystemType defined in conf file, so set the DefaultFileSystemType to value " + resources.DefaultForScbeConfigParamDefaultFilesystem)
+	} else if !utils.StringInSlice(config.DefaultFilesystemType, SupportedFSTypes) {
+		return logger.ErrorRet(
+			&ConfigDefaultFilesystemTypeNotSupported{
+				config.DefaultFilesystemType,
+				strings.Join(SupportedFSTypes, ",")}, "failed")
+	}
+
 	if len(config.UbiquityInstanceName) > resources.UbiquityInstanceNameMaxSize {
 		return logger.ErrorRet(&ConfigScbeUbiquityInstanceNameWrongSize{}, "failed")
 	}
-
 	// TODO add more verification on the config file.
 	return nil
 }
@@ -145,6 +162,22 @@ func (s *scbeLocalClient) CreateVolume(createVolumeRequest resources.CreateVolum
 	if err != nil {
 		return s.logger.ErrorRet(&provisionParamIsNotNumberError{createVolumeRequest.Name, OptionNameForVolumeSize}, "failed")
 	}
+
+	// validate fstype option given
+	fstypeInt, ok := createVolumeRequest.Opts[resources.OptionNameForVolumeFsType]
+	var fstype string
+	if !ok {
+		fstype = s.config.DefaultFilesystemType
+		s.logger.Debug("No default file system type given to create a volume, so using the default_fstype",
+			logs.Args{{"volume", createVolumeRequest.Name}, {"default_fstype", fstype}})
+	} else {
+		fstype = fstypeInt.(string)
+	}
+	if !utils.StringInSlice(fstype, SupportedFSTypes) {
+		return s.logger.ErrorRet(
+			&FsTypeNotSupportedError{createVolumeRequest.Name, fstype, strings.Join(SupportedFSTypes, ",")}, "failed")
+	}
+
 	// Get the profile option
 	profile := s.config.DefaultService
 	if createVolumeRequest.Opts[OptionNameForServiceName] != "" && createVolumeRequest.Opts[OptionNameForServiceName] != nil {
@@ -161,6 +194,7 @@ func (s *scbeLocalClient) CreateVolume(createVolumeRequest resources.CreateVolum
 		maxVolLength := MaxVolumeNameLength - volNamePrefixForCheckLengthLen // its dynamic because it depends on the UbiquityInstanceName len
 		return s.logger.ErrorRet(&VolumeNameExceededMaxLengthError{createVolumeRequest.Name, maxVolLength}, "failed")
 	}
+
 	// Provision the volume on SCBE service
 	volInfo := ScbeVolumeInfo{}
 	volInfo, err = s.scbeRestClient.CreateVolume(volNameToCreate, profile, size)
@@ -168,7 +202,7 @@ func (s *scbeLocalClient) CreateVolume(createVolumeRequest resources.CreateVolum
 		return s.logger.ErrorRet(err, "scbeRestClient.CreateVolume failed")
 	}
 
-	err = s.dataModel.InsertVolume(createVolumeRequest.Name, volInfo.Wwn, AttachedToNothing)
+	err = s.dataModel.InsertVolume(createVolumeRequest.Name, volInfo.Wwn, AttachedToNothing, fstype)
 	if err != nil {
 		return s.logger.ErrorRet(err, "dataModel.InsertVolume failed")
 	}
@@ -257,6 +291,8 @@ func (s *scbeLocalClient) GetVolumeConfig(getVolumeConfigRequest resources.GetVo
 		return nil, s.logger.ErrorRet(err, "json.Unmarshal failed")
 	}
 
+	// The ubiquity remote will use this extra info to determine the fstype needed to be created on this volume while attaching
+	volConfig[resources.OptionNameForVolumeFsType] = scbeVolume.FSType
 	return volConfig, nil
 }
 
@@ -356,15 +392,6 @@ func (s *scbeLocalClient) ListVolumes(listVolumesRequest resources.ListVolumesRe
 	return volumes, nil
 }
 
-func (s *scbeLocalClient) createVolume(name string, wwn string, profile string) error {
-	defer s.logger.Trace(logs.DEBUG)()
-
-	if err := s.dataModel.InsertVolume(name, wwn, ""); err != nil {
-		return s.logger.ErrorRet(err, "dataModel.InsertVolume failed")
-	}
-
-	return nil
-}
 func (s *scbeLocalClient) getVolumeMountPoint(volume ScbeVolume) (string, error) {
 	defer s.logger.Trace(logs.DEBUG)()
 

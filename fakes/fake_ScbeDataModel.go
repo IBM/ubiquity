@@ -29,12 +29,13 @@ type FakeScbeDataModel struct {
 	deleteVolumeReturnsOnCall map[int]struct {
 		result1 error
 	}
-	InsertVolumeStub        func(volumeName string, wwn string, attachTo string) error
+	InsertVolumeStub        func(volumeName string, wwn string, attachTo string, fstype string) error
 	insertVolumeMutex       sync.RWMutex
 	insertVolumeArgsForCall []struct {
 		volumeName string
 		wwn        string
 		attachTo   string
+		fstype     string
 	}
 	insertVolumeReturns struct {
 		result1 error
@@ -173,18 +174,19 @@ func (fake *FakeScbeDataModel) DeleteVolumeReturnsOnCall(i int, result1 error) {
 	}{result1}
 }
 
-func (fake *FakeScbeDataModel) InsertVolume(volumeName string, wwn string, attachTo string) error {
+func (fake *FakeScbeDataModel) InsertVolume(volumeName string, wwn string, attachTo string, fstype string) error {
 	fake.insertVolumeMutex.Lock()
 	ret, specificReturn := fake.insertVolumeReturnsOnCall[len(fake.insertVolumeArgsForCall)]
 	fake.insertVolumeArgsForCall = append(fake.insertVolumeArgsForCall, struct {
 		volumeName string
 		wwn        string
 		attachTo   string
-	}{volumeName, wwn, attachTo})
-	fake.recordInvocation("InsertVolume", []interface{}{volumeName, wwn, attachTo})
+		fstype     string
+	}{volumeName, wwn, attachTo, fstype})
+	fake.recordInvocation("InsertVolume", []interface{}{volumeName, wwn, attachTo, fstype})
 	fake.insertVolumeMutex.Unlock()
 	if fake.InsertVolumeStub != nil {
-		return fake.InsertVolumeStub(volumeName, wwn, attachTo)
+		return fake.InsertVolumeStub(volumeName, wwn, attachTo, fstype)
 	}
 	if specificReturn {
 		return ret.result1
@@ -198,10 +200,10 @@ func (fake *FakeScbeDataModel) InsertVolumeCallCount() int {
 	return len(fake.insertVolumeArgsForCall)
 }
 
-func (fake *FakeScbeDataModel) InsertVolumeArgsForCall(i int) (string, string, string) {
+func (fake *FakeScbeDataModel) InsertVolumeArgsForCall(i int) (string, string, string, string) {
 	fake.insertVolumeMutex.RLock()
 	defer fake.insertVolumeMutex.RUnlock()
-	return fake.insertVolumeArgsForCall[i].volumeName, fake.insertVolumeArgsForCall[i].wwn, fake.insertVolumeArgsForCall[i].attachTo
+	return fake.insertVolumeArgsForCall[i].volumeName, fake.insertVolumeArgsForCall[i].wwn, fake.insertVolumeArgsForCall[i].attachTo, fake.insertVolumeArgsForCall[i].fstype
 }
 
 func (fake *FakeScbeDataModel) InsertVolumeReturns(result1 error) {
