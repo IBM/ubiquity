@@ -25,7 +25,7 @@ func NewScbeMounter() resources.Mounter {
 
 func (s *scbeMounter) Mount(mountRequest resources.MountRequest) (string, error) {
 	defer s.logger.Trace(logs.DEBUG)()
-	volumeWWN := mountRequest.VolumeConfig["Wwn"].(string) // TODO use the const from local/scbe
+	volumeWWN := mountRequest.VolumeConfig["Wwn"].(string)
 
 	// Rescan OS
 	if err := s.blockDeviceMounterUtils.RescanAll(true, volumeWWN, false); err != nil {
@@ -47,7 +47,15 @@ func (s *scbeMounter) Mount(mountRequest resources.MountRequest) (string, error)
 	}
 
 	// Mount device and mkfs if needed
-	fstype := resources.DefaultForScbeConfigParamDefaultFilesystem // TODO uses volumeConfig['fstype']
+	var fstype string
+	fstypeInterface, ok := mountRequest.VolumeConfig[resources.OptionNameForVolumeFsType]
+	if !ok {
+		// the backend should do this default, but this is just for safe
+		fstype = resources.DefaultForScbeConfigParamDefaultFilesystem
+	} else {
+		fstype = fstypeInterface.(string)
+	}
+
 	if err := s.blockDeviceMounterUtils.MountDeviceFlow(devicePath, fstype, mountRequest.Mountpoint); err != nil {
 		return "", s.logger.ErrorRet(err, "MountDeviceFlow failed", logs.Args{{"devicePath", devicePath}})
 	}
