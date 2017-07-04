@@ -31,7 +31,7 @@ __1. Install and configure IBM SCBE__
 
 __2. Configure Ubiquity Service for SCBE__
 
-* The following snippet shows a sample configuration file for Ubiquity service for IBM Block Storage System:
+* The configuration file must be locate in `/etc/ubiquity/ubiquity-server.conf` file. See configuration file example below.
 ```toml
 port = 9999                     # The TCP port to listen on.
 logPath = "/var/tmp "           # The Ubiquity service will write logs to the "ubiquity.log" file in this location. 
