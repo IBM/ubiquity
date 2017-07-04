@@ -499,7 +499,7 @@ type CreateFilesetRequest struct {
 	Owner                        string `json:"owner,omitempty"`
 	Permissions                  string `json:"permissions,omitempty"`
 	InodeSpace                   string `json:"inodeSpace,omitempty"`
-	MaxNumInodes                 string `json:"maxNumInode,omitempty"`
+	MaxNumInodes                 string `json:"maxNumInodes,omitempty"`
 	AllocInodes                  string `json:"allocInodes,omitempty"`
 	PermissionChangeMode         string `json:"permissionChangeMode,omitempty"`
 	Comment                      string `json:"comment,omitempty"`
