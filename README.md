@@ -30,12 +30,12 @@ The code is provided as is, without warranty. Any issue will be handled on a bes
      ```
         Defaults !requiretty
      ```
-     For non-root users, such as [USER], configure the sudoers as follows: 
+     For non-root users, such as USER, configure the sudoers as follows: 
 
      ```
-         [USER] ALL= NOPASSWD: /usr/lpp/mmfs/bin/, /usr/bin/, /bin/
-         Defaults:%[USER] !requiretty
-         Defaults:%[USER] secure_path = /sbin:/bin:/usr/sbin:/usr/bin:/usr/lpp/mmfs/bin
+         USER ALL= NOPASSWD: /usr/lpp/mmfs/bin/, /usr/bin/, /bin/
+         Defaults:%USER !requiretty
+         Defaults:%USER secure_path = /sbin:/bin:/usr/sbin:/usr/bin:/usr/lpp/mmfs/bin
      ```
 
         
@@ -49,11 +49,11 @@ mkdir -p /etc/ubiquity
 cd /etc/ubiquity
 curl https://github.com/IBM/ubiquity/releases/download/v0.3.0/ubiquity-0.3.0.tar.gz | tar xf -
 chmod u+x ubiquity
-chown [USER]:[USER] ubiquity                 # In case running ubiquity as non-root, run this command with the [USER]
+chown USER:USER ubiquity                     # In case running ubiquity as non-root, run this command with the USER
 cp ubiquity /usr/bin/ubiquity                # Copy the Ubiquity binary file
 cp ubiquity.service /usr/lib/systemd/system/ # Copy the Ubiquity systemd config to systemd directory
 ```
-   * To run the ubiquity as non-root users, you must add to the `/usr/lib/systemd/system/ubiquity.service` file the following line under the [Service] line. ([USER] is a place holder to fill)
+   * To run the ubiquity as non-root users, you must add to the `/usr/lib/systemd/system/ubiquity.service` file the following line under the [Service] line. 
    
 `User=[USER]`
    * Enable the Ubiquity service
@@ -97,6 +97,12 @@ To contribute, follow the guidelines in [Contribution guide](contribution-guide.
 
 ## Support
 For any questions, suggestions, or issues, use github.
+
+## Troubleshooting
+* Review logs for any issues:
+    * <logPath>/ubiquity.log   (logPath configured in the ubiquity-server.conf)
+    * /var/log/messages  
+
 
 ## Licensing
 
