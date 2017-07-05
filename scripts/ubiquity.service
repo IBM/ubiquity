@@ -5,11 +5,8 @@ After=network.target
 
 [Service]
 Type=simple
-User=ubiquity
-EnvironmentFile=/etc/ubiquity/ubiquity-server.env
 ExecStart=/usr/bin/ubiquity \
-          $UBIQUITY_SERVER_CONFIG \
-          $UBIQUITY_SERVER_ARGS
+          --config /etc/ubiquity/ubiquity-server.conf
 Restart=on-abort
 
 [Install]
