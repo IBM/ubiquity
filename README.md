@@ -53,9 +53,8 @@ chown USER:USER ubiquity                     # In case running ubiquity as non-r
 cp ubiquity /usr/bin/ubiquity                # Copy the Ubiquity binary file
 cp ubiquity.service /usr/lib/systemd/system/ # Copy the Ubiquity systemd config to systemd directory
 ```
-   * To run the ubiquity as non-root users, you must add to the `/usr/lib/systemd/system/ubiquity.service` file the following line under the [Service] line. 
+   * To run the ubiquity as non-root users, you must add to the `/usr/lib/systemd/system/ubiquity.service` file this line `User=USER` under the [Service] item.
    
-`User=[USER]`
    * Enable the Ubiquity service
    
 ```bash 
