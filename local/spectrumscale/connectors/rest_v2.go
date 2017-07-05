@@ -108,7 +108,7 @@ func (s *spectrumRestV2) AsyncJobCompletion(jobURL string) error {
 		}
 
 		if jobQueryResponse.Jobs[0].Status == "RUNNING" {
-			time.Sleep(5000 * time.Millisecond)
+			time.Sleep(2000 * time.Millisecond)
 			continue
 		}
 		break
@@ -160,7 +160,7 @@ func (s *spectrumRestV2) GetClusterId() (string, error) {
 	err := s.doHTTP(getClusterURL, "GET", &getClusterResponse, nil)
 	if err != nil {
 		s.logger.Printf("error in executing remote call: %v", err)
-		return "", err
+		return "", fmt.Errorf("Unable to get cluster id. Please refer Ubiquity server logs for more details")
 	}
 	cid_str := fmt.Sprintf("%v", getClusterResponse.Cluster.ClusterSummary.ClusterID)
 	return cid_str, nil
@@ -180,7 +180,7 @@ func (s *spectrumRestV2) IsFilesystemMounted(filesystemName string) (bool, error
 		err := s.doHTTP(getNodesURL, "GET", &getNodesResponse, nil)
 		if err != nil {
 			s.logger.Printf("error in executing remote call: %v", err)
-			return false, err
+			return false, fmt.Errorf("Unable to fetch nodes for %v. Please refer Ubiquity server logs for more details",filesystemName)
 		}
 
 		if s.hostname != "" {
@@ -222,7 +222,7 @@ func (s *spectrumRestV2) ListFilesystems() ([]string, error) {
 	err := s.doHTTP(listFilesystemsURL, "GET", &getFilesystemResponse, nil)
 	if err != nil {
 		s.logger.Printf("error in executing remote call: %v", err)
-		return nil, err
+		return nil, fmt.Errorf("Unable to list filesystems. Please refer Ubiquity server logs for more details")
 	}
 	fsNumber := len(getFilesystemResponse.FileSystems)
 	filesystems := make([]string, fsNumber)
@@ -245,13 +245,13 @@ func (s *spectrumRestV2) GetFilesystemMountpoint(filesystemName string) (string,
 	err := s.doHTTP(getFilesystemURL, "GET", &getFilesystemResponse, nil)
 	if err != nil {
 		s.logger.Printf("error in executing remote call: %v", err)
-		return "", err
+		return "", fmt.Errorf("Unable to fetch mount point for %v. Please refer Ubiquity server logs for more details",filesystemName)
 	}
 
 	if len(getFilesystemResponse.FileSystems) > 0 {
 		return getFilesystemResponse.FileSystems[0].Mount.MountPoint, nil
 	} else {
-		return "", fmt.Errorf("Unable to get Filesystem")
+		return "", fmt.Errorf("Unable to fetch mount point for %v. Please refer Ubiquity server logs for more details",filesystemName)
 	}
 }
 
@@ -263,16 +263,36 @@ func (s *spectrumRestV2) CreateFileset(filesystemName string, filesetName string
 	filesetreq := CreateFilesetRequest{}
 	filesetreq.FilesetName = filesetName
 	filesetreq.Comment = "fileset for container volume"	
+
 	filesetType, filesetTypeSpecified := opts[UserSpecifiedFilesetType]
 	inodeLimit, inodeLimitSpecified := opts[UserSpecifiedInodeLimit]
 	if filesetTypeSpecified && filesetType.(string) == "independent" {
 		filesetreq.InodeSpace = "new"
 		if inodeLimitSpecified {
 			filesetreq.MaxNumInodes = inodeLimit.(string)
+			filesetreq.AllocInodes = inodeLimit.(string)
 		}
 	} else {
 		filesetreq.InodeSpace = "root"
 	}
+
+	uid, uidSpecified := opts[UserSpecifiedUid]
+	gid, gidSpecified := opts[UserSpecifiedGid]
+	if uidSpecified || gidSpecified { 
+		uidGidStr := ""
+		if (uidSpecified) {
+			uidGidStr = uid.(string)
+		}
+		if gidSpecified {
+			uidGidStr = uidGidStr + ":" + gid.(string)
+
+		}
+		filesetreq.Owner = uidGidStr
+/*TODO:  Disabling it. But need to review it again*/
+		filesetreq.Owner = ""
+	} 
+
+
 	s.logger.Printf("filesetreq %v\n", filesetreq)
 	createFilesetURL := utils.FormatURL(s.endpoint, fmt.Sprintf("scalemgmt/v2/filesystems/%s/filesets", filesystemName))
 	createFilesetResponse := GenericResponse{}
@@ -282,7 +302,7 @@ func (s *spectrumRestV2) CreateFileset(filesystemName string, filesetName string
 	err := s.doHTTP(createFilesetURL, "POST", &createFilesetResponse, filesetreq)
 	if err != nil {
 		s.logger.Printf("error in remote call %v", err)
-		return err
+		return fmt.Errorf("Unable to create fileset %v. Please refer Ubiquity server logs for more details",filesetName)
 	}
 
 	err = s.isRequestAccepted(createFilesetResponse, createFilesetURL)
@@ -310,7 +330,7 @@ func (s *spectrumRestV2) DeleteFileset(filesystemName string, filesetName string
 	err := s.doHTTP(deleteFilesetURL, "DELETE", &deleteFilesetResponse, nil)
 	if err != nil {
 		s.logger.Printf("Error in delete remote call")
-		return err
+		return fmt.Errorf("Unable to delete fileset %v. Please refer Ubiquity server logs for more details",filesetName)
 	}
 
 	err = s.isRequestAccepted(deleteFilesetResponse, deleteFilesetURL)
@@ -347,7 +367,7 @@ func (s *spectrumRestV2) LinkFileset(filesystemName string, filesetName string) 
 	err = s.doHTTP(linkFilesetURL, "POST", &linkFilesetResponse, linkReq)
 	if err != nil {
 		s.logger.Printf("error in remote call %v", err)
-		return err
+		return fmt.Errorf("Unable to link fileset %v. Please refer Ubiquity server logs for more details",filesetName)
 	}
 
 	err = s.isRequestAccepted(linkFilesetResponse, linkFilesetURL)
@@ -379,7 +399,7 @@ func (s *spectrumRestV2) UnlinkFileset(filesystemName string, filesetName string
 
 	if err != nil {
 		s.logger.Printf("error in remote call %v", err)
-		return err
+		return fmt.Errorf("Unable to unlink fileset %v. Please refer Ubiquity server logs for more details",filesetName)
 	}
 
 	err = s.isRequestAccepted(unlinkFilesetResponse, unlinkFilesetURL)
@@ -408,11 +428,11 @@ func (s *spectrumRestV2) ListFileset(filesystemName string, filesetName string) 
 	err := s.doHTTP(getFilesetURL, "GET", &getFilesetResponse, nil)
 	if err != nil {
 		s.logger.Printf("error in processing remote call %v", err)
-		return resources.Volume{}, err
+		return resources.Volume{}, fmt.Errorf("Unable to list fileset %v. Please refer Ubiquity server logs for more details",filesetName)
 	}
 
 	if len(getFilesetResponse.Filesets) == 0 {
-		return resources.Volume{}, fmt.Errorf("Unable to get fileset %v", getFilesetURL)
+		return resources.Volume{}, fmt.Errorf("Unable to list fileset %v. Please refer Ubiquity server logs for more details",filesetName)
 	}
 
 	name := getFilesetResponse.Filesets[0].Config.FilesetName
@@ -437,7 +457,7 @@ func (s *spectrumRestV2) ListFilesets(filesystemName string) ([]resources.Volume
 		err := s.doHTTP(listFilesetURL, "GET", &listFilesetResponse, nil)
 		if err != nil {
 			s.logger.Printf("error in processing remote call %v", err)
-			return nil, err
+			return nil, fmt.Errorf("Unable to list filesets for %v. Please refer Ubiquity server logs for more details",filesystemName)
 		}
 		responseSize = len(listFilesetResponse.Filesets)
 
@@ -493,7 +513,7 @@ func (s *spectrumRestV2) SetFilesetQuota(filesystemName string, filesetName stri
 	err := s.doHTTP(setQuotaURL, "POST", &setQuotaResponse, quotaRequest)
 	if err != nil {
 		s.logger.Printf("error setting quota for fileset %v", err)
-		return err
+		return fmt.Errorf("Unable to set quota for fileset %v. Please refer Ubiquity server logs for more details",filesetName)
 	}
 
 	err = s.isRequestAccepted(setQuotaResponse, setQuotaURL)
@@ -513,7 +533,7 @@ func (s *spectrumRestV2) ListFilesetQuota(filesystemName string, filesetName str
 	s.logger.Println("spectrumRestConnector: ListFilesetQuota")
 	defer s.logger.Println("spectrumRestConnector: ListFilesetQuota end")
 
-	listQuotaURL := utils.FormatURL(s.endpoint, fmt.Sprintf("scalemgmt/v2/filesystems/%s/filesets/%s/quotas", filesystemName, filesetName))
+	listQuotaURL := utils.FormatURL(s.endpoint, fmt.Sprintf("scalemgmt/v2/filesystems/%s/quotas?filter=objectName=%s", filesystemName, filesetName))
 	listQuotaResponse := GetQuotaResponse_v2{}
 
 	s.logger.Println("List Quota URL: ", listQuotaURL)
@@ -521,14 +541,14 @@ func (s *spectrumRestV2) ListFilesetQuota(filesystemName string, filesetName str
 	err := s.doHTTP(listQuotaURL, "GET", &listQuotaResponse, nil)
 	if err != nil {
 		s.logger.Printf("error in processing remote call %v", err)
-		return "", err
+		return "", fmt.Errorf("Unable to fetch quota information %v. Please refer Ubiquity server logs for more details", filesystemName)
 	}
 
 	//TODO check which quota in quotas[] and which attribute
 	if len(listQuotaResponse.Quotas) > 0 {
-		return fmt.Sprintf("%d", listQuotaResponse.Quotas[0].BlockQuota), nil
+		return fmt.Sprintf("%dK", listQuotaResponse.Quotas[0].BlockQuota), nil
 	} else {
-		return "", fmt.Errorf("Unable to get Quota information")
+		return "", fmt.Errorf("Unable to fetch quota information %v. Please refer Ubiquity server logs for more details", filesystemName)
 	}
 }
 
@@ -549,7 +569,7 @@ func (s *spectrumRestV2) ExportNfs(volumeMountpoint string, clientConfig string)
 	err := s.doHTTP(exportNfsURL, "POST", &nfsExportResp, nfsExportReq)
 	if err != nil {
 		s.logger.Printf("error during NFS export %v", err)
-		return err
+		return fmt.Errorf("Unable to export %v. Please refer Ubiquity server logs for more details",volumeMountpoint)
 	}
 
 	err = s.isRequestAccepted(nfsExportResp, exportNfsURL)
@@ -578,7 +598,7 @@ func (s *spectrumRestV2) UnexportNfs(volumeMountpoint string) error {
 	err := s.doHTTP(unexportNfsURL, "DELETE", &unexportNfsResp, nil)
 	if err != nil {
 		s.logger.Printf("Error while deleting NFS export %v", err)
-		return err
+		return fmt.Errorf("Unable to remove export %v. Please refer Ubiquity server logs for more details",volumeMountpoint)
 	}
 
 	err = s.isRequestAccepted(unexportNfsResp, unexportNfsURL)
@@ -603,8 +623,8 @@ func (s *spectrumRestV2) doHTTP(endpoint string, method string, responseObject i
 	}
 
 	if !s.isStatusOK(response.StatusCode) {
-		s.logger.Printf("Error in get filesystem remote call %#v\n", response)
-		return utils.ExtractErrorResponse(response)
+		s.logger.Printf("Remote call completed with error %#v\n", response)
+		return fmt.Errorf("Remote call completed with error")
 	}
 	err = utils.UnmarshalResponse(response, responseObject)
 	if err != nil {

@@ -285,7 +285,7 @@ var _ = Describe("spectrumRestV2", func() {
 			marshalledResponse, err := json.Marshal(createFilesetResp)
 			Expect(err).ToNot(HaveOccurred())
 			registerurl := fakeurl + "/scalemgmt/v2/filesystems/" + filesystem + "/filesets"
-			joburl := fakeurl + "/scalemgmt/v2/jobs?filter=jobId=1234"
+			joburl := fakeurl + "/scalemgmt/v2/jobs?filter=jobId=1234&fields=:all:"
 
 			httpmock.RegisterResponder(
 				"POST",
@@ -311,7 +311,7 @@ var _ = Describe("spectrumRestV2", func() {
 			marshalledResponse, err := json.Marshal(createFilesetResp)
 			Expect(err).ToNot(HaveOccurred())
 			registerurl := fakeurl + "/scalemgmt/v2/filesystems/" + filesystem + "/filesets"
-			joburl := fakeurl + "/scalemgmt/v2/jobs?filter=jobId=1234"
+			joburl := fakeurl + "/scalemgmt/v2/jobs?filter=jobId=1234&fields=:all:"
 
 			httpmock.RegisterResponder(
 				"POST",
@@ -337,7 +337,7 @@ var _ = Describe("spectrumRestV2", func() {
 			marshalledResponse, err := json.Marshal(createFilesetResp)
 			Expect(err).ToNot(HaveOccurred())
 			registerurl := fakeurl + "/scalemgmt/v2/filesystems/" + filesystem + "/filesets"
-			joburl := fakeurl + "/scalemgmt/v2/jobs?filter=jobId=1234"
+			joburl := fakeurl + "/scalemgmt/v2/jobs?filter=jobId=1234&fields=:all:"
 
 			httpmock.RegisterResponder(
 				"POST",
@@ -361,7 +361,7 @@ var _ = Describe("spectrumRestV2", func() {
 			marshalledResponse, err := json.Marshal(createFilesetResp)
 			Expect(err).ToNot(HaveOccurred())
 			registerurl := fakeurl + "/scalemgmt/v2/filesystems/" + filesystem + "/filesets"
-			joburl := fakeurl + "/scalemgmt/v2/jobs?filter=jobId=1234"
+			joburl := fakeurl + "/scalemgmt/v2/jobs?filter=jobId=1234&fields=:all:"
 
 			httpmock.RegisterResponder(
 				"POST",
@@ -391,7 +391,7 @@ var _ = Describe("spectrumRestV2", func() {
 			marshalledResponse, err := json.Marshal(deleteFilesetResp)
 			Expect(err).ToNot(HaveOccurred())
 			registerurl := fakeurl + "/scalemgmt/v2/filesystems/" + filesystem + "/filesets/" + fileset
-			joburl := fakeurl + "/scalemgmt/v2/jobs?filter=jobId=1234"
+			joburl := fakeurl + "/scalemgmt/v2/jobs?filter=jobId=1234&fields=:all:"
 
 			httpmock.RegisterResponder(
 				"DELETE",
@@ -417,7 +417,7 @@ var _ = Describe("spectrumRestV2", func() {
 			marshalledResponse, err := json.Marshal(deleteFilesetResp)
 			Expect(err).ToNot(HaveOccurred())
 			registerurl := fakeurl + "/scalemgmt/v2/filesystems/" + filesystem + "/filesets/" + fileset
-			joburl := fakeurl + "/scalemgmt/v2/jobs?filter=jobId=1234"
+			joburl := fakeurl + "/scalemgmt/v2/jobs?filter=jobId=1234&fields=:all:"
 
 			httpmock.RegisterResponder(
 				"DELETE",
@@ -444,7 +444,7 @@ var _ = Describe("spectrumRestV2", func() {
 			Expect(err).ToNot(HaveOccurred())
 
 			registerurl := fakeurl + "/scalemgmt/v2/filesystems/" + filesystem + "/filesets/" + fileset
-			joburl := fakeurl + "/scalemgmt/v2/jobs?filter=jobId=1234"
+			joburl := fakeurl + "/scalemgmt/v2/jobs?filter=jobId=1234&fields=:all:"
 			httpmock.RegisterResponder(
 				"DELETE",
 				registerurl,
@@ -467,7 +467,7 @@ var _ = Describe("spectrumRestV2", func() {
 			marshalledResponse, err := json.Marshal(deleteFilesetResp)
 			Expect(err).ToNot(HaveOccurred())
 			registerurl := fakeurl + "/scalemgmt/v2/filesystems/" + filesystem + "/filesets"
-			joburl := fakeurl + "/scalemgmt/v2/jobs?filter=jobId=1234"
+			joburl := fakeurl + "/scalemgmt/v2/jobs?filter=jobId=1234&fields=:all:"
 
 			httpmock.RegisterResponder(
 				"DELETE",
@@ -497,7 +497,7 @@ var _ = Describe("spectrumRestV2", func() {
 			marshalledResponse, err := json.Marshal(linkFilesetResp)
 			Expect(err).ToNot(HaveOccurred())
 			registerurl := fakeurl + "/scalemgmt/v2/filesystems/" + filesystem + "/filesets/" + fileset + "/link"
-			joburl := fakeurl + "/scalemgmt/v2/jobs?filter=jobId=1234"
+			joburl := fakeurl + "/scalemgmt/v2/jobs?filter=jobId=1234&fields=:all:"
 			httpmock.RegisterResponder(
 				"POST",
 				registerurl,
@@ -536,7 +536,7 @@ var _ = Describe("spectrumRestV2", func() {
 			marshalledResponse, err := json.Marshal(linkFilesetResp)
 			Expect(err).ToNot(HaveOccurred())
 			registerurl := fakeurl + "/scalemgmt/v2/filesystems/" + filesystem + "/filesets/" + fileset + "/link"
-			joburl := fakeurl + "/scalemgmt/v2/jobs?filter=jobId=1234"
+			joburl := fakeurl + "/scalemgmt/v2/jobs?filter=jobId=1234&fields=:all:"
 
 			httpmock.RegisterResponder(
 				"POST",
@@ -575,7 +575,7 @@ var _ = Describe("spectrumRestV2", func() {
 			marshalledResponse, err := json.Marshal(linkFilesetResp)
 			Expect(err).ToNot(HaveOccurred())
 			registerurl := fakeurl + "/scalemgmt/v2/filesystems/" + filesystem + "/filesets/" + fileset + "/link"
-			joburl := fakeurl + "/scalemgmt/v2/jobs?filter=jobId=1234"
+			joburl := fakeurl + "/scalemgmt/v2/jobs?filter=jobId=1234&fields=:all:"
 
 			httpmock.RegisterResponder(
 				"POST",
@@ -611,7 +611,7 @@ var _ = Describe("spectrumRestV2", func() {
 			marshalledResponse, err := json.Marshal(linkFilesetResp)
 			Expect(err).ToNot(HaveOccurred())
 			registerurl := fakeurl + "/scalemgmt/v2/filesystems/" + filesystem + "/filesets/" + fileset + "/link"
-			joburl := fakeurl + "/scalemgmt/v2/jobs?filter=jobId=1234"
+			joburl := fakeurl + "/scalemgmt/v2/jobs?filter=jobId=1234&fields=:all:"
 
 			httpmock.RegisterResponder(
 				"POST",
@@ -654,7 +654,7 @@ var _ = Describe("spectrumRestV2", func() {
 			marshalledResponse, err := json.Marshal(unlinkFilesetResp)
 			Expect(err).ToNot(HaveOccurred())
 			registerurl := fakeurl + "/scalemgmt/v2/filesystems/" + filesystem + "/filesets/" + fileset + "/link"
-			joburl := fakeurl + "/scalemgmt/v2/jobs?filter=jobId=1234"
+			joburl := fakeurl + "/scalemgmt/v2/jobs?filter=jobId=1234&fields=:all:"
 
 			httpmock.RegisterResponder(
 				"DELETE",
@@ -680,7 +680,7 @@ var _ = Describe("spectrumRestV2", func() {
 			marshalledResponse, err := json.Marshal(unlinkFilesetResp)
 			Expect(err).ToNot(HaveOccurred())
 			registerurl := fakeurl + "/scalemgmt/v2/filesystems/" + filesystem + "/filesets/" + fileset + "/link"
-			joburl := fakeurl + "/scalemgmt/v2/jobs?filter=jobId=1234"
+			joburl := fakeurl + "/scalemgmt/v2/jobs?filter=jobId=1234&fields=:all:"
 
 			httpmock.RegisterResponder(
 				"DELETE",
@@ -707,7 +707,7 @@ var _ = Describe("spectrumRestV2", func() {
 			Expect(err).ToNot(HaveOccurred())
 
 			registerurl := fakeurl + "/scalemgmt/v2/filesystems/" + filesystem + "/filesets/" + fileset + "/link"
-			joburl := fakeurl + "/scalemgmt/v2/jobs?filter=jobId=1234"
+			joburl := fakeurl + "/scalemgmt/v2/jobs?filter=jobId=1234&fields=:all:"
 			httpmock.RegisterResponder(
 				"DELETE",
 				registerurl,
@@ -730,7 +730,7 @@ var _ = Describe("spectrumRestV2", func() {
 			marshalledResponse, err := json.Marshal(unlinkFilesetResp)
 			Expect(err).ToNot(HaveOccurred())
 			registerurl := fakeurl + "/scalemgmt/v2/filesystems/" + filesystem + "/filesets/" + fileset + "/link"
-			joburl := fakeurl + "/scalemgmt/v2/jobs?filter=jobId=1234"
+			joburl := fakeurl + "/scalemgmt/v2/jobs?filter=jobId=1234&fields=:all:"
 
 			httpmock.RegisterResponder(
 				"DELETE",
@@ -979,7 +979,7 @@ var _ = Describe("spectrumRestV2", func() {
 			marshalledResponse, err := json.Marshal(setFilesetResp)
 			Expect(err).ToNot(HaveOccurred())
 			registerurl := fakeurl + "/scalemgmt/v2/filesystems/" + filesystem + "/filesets/" + fileset + "/quotas"
-			joburl := fakeurl + "/scalemgmt/v2/jobs?filter=jobId=1234"
+			joburl := fakeurl + "/scalemgmt/v2/jobs?filter=jobId=1234&fields=:all:"
 
 			httpmock.RegisterResponder(
 				"POST",
@@ -1005,7 +1005,7 @@ var _ = Describe("spectrumRestV2", func() {
 			marshalledResponse, err := json.Marshal(setFilesetResp)
 			Expect(err).ToNot(HaveOccurred())
 			registerurl := fakeurl + "/scalemgmt/v2/filesystems/" + filesystem + "/filesets/" + fileset + "/quotas"
-			joburl := fakeurl + "/scalemgmt/v2/jobs?filter=jobId=1234"
+			joburl := fakeurl + "/scalemgmt/v2/jobs?filter=jobId=1234&fields=:all:"
 
 			httpmock.RegisterResponder(
 				"POST",
@@ -1031,7 +1031,7 @@ var _ = Describe("spectrumRestV2", func() {
 			marshalledResponse, err := json.Marshal(setFilesetResp)
 			Expect(err).ToNot(HaveOccurred())
 			registerurl := fakeurl + "/scalemgmt/v2/filesystems/" + filesystem + "/filesets/" + fileset + "/quotas"
-			joburl := fakeurl + "/scalemgmt/v2/jobs?filter=jobId=1234"
+			joburl := fakeurl + "/scalemgmt/v2/jobs?filter=jobId=1234&fields=:all:"
 
 			httpmock.RegisterResponder(
 				"POST",
@@ -1055,7 +1055,7 @@ var _ = Describe("spectrumRestV2", func() {
 			marshalledResponse, err := json.Marshal(setFilesetResp)
 			Expect(err).ToNot(HaveOccurred())
 			registerurl := fakeurl + "/scalemgmt/v2/filesystems/" + filesystem + "/filesets/" + fileset + "/quotas"
-			joburl := fakeurl + "/scalemgmt/v2/jobs?filter=jobId=1234"
+			joburl := fakeurl + "/scalemgmt/v2/jobs?filter=jobId=1234&fields=:all:"
 
 			httpmock.RegisterResponder(
 				"POST",
@@ -1083,7 +1083,7 @@ var _ = Describe("spectrumRestV2", func() {
 
 			marshalledResponse, err := json.Marshal(getFilesetquota)
 			Expect(err).ToNot(HaveOccurred())
-			registerurl := fakeurl + "/scalemgmt/v2/filesystems/" + filesystem + "/filesets/" + fileset + "/quotas"
+			registerurl := fakeurl + "/scalemgmt/v2/filesystems/" + filesystem + "/quotas" + "?filter=objectName=" + fileset
 			httpmock.RegisterResponder(
 				"GET",
 				registerurl,
@@ -1091,7 +1091,7 @@ var _ = Describe("spectrumRestV2", func() {
 			)
 			quota, err := spectrumRestV2.ListFilesetQuota(filesystem, fileset)
 			Expect(err).ToNot(HaveOccurred())
-			Expect(quota).To(Equal("1024"))
+			Expect(quota).To(Equal("1024K"))
 		})
 
 		It("Should fail with http error", func() {
@@ -1102,7 +1102,7 @@ var _ = Describe("spectrumRestV2", func() {
 
 			marshalledResponse, err := json.Marshal(getFilesetquota)
 			Expect(err).ToNot(HaveOccurred())
-			registerurl := fakeurl + "/scalemgmt/v2/filesystems/" + filesystem + "/filesets/" + fileset + "/quotas"
+			registerurl := fakeurl + "/scalemgmt/v2/filesystems/" + filesystem + "/quotas" + "?filter=objectName=" + fileset
 			httpmock.RegisterResponder(
 				"GET",
 				registerurl,
@@ -1120,7 +1120,7 @@ var _ = Describe("spectrumRestV2", func() {
 
 			marshalledResponse, err := json.Marshal(getFilesetquota)
 			Expect(err).ToNot(HaveOccurred())
-			registerurl := fakeurl + "/scalemgmt/v2/filesystems/" + filesystem + "/filesets/" + fileset + "/quotas"
+			registerurl := fakeurl + "/scalemgmt/v2/filesystems/" + filesystem + "/quotas" + "?filter=objectName=" + fileset
 			httpmock.RegisterResponder(
 				"GET",
 				registerurl,
@@ -1143,7 +1143,7 @@ var _ = Describe("spectrumRestV2", func() {
 			marshalledResponse, err := json.Marshal(exportNfsResp)
 			Expect(err).ToNot(HaveOccurred())
 			registerurl := fakeurl + "/scalemgmt/v2/nfs/exports"
-			joburl := fakeurl + "/scalemgmt/v2/jobs?filter=jobId=1234"
+			joburl := fakeurl + "/scalemgmt/v2/jobs?filter=jobId=1234&fields=:all:"
 
 			httpmock.RegisterResponder(
 				"POST",
@@ -1169,7 +1169,7 @@ var _ = Describe("spectrumRestV2", func() {
 			marshalledResponse, err := json.Marshal(exportNfsResp)
 			Expect(err).ToNot(HaveOccurred())
 			registerurl := fakeurl + "/scalemgmt/v2/nfs/exports"
-			joburl := fakeurl + "/scalemgmt/v2/jobs?filter=jobId=1234"
+			joburl := fakeurl + "/scalemgmt/v2/jobs?filter=jobId=1234&fields=:all:"
 
 			httpmock.RegisterResponder(
 				"POST",
@@ -1195,7 +1195,7 @@ var _ = Describe("spectrumRestV2", func() {
 			marshalledResponse, err := json.Marshal(exportNfsResp)
 			Expect(err).ToNot(HaveOccurred())
 			registerurl := fakeurl + "/scalemgmt/v2/nfs/exports"
-			joburl := fakeurl + "/scalemgmt/v2/jobs?filter=jobId=1234"
+			joburl := fakeurl + "/scalemgmt/v2/jobs?filter=jobId=1234&fields=:all:"
 
 			httpmock.RegisterResponder(
 				"POST",
@@ -1219,7 +1219,7 @@ var _ = Describe("spectrumRestV2", func() {
 			marshalledResponse, err := json.Marshal(exportNfsResp)
 			Expect(err).ToNot(HaveOccurred())
 			registerurl := fakeurl + "/scalemgmt/v2/nfs/exports"
-			joburl := fakeurl + "/scalemgmt/v2/jobs?filter=jobId=1234"
+			joburl := fakeurl + "/scalemgmt/v2/jobs?filter=jobId=1234&fields=:all:"
 
 			httpmock.RegisterResponder(
 				"POST",
@@ -1249,7 +1249,7 @@ var _ = Describe("spectrumRestV2", func() {
 			marshalledResponse, err := json.Marshal(unexportNfs)
 			Expect(err).ToNot(HaveOccurred())
 			registerurl := fakeurl + "/scalemgmt/v2/nfs/exports/" + fileset
-			joburl := fakeurl + "/scalemgmt/v2/jobs?filter=jobId=1234"
+			joburl := fakeurl + "/scalemgmt/v2/jobs?filter=jobId=1234&fields=:all:"
 
 			httpmock.RegisterResponder(
 				"DELETE",
@@ -1275,7 +1275,7 @@ var _ = Describe("spectrumRestV2", func() {
 			marshalledResponse, err := json.Marshal(unexportNfs)
 			Expect(err).ToNot(HaveOccurred())
 			registerurl := fakeurl + "/scalemgmt/v2/nfs/exports/" + fileset
-			joburl := fakeurl + "/scalemgmt/v2/jobs?filter=jobId=1234"
+			joburl := fakeurl + "/scalemgmt/v2/jobs?filter=jobId=1234&fields=:all:"
 
 			httpmock.RegisterResponder(
 				"DELETE",
@@ -1302,7 +1302,7 @@ var _ = Describe("spectrumRestV2", func() {
 			Expect(err).ToNot(HaveOccurred())
 
 			registerurl := fakeurl + "/scalemgmt/v2/nfs/exports/" + fileset
-			joburl := fakeurl + "/scalemgmt/v2/jobs?filter=jobId=1234"
+			joburl := fakeurl + "/scalemgmt/v2/jobs?filter=jobId=1234&fields=:all:"
 			httpmock.RegisterResponder(
 				"DELETE",
 				registerurl,
@@ -1325,7 +1325,7 @@ var _ = Describe("spectrumRestV2", func() {
 			marshalledResponse, err := json.Marshal(unexportNfs)
 			Expect(err).ToNot(HaveOccurred())
 			registerurl := fakeurl + "/scalemgmt/v2/nfs/exports/" + fileset
-			joburl := fakeurl + "/scalemgmt/v2/jobs?filter=jobId=1234"
+			joburl := fakeurl + "/scalemgmt/v2/jobs?filter=jobId=1234&fields=:all:"
 
 			httpmock.RegisterResponder(
 				"DELETE",
