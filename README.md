@@ -1,9 +1,9 @@
 # Ubiquity Storage Service for Container Ecosystems 
 [![Build Status](https://travis-ci.org/IBM/ubiquity.svg?branch=master)](https://travis-ci.org/IBM/ubiquity)[![GoDoc](https://godoc.org/github.com/IBM/ubiquity?status.svg)](https://godoc.org/github.com/IBM/ubiquity)[![License](https://img.shields.io/badge/license-Apache--2.0-blue.svg)](http://www.apache.org/licenses/LICENSE-2.0)[![Go Report Card](https://goreportcard.com/badge/github.com/IBM/ubiquity)](https://goreportcard.com/report/github.com/IBM/ubiquity)
 
-The Ubiquity project implements an access management service for persistent storage within the Kubernetes and Docker container frameworks. 
+The Ubiquity project delivers access management service for persistent storage within the Kubernetes and Docker container frameworks. 
 
-Ubiquity is a pluggable framework that supports different storage systems. The framework interfaces with the storage systems using their plugins. The [Available Storage Systems](supportedStorage.md) section describe the Storage systems  configurations and deployment options.
+Ubiquity is a pluggable framework that supports different storage systems. The framework interfaces with the storage systems using their plugins. The [Available Storage Systems](supportedStorage.md) section describes the storage system  configuration and deployment options.
 
 
 
@@ -27,15 +27,13 @@ You can install the Ubiquity service manually or using systemd.
     - RHEL 7+
     - SUSE 12+
     - Ubuntu 16+
-  * Ubiquity needs access to the managment of the required storage backends. See [Available Storage Systems](supportedStorage.md) for details on the connectivity needed.
-  * The following sudoers configuration is required for a user to run the Ubiquity process (Ubiquity can be run as root user or none-root user.):
-
-     * Follow sudoers configuration to run Ubiquity as root user :
+  * Ubiquity needs access to the management of the required storage backends. See [Available Storage Systems](supportedStorage.md) for connectivity details.
+  * The following sudoers configuration is required to run the Ubiquity process:
         ```bash
         Defaults !requiretty
         ```
 
-### 2. Downloading and Install the Ubiquity service 
+### 2. Downloading and installing the Ubiquity service 
 
   * Download and unpack the application package.
 ```bash
@@ -43,15 +41,15 @@ mkdir -p /etc/ubiquity
 cd /etc/ubiquity
 curl https://github.com/IBM/ubiquity/releases/download/v0.3.0/ubiquity-0.3.0.tar.gz | tar xf -
 chmod u+x ubiquity
-cp ubiquity /usr/bin/ubiquity                # Copy the ubiquity binary file
-cp ubiquity.service /usr/lib/systemd/system/ # Copy the ubiquity systemd config to systemd directory
-systemctl enable ubiquity.service            # Enable ubiquity systemd service
+cp ubiquity /usr/bin/ubiquity                # Copy the Ubiquity binary file
+cp ubiquity.service /usr/lib/systemd/system/ # Copy the Ubiquity systemd config to systemd directory
+systemctl enable ubiquity.service            # Enable Ubiquity systemd service
 ```
 
 ### 3. Configuring the Ubiquity service
 Configure Ubiquity service, according to your storage backend requirements. Refer to 
 [specific instructions](supportedStorage.md). 
-The configuration file should be named `ubiquity-server.conf` and locate at `/etc/ubiquity` directory.
+The configuration file must be named `ubiquity-server.conf` and placed in `/etc/ubiquity` directory.
 
 
 ### 4. Running the Ubiquity service
