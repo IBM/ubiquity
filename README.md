@@ -20,7 +20,6 @@ Ubiquity supports the Kubernetes and Docker frameworks, using the following plug
 The code is provided as is, without warranty. Any issue will be handled on a best-effort basis.
 
 ## Installing the Ubiquity service
-You can install the Ubiquity service manually or using systemd.
 
 ### 1. Prerequisites
   * Ubiquity is supported on the following operating systems:
