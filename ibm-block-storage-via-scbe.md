@@ -34,20 +34,20 @@ __2. Configure Ubiquity Service for SCBE__
 * The configuration file must be locate in `/etc/ubiquity/ubiquity-server.conf` file. See configuration file example below.
 ```toml
 port = 9999                     # The TCP port to listen on.
-logPath = "/var/tmp "           # The Ubiquity service will write logs to the "ubiquity.log" file in this location. 
+logPath = "/var/tmp "           # The Ubiquity will write logs to the "ubiquity.log" file in this location. 
 defaultBackend = "scbe"         # Possible options are spectrum-scale, spectrum-scale-nfs or scbe.
-configPath = "/opt/ubiquityDB"  # Path in existing filesystem, where Ubiquity can create/store volume DB.
+configPath = "/opt/ubiquityDB"  # Path to directory where Ubiquity can create it's sqlite DB.
 
 [ScbeConfig]
 DefaultService = "gold"         # SCBE storage service to be used by default, if not specified by the plugin.
-DefaultVolumeSize = "5"         # Optional parameter. Default is 1GB.
+DefaultVolumeSize = "5"         # Optional parameter. Default is 1.
 DefaultFilesystemType = "ext4"  # Optional parameter. Default is ext4. Possible values are ext4 or xfs.
 UbiquityInstanceName = "instance1" # A prefix for any new volume created on the storage system. Default is none.
 
 [ScbeConfig.ConnectionInfo]
 managementIp = "IP Address"     # SCBE server IP or FQDN.
 Port = 8440                     # SCBE server port. Optional parameter. Default is 8440.
-SkipVerifySSL = false           # True verifies SCB SSL certificate or False ignores the certificate. Default is true).
+SkipVerifySSL = true            # false verifies SCB SSL certificate or false ignores the certificate. Default is true.
 
 [ScbeConfig.ConnectionInfo.CredentialInfo]
 Username = "user"               # User name defined for SCBE Ubiquity interface.
