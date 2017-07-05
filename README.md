@@ -67,12 +67,13 @@ To use Ubiquity service, install Ubiquity plugins for the relevant container fra
 ## Roadmap
 
  * Make Ubiquity Docker volume plugin in Docker store
- * Support secure communication between plugins and Ubiquity service, using certificates
  * Containerize Ubiquity service for Docker and Kubernetes
- * Enable additional IBM storage systems as Ubiquity backends
- * Enable OpenStack Manila storage as Ubiquity backend
- * Enable Cloud Foundry, as a container framework
- * Enable to share a volume between multiple nodes at the same time.
+ * Add more IBM storage systems as Ubiquity backends
+ * Add OpenStack Manila storage as Ubiquity backend
+ * Add Cloud Foundry, as a container framework
+ * Secure communication between plugins and Ubiquity service, using certificates
+ * Enable volume sharing between multiple nodes
+ * And more goodies to come...
 
 
 ## Contribution
