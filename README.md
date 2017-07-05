@@ -3,19 +3,18 @@
 
 The Ubiquity project delivers access management service for persistent storage within the Kubernetes and Docker container frameworks. 
 
-Ubiquity is a pluggable framework available for different storage systems. The framework interfaces with the storage systems using their plugins. The [Available Storage Systems](supportedStorage.md) section describes the storage system  configuration and deployment options.
+Ubiquity is a pluggable framework available for different storage systems. The framework interfaces with the storage systems using their plugins. The [Available Storage Systems](supportedStorage.md) section describes the storage system  configuration and deployment options. Different container frameworks can use Ubiquity concurrently, allowing access to different storage systems. 
+
 
 
 
 
 ![Ubiquity Overview](images/UbiquityOverview.jpg)
 
-Different container frameworks can use Ubiquity concurrently, allowing access to different storage systems. 
-
 Ubiquity supports the Kubernetes and Docker frameworks, using the following plugins:
 
-- [Ubiquity plugin for Kubernetes](https://github.com/IBM/ubiquity-k8s) (Dynamic Provisioner and FlexVolume)
 - [Ubiquity Docker volume plugin](https://github.com/IBM/ubiquity-docker-plugin)
+- [Ubiquity plugin for Kubernetes](https://github.com/IBM/ubiquity-k8s) (Dynamic Provisioner and FlexVolume)
 
 The code is provided as is, without warranty. Any issue will be handled on a best-effort basis.
 
@@ -26,7 +25,16 @@ The code is provided as is, without warranty. Any issue will be handled on a bes
     - RHEL 7+
     - SUSE 12+
     - Ubuntu 16+
-  * The following sudoers configuration is required to run the Ubiquity process: `Defaults !requiretty`
+  * The following sudoers configuration `/etc/sudoers` is required to run the Ubiquity process as root user: `Defaults !requiretty`.
+
+     For non-root users, such as [USER], configure the sudoers as follows: 
+
+     ```
+         [USER] ALL= NOPASSWD: /usr/lpp/mmfs/bin/, /usr/bin/, /bin/
+         Defaults:%[USER] !requiretty
+         Defaults:%[USER] secure_path = /sbin:/bin:/usr/sbin:/usr/bin:/usr/lpp/mmfs/bin
+     ```
+
         
   * Configure your [storage backend](supportedStorage.md). 
 
@@ -40,6 +48,8 @@ curl https://github.com/IBM/ubiquity/releases/download/v0.3.0/ubiquity-0.3.0.tar
 chmod u+x ubiquity
 cp ubiquity /usr/bin/ubiquity                # Copy the Ubiquity binary file
 cp ubiquity.service /usr/lib/systemd/system/ # Copy the Ubiquity systemd config to systemd directory
+
+# NOTE : For non-root users, add the `User=[USER]` to the ubiquity.service file before enabling the service.
 systemctl enable ubiquity.service            # Enable Ubiquity systemd service
 ```
 
