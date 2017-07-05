@@ -99,7 +99,7 @@ For any questions, suggestions, or issues, use github.
 
 ## Troubleshooting
 * Review the Ubiquity logs for any issues:
-    * <logPath>/ubiquity.log   (logPath configured in the ubiquity-server.conf)
+    * [logPath]/ubiquity.log   ([logPath] configured in the ubiquity-server.conf)
     * /var/log/messages        
 
 
