@@ -34,7 +34,7 @@ __2. Configure Ubiquity Service for SCBE__
 * The configuration file must be locate in `/etc/ubiquity/ubiquity-server.conf` file. See configuration file example below.
 ```toml
 port = 9999                     # The TCP port to listen on.
-logPath = "/var/tmp "           # The Ubiquity will write logs to the "ubiquity.log" file in this location. 
+logPath = "/var/tmp"           # The Ubiquity will write logs to the "ubiquity.log" file in this location. 
 defaultBackend = "scbe"         # Possible options are spectrum-scale, spectrum-scale-nfs or scbe.
 configPath = "/opt/ubiquityDB"  # Path to directory where Ubiquity can create it's sqlite DB.
 
