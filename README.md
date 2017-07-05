@@ -3,7 +3,7 @@
 
 The Ubiquity project implements an access management service for persistent storage within the Kubernetes and Docker container frameworks. 
 
-Ubiquity is a pluggable framework that supports different storage systems. The framework interfaces with the storage systems using their plugins. The [Available Storage Systems](supportedStorage.md) section lists the supported storage systems, their configurations and deployment options.
+Ubiquity is a pluggable framework that supports different storage systems. The framework interfaces with the storage systems using their plugins. The [Available Storage Systems](supportedStorage.md) section describe the Storage systems  configurations and deployment options.
 
 
 
@@ -26,6 +26,7 @@ You can install the Ubiquity service manually or using systemd.
   * Ubiquity is supported on the following operating systems:
     - RHEL 7+
     - SUSE 12+
+    - Ubuntu 16+
   * Ubiquity needs access to the managment of the required storage backends. See [Available Storage Systems](supportedStorage.md) for details on the connectivity needed.
   * The following sudoers configuration is required for a user to run the Ubiquity process (Ubiquity can be run as root user or none-root user.):
 
@@ -40,11 +41,11 @@ You can install the Ubiquity service manually or using systemd.
 ```bash
 mkdir -p /etc/ubiquity
 cd /etc/ubiquity
-curl https://github.com/IBM/ubiquity/releases/download/v0.3.0/ubiquity-0.3.0.tar.gz | tar xz
+curl https://github.com/IBM/ubiquity/releases/download/v0.3.0/ubiquity-0.3.0.tar.gz | tar xf -
 chmod u+x ubiquity
-cp -f ubiquity /usr/bin/ubiquity
-cp ubiquity.service /usr/lib/systemd/system/
-systemctl enable ubiquity.service
+cp ubiquity /usr/bin/ubiquity                # Copy the ubiquity binary file
+cp ubiquity.service /usr/lib/systemd/system/ # Copy the ubiquity systemd config to systemd directory
+systemctl enable ubiquity.service            # Enable ubiquity systemd service
 ```
 
 ### 3. Configuring the Ubiquity service
@@ -70,11 +71,10 @@ To use Ubiquity service, install Ubiquity plugins for the relevant container fra
  * Make Ubiquity Docker volume plugin in Docker store
  * Support secure communication between plugins and Ubiquity service, using certificates
  * Containerize Ubiquity service for Docker and Kubernetes
- * Support additional IBM storage systems as Ubiquity backends
- * Support OpenStack Manila storage backends
- * Support REST API for communication between Ubiquity service and Spectrum Scale.
- * Support Cloud Foundry, as a container framework
- * Support to share a volume between multiple nodes at the same time.
+ * Enable additional IBM storage systems as Ubiquity backends
+ * Enable OpenStack Manila storage as Ubiquity backend
+ * Enable Cloud Foundry, as a container framework
+ * Enable to share a volume between multiple nodes at the same time.
 
 
 ## Contribution
