@@ -50,8 +50,13 @@ curl https://github.com/IBM/ubiquity/releases/download/v0.3.0/ubiquity-0.3.0.tar
 chmod u+x ubiquity
 cp ubiquity /usr/bin/ubiquity                # Copy the Ubiquity binary file
 cp ubiquity.service /usr/lib/systemd/system/ # Copy the Ubiquity systemd config to systemd directory
-
-# NOTE : For non-root users, add the `User=[USER]` to the ubiquity.service file before enabling the service.
+```
+   * To run the ubiquity as non-root users, you must add to the `/usr/lib/systemd/system/ubiquity.service` file the following line under the [Service] line. ([USER] is a place holder to fill)
+   
+`User=[USER]`
+   * Enable the Ubiquity service
+   
+```bash 
 systemctl enable ubiquity.service            # Enable Ubiquity systemd service
 ```
 
