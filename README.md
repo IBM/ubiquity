@@ -27,8 +27,9 @@ The code is provided as is, without warranty. Any issue will be handled on a bes
     - Ubuntu 16+
   * The following sudoers configuration `/etc/sudoers` is required to run the Ubiquity process as root user: 
   
+     ```
         Defaults !requiretty
-
+     ```
      For non-root users, such as [USER], configure the sudoers as follows: 
 
      ```
@@ -48,6 +49,7 @@ mkdir -p /etc/ubiquity
 cd /etc/ubiquity
 curl https://github.com/IBM/ubiquity/releases/download/v0.3.0/ubiquity-0.3.0.tar.gz | tar xf -
 chmod u+x ubiquity
+chown [USER]:[USER] ubiquity                 # In case running ubiquity as non-root, run this command with the [USER]
 cp ubiquity /usr/bin/ubiquity                # Copy the Ubiquity binary file
 cp ubiquity.service /usr/lib/systemd/system/ # Copy the Ubiquity systemd config to systemd directory
 ```
