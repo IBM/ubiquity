@@ -3,7 +3,7 @@
 
 The Ubiquity project delivers access management service for persistent storage within the Kubernetes and Docker container frameworks. 
 
-Ubiquity is a pluggable framework that supports different storage systems. The framework interfaces with the storage systems using their plugins. The [Available Storage Systems](supportedStorage.md) section describes the storage system  configuration and deployment options.
+Ubiquity is a pluggable framework available for different storage systems. The framework interfaces with the storage systems using their plugins. The [Available Storage Systems](supportedStorage.md) section describes the storage system  configuration and deployment options.
 
 
 
@@ -22,15 +22,13 @@ The code is provided as is, without warranty. Any issue will be handled on a bes
 ## Installing the Ubiquity service
 
 ### 1. Prerequisites
-  * Ubiquity is supported on the following operating systems:
+  * Ubiquity is available on the following operating systems:
     - RHEL 7+
     - SUSE 12+
     - Ubuntu 16+
-  * Ubiquity needs access to the management of the required storage backends. See [Available Storage Systems](supportedStorage.md) for connectivity details.
-  * The following sudoers configuration is required to run the Ubiquity process:
-        ```bash
-        Defaults !requiretty
-        ```
+  * The following sudoers configuration is required to run the Ubiquity process: `Defaults !requiretty`
+        
+  * Configure your [storage backend](supportedStorage.md). 
 
 ### 2. Downloading and installing the Ubiquity service 
 
@@ -46,9 +44,7 @@ systemctl enable ubiquity.service            # Enable Ubiquity systemd service
 ```
 
 ### 3. Configuring the Ubiquity service
-Configure Ubiquity service, according to your storage backend requirements. Refer to 
-[specific instructions](supportedStorage.md). 
-The configuration file must be named `ubiquity-server.conf` and placed in `/etc/ubiquity` directory.
+Configure Ubiquity service, according to your storage backend requirements. The service is configured by editing the `ubiquity-server.conf` file in `/etc/ubiquity` directory, as illustrated in [this section](supportedStorage.md).
 
 
 ### 4. Running the Ubiquity service
@@ -57,10 +53,11 @@ The configuration file must be named `ubiquity-server.conf` and placed in `/etc/
 systemctl start ubiquity    
 ```
 
+
 ### 5. Installing Ubiquity plugins for Docker or Kubernetes
-To use Ubiquity service, install Ubiquity plugins for the relevant container framework. See 
-  * [Docker](https://github.com/IBM/ubiquity-docker-plugin)
-  * [Kubernetes](https://github.com/IBM/ubiquity-k8s)
+To use the active Ubiquity service, install Ubiquity plugins for the relevant container framework. The plugin packages and installation instructions are available in seperate github repositories.
+  * [Ubiquity Docker volume plugin](https://github.com/IBM/ubiquity-docker-plugin)
+  * [Ubiquity Kubernetes plugin](https://github.com/IBM/ubiquity-k8s)
 
 
 ## Roadmap
