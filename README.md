@@ -25,7 +25,9 @@ The code is provided as is, without warranty. Any issue will be handled on a bes
     - RHEL 7+
     - SUSE 12+
     - Ubuntu 16+
-  * The following sudoers configuration `/etc/sudoers` is required to run the Ubiquity process as root user: `Defaults !requiretty`.
+  * The following sudoers configuration `/etc/sudoers` is required to run the Ubiquity process as root user: 
+  
+        `Defaults !requiretty`.
 
      For non-root users, such as [USER], configure the sudoers as follows: 
 
