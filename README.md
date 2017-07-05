@@ -50,15 +50,15 @@ cd /etc/ubiquity
 curl https://github.com/IBM/ubiquity/releases/download/v0.3.0/ubiquity-0.3.0.tar.gz | tar xf -
 chmod u+x ubiquity
 #chown USER:GROUP ubiquity  # Run this command only a non-root should run ubiquity (fill up the USER and GROUP)
-cp ubiquity /usr/bin/ubiquity                # Copy the Ubiquity binary file
-cp ubiquity.service /usr/lib/systemd/system/ # Copy the Ubiquity systemd config to systemd directory
+cp ubiquity /usr/bin/ubiquity                
+cp ubiquity.service /usr/lib/systemd/system/ 
 ```
    * To run the ubiquity as non-root users, you must add to the `/usr/lib/systemd/system/ubiquity.service` file this line `User=USER` under the [Service] item.
    
    * Enable the Ubiquity service
    
 ```bash 
-systemctl enable ubiquity.service            # Enable Ubiquity systemd service
+systemctl enable ubiquity.service         
 ```
 
 ### 3. Configuring the Ubiquity service
@@ -98,9 +98,9 @@ To contribute, follow the guidelines in [Contribution guide](contribution-guide.
 For any questions, suggestions, or issues, use github.
 
 ## Troubleshooting
-* Review logs for any issues:
+* Review the Ubiquity logs for any issues:
     * <logPath>/ubiquity.log   (logPath configured in the ubiquity-server.conf)
-    * /var/log/messages  
+    * /var/log/messages        
 
 
 ## Licensing
