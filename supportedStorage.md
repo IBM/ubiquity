@@ -1,4 +1,4 @@
-# Supported Storage Systems 
+# Available Storage Systems 
 
 ### [IBM Spectrum Scale](ibm-spectrum-scale.md)
 
