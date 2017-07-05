@@ -1,5 +1,10 @@
 ## IBM Block Storage System via IBM Spectrum Control Base Edition
 
+* [Introduction](#introduction)
+* [Installing and configuring SCBE](#installing-and-configuring-scbe)
+* [Configuring Ubiquity service for SCBE](#configuring-ubiquity-service-for-scbe)
+
+## Introduction
 IBM block storage can be used as persistent storage for Kubernetes and Docker containers via Ubiquity service.
 Ubiquity communicates with the IBM storage systems through IBM Spectrum Control Base Edition (SCBE) 3.2.0. SCBE creates a storage profile (for example, gold, silver or bronze) and makes it available for Docker or Kubernetes plugins.
 
