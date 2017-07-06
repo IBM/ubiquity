@@ -6,8 +6,6 @@ It is a pluggable framework available for different storage systems. The framewo
 
 
 
-
-
 ![Ubiquity Overview](images/UbiquityOverview.jpg)
 
 Ubiquity supports the Kubernetes and Docker frameworks, using the following plugins:
@@ -79,7 +77,6 @@ To use the active Ubiquity service, install Ubiquity plugins for the relevant co
 
 
 ## Roadmap
-
  * Make Ubiquity Docker volume plugin in Docker store
  * Containerize Ubiquity service for Docker and Kubernetes
  * Add more IBM storage systems as Ubiquity backends
