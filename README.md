@@ -48,8 +48,8 @@ mkdir -p /etc/ubiquity
 cd /etc/ubiquity
 curl https://github.com/IBM/ubiquity/releases/download/v0.3.0/ubiquity-0.3.0.tar.gz | tar xf -
 chmod u+x ubiquity
-#chown USER:GROUP ubiquity  # Run this command only a non-root should run ubiquity (fill up the USER and GROUP)
 cp ubiquity /usr/bin/ubiquity                
+#chown USER:GROUP /usr/bin/ubiquity  # Run this command only a non-root should run ubiquity (fill up the USER and GROUP)
 cp ubiquity.service /usr/lib/systemd/system/ 
 ```
    * To run the ubiquity as non-root users, you must add to the `/usr/lib/systemd/system/ubiquity.service` file this line `User=USER` under the [Service] item.
