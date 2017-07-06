@@ -5,7 +5,6 @@ The Ubiquity project enables persistent storage for the Kubernetes and Docker co
 It is a pluggable framework available for different storage systems. The framework interfaces with the storage systems, using their plugins. The [Available Storage Systems](supportedStorage.md) section describes the storage system  configuration and deployment options. Different container frameworks can use Ubiquity concurrently, allowing access to different storage systems. 
 
 
-
 ![Ubiquity Overview](images/UbiquityOverview.jpg)
 
 Ubiquity supports the Kubernetes and Docker frameworks, using the following plugins:
