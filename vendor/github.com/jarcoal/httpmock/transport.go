@@ -2,10 +2,8 @@ package httpmock
 
 import (
 	"errors"
-	"fmt"
 	"net/http"
 	"strings"
-	"sync"
 )
 
 // Responders are callbacks that receive and http request and return a mocked response.
@@ -22,21 +20,15 @@ func ConnectionFailure(*http.Request) (*http.Response, error) {
 
 // NewMockTransport creates a new *MockTransport with no responders.
 func NewMockTransport() *MockTransport {
-	return &MockTransport{
-		responders:    make(map[string]Responder),
-		callCountInfo: make(map[string]int),
-	}
+	return &MockTransport{make(map[string]Responder), nil}
 }
 
 // MockTransport implements http.RoundTripper, which fulfills single http requests issued by
 // an http.Client.  This implementation doesn't actually make the call, instead deferring to
 // the registered list of responders.
 type MockTransport struct {
-	mu             sync.RWMutex
-	responders     map[string]Responder
-	noResponder    Responder
-	callCountInfo  map[string]int
-	totalCallCount int
+	responders  map[string]Responder
+	noResponder Responder
 }
 
 // RoundTrip receives HTTP requests and routes them to the appropriate responder.  It is required to
@@ -46,84 +38,24 @@ func (m *MockTransport) RoundTrip(req *http.Request) (*http.Response, error) {
 	url := req.URL.String()
 
 	// try and get a responder that matches the method and URL
-	key := req.Method + " " + url
-	responder := m.responderForKey(key)
+	responder := m.responderForKey(req.Method + " " + url)
 
 	// if we weren't able to find a responder and the URL contains a querystring
 	// then we strip off the querystring and try again.
 	if responder == nil && strings.Contains(url, "?") {
-		key = req.Method + " " + strings.Split(url, "?")[0]
-		responder = m.responderForKey(key)
+		responder = m.responderForKey(req.Method + " " + strings.Split(url, "?")[0])
 	}
-	m.mu.Lock()
-	defer m.mu.Unlock()
+
 	// if we found a responder, call it
 	if responder != nil {
-		m.callCountInfo[key]++
-		m.totalCallCount++
-		return runCancelable(responder, req)
+		return responder(req)
 	}
 
 	// we didn't find a responder, so fire the 'no responder' responder
 	if m.noResponder == nil {
 		return ConnectionFailure(req)
 	}
-	m.callCountInfo["NO_RESPONDER"]++
-	m.totalCallCount++
-	return runCancelable(m.noResponder, req)
-}
-
-func runCancelable(responder Responder, req *http.Request) (*http.Response, error) {
-	if req.Cancel == nil {
-		return responder(req)
-	}
-
-	// Set up a goroutine that translates a close(req.Cancel) into a
-	// "request canceled" error, and another one that runs the
-	// responder. Then race them: first to the result channel wins.
-
-	type result struct {
-		response *http.Response
-		err      error
-	}
-	resultch := make(chan result, 1)
-	done := make(chan struct{}, 1)
-
-	go func() {
-		select {
-		case <-req.Cancel:
-			resultch <- result{
-				response: nil,
-				err:      errors.New("request canceled"),
-			}
-		case <-done:
-		}
-	}()
-
-	go func() {
-		defer func() {
-			if err := recover(); err != nil {
-				resultch <- result{
-					response: nil,
-					err:      fmt.Errorf("panic in responder: got %q", err),
-				}
-			}
-		}()
-
-		response, err := responder(req)
-		resultch <- result{
-			response: response,
-			err:      err,
-		}
-	}()
-
-	r := <-resultch
-
-	// if a close(req.Cancel) is never coming,
-	// we'll need to unblock the first goroutine.
-	done <- struct{}{}
-
-	return r.response, r.err
+	return m.noResponder(req)
 }
 
 // do nothing with timeout
@@ -131,8 +63,6 @@ func (m *MockTransport) CancelRequest(req *http.Request) {}
 
 // responderForKey returns a responder for a given key
 func (m *MockTransport) responderForKey(key string) Responder {
-	m.mu.RLock()
-	defer m.mu.RUnlock()
 	for k, r := range m.responders {
 		if k != key {
 			continue
@@ -145,49 +75,19 @@ func (m *MockTransport) responderForKey(key string) Responder {
 // RegisterResponder adds a new responder, associated with a given HTTP method and URL.  When a
 // request comes in that matches, the responder will be called and the response returned to the client.
 func (m *MockTransport) RegisterResponder(method, url string, responder Responder) {
-	key := method + " " + url
-
-	m.mu.Lock()
-	m.responders[key] = responder
-	m.callCountInfo[key] = 0
-	m.mu.Unlock()
+	m.responders[method+" "+url] = responder
 }
 
 // RegisterNoResponder is used to register a responder that will be called if no other responder is
 // found.  The default is ConnectionFailure.
 func (m *MockTransport) RegisterNoResponder(responder Responder) {
-	m.mu.Lock()
 	m.noResponder = responder
-	m.mu.Unlock()
 }
 
 // Reset removes all registered responders (including the no responder) from the MockTransport
 func (m *MockTransport) Reset() {
-	m.mu.Lock()
 	m.responders = make(map[string]Responder)
 	m.noResponder = nil
-	m.callCountInfo = make(map[string]int)
-	m.totalCallCount = 0
-	m.mu.Unlock()
-}
-
-// GetCallCountInfo returns callCountInfo
-func (m *MockTransport) GetCallCountInfo() map[string]int {
-	res := map[string]int{}
-	m.mu.RLock()
-	for k, v := range m.callCountInfo {
-		res[k] = v
-	}
-	m.mu.RUnlock()
-	return res
-}
-
-// GetTotalCallCount returns the totalCallCount
-func (m *MockTransport) GetTotalCallCount() int {
-	m.mu.RLock()
-	count := m.totalCallCount
-	m.mu.RUnlock()
-	return count
 }
 
 // DefaultTransport is the default mock transport used by Activate, Deactivate, Reset,
@@ -245,19 +145,6 @@ func ActivateNonDefault(client *http.Client) {
 	oldTransport = client.Transport
 	oldClient = client
 	client.Transport = DefaultTransport
-}
-
-// GetCallCountInfo gets the info on all the calls httpmock has taken since it was activated or
-// reset. The info is returned as a map of the calling keys with the number of calls made to them
-// as their value. The key is the method, a space, and the url all concatenated together.
-func GetCallCountInfo() map[string]int {
-	return DefaultTransport.GetCallCountInfo()
-}
-
-// GetTotalCallCount gets the total number of calls httpmock has taken since it was activated or
-// reset.
-func GetTotalCallCount() int {
-	return DefaultTransport.GetTotalCallCount()
 }
 
 // Deactivate shuts down the mock environment.  Any HTTP calls made after this will use a live

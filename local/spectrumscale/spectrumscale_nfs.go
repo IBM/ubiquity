@@ -1,3 +1,19 @@
+/**
+ * Copyright 2017 IBM Corp.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package spectrumscale
 
 import (
@@ -35,7 +51,7 @@ func NewSpectrumNfsLocalClient(logger *log.Logger, config resources.UbiquityServ
 	if err != nil {
 		return nil, err
 	}
-	return &spectrumNfsLocalClient{config: config.SpectrumScaleConfig, spectrumClient: spectrumClient, executor: utils.NewExecutor(logger)}, nil
+	return &spectrumNfsLocalClient{config: config.SpectrumScaleConfig, spectrumClient: spectrumClient, executor: utils.NewExecutor()}, nil
 }
 
 func (s *spectrumNfsLocalClient) Activate(activateRequest resources.ActivateRequest) error {
@@ -191,7 +207,7 @@ func (s *spectrumNfsLocalClient) exportNfs(name, clientConfig string) error {
 		return err
 	}
 
-	return s.spectrumClient.connector.ExportNfs(volumeMountpoint,clientConfig)
+	return s.spectrumClient.connector.ExportNfs(volumeMountpoint, clientConfig)
 }
 
 func (s *spectrumNfsLocalClient) unexportNfs(name string) error {

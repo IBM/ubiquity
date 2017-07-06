@@ -1,3 +1,19 @@
+/**
+ * Copyright 2017 IBM Corp.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package mounter
 
 import (
@@ -16,7 +32,7 @@ type nfsMounter struct {
 }
 
 func NewNfsMounter(logger *log.Logger) resources.Mounter {
-	return &nfsMounter{logger: logger, executor: utils.NewExecutor(logger)}
+	return &nfsMounter{logger: logger, executor: utils.NewExecutor()}
 }
 
 func (s *nfsMounter) Mount(mountRequest resources.MountRequest) (string, error) {
@@ -122,5 +138,10 @@ func (s *nfsMounter) unmount(remoteMountpoint string) error {
 	}
 	s.logger.Printf("nfsMounter: umount output: %s\n", string(output))
 
+	return nil
+}
+
+func (s *nfsMounter) ActionAfterDetach(request resources.AfterDetachRequest) error {
+	// no action needed for SSc
 	return nil
 }

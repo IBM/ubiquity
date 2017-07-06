@@ -1,3 +1,19 @@
+/**
+ * Copyright 2016, 2017 IBM Corp.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package main
 
 import (
@@ -14,6 +30,7 @@ import (
 	"github.com/IBM/ubiquity/local"
 	"github.com/IBM/ubiquity/resources"
 	"github.com/IBM/ubiquity/utils"
+	"github.com/IBM/ubiquity/utils/logs"
 	"github.com/IBM/ubiquity/web_server"
 	"github.com/jinzhu/gorm"
 	_ "github.com/jinzhu/gorm/dialects/sqlite"
@@ -44,10 +61,11 @@ func main() {
 		return
 	}
 
+	defer logs.InitFileLogger(logs.DEBUG, path.Join(config.LogPath, "ubiquity.log"))()
 	logger, logFile := utils.SetupLogger(config.LogPath, "ubiquity")
 	defer utils.CloseLogs(logFile)
 
-	spectrumExecutor := utils.NewExecutor(logger)
+	spectrumExecutor := utils.NewExecutor()
 	ubiquityConfigPath, err := utils.SetupConfigDirectory(logger, spectrumExecutor, config.ConfigPath)
 	if err != nil {
 		panic(err.Error())

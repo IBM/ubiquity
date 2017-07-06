@@ -1,5 +1,5 @@
-hash: 0ad2ed48be6f7177d174c6224fa42d9cbe3739d39afca093398663495876fa60
-updated: 2017-05-25T07:47:58.712122432-07:00
+hash: 1e44cc45af2805eed3fe543d611c36c06131d7e03ac38a552c91161629a0cc34
+updated: 2017-06-12T16:02:39.984426719+03:00
 imports:
 - name: github.com/BurntSushi/toml
   version: b26d9c308763d68093482582cea63d69be07a0f0
@@ -17,13 +17,15 @@ imports:
   version: 1c35d901db3da928c72a72d8458480cc9ade058f
 - name: github.com/mattn/go-sqlite3
   version: ca5e3819723d8eeaf170ad510e7da1d6d2e94a08
+- name: github.com/op/go-logging
+  version: 970db520ece77730c7e4724c61121037378659d9
 - name: golang.org/x/net
   version: e90d6d0afc4c315a0d87a568ae68577cc15149a0
   subpackages:
   - context
 testImports:
 - name: github.com/jarcoal/httpmock
-  version: cf52904a3cf0f78f199ecade6a6df8e245d5b25a
+  version: 4442edb3db31196622da56482fd8d0fa375fba4d
 - name: github.com/onsi/ginkgo
   version: bb93381d543b0e5725244abe752214a110791d01
   subpackages:
@@ -58,8 +60,8 @@ testImports:
   - matchers/support/goraph/util
   - types
 - name: golang.org/x/sys
-  version: 8f0908ab3b2457e2e15403d3697c9ef5cb4b57a9
+  version: 0b25a408a50076fbbcae6b7ac0ea5fbb0b085e79
   subpackages:
   - unix
 - name: gopkg.in/yaml.v2
-  version: 53feefa2559fb8dfa8d81baad31be332c97d6c77
+  version: cd8b52f8269e0feb286dfeef29f8fe4d5b397e0b

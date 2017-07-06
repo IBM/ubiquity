@@ -1,3 +1,19 @@
+/**
+ * Copyright 2017 IBM Corp.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package remote
 
 import (
@@ -15,16 +31,17 @@ import (
 )
 
 type remoteClient struct {
-	logger        *log.Logger
-	isActivated   bool
-	isMounted     bool
-	httpClient    *http.Client
-	storageApiURL string
-	config        resources.UbiquityPluginConfig
+	logger            *log.Logger
+	isActivated       bool
+	isMounted         bool
+	httpClient        *http.Client
+	storageApiURL     string
+	config            resources.UbiquityPluginConfig
+	mounterPerBackend map[string]resources.Mounter
 }
 
 func NewRemoteClient(logger *log.Logger, storageApiURL string, config resources.UbiquityPluginConfig) (resources.StorageClient, error) {
-	return &remoteClient{logger: logger, storageApiURL: storageApiURL, httpClient: &http.Client{}, config: config}, nil
+	return &remoteClient{logger: logger, storageApiURL: storageApiURL, httpClient: &http.Client{}, config: config, mounterPerBackend: make(map[string]resources.Mounter)}, nil
 }
 
 func (s *remoteClient) Activate(activateRequest resources.ActivateRequest) error {
@@ -187,7 +204,6 @@ func (s *remoteClient) Attach(attachRequest resources.AttachRequest) (string, er
 	if err != nil {
 		return "", err
 	}
-	//needs to return actual client mounted path
 
 	return mountpoint, nil
 }
@@ -227,6 +243,11 @@ func (s *remoteClient) Detach(detachRequest resources.DetachRequest) error {
 		return utils.ExtractErrorResponse(response)
 	}
 
+	afterDetachRequest := resources.AfterDetachRequest{VolumeConfig: volumeConfig}
+	if err := mounter.ActionAfterDetach(afterDetachRequest); err != nil {
+		s.logger.Printf(fmt.Sprintf("Error execute action after detaching the volume : %#v", err))
+		return err
+	}
 	return nil
 
 }
@@ -258,13 +279,22 @@ func (s *remoteClient) ListVolumes(listVolumesRequest resources.ListVolumesReque
 
 }
 
+// Return the mounter object. If mounter object already used(in the map mounterPerBackend) then just reuse it
 func (s *remoteClient) getMounterForBackend(backend string) (resources.Mounter, error) {
 	s.logger.Println("remoteClient: getMounterForVolume start")
 	defer s.logger.Println("remoteClient: getMounterForVolume end")
-	if backend == resources.SpectrumScale {
-		return mounter.NewSpectrumScaleMounter(s.logger), nil
+	mounterInst, ok := s.mounterPerBackend[backend]
+	if ok {
+		s.logger.Printf("getMounterForVolume reuse existing mounter for backend " + backend)
+		return mounterInst, nil
+	} else if backend == resources.SpectrumScale {
+		s.mounterPerBackend[backend] = mounter.NewSpectrumScaleMounter(s.logger)
 	} else if backend == resources.SoftlayerNFS || backend == resources.SpectrumScaleNFS {
-		return mounter.NewNfsMounter(s.logger), nil
+		s.mounterPerBackend[backend] = mounter.NewNfsMounter(s.logger)
+	} else if backend == resources.SCBE {
+		s.mounterPerBackend[backend] = mounter.NewScbeMounter()
+	} else {
+		return nil, fmt.Errorf("Mounter not found for backend: %s", backend)
 	}
-	return nil, fmt.Errorf("Mounter not found for backend: %s", backend)
+	return s.mounterPerBackend[backend], nil
 }

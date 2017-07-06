@@ -12,10 +12,12 @@ import:
   - dialects/sqlite
 - package: github.com/mattn/go-sqlite3
   version: ^1.2.0
+- package: github.com/op/go-logging
+  version: 970db520ece77730c7e4724c61121037378659d9
 testImport:
 - package: github.com/onsi/ginkgo
   version: bb93381d543b0e5725244abe752214a110791d01
 - package: github.com/onsi/gomega
   version: c463cd2a8578290d4be7a25cba69de81cf35785e
 - package: github.com/jarcoal/httpmock
-  version: v1
+  version: 4442edb3db31196622da56482fd8d0fa375fba4d
