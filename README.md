@@ -61,7 +61,8 @@ systemctl enable ubiquity.service
 ```
 
 ### 3. Configuring the Ubiquity service
-Configure Ubiquity service, according to your storage backend requirements. The service is configured by editing the `ubiquity-server.conf` file in `/etc/ubiquity` directory, as illustrated in [this section](supportedStorage.md).
+Before running the Ubiquity service, you must create and configure the `/etc/ubiquity/ubiquity-server.conf` file, according to your storage system type.
+Follow the configuration procedures detailed in the [Available Storage Systems](supportedStorage.md) section.
 
 
 ### 4. Running the Ubiquity service
