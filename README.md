@@ -43,7 +43,7 @@ The code is provided as is, without warranty. Any issue will be handled on a bes
 ```bash
 mkdir -p /etc/ubiquity
 cd /etc/ubiquity
-curl https://github.com/IBM/ubiquity/releases/download/v0.3.0/ubiquity-0.3.0.tar.gz | tar xf -
+curl -L https://github.com/IBM/ubiquity/releases/download/v0.3.0/ubiquity-0.3.0.tar.gz | tar xf -
 chmod u+x ubiquity
 cp ubiquity /usr/bin/ubiquity                
 #chown USER:GROUP /usr/bin/ubiquity  # Run this command only if non-root should run ubiquity (fill up the USER and GROUP)
