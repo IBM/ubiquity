@@ -94,14 +94,14 @@ To use the active Ubiquity service, install Ubiquity plugins for the relevant co
 Our team welcomes any contribution.
 To contribute, follow the guidelines in [Contribution guide](contribution-guide.md)
 
-## Support
-For any questions, suggestions, or issues, use github.
 
 ## Troubleshooting
 * Review the Ubiquity logs for any issues:
     * [logPath]/ubiquity.log   ([logPath] configured in the ubiquity-server.conf)
     * /var/log/messages        
 
+## Support
+For any questions, suggestions, or issues, use github.
 
 ## Licensing
 
