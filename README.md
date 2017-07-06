@@ -1,11 +1,8 @@
 # Ubiquity Storage Service for Container Ecosystems 
 [![Build Status](https://travis-ci.org/IBM/ubiquity.svg?branch=master)](https://travis-ci.org/IBM/ubiquity)[![GoDoc](https://godoc.org/github.com/IBM/ubiquity?status.svg)](https://godoc.org/github.com/IBM/ubiquity)[![License](https://img.shields.io/badge/license-Apache--2.0-blue.svg)](http://www.apache.org/licenses/LICENSE-2.0)[![Go Report Card](https://goreportcard.com/badge/github.com/IBM/ubiquity)](https://goreportcard.com/report/github.com/IBM/ubiquity)
 
-The Ubiquity project delivers access management service for persistent storage within the Kubernetes and Docker container frameworks. 
-
-Ubiquity is a pluggable framework available for different storage systems. The framework interfaces with the storage systems using their plugins. The [Available Storage Systems](supportedStorage.md) section describes the storage system  configuration and deployment options. Different container frameworks can use Ubiquity concurrently, allowing access to different storage systems. 
-
-
+The Ubiquity project enables persistent storage for the Kubernetes and Docker container frameworks. 
+It is a pluggable framework available for different storage systems. The framework interfaces with the storage systems, using their plugins. The [Available Storage Systems](supportedStorage.md) section describes the storage system  configuration and deployment options. Different container frameworks can use Ubiquity concurrently, allowing access to different storage systems. 
 
 
 
@@ -49,8 +46,8 @@ mkdir -p /etc/ubiquity
 cd /etc/ubiquity
 curl https://github.com/IBM/ubiquity/releases/download/v0.3.0/ubiquity-0.3.0.tar.gz | tar xf -
 chmod u+x ubiquity
-#chown USER:GROUP ubiquity  # Run this command only a non-root should run ubiquity (fill up the USER and GROUP)
 cp ubiquity /usr/bin/ubiquity                
+#chown USER:GROUP /usr/bin/ubiquity  # Run this command only a non-root should run ubiquity (fill up the USER and GROUP)
 cp ubiquity.service /usr/lib/systemd/system/ 
 ```
    * To run the ubiquity as non-root users, you must add to the `/usr/lib/systemd/system/ubiquity.service` file this line `User=USER` under the [Service] item.
@@ -62,7 +59,8 @@ systemctl enable ubiquity.service
 ```
 
 ### 3. Configuring the Ubiquity service
-Configure Ubiquity service, according to your storage backend requirements. The service is configured by editing the `ubiquity-server.conf` file in `/etc/ubiquity` directory, as illustrated in [this section](supportedStorage.md).
+Before running the Ubiquity service, you must create and configure the `/etc/ubiquity/ubiquity-server.conf` file, according to your storage system type.
+Follow the configuration procedures detailed in the [Available Storage Systems](supportedStorage.md) section.
 
 
 ### 4. Running the Ubiquity service
@@ -79,7 +77,6 @@ To use the active Ubiquity service, install Ubiquity plugins for the relevant co
 
 
 ## Roadmap
-
  * Make Ubiquity Docker volume plugin in Docker store
  * Containerize Ubiquity service for Docker and Kubernetes
  * Add more IBM storage systems as Ubiquity backends
@@ -94,14 +91,14 @@ To use the active Ubiquity service, install Ubiquity plugins for the relevant co
 Our team welcomes any contribution.
 To contribute, follow the guidelines in [Contribution guide](contribution-guide.md)
 
-## Support
-For any questions, suggestions, or issues, use github.
 
 ## Troubleshooting
 * Review the Ubiquity logs for any issues:
     * [logPath]/ubiquity.log   ([logPath] configured in the ubiquity-server.conf)
     * /var/log/messages        
 
+## Support
+For any questions, suggestions, or issues, use github.
 
 ## Licensing
 

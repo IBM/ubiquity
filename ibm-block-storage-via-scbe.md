@@ -1,12 +1,7 @@
 ## IBM Block Storage System via IBM Spectrum Control Base Edition
 
-* [Introduction](#introduction)
-* [Installing and configuring SCBE](#installing-and-configuring-scbe)
-* [Configuring Ubiquity service for SCBE](#configuring-ubiquity-service-for-scbe)
-
-## Introduction
 IBM block storage can be used as persistent storage for Kubernetes and Docker containers via Ubiquity service.
-Ubiquity communicates with the IBM storage systems through IBM Spectrum Control Base Edition (SCBE) 3.2.0. SCBE creates a storage profile (for example, gold, silver or bronze) and makes it available for Docker or Kubernetes plugins.
+Ubiquity communicates with the IBM storage systems through [IBM Spectrum Control Base Edition](https://www.ibm.com/support/knowledgecenter/en/STWMS9) (SCBE) 3.2.0. SCBE creates a storage profile (for example, gold, silver or bronze) and makes it available for Docker or Kubernetes plugins.
 
 The following IBM block storage systems are available:
 - IBM Spectrum Accelerate Family products:
@@ -57,3 +52,6 @@ SkipVerifySSL = true            # false verifies SCB SSL certificate or false ig
 Username = "user"               # User name defined for SCBE Ubiquity interface.
 Password = "password"           # Password defined for SCBE Ubiquity interface.
 ```
+
+  * Verify that the logPath, exists on the host before you start the Ubiquity service.
+  * Verify that the configPath, exists on the host before you start the Ubiquity service.
