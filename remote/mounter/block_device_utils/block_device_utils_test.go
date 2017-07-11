@@ -59,7 +59,6 @@ var _ = Describe("block_device_utils_test", func() {
             Expect(cmd).To(Equal("sudo"))
             Expect(args).To(Equal([]string{"rescan-scsi-bus", "-r"}))
         })
-        /*
         It("Rescan ISCSI fails if iscsiadm command missing", func() {
             fakeExec.IsExecutableReturns(cmdErr)
             err = bdUtils.Rescan(block_device_utils.ISCSI)
@@ -69,7 +68,6 @@ var _ = Describe("block_device_utils_test", func() {
             Expect(fakeExec.IsExecutableCallCount()).To(Equal(1))
             Expect(fakeExec.IsExecutableArgsForCall(0)).To(Equal("iscsiadm"))
         })
-        */
         It("Rescan SCSI fails if rescan-scsi-bus command missing", func() {
             fakeExec.IsExecutableReturns(cmdErr)
             err = bdUtils.Rescan(block_device_utils.SCSI)

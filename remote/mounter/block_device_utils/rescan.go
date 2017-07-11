@@ -38,8 +38,7 @@ func (s *impBlockDeviceUtils) RescanISCSI() error {
 	defer s.logger.Trace(logs.DEBUG)()
 	rescanCmd := "iscsiadm"
 	if err := s.exec.IsExecutable(rescanCmd); err != nil {
-		return s.logger.ErrorRet(nil, "failed, continue without ISCSI")
-		//return s.logger.ErrorRet(&commandNotFoundError{rescanCmd, err}, "failed")
+		return s.logger.ErrorRet(&commandNotFoundError{rescanCmd, err}, "failed")
 	}
 	args := []string{rescanCmd, "-m", "session", "--rescan"}
 	if _, err := s.exec.Execute("sudo", args); err != nil {
