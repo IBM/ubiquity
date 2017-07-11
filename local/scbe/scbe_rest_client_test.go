@@ -38,6 +38,7 @@ var _ = Describe("ScbeRestClient", func() {
         volName               string = "fake-volume"
         volIdentifier         string = "fake-volume-identifier"
         volSize               int = 10
+        hostName              string = "fake-host-name"
         restErr               error = errors.New("rest error")
     )
     BeforeEach(func() {
@@ -173,6 +174,34 @@ var _ = Describe("ScbeRestClient", func() {
         It("fail upon SimpleRestClient error", func() {
             fakeSimpleRestClient.GetReturns(restErr)
             _, err := scbeRestClient.GetVolumes(volIdentifier)
+            Expect(err).To(HaveOccurred())
+            Expect(err).To(MatchError(restErr))
+        })
+    })
+    Context("MapVolume", func() {
+        It("succeed", func() {
+            mapResponse := []scbe.ScbeResponseMapping{
+                {Id: 1, Volume: volIdentifier, Host: 1, LunNumber:1}}
+            mappings := scbe.ScbeResponseMappings{Mappings: mapResponse}
+            fakeSimpleRestClient.PostStub = OverridePostStub(mappings)
+            _, err := scbeRestClient.MapVolume(volIdentifier, hostName)
+            Expect(err).NotTo(HaveOccurred())
+        })
+        It("fail upon SimpleRestClient error", func() {
+            fakeSimpleRestClient.PostReturns(restErr)
+            _, err := scbeRestClient.MapVolume(volIdentifier, hostName)
+            Expect(err).To(HaveOccurred())
+            Expect(err).To(MatchError(restErr))
+        })
+    })
+    Context("UnmapVolume", func() {
+        It("succeed", func() {
+            err := scbeRestClient.UnmapVolume(volIdentifier, hostName)
+            Expect(err).NotTo(HaveOccurred())
+        })
+        It("fail upon SimpleRestClient error", func() {
+            fakeSimpleRestClient.DeleteReturns(restErr)
+            err := scbeRestClient.UnmapVolume(volIdentifier, hostName)
             Expect(err).To(HaveOccurred())
             Expect(err).To(MatchError(restErr))
         })
