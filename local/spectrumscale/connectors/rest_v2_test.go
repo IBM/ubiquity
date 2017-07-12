@@ -275,17 +275,24 @@ var _ = Describe("spectrumRestV2", func() {
 	})
 
 	Context(".CreateFileset", func() {
-		It("Should pass while creating a fileset", func() {
-			Skip("TODO need to fix")
-			createFilesetResp := connectors.GenericResponse{}
-			createFilesetResp.Status.Code = 202
+		var (
+			createFilesetResp connectors.GenericResponse
+			registerurl       string
+			joburl            string
+		)
+		BeforeEach(func() {
+			createFilesetResp = connectors.GenericResponse{}
 			createFilesetResp.Jobs = make([]connectors.Job, 1)
 			createFilesetResp.Jobs[0].JobID = 1234
+			registerurl = fakeurl + "/scalemgmt/v2/filesystems/" + filesystem + "/filesets"
+			joburl = fakeurl + "/scalemgmt/v2/jobs?filter=jobId=1234&fields=:all:"
+
+		})
+		It("Should pass while creating a fileset", func() {
+			createFilesetResp.Status.Code = 202
 			createFilesetResp.Jobs[0].Status = "COMPLETED"
 			marshalledResponse, err := json.Marshal(createFilesetResp)
 			Expect(err).ToNot(HaveOccurred())
-			registerurl := fakeurl + "/scalemgmt/v2/filesystems/" + filesystem + "/filesets"
-			joburl := fakeurl + "/scalemgmt/v2/jobs?filter=jobId=1234&fields=:all:"
 
 			httpmock.RegisterResponder(
 				"POST",
@@ -303,15 +310,10 @@ var _ = Describe("spectrumRestV2", func() {
 		})
 
 		It("Should fail with http error", func() {
-			createFilesetResp := connectors.GenericResponse{}
 			createFilesetResp.Status.Code = 500
-			createFilesetResp.Jobs = make([]connectors.Job, 1)
-			createFilesetResp.Jobs[0].JobID = 1234
 			createFilesetResp.Jobs[0].Status = "COMPLETED"
 			marshalledResponse, err := json.Marshal(createFilesetResp)
 			Expect(err).ToNot(HaveOccurred())
-			registerurl := fakeurl + "/scalemgmt/v2/filesystems/" + filesystem + "/filesets"
-			joburl := fakeurl + "/scalemgmt/v2/jobs?filter=jobId=1234&fields=:all:"
 
 			httpmock.RegisterResponder(
 				"POST",
@@ -329,15 +331,10 @@ var _ = Describe("spectrumRestV2", func() {
 		})
 
 		It("Should fail since it is unable to fetch job details due to http error", func() {
-			createFilesetResp := connectors.GenericResponse{}
 			createFilesetResp.Status.Code = 202
-			createFilesetResp.Jobs = make([]connectors.Job, 1)
-			createFilesetResp.Jobs[0].JobID = 1234
 			createFilesetResp.Jobs[0].Status = "COMPLETED"
 			marshalledResponse, err := json.Marshal(createFilesetResp)
 			Expect(err).ToNot(HaveOccurred())
-			registerurl := fakeurl + "/scalemgmt/v2/filesystems/" + filesystem + "/filesets"
-			joburl := fakeurl + "/scalemgmt/v2/jobs?filter=jobId=1234&fields=:all:"
 
 			httpmock.RegisterResponder(
 				"POST",
@@ -355,13 +352,10 @@ var _ = Describe("spectrumRestV2", func() {
 		})
 
 		It("Should fail to do zero length job array", func() {
-			createFilesetResp := connectors.GenericResponse{}
 			createFilesetResp.Status.Code = 202
 			createFilesetResp.Jobs = make([]connectors.Job, 0)
 			marshalledResponse, err := json.Marshal(createFilesetResp)
 			Expect(err).ToNot(HaveOccurred())
-			registerurl := fakeurl + "/scalemgmt/v2/filesystems/" + filesystem + "/filesets"
-			joburl := fakeurl + "/scalemgmt/v2/jobs?filter=jobId=1234&fields=:all:"
 
 			httpmock.RegisterResponder(
 				"POST",
@@ -381,17 +375,27 @@ var _ = Describe("spectrumRestV2", func() {
 	})
 
 	Context(".DeleteFileset", func() {
+		var (
+			deleteFilesetResp connectors.GenericResponse
+			registerurl       string
+			joburl            string
+		)
+		BeforeEach(func() {
+			deleteFilesetResp = connectors.GenericResponse{}
+			deleteFilesetResp.Jobs = make([]connectors.Job, 1)
+			deleteFilesetResp.Jobs[0].JobID = 1234
+			registerurl = fakeurl + "/scalemgmt/v2/filesystems/" + filesystem + "/filesets/" + fileset
+
+			joburl = fakeurl + "/scalemgmt/v2/jobs?filter=jobId=1234&fields=:all:"
+
+		})
 		It("Should pass while deleting a fileset", func() {
-			Skip("TODO need to fix")
-			deleteFilesetResp := connectors.GenericResponse{}
 			deleteFilesetResp.Status.Code = 202
 			deleteFilesetResp.Jobs = make([]connectors.Job, 1)
 			deleteFilesetResp.Jobs[0].JobID = 1234
 			deleteFilesetResp.Jobs[0].Status = "COMPLETED"
 			marshalledResponse, err := json.Marshal(deleteFilesetResp)
 			Expect(err).ToNot(HaveOccurred())
-			registerurl := fakeurl + "/scalemgmt/v2/filesystems/" + filesystem + "/filesets/" + fileset
-			joburl := fakeurl + "/scalemgmt/v2/jobs?filter=jobId=1234&fields=:all:"
 
 			httpmock.RegisterResponder(
 				"DELETE",
@@ -409,15 +413,10 @@ var _ = Describe("spectrumRestV2", func() {
 		})
 
 		It("Should fail with http error", func() {
-			deleteFilesetResp := connectors.GenericResponse{}
 			deleteFilesetResp.Status.Code = 500
-			deleteFilesetResp.Jobs = make([]connectors.Job, 1)
-			deleteFilesetResp.Jobs[0].JobID = 1234
 			deleteFilesetResp.Jobs[0].Status = "COMPLETED"
 			marshalledResponse, err := json.Marshal(deleteFilesetResp)
 			Expect(err).ToNot(HaveOccurred())
-			registerurl := fakeurl + "/scalemgmt/v2/filesystems/" + filesystem + "/filesets/" + fileset
-			joburl := fakeurl + "/scalemgmt/v2/jobs?filter=jobId=1234&fields=:all:"
 
 			httpmock.RegisterResponder(
 				"DELETE",
@@ -435,16 +434,11 @@ var _ = Describe("spectrumRestV2", func() {
 		})
 
 		It("Should fail since it is unable to fetch job details due to http error", func() {
-			deleteFilesetResp := connectors.GenericResponse{}
 			deleteFilesetResp.Status.Code = 202
-			deleteFilesetResp.Jobs = make([]connectors.Job, 1)
-			deleteFilesetResp.Jobs[0].JobID = 1234
 			deleteFilesetResp.Jobs[0].Status = "COMPLETED"
 			marshalledResponse, err := json.Marshal(deleteFilesetResp)
 			Expect(err).ToNot(HaveOccurred())
 
-			registerurl := fakeurl + "/scalemgmt/v2/filesystems/" + filesystem + "/filesets/" + fileset
-			joburl := fakeurl + "/scalemgmt/v2/jobs?filter=jobId=1234&fields=:all:"
 			httpmock.RegisterResponder(
 				"DELETE",
 				registerurl,
@@ -461,13 +455,10 @@ var _ = Describe("spectrumRestV2", func() {
 		})
 
 		It("Should fail to do zero length job array", func() {
-			deleteFilesetResp := connectors.GenericResponse{}
 			deleteFilesetResp.Status.Code = 202
 			deleteFilesetResp.Jobs = make([]connectors.Job, 0)
 			marshalledResponse, err := json.Marshal(deleteFilesetResp)
 			Expect(err).ToNot(HaveOccurred())
-			registerurl := fakeurl + "/scalemgmt/v2/filesystems/" + filesystem + "/filesets"
-			joburl := fakeurl + "/scalemgmt/v2/jobs?filter=jobId=1234&fields=:all:"
 
 			httpmock.RegisterResponder(
 				"DELETE",
@@ -487,17 +478,31 @@ var _ = Describe("spectrumRestV2", func() {
 	})
 
 	Context(".LinkFileset", func() {
-		It("should pass while linking a fileset", func() {
-			Skip("TODO need to fix")
-			linkFilesetResp := connectors.GenericResponse{}
-			linkFilesetResp.Status.Code = 202
+		var (
+			linkFilesetResp connectors.GenericResponse
+			registerurl     string
+			registerFSurl   string
+			joburl          string
+			getfilesysResp  connectors.GetFilesystemResponse_v2
+		)
+		BeforeEach(func() {
+			linkFilesetResp = connectors.GenericResponse{}
 			linkFilesetResp.Jobs = make([]connectors.Job, 1)
 			linkFilesetResp.Jobs[0].JobID = 1234
+			registerurl = fakeurl + "/scalemgmt/v2/filesystems/" + filesystem + "/filesets/" + fileset + "/link"
+			joburl = fakeurl + "/scalemgmt/v2/jobs?filter=jobId=1234&fields=:all:"
+			registerFSurl = fakeurl + "/scalemgmt/v2/filesystems/" + filesystem
+			getfilesysResp = connectors.GetFilesystemResponse_v2{}
+			getfilesysResp.FileSystems = make([]connectors.FileSystem_v2, 1)
+			getfilesysResp.FileSystems[0].Mount.MountPoint = "fakemount"
+			getfilesysResp.Status.Code = 200
+		})
+		It("should pass while linking a fileset", func() {
+			linkFilesetResp.Status.Code = 202
 			linkFilesetResp.Jobs[0].Status = "COMPLETED"
 			marshalledResponse, err := json.Marshal(linkFilesetResp)
 			Expect(err).ToNot(HaveOccurred())
-			registerurl := fakeurl + "/scalemgmt/v2/filesystems/" + filesystem + "/filesets/" + fileset + "/link"
-			joburl := fakeurl + "/scalemgmt/v2/jobs?filter=jobId=1234&fields=:all:"
+
 			httpmock.RegisterResponder(
 				"POST",
 				registerurl,
@@ -510,16 +515,12 @@ var _ = Describe("spectrumRestV2", func() {
 				httpmock.NewStringResponder(200, string(marshalledResponse)),
 			)
 
-			getfilesysResp := connectors.GetFilesystemResponse_v2{}
-			getfilesysResp.FileSystems = make([]connectors.FileSystem_v2, 1)
-			getfilesysResp.FileSystems[0].Mount.MountPoint = "fakemount"
-			getfilesysResp.Status.Code = 200
 			marshalledResponse_filesys, err := json.Marshal(getfilesysResp)
 			Expect(err).ToNot(HaveOccurred())
-			registerurl = fakeurl + "/scalemgmt/v2/filesystems/" + filesystem
+
 			httpmock.RegisterResponder(
 				"GET",
-				registerurl,
+				registerFSurl,
 				httpmock.NewStringResponder(200, string(marshalledResponse_filesys)),
 			)
 
@@ -528,15 +529,10 @@ var _ = Describe("spectrumRestV2", func() {
 		})
 
 		It("Should fail with http error", func() {
-			linkFilesetResp := connectors.GenericResponse{}
 			linkFilesetResp.Status.Code = 500
-			linkFilesetResp.Jobs = make([]connectors.Job, 1)
-			linkFilesetResp.Jobs[0].JobID = 1234
 			linkFilesetResp.Jobs[0].Status = "COMPLETED"
 			marshalledResponse, err := json.Marshal(linkFilesetResp)
 			Expect(err).ToNot(HaveOccurred())
-			registerurl := fakeurl + "/scalemgmt/v2/filesystems/" + filesystem + "/filesets/" + fileset + "/link"
-			joburl := fakeurl + "/scalemgmt/v2/jobs?filter=jobId=1234&fields=:all:"
 
 			httpmock.RegisterResponder(
 				"POST",
@@ -550,16 +546,12 @@ var _ = Describe("spectrumRestV2", func() {
 				httpmock.NewStringResponder(200, string(marshalledResponse)),
 			)
 
-			getfilesysResp := connectors.GetFilesystemResponse_v2{}
-			getfilesysResp.FileSystems = make([]connectors.FileSystem_v2, 1)
-			getfilesysResp.FileSystems[0].Mount.MountPoint = "fakemount"
-			getfilesysResp.Status.Code = 200
 			marshalledResponse_filesys, err := json.Marshal(getfilesysResp)
 			Expect(err).ToNot(HaveOccurred())
-			registerurl = fakeurl + "/scalemgmt/v2/filesystems/" + filesystem
+
 			httpmock.RegisterResponder(
 				"GET",
-				registerurl,
+				registerFSurl,
 				httpmock.NewStringResponder(200, string(marshalledResponse_filesys)),
 			)
 			err = spectrumRestV2.LinkFileset(filesystem, fileset)
@@ -567,15 +559,10 @@ var _ = Describe("spectrumRestV2", func() {
 		})
 
 		It("Should fail since it is unable to fetch job details due to http error", func() {
-			linkFilesetResp := connectors.GenericResponse{}
 			linkFilesetResp.Status.Code = 202
-			linkFilesetResp.Jobs = make([]connectors.Job, 1)
-			linkFilesetResp.Jobs[0].JobID = 1234
 			linkFilesetResp.Jobs[0].Status = "COMPLETED"
 			marshalledResponse, err := json.Marshal(linkFilesetResp)
 			Expect(err).ToNot(HaveOccurred())
-			registerurl := fakeurl + "/scalemgmt/v2/filesystems/" + filesystem + "/filesets/" + fileset + "/link"
-			joburl := fakeurl + "/scalemgmt/v2/jobs?filter=jobId=1234&fields=:all:"
 
 			httpmock.RegisterResponder(
 				"POST",
@@ -588,16 +575,11 @@ var _ = Describe("spectrumRestV2", func() {
 				joburl,
 				httpmock.NewStringResponder(400, string(marshalledResponse)),
 			)
-			getfilesysResp := connectors.GetFilesystemResponse_v2{}
-			getfilesysResp.FileSystems = make([]connectors.FileSystem_v2, 1)
-			getfilesysResp.FileSystems[0].Mount.MountPoint = "fakemount"
-			getfilesysResp.Status.Code = 200
 			marshalledResponse_filesys, err := json.Marshal(getfilesysResp)
 			Expect(err).ToNot(HaveOccurred())
-			registerurl = fakeurl + "/scalemgmt/v2/filesystems/" + filesystem
 			httpmock.RegisterResponder(
 				"GET",
-				registerurl,
+				registerFSurl,
 				httpmock.NewStringResponder(200, string(marshalledResponse_filesys)),
 			)
 			err = spectrumRestV2.LinkFileset(filesystem, fileset)
@@ -605,13 +587,10 @@ var _ = Describe("spectrumRestV2", func() {
 		})
 
 		It("Should fail to do zero length job array", func() {
-			linkFilesetResp := connectors.GenericResponse{}
 			linkFilesetResp.Status.Code = 202
 			linkFilesetResp.Jobs = make([]connectors.Job, 0)
 			marshalledResponse, err := json.Marshal(linkFilesetResp)
 			Expect(err).ToNot(HaveOccurred())
-			registerurl := fakeurl + "/scalemgmt/v2/filesystems/" + filesystem + "/filesets/" + fileset + "/link"
-			joburl := fakeurl + "/scalemgmt/v2/jobs?filter=jobId=1234&fields=:all:"
 
 			httpmock.RegisterResponder(
 				"POST",
@@ -624,16 +603,12 @@ var _ = Describe("spectrumRestV2", func() {
 				joburl,
 				httpmock.NewStringResponder(200, string(marshalledResponse)),
 			)
-			getfilesysResp := connectors.GetFilesystemResponse_v2{}
-			getfilesysResp.FileSystems = make([]connectors.FileSystem_v2, 1)
-			getfilesysResp.FileSystems[0].Mount.MountPoint = "fakemount"
-			getfilesysResp.Status.Code = 200
+
 			marshalledResponse_filesys, err := json.Marshal(getfilesysResp)
 			Expect(err).ToNot(HaveOccurred())
-			registerurl = fakeurl + "/scalemgmt/v2/filesystems/" + filesystem
 			httpmock.RegisterResponder(
 				"GET",
-				registerurl,
+				registerFSurl,
 				httpmock.NewStringResponder(200, string(marshalledResponse_filesys)),
 			)
 
@@ -644,17 +619,24 @@ var _ = Describe("spectrumRestV2", func() {
 	})
 
 	Context(".UnlinkFileset", func() {
-		It("should pass while deleting a fileset", func() {
-			Skip("TODO need to fix")
-			unlinkFilesetResp := connectors.GenericResponse{}
-			unlinkFilesetResp.Status.Code = 202
+		var (
+			unlinkFilesetResp connectors.GenericResponse
+			registerurl       string
+			joburl            string
+		)
+		BeforeEach(func() {
+			unlinkFilesetResp = connectors.GenericResponse{}
 			unlinkFilesetResp.Jobs = make([]connectors.Job, 1)
 			unlinkFilesetResp.Jobs[0].JobID = 1234
+			registerurl = fakeurl + "/scalemgmt/v2/filesystems/" + filesystem + "/filesets/" + fileset + "/link"
+			joburl = fakeurl + "/scalemgmt/v2/jobs?filter=jobId=1234&fields=:all:"
+
+		})
+		It("should pass while deleting a fileset", func() {
+			unlinkFilesetResp.Status.Code = 202
 			unlinkFilesetResp.Jobs[0].Status = "COMPLETED"
 			marshalledResponse, err := json.Marshal(unlinkFilesetResp)
 			Expect(err).ToNot(HaveOccurred())
-			registerurl := fakeurl + "/scalemgmt/v2/filesystems/" + filesystem + "/filesets/" + fileset + "/link"
-			joburl := fakeurl + "/scalemgmt/v2/jobs?filter=jobId=1234&fields=:all:"
 
 			httpmock.RegisterResponder(
 				"DELETE",
@@ -672,15 +654,10 @@ var _ = Describe("spectrumRestV2", func() {
 		})
 
 		It("Should fail with http error", func() {
-			unlinkFilesetResp := connectors.GenericResponse{}
 			unlinkFilesetResp.Status.Code = 500
-			unlinkFilesetResp.Jobs = make([]connectors.Job, 1)
-			unlinkFilesetResp.Jobs[0].JobID = 1234
 			unlinkFilesetResp.Jobs[0].Status = "COMPLETED"
 			marshalledResponse, err := json.Marshal(unlinkFilesetResp)
 			Expect(err).ToNot(HaveOccurred())
-			registerurl := fakeurl + "/scalemgmt/v2/filesystems/" + filesystem + "/filesets/" + fileset + "/link"
-			joburl := fakeurl + "/scalemgmt/v2/jobs?filter=jobId=1234&fields=:all:"
 
 			httpmock.RegisterResponder(
 				"DELETE",
@@ -698,16 +675,11 @@ var _ = Describe("spectrumRestV2", func() {
 		})
 
 		It("Should fail since it is unable to fetch job details due to http error", func() {
-			unlinkFilesetResp := connectors.GenericResponse{}
 			unlinkFilesetResp.Status.Code = 202
-			unlinkFilesetResp.Jobs = make([]connectors.Job, 1)
-			unlinkFilesetResp.Jobs[0].JobID = 1234
 			unlinkFilesetResp.Jobs[0].Status = "COMPLETED"
 			marshalledResponse, err := json.Marshal(unlinkFilesetResp)
 			Expect(err).ToNot(HaveOccurred())
 
-			registerurl := fakeurl + "/scalemgmt/v2/filesystems/" + filesystem + "/filesets/" + fileset + "/link"
-			joburl := fakeurl + "/scalemgmt/v2/jobs?filter=jobId=1234&fields=:all:"
 			httpmock.RegisterResponder(
 				"DELETE",
 				registerurl,
@@ -724,13 +696,10 @@ var _ = Describe("spectrumRestV2", func() {
 		})
 
 		It("Should fail to do zero length job array", func() {
-			unlinkFilesetResp := connectors.GenericResponse{}
 			unlinkFilesetResp.Status.Code = 202
 			unlinkFilesetResp.Jobs = make([]connectors.Job, 0)
 			marshalledResponse, err := json.Marshal(unlinkFilesetResp)
 			Expect(err).ToNot(HaveOccurred())
-			registerurl := fakeurl + "/scalemgmt/v2/filesystems/" + filesystem + "/filesets/" + fileset + "/link"
-			joburl := fakeurl + "/scalemgmt/v2/jobs?filter=jobId=1234&fields=:all:"
 
 			httpmock.RegisterResponder(
 				"DELETE",
@@ -750,15 +719,25 @@ var _ = Describe("spectrumRestV2", func() {
 	})
 
 	Context(".ListFileset", func() {
-		It("Should pass with fileset info", func() {
-			getFilesetRespo := connectors.GetFilesetResponse_v2{}
-			getFilesetRespo.Status.Code = 200
+		var (
+			getFilesetRespo     connectors.GetFilesetResponse_v2
+			registerurl         string
+			registerURLFilesets string
+		)
+		BeforeEach(func() {
+			getFilesetRespo = connectors.GetFilesetResponse_v2{}
 			getFilesetRespo.Filesets = make([]connectors.Fileset_v2, 1)
 			getFilesetRespo.Filesets[0].Config.FilesetName = fileset
 			getFilesetRespo.Filesets[0].Config.Path = "fakemount"
+			registerurl = fakeurl + "/scalemgmt/v2/filesystems/" + filesystem + "/filesets/" + fileset
+			registerURLFilesets = fakeurl + "/scalemgmt/v2/filesystems/" + filesystem + "/filesets"
+		})
+		It("Should pass with fileset info", func() {
+			getFilesetRespo.Status.Code = 200
+
 			marshalledResponse, err := json.Marshal(getFilesetRespo)
 			Expect(err).ToNot(HaveOccurred())
-			registerurl := fakeurl + "/scalemgmt/v2/filesystems/" + filesystem + "/filesets/" + fileset
+
 			httpmock.RegisterResponder(
 				"GET",
 				registerurl,
@@ -771,14 +750,10 @@ var _ = Describe("spectrumRestV2", func() {
 		})
 
 		It("Should fail with http error", func() {
-			getFilesetRespo := connectors.GetFilesetResponse_v2{}
 			getFilesetRespo.Status.Code = 500
-			getFilesetRespo.Filesets = make([]connectors.Fileset_v2, 1)
-			getFilesetRespo.Filesets[0].Config.FilesetName = fileset
-			getFilesetRespo.Filesets[0].Config.Path = "fakemount"
 			marshalledResponse, err := json.Marshal(getFilesetRespo)
 			Expect(err).ToNot(HaveOccurred())
-			registerurl := fakeurl + "/scalemgmt/v2/filesystems/" + filesystem + "/filesets/" + fileset
+
 			httpmock.RegisterResponder(
 				"GET",
 				registerurl,
@@ -791,12 +766,10 @@ var _ = Describe("spectrumRestV2", func() {
 		})
 
 		It("Should fail due to zero length fileset", func() {
-			getFilesetRespo := connectors.GetFilesetResponse_v2{}
 			getFilesetRespo.Status.Code = 500
 			getFilesetRespo.Filesets = make([]connectors.Fileset_v2, 0)
 			marshalledResponse, err := json.Marshal(getFilesetRespo)
 			Expect(err).ToNot(HaveOccurred())
-			registerurl := fakeurl + "/scalemgmt/v2/filesystems/" + filesystem + "/filesets/" + fileset
 			httpmock.RegisterResponder(
 				"GET",
 				registerurl,
@@ -809,7 +782,6 @@ var _ = Describe("spectrumRestV2", func() {
 		})
 
 		It("Should pass with fileset info", func() {
-			getFilesetRespo := connectors.GetFilesetResponse_v2{}
 			getFilesetRespo.Status.Code = 200
 			getFilesetRespo.Filesets = make([]connectors.Fileset_v2, 4)
 			getFilesetRespo.Filesets[0].Config.FilesetName = fileset
@@ -826,10 +798,9 @@ var _ = Describe("spectrumRestV2", func() {
 
 			marshalledResponse, err := json.Marshal(getFilesetRespo)
 			Expect(err).ToNot(HaveOccurred())
-			registerurl := fakeurl + "/scalemgmt/v2/filesystems/" + filesystem + "/filesets"
 			httpmock.RegisterResponder(
 				"GET",
-				registerurl,
+				registerURLFilesets,
 				httpmock.NewStringResponder(200, string(marshalledResponse)),
 			)
 			volumemeta_arr, err := spectrumRestV2.ListFilesets(filesystem)
@@ -842,7 +813,7 @@ var _ = Describe("spectrumRestV2", func() {
 		})
 
 		It("Should fail with http error", func() {
-			getFilesetRespo := connectors.GetFilesetResponse_v2{}
+
 			getFilesetRespo.Status.Code = 500
 			getFilesetRespo.Filesets = make([]connectors.Fileset_v2, 4)
 			getFilesetRespo.Filesets[0].Config.FilesetName = fileset
@@ -859,10 +830,9 @@ var _ = Describe("spectrumRestV2", func() {
 
 			marshalledResponse, err := json.Marshal(getFilesetRespo)
 			Expect(err).ToNot(HaveOccurred())
-			registerurl := fakeurl + "/scalemgmt/v2/filesystems/" + filesystem + "/filesets"
 			httpmock.RegisterResponder(
 				"GET",
-				registerurl,
+				registerURLFilesets,
 				httpmock.NewStringResponder(500, string(marshalledResponse)),
 			)
 			volumemeta_arr, err := spectrumRestV2.ListFilesets(filesystem)
@@ -871,16 +841,14 @@ var _ = Describe("spectrumRestV2", func() {
 		})
 
 		It("Should fail with zero length", func() {
-			getFilesetRespo := connectors.GetFilesetResponse_v2{}
 			getFilesetRespo.Status.Code = 200
 			getFilesetRespo.Filesets = make([]connectors.Fileset_v2, 0)
 
 			marshalledResponse, err := json.Marshal(getFilesetRespo)
 			Expect(err).ToNot(HaveOccurred())
-			registerurl := fakeurl + "/scalemgmt/v2/filesystems/" + filesystem + "/filesets"
 			httpmock.RegisterResponder(
 				"GET",
-				registerurl,
+				registerURLFilesets,
 				httpmock.NewStringResponder(200, string(marshalledResponse)),
 			)
 			volumemeta_arr, err := spectrumRestV2.ListFilesets(filesystem)
@@ -890,15 +858,21 @@ var _ = Describe("spectrumRestV2", func() {
 	})
 
 	Context(".IsFilesetLinked", func() {
-		It("Should pass since fileset is linked", func() {
-			getFilesetRespo := connectors.GetFilesetResponse_v2{}
-			getFilesetRespo.Status.Code = 200
+		var (
+			getFilesetRespo connectors.GetFilesetResponse_v2
+			registerurl     string
+		)
+		BeforeEach(func() {
+			getFilesetRespo = connectors.GetFilesetResponse_v2{}
 			getFilesetRespo.Filesets = make([]connectors.Fileset_v2, 1)
 			getFilesetRespo.Filesets[0].Config.FilesetName = fileset
 			getFilesetRespo.Filesets[0].Config.Path = "fakemount"
+			registerurl = fakeurl + "/scalemgmt/v2/filesystems/" + filesystem + "/filesets/" + fileset
+		})
+		It("Should pass since fileset is linked", func() {
+			getFilesetRespo.Status.Code = 200
 			marshalledResponse, err := json.Marshal(getFilesetRespo)
 			Expect(err).ToNot(HaveOccurred())
-			registerurl := fakeurl + "/scalemgmt/v2/filesystems/" + filesystem + "/filesets/" + fileset
 			httpmock.RegisterResponder(
 				"GET",
 				registerurl,
@@ -911,14 +885,9 @@ var _ = Describe("spectrumRestV2", func() {
 		})
 
 		It("Should fail with http error", func() {
-			getFilesetRespo := connectors.GetFilesetResponse_v2{}
 			getFilesetRespo.Status.Code = 500
-			getFilesetRespo.Filesets = make([]connectors.Fileset_v2, 1)
-			getFilesetRespo.Filesets[0].Config.FilesetName = fileset
-			getFilesetRespo.Filesets[0].Config.Path = "fakemount"
 			marshalledResponse, err := json.Marshal(getFilesetRespo)
 			Expect(err).ToNot(HaveOccurred())
-			registerurl := fakeurl + "/scalemgmt/v2/filesystems/" + filesystem + "/filesets/" + fileset
 			httpmock.RegisterResponder(
 				"GET",
 				registerurl,
@@ -930,14 +899,10 @@ var _ = Describe("spectrumRestV2", func() {
 		})
 
 		It("Should return false as mount point is empty", func() {
-			getFilesetRespo := connectors.GetFilesetResponse_v2{}
 			getFilesetRespo.Status.Code = 200
-			getFilesetRespo.Filesets = make([]connectors.Fileset_v2, 1)
-			getFilesetRespo.Filesets[0].Config.FilesetName = fileset
 			getFilesetRespo.Filesets[0].Config.Path = ""
 			marshalledResponse, err := json.Marshal(getFilesetRespo)
 			Expect(err).ToNot(HaveOccurred())
-			registerurl := fakeurl + "/scalemgmt/v2/filesystems/" + filesystem + "/filesets/" + fileset
 			httpmock.RegisterResponder(
 				"GET",
 				registerurl,
@@ -949,14 +914,10 @@ var _ = Describe("spectrumRestV2", func() {
 		})
 
 		It("Should fail as mount point contains --", func() {
-			getFilesetRespo := connectors.GetFilesetResponse_v2{}
 			getFilesetRespo.Status.Code = 200
-			getFilesetRespo.Filesets = make([]connectors.Fileset_v2, 1)
-			getFilesetRespo.Filesets[0].Config.FilesetName = fileset
 			getFilesetRespo.Filesets[0].Config.Path = "--"
 			marshalledResponse, err := json.Marshal(getFilesetRespo)
 			Expect(err).ToNot(HaveOccurred())
-			registerurl := fakeurl + "/scalemgmt/v2/filesystems/" + filesystem + "/filesets/" + fileset
 			httpmock.RegisterResponder(
 				"GET",
 				registerurl,
@@ -969,17 +930,25 @@ var _ = Describe("spectrumRestV2", func() {
 	})
 
 	Context(".SetFilesetQuota", func() {
-		It("Should pass while creating a fileset", func() {
-			Skip("TODO need to fix")
-			setFilesetResp := connectors.GenericResponse{}
-			setFilesetResp.Status.Code = 202
+		var (
+			setFilesetResp connectors.GenericResponse
+			registerurl    string
+			joburl         string
+		)
+		BeforeEach(func() {
+			setFilesetResp = connectors.GenericResponse{}
 			setFilesetResp.Jobs = make([]connectors.Job, 1)
 			setFilesetResp.Jobs[0].JobID = 1234
+			registerurl = fakeurl + "/scalemgmt/v2/filesystems/" + filesystem + "/filesets/" + fileset + "/quotas"
+			joburl = fakeurl + "/scalemgmt/v2/jobs?filter=jobId=1234&fields=:all:"
+
+		})
+		It("Should pass while creating a fileset", func() {
+			setFilesetResp.Status.Code = 202
+
 			setFilesetResp.Jobs[0].Status = "COMPLETED"
 			marshalledResponse, err := json.Marshal(setFilesetResp)
 			Expect(err).ToNot(HaveOccurred())
-			registerurl := fakeurl + "/scalemgmt/v2/filesystems/" + filesystem + "/filesets/" + fileset + "/quotas"
-			joburl := fakeurl + "/scalemgmt/v2/jobs?filter=jobId=1234&fields=:all:"
 
 			httpmock.RegisterResponder(
 				"POST",
@@ -997,15 +966,10 @@ var _ = Describe("spectrumRestV2", func() {
 		})
 
 		It("Should fail with http error", func() {
-			setFilesetResp := connectors.GenericResponse{}
 			setFilesetResp.Status.Code = 500
-			setFilesetResp.Jobs = make([]connectors.Job, 1)
-			setFilesetResp.Jobs[0].JobID = 1234
 			setFilesetResp.Jobs[0].Status = "COMPLETED"
 			marshalledResponse, err := json.Marshal(setFilesetResp)
 			Expect(err).ToNot(HaveOccurred())
-			registerurl := fakeurl + "/scalemgmt/v2/filesystems/" + filesystem + "/filesets/" + fileset + "/quotas"
-			joburl := fakeurl + "/scalemgmt/v2/jobs?filter=jobId=1234&fields=:all:"
 
 			httpmock.RegisterResponder(
 				"POST",
@@ -1023,15 +987,10 @@ var _ = Describe("spectrumRestV2", func() {
 		})
 
 		It("Should fail since it is unable to fetch job details due to http error", func() {
-			setFilesetResp := connectors.GenericResponse{}
 			setFilesetResp.Status.Code = 202
-			setFilesetResp.Jobs = make([]connectors.Job, 1)
-			setFilesetResp.Jobs[0].JobID = 1234
 			setFilesetResp.Jobs[0].Status = "COMPLETED"
 			marshalledResponse, err := json.Marshal(setFilesetResp)
 			Expect(err).ToNot(HaveOccurred())
-			registerurl := fakeurl + "/scalemgmt/v2/filesystems/" + filesystem + "/filesets/" + fileset + "/quotas"
-			joburl := fakeurl + "/scalemgmt/v2/jobs?filter=jobId=1234&fields=:all:"
 
 			httpmock.RegisterResponder(
 				"POST",
@@ -1049,13 +1008,10 @@ var _ = Describe("spectrumRestV2", func() {
 		})
 
 		It("Should fail to do zero length job array", func() {
-			setFilesetResp := connectors.GenericResponse{}
 			setFilesetResp.Status.Code = 202
 			setFilesetResp.Jobs = make([]connectors.Job, 0)
 			marshalledResponse, err := json.Marshal(setFilesetResp)
 			Expect(err).ToNot(HaveOccurred())
-			registerurl := fakeurl + "/scalemgmt/v2/filesystems/" + filesystem + "/filesets/" + fileset + "/quotas"
-			joburl := fakeurl + "/scalemgmt/v2/jobs?filter=jobId=1234&fields=:all:"
 
 			httpmock.RegisterResponder(
 				"POST",
@@ -1075,15 +1031,21 @@ var _ = Describe("spectrumRestV2", func() {
 	})
 
 	Context(".ListFilesetQuota", func() {
-		It("Should pass after getting quota", func() {
-			getFilesetquota := connectors.GetQuotaResponse_v2{}
-			getFilesetquota.Status.Code = 200
+		var (
+			getFilesetquota connectors.GetQuotaResponse_v2
+			registerurl     string
+		)
+		BeforeEach(func() {
+			getFilesetquota = connectors.GetQuotaResponse_v2{}
 			getFilesetquota.Quotas = make([]connectors.Quota_v2, 1)
 			getFilesetquota.Quotas[0].BlockQuota = 1024
+			registerurl = fakeurl + "/scalemgmt/v2/filesystems/" + filesystem + "/quotas" + "?filter=objectName=" + fileset
+		})
+		It("Should pass after getting quota", func() {
+			getFilesetquota.Status.Code = 200
 
 			marshalledResponse, err := json.Marshal(getFilesetquota)
 			Expect(err).ToNot(HaveOccurred())
-			registerurl := fakeurl + "/scalemgmt/v2/filesystems/" + filesystem + "/quotas" + "?filter=objectName=" + fileset
 			httpmock.RegisterResponder(
 				"GET",
 				registerurl,
@@ -1095,14 +1057,9 @@ var _ = Describe("spectrumRestV2", func() {
 		})
 
 		It("Should fail with http error", func() {
-			getFilesetquota := connectors.GetQuotaResponse_v2{}
 			getFilesetquota.Status.Code = 500
-			getFilesetquota.Quotas = make([]connectors.Quota_v2, 1)
-			getFilesetquota.Quotas[0].BlockQuota = 1024
-
 			marshalledResponse, err := json.Marshal(getFilesetquota)
 			Expect(err).ToNot(HaveOccurred())
-			registerurl := fakeurl + "/scalemgmt/v2/filesystems/" + filesystem + "/quotas" + "?filter=objectName=" + fileset
 			httpmock.RegisterResponder(
 				"GET",
 				registerurl,
@@ -1114,13 +1071,11 @@ var _ = Describe("spectrumRestV2", func() {
 		})
 
 		It("should fail with zero length quota array", func() {
-			getFilesetquota := connectors.GetQuotaResponse_v2{}
 			getFilesetquota.Status.Code = 200
 			getFilesetquota.Quotas = make([]connectors.Quota_v2, 0)
 
 			marshalledResponse, err := json.Marshal(getFilesetquota)
 			Expect(err).ToNot(HaveOccurred())
-			registerurl := fakeurl + "/scalemgmt/v2/filesystems/" + filesystem + "/quotas" + "?filter=objectName=" + fileset
 			httpmock.RegisterResponder(
 				"GET",
 				registerurl,
@@ -1133,43 +1088,47 @@ var _ = Describe("spectrumRestV2", func() {
 	})
 
 	Context(".ExportNfs", func() {
-		It("Should pass while creating a fileset", func() {
-			Skip("TODO need to fix")
-			exportNfsResp := connectors.GenericResponse{}
-			exportNfsResp.Status.Code = 202
+		var (
+			exportNfsResp connectors.GenericResponse
+			registerurl   string
+			joburl        string
+		)
+		BeforeEach(func() {
+			exportNfsResp = connectors.GenericResponse{}
 			exportNfsResp.Jobs = make([]connectors.Job, 1)
 			exportNfsResp.Jobs[0].JobID = 1234
+			registerurl = fakeurl + "/scalemgmt/v2/nfs/exports"
+			joburl = fakeurl + "/scalemgmt/v2/jobs?filter=jobId=1234&fields=:all:"
+
+		})
+		It("Should pass while creating a fileset", func() {
+
+			exportNfsResp.Status.Code = 202
+
 			exportNfsResp.Jobs[0].Status = "COMPLETED"
 			marshalledResponse, err := json.Marshal(exportNfsResp)
 			Expect(err).ToNot(HaveOccurred())
-			registerurl := fakeurl + "/scalemgmt/v2/nfs/exports"
-			joburl := fakeurl + "/scalemgmt/v2/jobs?filter=jobId=1234&fields=:all:"
 
 			httpmock.RegisterResponder(
 				"POST",
 				registerurl,
-				httpmock.NewStringResponder(202, string(marshalledResponse)),
+				httpmock.NewStringResponder(http.StatusAccepted, string(marshalledResponse)),
 			)
 
 			httpmock.RegisterResponder(
 				"GET",
 				joburl,
-				httpmock.NewStringResponder(200, string(marshalledResponse)),
+				httpmock.NewStringResponder(http.StatusAccepted, string(marshalledResponse)),
 			)
 			err = spectrumRestV2.ExportNfs(filesystem, filesystem)
 			Expect(err).ToNot(HaveOccurred())
 		})
 
 		It("Should fail with http error", func() {
-			exportNfsResp := connectors.GenericResponse{}
 			exportNfsResp.Status.Code = 500
-			exportNfsResp.Jobs = make([]connectors.Job, 1)
-			exportNfsResp.Jobs[0].JobID = 1234
 			exportNfsResp.Jobs[0].Status = "COMPLETED"
 			marshalledResponse, err := json.Marshal(exportNfsResp)
 			Expect(err).ToNot(HaveOccurred())
-			registerurl := fakeurl + "/scalemgmt/v2/nfs/exports"
-			joburl := fakeurl + "/scalemgmt/v2/jobs?filter=jobId=1234&fields=:all:"
 
 			httpmock.RegisterResponder(
 				"POST",
@@ -1187,15 +1146,11 @@ var _ = Describe("spectrumRestV2", func() {
 		})
 
 		It("Should fail since it is unable to fetch job details due to http error", func() {
-			exportNfsResp := connectors.GenericResponse{}
 			exportNfsResp.Status.Code = 202
-			exportNfsResp.Jobs = make([]connectors.Job, 1)
 			exportNfsResp.Jobs[0].JobID = 1234
 			exportNfsResp.Jobs[0].Status = "COMPLETED"
 			marshalledResponse, err := json.Marshal(exportNfsResp)
 			Expect(err).ToNot(HaveOccurred())
-			registerurl := fakeurl + "/scalemgmt/v2/nfs/exports"
-			joburl := fakeurl + "/scalemgmt/v2/jobs?filter=jobId=1234&fields=:all:"
 
 			httpmock.RegisterResponder(
 				"POST",
@@ -1213,13 +1168,10 @@ var _ = Describe("spectrumRestV2", func() {
 		})
 
 		It("Should fail to do zero length job array", func() {
-			exportNfsResp := connectors.GenericResponse{}
 			exportNfsResp.Status.Code = 202
 			exportNfsResp.Jobs = make([]connectors.Job, 0)
 			marshalledResponse, err := json.Marshal(exportNfsResp)
 			Expect(err).ToNot(HaveOccurred())
-			registerurl := fakeurl + "/scalemgmt/v2/nfs/exports"
-			joburl := fakeurl + "/scalemgmt/v2/jobs?filter=jobId=1234&fields=:all:"
 
 			httpmock.RegisterResponder(
 				"POST",
@@ -1239,17 +1191,24 @@ var _ = Describe("spectrumRestV2", func() {
 	})
 
 	Context(".UnexportNfs", func() {
-		It("Should pass while deleting a fileset", func() {
-			Skip("TODO need to fix")
-			unexportNfs := connectors.GenericResponse{}
-			unexportNfs.Status.Code = 202
+		var (
+			unexportNfs connectors.GenericResponse
+			registerurl string
+			joburl      string
+		)
+		BeforeEach(func() {
+			unexportNfs = connectors.GenericResponse{}
 			unexportNfs.Jobs = make([]connectors.Job, 1)
 			unexportNfs.Jobs[0].JobID = 1234
+			registerurl = fakeurl + "/scalemgmt/v2/nfs/exports/" + fileset
+			joburl = fakeurl + "/scalemgmt/v2/jobs?filter=jobId=1234&fields=:all:"
+
+		})
+		It("Should pass while deleting a fileset", func() {
+			unexportNfs.Status.Code = 202
 			unexportNfs.Jobs[0].Status = "COMPLETED"
 			marshalledResponse, err := json.Marshal(unexportNfs)
 			Expect(err).ToNot(HaveOccurred())
-			registerurl := fakeurl + "/scalemgmt/v2/nfs/exports/" + fileset
-			joburl := fakeurl + "/scalemgmt/v2/jobs?filter=jobId=1234&fields=:all:"
 
 			httpmock.RegisterResponder(
 				"DELETE",
@@ -1267,15 +1226,10 @@ var _ = Describe("spectrumRestV2", func() {
 		})
 
 		It("Should fail with http error", func() {
-			unexportNfs := connectors.GenericResponse{}
 			unexportNfs.Status.Code = 500
-			unexportNfs.Jobs = make([]connectors.Job, 1)
-			unexportNfs.Jobs[0].JobID = 1234
 			unexportNfs.Jobs[0].Status = "COMPLETED"
 			marshalledResponse, err := json.Marshal(unexportNfs)
 			Expect(err).ToNot(HaveOccurred())
-			registerurl := fakeurl + "/scalemgmt/v2/nfs/exports/" + fileset
-			joburl := fakeurl + "/scalemgmt/v2/jobs?filter=jobId=1234&fields=:all:"
 
 			httpmock.RegisterResponder(
 				"DELETE",
@@ -1293,16 +1247,11 @@ var _ = Describe("spectrumRestV2", func() {
 		})
 
 		It("Should fail since it is unable to fetch job details due to http error", func() {
-			unexportNfs := connectors.GenericResponse{}
 			unexportNfs.Status.Code = 202
-			unexportNfs.Jobs = make([]connectors.Job, 1)
-			unexportNfs.Jobs[0].JobID = 1234
 			unexportNfs.Jobs[0].Status = "COMPLETED"
 			marshalledResponse, err := json.Marshal(unexportNfs)
 			Expect(err).ToNot(HaveOccurred())
 
-			registerurl := fakeurl + "/scalemgmt/v2/nfs/exports/" + fileset
-			joburl := fakeurl + "/scalemgmt/v2/jobs?filter=jobId=1234&fields=:all:"
 			httpmock.RegisterResponder(
 				"DELETE",
 				registerurl,
@@ -1319,13 +1268,10 @@ var _ = Describe("spectrumRestV2", func() {
 		})
 
 		It("Should fail to do zero length job array", func() {
-			unexportNfs := connectors.GenericResponse{}
 			unexportNfs.Status.Code = 202
 			unexportNfs.Jobs = make([]connectors.Job, 0)
 			marshalledResponse, err := json.Marshal(unexportNfs)
 			Expect(err).ToNot(HaveOccurred())
-			registerurl := fakeurl + "/scalemgmt/v2/nfs/exports/" + fileset
-			joburl := fakeurl + "/scalemgmt/v2/jobs?filter=jobId=1234&fields=:all:"
 
 			httpmock.RegisterResponder(
 				"DELETE",
