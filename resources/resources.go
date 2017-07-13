@@ -100,8 +100,10 @@ type UbiquityPluginConfig struct {
 	LogPath                 string
 	UbiquityServer          UbiquityServerConnectionInfo
 	SpectrumNfsRemoteConfig SpectrumNfsRemoteConfig
+	ScbeRemoteConfig        ScbeRemoteConfig
 	Backends                []string
 }
+
 type UbiquityDockerPluginConfig struct {
 	//Address          string
 	Port             int
@@ -112,6 +114,11 @@ type UbiquityServerConnectionInfo struct {
 	Address string
 	Port    int
 }
+
+type ScbeRemoteConfig struct {
+	SkipRescanISCSI bool
+}
+
 
 //go:generate counterfeiter -o ../fakes/fake_storage_client.go . StorageClient
 

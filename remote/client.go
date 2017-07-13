@@ -292,7 +292,7 @@ func (s *remoteClient) getMounterForBackend(backend string) (resources.Mounter, 
 	} else if backend == resources.SoftlayerNFS || backend == resources.SpectrumScaleNFS {
 		s.mounterPerBackend[backend] = mounter.NewNfsMounter(s.logger)
 	} else if backend == resources.SCBE {
-		s.mounterPerBackend[backend] = mounter.NewScbeMounter()
+		s.mounterPerBackend[backend] = mounter.NewScbeMounter(s.config.ScbeRemoteConfig)
 	} else {
 		return nil, fmt.Errorf("Mounter not found for backend: %s", backend)
 	}
