@@ -12,6 +12,8 @@ ginkgo -r -cover
 
 echo "Report coverage"
 gover
-if [ -z "$NOGOVERALLS" ]; then
+if [ -z "$GOVERALLS_TOKEN" ]; then
     goveralls -coverprofile=gover.coverprofile
+else
+    goveralls -coverprofile=gover.coverprofile -repotoken $GOVERALLS_TOKEN
 fi
