@@ -3,6 +3,13 @@ echo "Setting up ginkgo and gomega"
 go get github.com/onsi/ginkgo/ginkgo
 go get github.com/onsi/gomega
 
-cd local
-echo "Starting unit tests for local"
-ginkgo -r
+echo "Setting up coverage"
+go get github.com/mattn/goveralls
+go get github.com/modocache/gover
+
+echo "Run unit tests"
+ginkgo -r -cover
+
+echo "Report coverage"
+gover
+goveralls -coverprofile=gover.coverprofile #-repotoken $COVERALLS_TOKEN

@@ -22,7 +22,7 @@ _cgo_gotypes.go
 _cgo_export.*
 
 _testmain.go
-
+*.coverprofile
 *.exe
 *.test
 .DS_STORE
