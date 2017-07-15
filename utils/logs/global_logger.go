@@ -28,9 +28,12 @@ func initLogger(level Level, writer io.Writer) {
     if logger != nil {
         panic("logger already initialized")
     }
-    logger = NewGoLoggingLogger(level, writer)
+    logger = newGoLoggingLogger(level, writer)
 }
 
+// InitFileLogger initializes the global logger with a file writer to filePath and set at level.
+// It returns a function that clears the global logger.
+// If the global logger is already initialized InitFileLogger panics.
 func InitFileLogger(level Level, filePath string) func() {
     logFile, err := os.OpenFile(filePath, os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0640)
     if err != nil {
@@ -40,11 +43,16 @@ func InitFileLogger(level Level, filePath string) func() {
     return func() { logFile.Close(); logger = nil }
 }
 
+// InitStdoutLogger initializes the global logger with stdout and set at level.
+// It returns a function that clears the global logger.
+// If the global logger is already initialized InitStdoutLogger panics.
 func InitStdoutLogger(level Level) func() {
     initLogger(level, os.Stdout)
     return func() { logger = nil }
 }
 
+// GetLogger returns the global logger.
+// If the global logger is not initialized GetLogger panics.
 func GetLogger() Logger {
     if logger == nil {
         panic("logger not initialized")
