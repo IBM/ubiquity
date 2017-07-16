@@ -141,6 +141,15 @@ var _ = Describe("block_device_utils_test", func() {
             Expect(err).To(HaveOccurred())
             Expect(err.Error()).To(MatchRegexp(cmdErr.Error()))
         })
+        It("Discover fails if stat fails", func() {
+            volumeId := "volume-id"
+            result := "mpath"
+            fakeExec.ExecuteReturns([]byte(fmt.Sprintf("%s (%s) dm-1", result, volumeId)), nil)
+            fakeExec.StatReturns(nil, cmdErr)
+            _, err := bdUtils.Discover(volumeId)
+            Expect(err).To(HaveOccurred())
+            Expect(err.Error()).To(MatchRegexp(cmdErr.Error()))
+        })
         It("Discover fails if volume not found", func() {
             volumeId := "volume-id"
             fakeExec.ExecuteReturns([]byte(fmt.Sprintf(
