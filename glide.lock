@@ -1,10 +1,12 @@
-hash: 1e44cc45af2805eed3fe543d611c36c06131d7e03ac38a552c91161629a0cc34
-updated: 2017-06-12T16:02:39.984426719+03:00
+hash: 5bcaaba294118ace4f0d58deb67551754e960316abf14b2df6ab0bc47a6edebd
+updated: 2017-07-17T11:53:37.478670594+03:00
 imports:
 - name: github.com/BurntSushi/toml
   version: b26d9c308763d68093482582cea63d69be07a0f0
 - name: github.com/djherbis/times
   version: 95292e44976d1217cf3611dc7c8d9466877d3ed5
+- name: github.com/dustin/go-humanize
+  version: 259d2a102b871d17f30e3cd9881a642961a1e486
 - name: github.com/gorilla/context
   version: 08b5f424b9271eedf6f9f0ce86cb9396ed337a42
 - name: github.com/gorilla/mux
@@ -60,8 +62,8 @@ testImports:
   - matchers/support/goraph/util
   - types
 - name: golang.org/x/sys
-  version: 0b25a408a50076fbbcae6b7ac0ea5fbb0b085e79
+  version: 8f0908ab3b2457e2e15403d3697c9ef5cb4b57a9
   subpackages:
   - unix
 - name: gopkg.in/yaml.v2
-  version: cd8b52f8269e0feb286dfeef29f8fe4d5b397e0b
+  version: 53feefa2559fb8dfa8d81baad31be332c97d6c77
