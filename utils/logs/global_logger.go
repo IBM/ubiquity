@@ -20,6 +20,7 @@ import (
     "os"
     "fmt"
     "io"
+    "strings"
 )
 
 var logger Logger = nil
@@ -35,7 +36,7 @@ func initLogger(level Level, writer io.Writer) {
 // It returns the level for one of: "debug" / "info" / "error"
 // If there is no match, default is INFO
 func GetLogLevelFromString(level string) Level {
-    switch level {
+    switch strings.ToLower(level) {
     case "debug":
         return DEBUG
     case "info":
