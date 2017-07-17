@@ -31,6 +31,19 @@ func initLogger(level Level, writer io.Writer) {
     logger = newGoLoggingLogger(level, writer)
 }
 
+func GetLogLevelFromString(level string) Level {
+    switch level {
+    case "debug":
+        return DEBUG
+    case "info":
+        return INFO
+    case "error":
+        return ERROR
+    default:
+        return INFO
+    }
+}
+
 // InitFileLogger initializes the global logger with a file writer to filePath and set at level.
 // It returns a function that clears the global logger.
 // If the global logger is already initialized InitFileLogger panics.
