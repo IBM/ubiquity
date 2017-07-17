@@ -31,6 +31,9 @@ func initLogger(level Level, writer io.Writer) {
     logger = newGoLoggingLogger(level, writer)
 }
 
+// GetLogLevelFromString translates string log level to Level type
+// It returns the level for one of: "debug" / "info" / "error"
+// If there is no match, default is INFO
 func GetLogLevelFromString(level string) Level {
     switch level {
     case "debug":
