@@ -16,11 +16,6 @@
 
 package block_device_utils
 
-import (
-	"github.com/IBM/ubiquity/utils"
-	"github.com/IBM/ubiquity/utils/logs"
-)
-
 type Protocol int
 
 const (
@@ -38,21 +33,4 @@ type BlockDeviceUtils interface {
 	MakeFs(mpath string, fsType string) error
 	MountFs(mpath string, mpoint string) error
 	UmountFs(mpoint string) error
-}
-
-type impBlockDeviceUtils struct {
-	logger logs.Logger
-	exec   utils.Executor
-}
-
-func NewBlockDeviceUtils() BlockDeviceUtils {
-	return newBlockDeviceUtils(utils.NewExecutor())
-}
-
-func NewBlockDeviceUtilsWithExecutor(executor utils.Executor) BlockDeviceUtils {
-	return newBlockDeviceUtils(executor)
-}
-
-func newBlockDeviceUtils(executor utils.Executor) BlockDeviceUtils {
-	return &impBlockDeviceUtils{logger: logs.GetLogger(), exec: executor}
 }

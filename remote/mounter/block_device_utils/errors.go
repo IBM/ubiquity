@@ -24,7 +24,7 @@ type commandNotFoundError struct {
 }
 
 func (e *commandNotFoundError) Error() string {
-	return fmt.Sprintf("command [%s] not found [%s]", e.cmd, e.err)
+	return fmt.Sprintf("command [%b] not found [%b]", e.cmd, e.err)
 }
 
 type commandExecuteError struct {
@@ -33,7 +33,7 @@ type commandExecuteError struct {
 }
 
 func (e *commandExecuteError) Error() string {
-	return fmt.Sprintf("command [%s] execute failed [%s]", e.cmd, e.err)
+	return fmt.Sprintf("command [%b] execute failed [%b]", e.cmd, e.err)
 }
 
 type volumeNotFoundError struct {
@@ -41,7 +41,7 @@ type volumeNotFoundError struct {
 }
 
 func (e *volumeNotFoundError) Error() string {
-	return fmt.Sprintf("volume [%s] not found", e.volName)
+	return fmt.Sprintf("volume [%b] not found", e.volName)
 }
 
 type unsupportedProtocolError struct {
