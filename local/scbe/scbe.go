@@ -24,9 +24,9 @@ import (
 	"github.com/IBM/ubiquity/utils"
 	"github.com/IBM/ubiquity/utils/logs"
 	"github.com/jinzhu/gorm"
-	"strconv"
 	"strings"
 	"sync"
+	"github.com/dustin/go-humanize"
 )
 
 type scbeLocalClient struct {
@@ -111,9 +111,17 @@ func validateScbeConfig(config *resources.ScbeConfig) error {
 		config.DefaultVolumeSize = resources.DefaultForScbeConfigParamDefaultVolumeSize
 		logger.Debug("No DefaultVolumeSize defined in conf file, so set the DefaultVolumeSize to value " + resources.DefaultForScbeConfigParamDefaultVolumeSize)
 	}
-	_, err := strconv.Atoi(config.DefaultVolumeSize)
+
+	// parse default size
+	size, err := humanize.ParseBytes(config.DefaultVolumeSize)
 	if err != nil {
-		return logger.ErrorRet(&ConfigDefaultSizeNotNumError{}, "failed")
+		return logger.ErrorRet(&ConfigDefaultSizeNotValidError{config.DefaultVolumeSize}, "failed")
+	}
+
+	// convert default size to gib
+	sizeInGib := size / humanize.GiByte
+	if sizeInGib == 0 {
+		return logger.ErrorRet(&ConfigDefaultSizeNotValidError{config.DefaultVolumeSize}, "failed")
 	}
 
 	if config.DefaultFilesystemType == "" {
@@ -173,10 +181,16 @@ func (s *scbeLocalClient) CreateVolume(createVolumeRequest resources.CreateVolum
 			logs.Args{{"volume", createVolumeRequest.Name}, {"default_size", sizeStr}})
 	}
 
-	// validate size is a number
-	size, err := strconv.Atoi(sizeStr.(string))
+	// parse size
+	size, err := humanize.ParseBytes(sizeStr.(string))
 	if err != nil {
-		return s.logger.ErrorRet(&provisionParamIsNotNumberError{createVolumeRequest.Name, OptionNameForVolumeSize}, "failed")
+		return s.logger.ErrorRet(&provisionSizeIsInvalid{createVolumeRequest.Name, sizeStr.(string)}, "failed")
+	}
+
+	// convert to gib
+	sizeInGib := size / humanize.GiByte
+	if sizeInGib == 0 {
+		return s.logger.ErrorRet(&provisionSizeIsInvalid{createVolumeRequest.Name, sizeStr.(string)}, "failed")
 	}
 
 	// validate fstype option given
@@ -213,7 +227,7 @@ func (s *scbeLocalClient) CreateVolume(createVolumeRequest resources.CreateVolum
 
 	// Provision the volume on SCBE service
 	volInfo := ScbeVolumeInfo{}
-	volInfo, err = s.scbeRestClient.CreateVolume(volNameToCreate, profile, size)
+	volInfo, err = s.scbeRestClient.CreateVolume(volNameToCreate, profile, int(sizeInGib))
 	if err != nil {
 		return s.logger.ErrorRet(err, "scbeRestClient.CreateVolume failed")
 	}

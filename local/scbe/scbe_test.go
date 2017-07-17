@@ -55,7 +55,7 @@ var _ = Describe("scbeLocalClient init", func() {
 		fakeScbeRestClient = new(fakes.FakeScbeRestClient)
 	})
 	Context(".init", func() {
-		It("should fail because DefaultVolumeSize is not int", func() {
+		It("should fail because DefaultVolumeSize is not valid", func() {
 			fakeConfig = resources.ScbeConfig{
 				DefaultVolumeSize: "badint",
 			}
@@ -64,11 +64,12 @@ var _ = Describe("scbeLocalClient init", func() {
 				fakeScbeDataModel,
 				fakeScbeRestClient)
 			Expect(err).To(HaveOccurred())
-			_, ok := err.(*scbe.ConfigDefaultSizeNotNumError)
+			_, ok := err.(*scbe.ConfigDefaultSizeNotValidError)
 			Expect(ok).To(Equal(true))
 		})
 		It("should fail because DefaultFilesystemType is not supported", func() {
 			fakeConfig = resources.ScbeConfig{
+				DefaultVolumeSize: "1gib",
 				DefaultFilesystemType: "bad fstype",
 			}
 			client, err = scbe.NewScbeLocalClientWithNewScbeRestClientAndDataModel(
@@ -79,10 +80,10 @@ var _ = Describe("scbeLocalClient init", func() {
 			_, ok := err.(*scbe.ConfigDefaultFilesystemTypeNotSupported)
 			Expect(ok).To(Equal(true))
 		})
-		It("should fail because UbiquityInstanceName lenth is too long", func() {
+		It("should fail because UbiquityInstanceName length is too long", func() {
 			fakeConfig = resources.ScbeConfig{
 				UbiquityInstanceName: "1234567890123456",
-				DefaultVolumeSize:    "1",
+				DefaultVolumeSize:    "1gib",
 			}
 			client, err = scbe.NewScbeLocalClientWithNewScbeRestClientAndDataModel(
 				fakeConfig,
@@ -95,7 +96,7 @@ var _ = Describe("scbeLocalClient init", func() {
 		It("should succeed to init because config is ok", func() {
 			fakeConfig = resources.ScbeConfig{
 				UbiquityInstanceName: "123456789012345",
-				DefaultVolumeSize:    "1",
+				DefaultVolumeSize:    "1gib",
 			}
 			fakeScbeRestClient.LoginReturns(nil)
 			fakeScbeRestClient.ServiceExistReturns(true, nil)
@@ -109,7 +110,7 @@ var _ = Describe("scbeLocalClient init", func() {
 		It("should succeed to init because config is ok (ext4)", func() {
 			fakeConfig = resources.ScbeConfig{
 				UbiquityInstanceName:  "123456789012345",
-				DefaultVolumeSize:     "1",
+				DefaultVolumeSize:     "1gib",
 				DefaultFilesystemType: "ext4",
 			}
 			fakeScbeRestClient.LoginReturns(nil)
@@ -124,6 +125,7 @@ var _ = Describe("scbeLocalClient init", func() {
 		It("should succeed to init because config is ok (xsf)", func() {
 			fakeConfig = resources.ScbeConfig{
 				DefaultFilesystemType: "xfs",
+				DefaultVolumeSize:    "1gib",
 			}
 			fakeScbeRestClient.LoginReturns(nil)
 			fakeScbeRestClient.ServiceExistReturns(true, nil)
@@ -153,6 +155,7 @@ var _ = Describe("scbeLocalClient", func() {
 			ConfigPath:           "/tmp",
 			DefaultService:       fakeDefaultProfile,
 			UbiquityInstanceName: "fakeInstance1",
+			DefaultVolumeSize:    "1gib",
 		}
 	})
 
@@ -237,6 +240,7 @@ var _ = Describe("scbeLocalClient", func() {
 			ConfigPath:           "/tmp",
 			DefaultService:       fakeDefaultProfile,
 			UbiquityInstanceName: "fakeInstance1",
+			DefaultVolumeSize:    "1gib",
 		}
 		fakeScbeRestClient.LoginReturns(nil)
 		fakeScbeRestClient.ServiceExistReturns(true, nil)
@@ -268,7 +272,7 @@ var _ = Describe("scbeLocalClient", func() {
 			err = client.CreateVolume(req)
 			Expect(err).To(HaveOccurred())
 		})
-		It("should fail create volume if vol size is not number", func() {
+		It("should fail create volume if fstype not supported", func() {
 			fakeScbeDataModel.GetVolumeReturns(scbe.ScbeVolume{}, false, nil)
 			opts := make(map[string]interface{})
 			opts[resources.OptionNameForVolumeFsType] = "bad-fs-type"
@@ -282,7 +286,7 @@ var _ = Describe("scbeLocalClient", func() {
 		It("should fail create volume if vol len exeeded", func() {
 			fakeScbeDataModel.GetVolumeReturns(scbe.ScbeVolume{}, false, nil)
 			opts := make(map[string]interface{})
-			opts[scbe.OptionNameForVolumeSize] = "100"
+			opts[scbe.OptionNameForVolumeSize] = "100gib"
 			maxVolNameCapable := scbe.MaxVolumeNameLength - (len(fakeConfig.UbiquityInstanceName) + 3)
 			volname := strings.Repeat("x", maxVolNameCapable+1)
 			req := resources.CreateVolumeRequest{Name: volname, Backend: resources.SCBE, Opts: opts}
@@ -297,7 +301,7 @@ var _ = Describe("scbeLocalClient", func() {
 			fakeScbeRestClient.CreateVolumeReturns(scbe.ScbeVolumeInfo{}, fmt.Errorf("error"))
 
 			opts := make(map[string]interface{})
-			opts[scbe.OptionNameForVolumeSize] = "100"
+			opts[scbe.OptionNameForVolumeSize] = "100gib"
 			maxVolNameCapable := scbe.MaxVolumeNameLength - (len(fakeConfig.UbiquityInstanceName) + 3)
 
 			volName := strings.Repeat("x", maxVolNameCapable)
@@ -314,7 +318,7 @@ var _ = Describe("scbeLocalClient", func() {
 			fakeScbeDataModel.GetVolumeReturns(scbe.ScbeVolume{}, false, nil)
 			fakeScbeRestClient.CreateVolumeReturns(scbe.ScbeVolumeInfo{}, fmt.Errorf("error"))
 			opts := make(map[string]interface{})
-			opts[scbe.OptionNameForVolumeSize] = "100"
+			opts[scbe.OptionNameForVolumeSize] = "100gib"
 
 			volFake := "fakevol"
 			req := resources.CreateVolumeRequest{Name: volFake, Backend: resources.SCBE, Opts: opts}
@@ -332,7 +336,7 @@ var _ = Describe("scbeLocalClient", func() {
 			fakeScbeDataModel.GetVolumeReturns(scbe.ScbeVolume{}, false, nil)
 			fakeScbeRestClient.CreateVolumeReturns(scbe.ScbeVolumeInfo{}, fmt.Errorf("error"))
 			opts := make(map[string]interface{})
-			opts[scbe.OptionNameForVolumeSize] = "100"
+			opts[scbe.OptionNameForVolumeSize] = "100gib"
 			opts[scbe.OptionNameForServiceName] = "gold"
 
 			volFake := "fakevol"
@@ -354,7 +358,7 @@ var _ = Describe("scbeLocalClient", func() {
 				Name: "v1", Wwn: "wwn1", Profile: "gold"}, nil)
 			fakeScbeDataModel.InsertVolumeReturns(fmt.Errorf("error"))
 			opts := make(map[string]interface{})
-			opts[scbe.OptionNameForVolumeSize] = "100"
+			opts[scbe.OptionNameForVolumeSize] = "100gib"
 			opts[scbe.OptionNameForServiceName] = "gold"
 
 			volFake := "fakevol"
@@ -375,7 +379,7 @@ var _ = Describe("scbeLocalClient", func() {
 			fakeScbeRestClient.CreateVolumeReturns(scbe.ScbeVolumeInfo{Name: "v1", Wwn: "wwn1", Profile: "gold"}, nil)
 			fakeScbeDataModel.InsertVolumeReturns(nil)
 			opts := make(map[string]interface{})
-			opts[scbe.OptionNameForVolumeSize] = "100"
+			opts[scbe.OptionNameForVolumeSize] = "100gib"
 			opts[scbe.OptionNameForServiceName] = "gold"
 
 			volFake := "fakevol"
@@ -394,7 +398,6 @@ var _ = Describe("scbeLocalClient", func() {
 			fakeScbeRestClient.CreateVolumeReturns(scbe.ScbeVolumeInfo{Name: "v1", Wwn: "wwn1", Profile: "gold"}, nil)
 			fakeScbeDataModel.InsertVolumeReturns(nil)
 			opts := make(map[string]interface{})
-			//opts[scbe.OptionNameForVolumeSize] = "10"
 			opts[scbe.OptionNameForServiceName] = "gold"
 
 			volFake := "fakevol"
@@ -445,7 +448,9 @@ var _ = Describe("scbeLocalClient", func() {
 		fakeScbeRestClient = new(fakes.FakeScbeRestClient)
 		fakeConfig = resources.ScbeConfig{
 			ConfigPath:     "/tmp",
-			DefaultService: fakeDefaultProfile}
+			DefaultService: fakeDefaultProfile,
+			DefaultVolumeSize:    "1gib",
+		}
 
 		fakeScbeRestClient.LoginReturns(nil)
 		fakeScbeRestClient.ServiceExistReturns(true, nil)

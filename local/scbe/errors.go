@@ -97,13 +97,13 @@ func (e *FsTypeNotSupportedError) Error() string {
 		e.volName, e.supportedTypes, e.wrongFStype)
 }
 
-type provisionParamIsNotNumberError struct {
+type provisionSizeIsInvalid struct {
 	volName string
-	param   string
+	size    string
 }
 
-func (e *provisionParamIsNotNumberError) Error() string {
-	return fmt.Sprintf("Fail to provision a volume [%s] because the [%s] option is not a number", e.volName, e.param)
+func (e *provisionSizeIsInvalid) Error() string {
+	return fmt.Sprintf("Fail to provision a volume [%s] because the size [%s] is not valid", e.volName, e.size)
 }
 
 type volAlreadyAttachedError struct {
@@ -132,13 +132,12 @@ func (e *volNotAttachedError) Error() string {
 	return fmt.Sprintf("Volume [%s] not attached", e.volName)
 }
 
-type ConfigDefaultSizeNotNumError struct {
+type ConfigDefaultSizeNotValidError struct {
 	size string
 }
 
-func (e *ConfigDefaultSizeNotNumError) Error() string {
-	return fmt.Sprintf("Error in config file. The parameter [%s] must be a number",
-		"ScbeConfig.DefaultVolumeSize")
+func (e *ConfigDefaultSizeNotValidError) Error() string {
+	return fmt.Sprintf("Error in config file. The parameter [%s] must be a valid size", "ScbeConfig.DefaultVolumeSize")
 }
 
 type ConfigDefaultFilesystemTypeNotSupported struct {
