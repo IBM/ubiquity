@@ -14,8 +14,6 @@ import:
   version: ^1.2.0
 - package: github.com/op/go-logging
   version: 970db520ece77730c7e4724c61121037378659d9
-- package: github.com/dustin/go-humanize
-  version: 259d2a102b871d17f30e3cd9881a642961a1e486
 testImport:
 - package: github.com/onsi/ginkgo
   version: bb93381d543b0e5725244abe752214a110791d01
