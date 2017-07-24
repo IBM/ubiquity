@@ -103,6 +103,7 @@ type UbiquityPluginConfig struct {
 	SpectrumNfsRemoteConfig SpectrumNfsRemoteConfig
 	ScbeRemoteConfig        ScbeRemoteConfig
 	Backends                []string
+	LogLevel                string
 }
 
 type UbiquityDockerPluginConfig struct {
