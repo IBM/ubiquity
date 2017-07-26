@@ -87,6 +87,17 @@ type FakeExecutor struct {
 	removeAllReturnsOnCall map[int]struct {
 		result1 error
 	}
+	RemoveStub        func(string) error
+	removeMutex       sync.RWMutex
+	removeArgsForCall []struct {
+		arg1 string
+	}
+	removeReturns struct {
+		result1 error
+	}
+	removeReturnsOnCall map[int]struct {
+		result1 error
+	}
 	HostnameStub        func() (string, error)
 	hostnameMutex       sync.RWMutex
 	hostnameArgsForCall []struct{}
@@ -108,6 +119,19 @@ type FakeExecutor struct {
 	}
 	isExecutableReturnsOnCall map[int]struct {
 		result1 error
+	}
+	EvalSymlinksStub        func(path string) (string, error)
+	evalSymlinksMutex       sync.RWMutex
+	evalSymlinksArgsForCall []struct {
+		path string
+	}
+	evalSymlinksReturns struct {
+		result1 string
+		result2 error
+	}
+	evalSymlinksReturnsOnCall map[int]struct {
+		result1 string
+		result2 error
 	}
 	invocations      map[string][][]interface{}
 	invocationsMutex sync.RWMutex
@@ -367,6 +391,54 @@ func (fake *FakeExecutor) RemoveAllReturnsOnCall(i int, result1 error) {
 	}{result1}
 }
 
+func (fake *FakeExecutor) Remove(arg1 string) error {
+	fake.removeMutex.Lock()
+	ret, specificReturn := fake.removeReturnsOnCall[len(fake.removeArgsForCall)]
+	fake.removeArgsForCall = append(fake.removeArgsForCall, struct {
+		arg1 string
+	}{arg1})
+	fake.recordInvocation("Remove", []interface{}{arg1})
+	fake.removeMutex.Unlock()
+	if fake.RemoveStub != nil {
+		return fake.RemoveStub(arg1)
+	}
+	if specificReturn {
+		return ret.result1
+	}
+	return fake.removeReturns.result1
+}
+
+func (fake *FakeExecutor) RemoveCallCount() int {
+	fake.removeMutex.RLock()
+	defer fake.removeMutex.RUnlock()
+	return len(fake.removeArgsForCall)
+}
+
+func (fake *FakeExecutor) RemoveArgsForCall(i int) string {
+	fake.removeMutex.RLock()
+	defer fake.removeMutex.RUnlock()
+	return fake.removeArgsForCall[i].arg1
+}
+
+func (fake *FakeExecutor) RemoveReturns(result1 error) {
+	fake.RemoveStub = nil
+	fake.removeReturns = struct {
+		result1 error
+	}{result1}
+}
+
+func (fake *FakeExecutor) RemoveReturnsOnCall(i int, result1 error) {
+	fake.RemoveStub = nil
+	if fake.removeReturnsOnCall == nil {
+		fake.removeReturnsOnCall = make(map[int]struct {
+			result1 error
+		})
+	}
+	fake.removeReturnsOnCall[i] = struct {
+		result1 error
+	}{result1}
+}
+
 func (fake *FakeExecutor) Hostname() (string, error) {
 	fake.hostnameMutex.Lock()
 	ret, specificReturn := fake.hostnameReturnsOnCall[len(fake.hostnameArgsForCall)]
@@ -458,6 +530,57 @@ func (fake *FakeExecutor) IsExecutableReturnsOnCall(i int, result1 error) {
 	}{result1}
 }
 
+func (fake *FakeExecutor) EvalSymlinks(path string) (string, error) {
+	fake.evalSymlinksMutex.Lock()
+	ret, specificReturn := fake.evalSymlinksReturnsOnCall[len(fake.evalSymlinksArgsForCall)]
+	fake.evalSymlinksArgsForCall = append(fake.evalSymlinksArgsForCall, struct {
+		path string
+	}{path})
+	fake.recordInvocation("EvalSymlinks", []interface{}{path})
+	fake.evalSymlinksMutex.Unlock()
+	if fake.EvalSymlinksStub != nil {
+		return fake.EvalSymlinksStub(path)
+	}
+	if specificReturn {
+		return ret.result1, ret.result2
+	}
+	return fake.evalSymlinksReturns.result1, fake.evalSymlinksReturns.result2
+}
+
+func (fake *FakeExecutor) EvalSymlinksCallCount() int {
+	fake.evalSymlinksMutex.RLock()
+	defer fake.evalSymlinksMutex.RUnlock()
+	return len(fake.evalSymlinksArgsForCall)
+}
+
+func (fake *FakeExecutor) EvalSymlinksArgsForCall(i int) string {
+	fake.evalSymlinksMutex.RLock()
+	defer fake.evalSymlinksMutex.RUnlock()
+	return fake.evalSymlinksArgsForCall[i].path
+}
+
+func (fake *FakeExecutor) EvalSymlinksReturns(result1 string, result2 error) {
+	fake.EvalSymlinksStub = nil
+	fake.evalSymlinksReturns = struct {
+		result1 string
+		result2 error
+	}{result1, result2}
+}
+
+func (fake *FakeExecutor) EvalSymlinksReturnsOnCall(i int, result1 string, result2 error) {
+	fake.EvalSymlinksStub = nil
+	if fake.evalSymlinksReturnsOnCall == nil {
+		fake.evalSymlinksReturnsOnCall = make(map[int]struct {
+			result1 string
+			result2 error
+		})
+	}
+	fake.evalSymlinksReturnsOnCall[i] = struct {
+		result1 string
+		result2 error
+	}{result1, result2}
+}
+
 func (fake *FakeExecutor) Invocations() map[string][][]interface{} {
 	fake.invocationsMutex.RLock()
 	defer fake.invocationsMutex.RUnlock()
@@ -471,10 +594,14 @@ func (fake *FakeExecutor) Invocations() map[string][][]interface{} {
 	defer fake.mkdirAllMutex.RUnlock()
 	fake.removeAllMutex.RLock()
 	defer fake.removeAllMutex.RUnlock()
+	fake.removeMutex.RLock()
+	defer fake.removeMutex.RUnlock()
 	fake.hostnameMutex.RLock()
 	defer fake.hostnameMutex.RUnlock()
 	fake.isExecutableMutex.RLock()
 	defer fake.isExecutableMutex.RUnlock()
+	fake.evalSymlinksMutex.RLock()
+	defer fake.evalSymlinksMutex.RUnlock()
 	copiedInvocations := map[string][][]interface{}{}
 	for key, value := range fake.invocations {
 		copiedInvocations[key] = value
