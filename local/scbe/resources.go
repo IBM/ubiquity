@@ -180,13 +180,13 @@ type ScbeCreateVolumePostParams struct {
 
 type ScbeMapVolumePostParams struct {
 	VolumeId string `json:"volume_id"`
-	HostId   int    `json:"host_id"`
+	HostName string `json:"host_name"`
 }
 
 // Its the same as ScbeMapVolumePostParams but later on we may add more attr to the map struct
 type ScbeUnMapVolumePostParams struct {
 	VolumeId string `json:"volume_id"`
-	HostId   int    `json:"host_id"`
+	HostName string `json:"host_name"`
 }
 
 type ScbeResponseMapping struct {
