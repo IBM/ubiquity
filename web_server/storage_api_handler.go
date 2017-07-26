@@ -75,16 +75,13 @@ func (h *StorageApiHandler) Activate() http.HandlerFunc {
 			for name, backend := range h.backends {
 				err := backend.Activate(activateRequest)
 				if err != nil {
-					h.logger.Printf("Error activating %s", err.Error())
+					h.logger.Printf(fmt.Sprintf("Error activating %s %s", name, err.Error()))
 					errors = fmt.Sprintf("%s,%s", errors, name)
 				}
 			}
 			if errors != "" {
 				utils.WriteResponse(w, http.StatusInternalServerError, &resources.GenericResponse{Err: errors})
 				return
-			} else {
-				h.logger.Printf("Error - fail to activate due to error : [%s]", errors)
-				h.logger.Printf("But since SCBE succeeded lets ignore and finish activation. (TODO its a tmp hack)", errors)
 			}
 		}
 
