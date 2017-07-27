@@ -341,7 +341,7 @@ func (h *StorageApiHandler) getBackend(name string) (resources.StorageClient, er
 	return backend, nil
 }
 
-func (h *StorageApiHandler) Capabilities() http.HandlerFunc {
+func (h *StorageApiHandler) GetCapabilities() http.HandlerFunc {
 	return func(w http.ResponseWriter, req *http.Request) {
 
 		capabilitiesRequest := resources.GetCapabilitiesRequest{}
@@ -351,18 +351,26 @@ func (h *StorageApiHandler) Capabilities() http.HandlerFunc {
 			return
 		}
 
-		var scope string
-		if h.config.DefaultBackend == resources.SCBE {
-			scope = "local"
-		} else if h.config.DefaultBackend == resources.SpectrumScale ||
-			h.config.DefaultBackend == resources.SpectrumScaleNFS {
-			scope = "global"
-		} else {
-			utils.WriteResponse(w, http.StatusNotFound, &resources.GenericResponse{Err: "backend-not-found"})
+		if len(capabilitiesRequest.Backend) == 0 {
+			h.logger.Printf("Backend not specified", capabilitiesRequest.Backend)
+			utils.WriteResponse(w, http.StatusNotFound, &resources.GenericResponse{Err: "Backend-not-specified"})
+			return
 		}
 
-		capabilitiesResponse := resources.GetCapabilitiesResponse{Capabilities: resources.Capabilities{Scope: scope}}
-		h.logger.Printf("Capabilities response: %#v\n", capabilitiesResponse)
-		utils.WriteResponse(w, http.StatusOK, capabilitiesResponse)
+		backend, ok := h.backends[capabilitiesRequest.Backend]
+		if !ok {
+			h.logger.Printf("error-backend-not-found: %s", capabilitiesRequest.Backend)
+			utils.WriteResponse(w, http.StatusNotFound, &resources.GenericResponse{Err: "backend-not-found"})
+			return
+		}
+
+		capabilities, err := backend.GetCapabilities(capabilitiesRequest)
+		if err != nil {
+			utils.WriteResponse(w, 409, &resources.GetResponse{Err: err.Error()})
+			return
+		}
+
+		h.logger.Printf("GetCapabilities response: %#v\n", capabilities)
+		utils.WriteResponse(w, http.StatusOK, capabilities)
 	}
 }
