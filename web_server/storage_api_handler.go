@@ -340,3 +340,29 @@ func (h *StorageApiHandler) getBackend(name string) (resources.StorageClient, er
 	}
 	return backend, nil
 }
+
+func (h *StorageApiHandler) Capabilities() http.HandlerFunc {
+	return func(w http.ResponseWriter, req *http.Request) {
+
+		capabilitiesRequest := resources.GetCapabilitiesRequest{}
+		err := utils.UnmarshalDataFromRequest(req, &capabilitiesRequest)
+		if err != nil {
+			utils.WriteResponse(w, 409, &resources.GenericResponse{Err: err.Error()})
+			return
+		}
+
+		var scope string
+		if h.config.DefaultBackend == resources.SCBE {
+			scope = "local"
+		} else if h.config.DefaultBackend == resources.SpectrumScale ||
+			h.config.DefaultBackend == resources.SpectrumScaleNFS {
+			scope = "global"
+		} else {
+			utils.WriteResponse(w, http.StatusNotFound, &resources.GenericResponse{Err: "backend-not-found"})
+		}
+
+		capabilitiesResponse := resources.GetCapabilitiesResponse{Capabilities: resources.Capabilities{Scope: scope}}
+		h.logger.Printf("Capabilities response: %#v\n", capabilitiesResponse)
+		utils.WriteResponse(w, http.StatusOK, capabilitiesResponse)
+	}
+}

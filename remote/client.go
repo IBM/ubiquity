@@ -279,6 +279,32 @@ func (s *remoteClient) ListVolumes(listVolumesRequest resources.ListVolumesReque
 
 }
 
+func (s *remoteClient) GetCapabilities(getCapabilitiesRequest resources.GetCapabilitiesRequest) (resources.Capabilities, error) {
+	s.logger.Println("remoteClient: GetCapabilities start")
+	defer s.logger.Println("remoteClient:  GetCapabilities end")
+
+	getCapabilitiesURL := utils.FormatURL(s.storageApiURL, "capabilities")
+	response, err := utils.HttpExecute(s.httpClient, s.logger, "POST", getCapabilitiesURL, getCapabilitiesRequest)
+	if err != nil {
+		s.logger.Printf("Error in GetCapabilities remote call %#v", err)
+		return resources.Capabilities{}, fmt.Errorf("Error in GetCapabilities remote call")
+	}
+
+	if response.StatusCode != http.StatusOK {
+		s.logger.Printf("Error in GetCapabilities remote call %#v", err)
+		return resources.Capabilities{}, utils.ExtractErrorResponse(response)
+	}
+
+	capabilities := resources.Capabilities{}
+	err = utils.UnmarshalResponse(response, &capabilities)
+	if err != nil {
+		s.logger.Printf("Error in unmarshalling response for GetCapabilities call %#v for response %#v", err, response)
+		return resources.Capabilities{}, fmt.Errorf("Error in unmarshalling response for GetCapabilities call")
+	}
+
+	return capabilities, nil
+}
+
 // Return the mounter object. If mounter object already used(in the map mounterPerBackend) then just reuse it
 func (s *remoteClient) getMounterForBackend(backend string) (resources.Mounter, error) {
 	s.logger.Println("remoteClient: getMounterForVolume start")

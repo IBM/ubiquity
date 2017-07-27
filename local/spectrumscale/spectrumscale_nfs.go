@@ -187,6 +187,13 @@ func (s *spectrumNfsLocalClient) GetVolume(getVolumeRequest resources.GetVolumeR
 	return s.spectrumClient.GetVolume(getVolumeRequest)
 }
 
+func (s *spectrumNfsLocalClient) GetCapabilities(capabilitiesRequest resources.GetCapabilitiesRequest) (resources.Capabilities, error) {
+	s.spectrumClient.logger.Println("spectrumNfsLocalClient: GetCapabilities start")
+	defer s.spectrumClient.logger.Println("spectrumNfsLocalClient: GetCapabilities finish")
+
+	return resources.Capabilities{Scope:"global"}, nil
+}
+
 func (s *spectrumNfsLocalClient) exportNfs(name, clientConfig string) error {
 	s.spectrumClient.logger.Printf("spectrumNfsLocalClient: ExportNfs start with name=%#v and clientConfig=%#v\n", name, clientConfig)
 	defer s.spectrumClient.logger.Printf("spectrumNfsLocalClient: ExportNfs end")

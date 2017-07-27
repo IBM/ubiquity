@@ -458,6 +458,13 @@ func (s *spectrumLocalClient) ListVolumes(listVolumesRequest resources.ListVolum
 	return volumesInDb, nil
 }
 
+func (s *spectrumLocalClient) GetCapabilities(capabilitiesRequest resources.GetCapabilitiesRequest) (resources.Capabilities, error) {
+	s.logger.Println("spectrumLocalClient: GetCapabilities start")
+	defer s.logger.Println("spectrumLocalClient: GetCapabilities end")
+
+	return resources.Capabilities{Scope:"global"}, nil
+}
+
 func (s *spectrumLocalClient) createFilesetVolume(filesystem, name string, opts map[string]interface{}) error {
 	s.logger.Println("spectrumLocalClient: createFilesetVolume start")
 	defer s.logger.Println("spectrumLocalClient: createFilesetVolume end")

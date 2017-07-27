@@ -133,6 +133,7 @@ type StorageClient interface {
 	GetVolumeConfig(getVolumeConfigRequest GetVolumeConfigRequest) (map[string]interface{}, error)
 	Attach(attachRequest AttachRequest) (string, error)
 	Detach(detachRequest DetachRequest) error
+	GetCapabilities(capabilitiesRequest GetCapabilitiesRequest) (Capabilities, error)
 }
 
 //go:generate counterfeiter -o ../fakes/fake_mounter.go . Mounter
@@ -161,6 +162,10 @@ type RemoveVolumeRequest struct {
 type ListVolumesRequest struct {
 	//TODO add filter
 	Backends []string
+}
+
+type GetCapabilitiesRequest struct {
+	Backend string
 }
 
 type AttachRequest struct {
@@ -236,6 +241,14 @@ type GetConfigResponse struct {
 type ListResponse struct {
 	Volumes []Volume
 	Err     string
+}
+
+type GetCapabilitiesResponse struct {
+	Capabilities Capabilities
+}
+
+type Capabilities struct {
+	Scope string
 }
 
 type FlexVolumeResponse struct {

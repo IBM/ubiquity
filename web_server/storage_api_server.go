@@ -46,6 +46,7 @@ func (s *StorageApiServer) InitializeHandler() http.Handler {
 	router.HandleFunc("/ubiquity_storage/volumes/{volume}/detach", s.storageApiHandler.DetachVolume()).Methods("PUT")
 	router.HandleFunc("/ubiquity_storage/volumes/{volume}", s.storageApiHandler.GetVolume()).Methods("GET")
 	router.HandleFunc("/ubiquity_storage/volumes/{volume}/config", s.storageApiHandler.GetVolumeConfig()).Methods("GET")
+	router.HandleFunc("/ubiquity_storage/capabilities", s.storageApiHandler.Capabilities()).Methods("POST")
 	return router
 }
 

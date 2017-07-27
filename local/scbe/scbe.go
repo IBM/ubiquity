@@ -408,6 +408,12 @@ func (s *scbeLocalClient) ListVolumes(listVolumesRequest resources.ListVolumesRe
 	return volumes, nil
 }
 
+func (s *scbeLocalClient) GetCapabilities(capabilitiesRequest resources.GetCapabilitiesRequest) (resources.Capabilities, error) {
+	defer s.logger.Trace(logs.DEBUG)()
+
+	return resources.Capabilities{Scope:"local"}, nil
+}
+
 func (s *scbeLocalClient) getVolumeMountPoint(volume ScbeVolume) (string, error) {
 	defer s.logger.Trace(logs.DEBUG)()
 
