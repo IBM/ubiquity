@@ -411,7 +411,7 @@ func (s *scbeLocalClient) ListVolumes(listVolumesRequest resources.ListVolumesRe
 func (s *scbeLocalClient) GetCapabilities(capabilitiesRequest resources.GetCapabilitiesRequest) (resources.Capabilities, error) {
 	defer s.logger.Trace(logs.DEBUG)()
 
-	return resources.Capabilities{Scope:"local"}, nil
+	return resources.Capabilities{Scope:"global"}, nil
 }
 
 func (s *scbeLocalClient) getVolumeMountPoint(volume ScbeVolume) (string, error) {
