@@ -107,8 +107,6 @@ type UbiquityPluginConfig struct {
 }
 
 type UbiquityDockerPluginConfig struct {
-	//Address          string
-	Port             int
 	PluginsDirectory string
 }
 
