@@ -2,7 +2,7 @@
 *.o
 *.a
 *.so
-
+glide.lock
 tmp/*
 
 .idea/*
@@ -10,6 +10,7 @@ out/*
 bin/*
 gobin/*
 # Folders
+vendor
 _obj
 _test
 .idea
