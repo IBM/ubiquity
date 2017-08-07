@@ -4,6 +4,7 @@ go:
   - 1.7
 
 install:
+  - sh scripts/run_glide_up
   - sh scripts/build
 
 script:
