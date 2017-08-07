@@ -2,6 +2,7 @@
 *.o
 *.a
 *.so
+glide.lock
 
 tmp/*
 
