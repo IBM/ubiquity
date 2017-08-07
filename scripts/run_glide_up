@@ -1,0 +1,11 @@
+#!/bin/bash
+
+set -e
+
+scripts=$(dirname $0)
+
+echo "Setting up glide"
+go get -v github.com/Masterminds/glide
+
+echo "Running glide up with strip vendor flag"
+glide up --strip-vendor
