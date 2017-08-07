@@ -43,23 +43,23 @@ func (s *spectrumScaleMounter) Mount(mountRequest resources.MountRequest) (strin
 		gid, gidSpecified := mountRequest.VolumeConfig["gid"]
 
 		if uidSpecified || gidSpecified {
-			args := []string{"chown", fmt.Sprintf("%s:%s", uid, gid), mountRequest.Mountpoint}
-			_, err := s.executor.Execute("sudo", args)
+			args := []string{fmt.Sprintf("%s:%s", uid, gid), mountRequest.Mountpoint}
+			_, err := s.executor.Execute("chown", args)
 			if err != nil {
 				s.logger.Printf("Failed to change permissions of mountpoint %s: %s", mountRequest.Mountpoint, err.Error())
 				return "", err
 			}
 			//set permissions to specific user
-			args = []string{"chmod", "og-rw", mountRequest.Mountpoint}
-			_, err = s.executor.Execute("sudo", args)
+			args = []string{"og-rw", mountRequest.Mountpoint}
+			_, err = s.executor.Execute("chmod", args)
 			if err != nil {
 				s.logger.Printf("Failed to set user permissions of mountpoint %s: %s", mountRequest.Mountpoint, err.Error())
 				return "", err
 			}
 		} else {
 			//chmod 777 mountpoint
-			args := []string{"chmod", "777", mountRequest.Mountpoint}
-			_, err := s.executor.Execute("sudo", args)
+			args := []string{"777", mountRequest.Mountpoint}
+			_, err := s.executor.Execute("chmod", args)
 			if err != nil {
 				s.logger.Printf("Failed to change permissions of mountpoint %s: %s", mountRequest.Mountpoint, err.Error())
 				return "", err
