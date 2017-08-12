@@ -506,6 +506,7 @@ func (s *spectrumRestV2) SetFilesetQuota(filesystemName string, filesetName stri
 	quotaRequest.BlockSoftLimit = quota
 	quotaRequest.OperationType = "setQuota"
 	quotaRequest.QuotaType = "fileset"
+	quotaRequest.ObjectName = filesetName
 
 	setQuotaResponse := GenericResponse{}
 

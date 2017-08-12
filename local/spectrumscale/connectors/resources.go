@@ -39,7 +39,6 @@ type ClusterSummary struct {
 	ClusterName     string `json:"clusterName,omitempty"`
 	PrimaryServer   string `json:"primaryServer,omitempty"`
 	RcpPath         string `json:"rcpPath,omitempty"`
-	RcpSudoWrapper  string `json:"rcpSudoWrapper,omitempty"`
 	RepositoryType  string `json:"repositoryType,omitempty"`
 	RshPath         string `json:"rshPath,omitempty"`
 	SecondaryServer string `json:"secondaryServer,omitempty"`
@@ -499,6 +498,7 @@ type SetQuotaRequest_v2 struct {
 	FilesSoftLimit   string `json:"filesSoftLimit,omitempty"`
 	OperationType    string `json:"operationType,omitempty"`
 	QuotaType        string `json:"quotaType,omitempty"`
+	ObjectName       string `json:"objectName,omitempty"`
 }
 
 type LinkFilesetRequest struct {
