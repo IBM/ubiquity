@@ -386,15 +386,12 @@ func (s *spectrumRestV2) UnlinkFileset(filesystemName string, filesetName string
 	s.logger.Println("spectrumRestConnector: UnlinkFileset")
 	defer s.logger.Println("spectrumRestConnector: UnlinkFileset end")
 
-	UnlinkReq := UnlinkFilesetRequest{}
-	UnlinkReq.Force = true
-
-	unlinkFilesetURL := utils.FormatURL(s.endpoint, fmt.Sprintf("scalemgmt/v2/filesystems/%s/filesets/%s/link", filesystemName, filesetName))
+	unlinkFilesetURL := utils.FormatURL(s.endpoint, fmt.Sprintf("scalemgmt/v2/filesystems/%s/filesets/%s/link?force=True", filesystemName, filesetName))
 	unlinkFilesetResponse := GenericResponse{}
 
 	s.logger.Println("Unlink Fileset URL: ", unlinkFilesetURL)
 
-	err := s.doHTTP(unlinkFilesetURL, "DELETE", &unlinkFilesetResponse, UnlinkReq)
+	err := s.doHTTP(unlinkFilesetURL, "DELETE", &unlinkFilesetResponse, nil)
 
 	if err != nil {
 		s.logger.Printf("error in remote call %v", err)

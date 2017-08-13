@@ -628,7 +628,7 @@ var _ = Describe("spectrumRestV2", func() {
 			unlinkFilesetResp = connectors.GenericResponse{}
 			unlinkFilesetResp.Jobs = make([]connectors.Job, 1)
 			unlinkFilesetResp.Jobs[0].JobID = 1234
-			registerurl = fakeurl + "/scalemgmt/v2/filesystems/" + filesystem + "/filesets/" + fileset + "/link"
+			registerurl = fakeurl + "/scalemgmt/v2/filesystems/" + filesystem + "/filesets/" + fileset + "/link?force=True"
 			joburl = fakeurl + "/scalemgmt/v2/jobs?filter=jobId=1234&fields=:all:"
 
 		})
