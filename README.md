@@ -91,7 +91,6 @@ To use the active Ubiquity service, install Ubiquity plugins for the relevant co
 
 
 ## Contribution
-Our team welcomes any contribution.
 To contribute, follow the guidelines in [Contribution guide](contribution-guide.md)
 
 
