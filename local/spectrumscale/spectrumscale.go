@@ -549,8 +549,8 @@ func (s *spectrumLocalClient) createLightweightVolume(filesystem, name, fileset 
 		return err
 	}
 	//open permissions on enclosing fileset
-	args := []string{"chmod", "777", path.Join(mountpoint, fileset)}
-	_, err = s.executor.Execute("sudo", args)
+	args := []string{"777", path.Join(mountpoint, fileset)}
+	_, err = s.executor.Execute("chmod", args)
 
 	if err != nil {
 		s.logger.Printf("Failed update permissions of fileset %s containing LTW volumes with error: %s", fileset, err.Error())
@@ -558,8 +558,8 @@ func (s *spectrumLocalClient) createLightweightVolume(filesystem, name, fileset 
 	}
 
 	lightweightVolumePath := path.Join(mountpoint, fileset, lightweightVolumeName)
-	args = []string{"mkdir", "-p", lightweightVolumePath}
-	_, err = s.executor.Execute("sudo", args)
+	args = []string{"-p", lightweightVolumePath}
+	_, err = s.executor.Execute("mkdir", args)
 
 	if err != nil {
 		s.logger.Printf("Failed to create directory path %s : %s", lightweightVolumePath, err.Error())
@@ -854,8 +854,8 @@ func (s *spectrumLocalClient) updatePermissions(name string) error {
 	// executor := utils.NewExecutor() // TODO check why its here ( #39: new logger in block_device_mounter_utils)
 	filesetPath := path.Join(fsMountpoint, fileset.(string))
 	//chmod 777 mountpoint
-	args := []string{"chmod", "777", filesetPath}
-	_, err = s.executor.Execute("sudo", args)
+	args := []string{"777", filesetPath}
+	_, err = s.executor.Execute("chmod", args)
 	if err != nil {
 		s.logger.Printf("Failed to change permissions of filesetpath %s: %s", filesetPath, err.Error())
 		return err
@@ -866,8 +866,8 @@ func (s *spectrumLocalClient) updatePermissions(name string) error {
 			return fmt.Errorf("Cannot determine directory for volume: %s", name)
 		}
 		directoryPath := path.Join(filesetPath, directory.(string))
-		args := []string{"chmod", "777", directoryPath}
-		_, err = s.executor.Execute("sudo", args)
+		args := []string{"777", directoryPath}
+		_, err = s.executor.Execute("chmod", args)
 		if err != nil {
 			s.logger.Printf("Failed to change permissions of directorypath %s: %s", directoryPath, err.Error())
 			return err
