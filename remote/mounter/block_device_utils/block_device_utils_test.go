@@ -43,21 +43,21 @@ var _ = Describe("block_device_utils_test", func() {
     })
 
     Context(".Rescan", func() {
-        It("Rescan ISCSI calls 'sudo iscsiadm -m session --rescan'", func() {
+        It("Rescan ISCSI calls 'iscsiadm -m session --rescan'", func() {
             err = bdUtils.Rescan(block_device_utils.ISCSI)
             Expect(err).ToNot(HaveOccurred())
             Expect(fakeExec.ExecuteCallCount()).To(Equal(1))
             cmd, args := fakeExec.ExecuteArgsForCall(0)
-            Expect(cmd).To(Equal("sudo"))
-            Expect(args).To(Equal([]string{"iscsiadm", "-m", "session", "--rescan"}))
+            Expect(cmd).To(Equal("iscsiadm"))
+            Expect(args).To(Equal([]string{"-m", "session", "--rescan"}))
         })
-        It("Rescan SCSI calls 'sudo rescan-scsi-bus -r'", func() {
+        It("Rescan SCSI calls 'rescan-scsi-bus -r'", func() {
             err = bdUtils.Rescan(block_device_utils.SCSI)
             Expect(err).ToNot(HaveOccurred())
             Expect(fakeExec.ExecuteCallCount()).To(Equal(1))
             cmd, args := fakeExec.ExecuteArgsForCall(0)
-            Expect(cmd).To(Equal("sudo"))
-            Expect(args).To(Equal([]string{"rescan-scsi-bus", "-r"}))
+            Expect(cmd).To(Equal("rescan-scsi-bus"))
+            Expect(args).To(Equal([]string{"-r"}))
         })
         It("Rescan ISCSI fails if iscsiadm command missing", func() {
             fakeExec.IsExecutableReturns(cmdErr)
@@ -98,8 +98,8 @@ var _ = Describe("block_device_utils_test", func() {
             Expect(err).ToNot(HaveOccurred())
             Expect(fakeExec.ExecuteCallCount()).To(Equal(1))
             cmd, args := fakeExec.ExecuteArgsForCall(0)
-            Expect(cmd).To(Equal("sudo"))
-            Expect(args).To(Equal([]string{"multipath", "-r"}))
+            Expect(cmd).To(Equal("multipath"))
+            Expect(args).To(Equal([]string{"-r"}))
         })
         It("ReloadMultipath fails if multipath command is missing", func() {
             fakeExec.IsExecutableReturns(cmdErr)
@@ -124,8 +124,8 @@ var _ = Describe("block_device_utils_test", func() {
             Expect(mpath).To(Equal("/dev/mapper/" + result))
             Expect(fakeExec.ExecuteCallCount()).To(Equal(1))
             cmd, args := fakeExec.ExecuteArgsForCall(0)
-            Expect(cmd).To(Equal("sudo"))
-            Expect(args).To(Equal([]string{"multipath", "-ll"}))
+            Expect(cmd).To(Equal("multipath"))
+            Expect(args).To(Equal([]string{"-ll"}))
         })
         It("Discover fails if multipath command is missing", func() {
             volumeId := "volume-id"
@@ -165,11 +165,11 @@ var _ = Describe("block_device_utils_test", func() {
             Expect(err).ToNot(HaveOccurred())
             Expect(fakeExec.ExecuteCallCount()).To(Equal(2))
             cmd1, args1 := fakeExec.ExecuteArgsForCall(0)
-            Expect(cmd1).To(Equal("sudo"))
-            Expect(args1).To(Equal([]string{"dmsetup", "message", mpath, "0", "fail_if_no_path"}))
+            Expect(cmd1).To(Equal("dmsetup"))
+            Expect(args1).To(Equal([]string{"message", mpath, "0", "fail_if_no_path"}))
             cmd2, args2 := fakeExec.ExecuteArgsForCall(1)
-            Expect(cmd2).To(Equal("sudo"))
-            Expect(args2).To(Equal([]string{"multipath", "-f", mpath}))
+            Expect(cmd2).To(Equal("multipath"))
+            Expect(args2).To(Equal([]string{"-f", mpath}))
         })
         It("Cleanup fails if dmsetup command missing", func() {
             mpath := "mpath"
@@ -210,8 +210,8 @@ var _ = Describe("block_device_utils_test", func() {
             Expect(fs).To(Equal(false))
             Expect(fakeExec.ExecuteCallCount()).To(Equal(1))
             cmd, args := fakeExec.ExecuteArgsForCall(0)
-            Expect(cmd).To(Equal("sudo"))
-            Expect(args).To(Equal([]string{"blkid", mpath}))
+            Expect(cmd).To(Equal("blkid"))
+            Expect(args).To(Equal([]string{mpath}))
         })
         It("CheckFs detects empty device", func() {
             err = ioutil.WriteFile("/tmp/tst.sh", []byte("exit 2"), 0777)
@@ -226,8 +226,8 @@ var _ = Describe("block_device_utils_test", func() {
             Expect(fs).To(Equal(true))
             Expect(fakeExec.ExecuteCallCount()).To(Equal(1))
             cmd, args := fakeExec.ExecuteArgsForCall(0)
-            Expect(cmd).To(Equal("sudo"))
-            Expect(args).To(Equal([]string{"blkid", mpath}))
+            Expect(cmd).To(Equal("blkid"))
+            Expect(args).To(Equal([]string{mpath}))
         })
         It("CheckFs fails if blkid missing", func() {
             mpath := "mpath"
@@ -252,8 +252,8 @@ var _ = Describe("block_device_utils_test", func() {
             Expect(err).To(Not(HaveOccurred()))
             Expect(fakeExec.ExecuteCallCount()).To(Equal(1))
             cmd, args := fakeExec.ExecuteArgsForCall(0)
-            Expect(cmd).To(Equal("sudo"))
-            Expect(args).To(Equal([]string{"mkfs", "-t", fstype, mpath}))
+            Expect(cmd).To(Equal("mkfs"))
+            Expect(args).To(Equal([]string{"-t", fstype, mpath}))
         })
         It("MakeFs fails if mkfs missing", func() {
             mpath := "mpath"
@@ -278,8 +278,8 @@ var _ = Describe("block_device_utils_test", func() {
             Expect(err).To(Not(HaveOccurred()))
             Expect(fakeExec.ExecuteCallCount()).To(Equal(1))
             cmd, args := fakeExec.ExecuteArgsForCall(0)
-            Expect(cmd).To(Equal("sudo"))
-            Expect(args).To(Equal([]string{"mount", mpath, mpoint}))
+            Expect(cmd).To(Equal("mount"))
+            Expect(args).To(Equal([]string{mpath, mpoint}))
         })
         It("MountFs fails if mount command missing", func() {
             mpath := "mpath"
@@ -306,8 +306,8 @@ var _ = Describe("block_device_utils_test", func() {
             Expect(err).To(Not(HaveOccurred()))
             Expect(fakeExec.ExecuteCallCount()).To(Equal(1))
             cmd, args := fakeExec.ExecuteArgsForCall(0)
-            Expect(cmd).To(Equal("sudo"))
-            Expect(args).To(Equal([]string{"umount", mpoint}))
+            Expect(cmd).To(Equal("umount"))
+            Expect(args).To(Equal([]string{mpoint}))
         })
         It("UmountFs fails if umount command missing", func() {
             mpoint := "mpoint"

@@ -34,8 +34,8 @@ func (b *blockDeviceUtils) ReloadMultipath() (error) {
     if err := b.exec.IsExecutable(multipathCmd); err != nil {
         return b.logger.ErrorRet(&commandNotFoundError{multipathCmd, err}, "failed")
     }
-    args := []string{multipathCmd, "-r"}
-    if _, err := b.exec.Execute("sudo", args); err != nil {
+    args := []string{"-r"}
+    if _, err := b.exec.Execute(multipathCmd, args); err != nil {
         return b.logger.ErrorRet(&commandExecuteError{multipathCmd, err}, "failed")
     }
     return nil
@@ -47,8 +47,8 @@ func (b *blockDeviceUtils) Discover(volumeWwn string) (string, error) {
     if err := b.exec.IsExecutable(multipathCmd); err != nil {
         return "", b.logger.ErrorRet(&commandNotFoundError{multipathCmd, err}, "failed")
     }
-    args := []string{multipathCmd, "-ll"}
-    outputBytes, err := b.exec.Execute("sudo", args)
+    args := []string{"-ll"}
+    outputBytes, err := b.exec.Execute(multipathCmd, args)
     if err != nil {
         return "", b.logger.ErrorRet(&commandExecuteError{multipathCmd, err}, "failed")
     }
@@ -84,15 +84,15 @@ func (b *blockDeviceUtils) Cleanup(mpath string) (error) {
     if err := b.exec.IsExecutable(dmsetupCmd); err != nil {
         return b.logger.ErrorRet(&commandNotFoundError{dmsetupCmd, err}, "failed")
     }
-    args := []string{dmsetupCmd, "message", dev, "0", "fail_if_no_path"}
-    if _, err := b.exec.Execute("sudo", args); err != nil {
+    args := []string{"message", dev, "0", "fail_if_no_path"}
+    if _, err := b.exec.Execute(dmsetupCmd, args); err != nil {
         return b.logger.ErrorRet(&commandExecuteError{dmsetupCmd, err}, "failed")
     }
     if err := b.exec.IsExecutable(multipathCmd); err != nil {
         return b.logger.ErrorRet(&commandNotFoundError{multipathCmd, err}, "failed")
     }
-    args = []string{multipathCmd, "-f", dev}
-    if _, err := b.exec.Execute("sudo", args); err != nil {
+    args = []string{"-f", dev}
+    if _, err := b.exec.Execute(multipathCmd, args); err != nil {
         return b.logger.ErrorRet(&commandExecuteError{multipathCmd, err}, "failed")
     }
     b.logger.Info("flushed", logs.Args{{"mpath", mpath}})
