@@ -45,6 +45,7 @@ func (s *spectrum_mmcli) GetClusterId() (string, error) {
 	args := []string{}
 	return GetClusterIdInternal(s.logger, s.executor, spectrumCommand, args)
 }
+
 func GetClusterIdInternal(logger *log.Logger, executor utils.Executor, command string, args []string) (string, error) {
 	var clusterId string
 
