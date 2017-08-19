@@ -1,5 +1,5 @@
 # Contribution guide
-The Ubiquity team uses GitHub to accept contributions via pull requests.
+The Ubiquity team accepts contributions from IBM employees using GitHub pull requests.
 Pushing to master is not allowed. Any direct push to master might interfere with our CI process.
 
 If you want to make a change, create your own branch out of `dev` branch, make your changes. Once you are done, submit a pull request to the `dev` branch. When accepted, the changes will make their way into `master` after we merge.
