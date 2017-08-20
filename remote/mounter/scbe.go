@@ -28,14 +28,16 @@ type scbeMounter struct {
 	logger                  logs.Logger
 	blockDeviceMounterUtils block_device_mounter_utils.BlockDeviceMounterUtils
 	exec                    utils.Executor
+	config                  resources.ScbeRemoteConfig
 }
 
-func NewScbeMounter() resources.Mounter {
+func NewScbeMounter(scbeRemoteConfig resources.ScbeRemoteConfig) resources.Mounter {
 	blockDeviceMounterUtils := block_device_mounter_utils.NewBlockDeviceMounterUtils()
 	return &scbeMounter{
 		logger:                  logs.GetLogger(),
 		blockDeviceMounterUtils: blockDeviceMounterUtils,
 		exec: utils.NewExecutor(),
+		config: scbeRemoteConfig,
 	}
 }
 
@@ -44,7 +46,7 @@ func (s *scbeMounter) Mount(mountRequest resources.MountRequest) (string, error)
 	volumeWWN := mountRequest.VolumeConfig["Wwn"].(string)
 
 	// Rescan OS
-	if err := s.blockDeviceMounterUtils.RescanAll(true, volumeWWN, false); err != nil {
+	if err := s.blockDeviceMounterUtils.RescanAll(!s.config.SkipRescanISCSI, volumeWWN, false); err != nil {
 		return "", s.logger.ErrorRet(err, "RescanAll failed")
 	}
 

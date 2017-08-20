@@ -33,6 +33,7 @@ type UbiquityServerConfig struct {
 	ScbeConfig          ScbeConfig
 	BrokerConfig        BrokerConfig
 	DefaultBackend      string
+	LogLevel            string
 }
 
 // TODO we should consider to move dedicated backend structs to the backend resource file instead of this one.
@@ -100,8 +101,11 @@ type UbiquityPluginConfig struct {
 	LogPath                 string
 	UbiquityServer          UbiquityServerConnectionInfo
 	SpectrumNfsRemoteConfig SpectrumNfsRemoteConfig
+	ScbeRemoteConfig        ScbeRemoteConfig
 	Backends                []string
+	LogLevel                string
 }
+
 type UbiquityDockerPluginConfig struct {
 	//Address          string
 	Port             int
@@ -112,6 +116,11 @@ type UbiquityServerConnectionInfo struct {
 	Address string
 	Port    int
 }
+
+type ScbeRemoteConfig struct {
+	SkipRescanISCSI bool
+}
+
 
 //go:generate counterfeiter -o ../fakes/fake_storage_client.go . StorageClient
 
