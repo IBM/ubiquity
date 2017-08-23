@@ -1313,7 +1313,7 @@ var _ = Describe("spectrumRestV2", func() {
 			Expect(err).To(HaveOccurred())
 
 		})
-		It("Should fail to do zero length job array", func() {
+		It("Should fail with UnMarshalling error", func() {
 			unexportNfs.Status.Code = 200
 			unexportNfs.Jobs = make([]connectors.Job, 0)
 
@@ -1332,6 +1332,29 @@ var _ = Describe("spectrumRestV2", func() {
 			Expect(err).To(HaveOccurred())
 
 		})
+		It("Should fail due to empty username", func() {
+			unexportNfs.Status.Code = 200
+			unexportNfs.Jobs = make([]connectors.Job, 0)
 
+			httpmock.RegisterResponder(
+				"DELETE",
+				registerurl,
+				httpmock.NewStringResponder(200, string("fake")),
+			)
+
+			httpmock.RegisterResponder(
+				"GET",
+				joburl,
+				httpmock.NewStringResponder(200, string("fake")),
+			)
+	               restConfig.User = ""
+	               restConfig.Password = "fakepassword"
+	               restConfig.Hostname = "fakehostname"
+                       spectrumRestV2, err = connectors.NewSpectrumRestV2(logger, restConfig)
+                       spectrumRestV2, client, err = connectors.NewspectrumRestV2WithClient(logger, restConfig)
+			err = spectrumRestV2.UnexportNfs(fileset)
+			Expect(err).To(HaveOccurred())
+
+		})
 	})
 })
