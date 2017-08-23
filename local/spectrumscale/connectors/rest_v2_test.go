@@ -309,6 +309,31 @@ var _ = Describe("spectrumRestV2", func() {
 			Expect(err).ToNot(HaveOccurred())
 		})
 
+		It("Should pass while creating a fileset", func() {
+			createFilesetResp.Status.Code = 202
+			createFilesetResp.Jobs[0].Status = "COMPLETED"
+			marshalledResponse, err := json.Marshal(createFilesetResp)
+			opts = make(map[string]interface{})
+			opts["fileset-type"] = "independent"
+			opts["inode-limit"] = "100"
+			Expect(err).ToNot(HaveOccurred())
+
+			httpmock.RegisterResponder(
+				"POST",
+				registerurl,
+				httpmock.NewStringResponder(202, string(marshalledResponse)),
+			)
+
+			httpmock.RegisterResponder(
+				"GET",
+				joburl,
+				httpmock.NewStringResponder(200, string(marshalledResponse)),
+			)
+			err = spectrumRestV2.CreateFileset(filesystem, fileset, opts)
+			Expect(err).ToNot(HaveOccurred())
+		})
+
+
 		It("Should fail with http error", func() {
 			createFilesetResp.Status.Code = 500
 			createFilesetResp.Jobs[0].Status = "COMPLETED"
