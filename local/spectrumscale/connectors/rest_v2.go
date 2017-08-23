@@ -276,22 +276,6 @@ func (s *spectrumRestV2) CreateFileset(filesystemName string, filesetName string
 		filesetreq.InodeSpace = "root"
 	}
 
-	uid, uidSpecified := opts[UserSpecifiedUid]
-	gid, gidSpecified := opts[UserSpecifiedGid]
-	if uidSpecified || gidSpecified { 
-		uidGidStr := ""
-		if (uidSpecified) {
-			uidGidStr = uid.(string)
-		}
-		if gidSpecified {
-			uidGidStr = uidGidStr + ":" + gid.(string)
-
-		}
-		filesetreq.Owner = uidGidStr
-/*TODO:  Disabling it. But need to review it again*/
-		filesetreq.Owner = ""
-	}
-
 	s.logger.Printf("filesetreq %v\n", filesetreq)
 	createFilesetURL := utils.FormatURL(s.endpoint, fmt.Sprintf("scalemgmt/v2/filesystems/%s/filesets", filesystemName))
 	createFilesetResponse := GenericResponse{}
