@@ -39,7 +39,6 @@ type ClusterSummary struct {
 	ClusterName     string `json:"clusterName,omitempty"`
 	PrimaryServer   string `json:"primaryServer,omitempty"`
 	RcpPath         string `json:"rcpPath,omitempty"`
-	RcpSudoWrapper  string `json:"rcpSudoWrapper,omitempty"`
 	RepositoryType  string `json:"repositoryType,omitempty"`
 	RshPath         string `json:"rshPath,omitempty"`
 	SecondaryServer string `json:"secondaryServer,omitempty"`
@@ -499,6 +498,7 @@ type SetQuotaRequest_v2 struct {
 	FilesSoftLimit   string `json:"filesSoftLimit,omitempty"`
 	OperationType    string `json:"operationType,omitempty"`
 	QuotaType        string `json:"quotaType,omitempty"`
+	ObjectName       string `json:"objectName,omitempty"`
 }
 
 type LinkFilesetRequest struct {
@@ -515,7 +515,7 @@ type CreateFilesetRequest struct {
 	Owner                        string `json:"owner,omitempty"`
 	Permissions                  string `json:"permissions,omitempty"`
 	InodeSpace                   string `json:"inodeSpace,omitempty"`
-	MaxNumInodes                 string `json:"maxNumInode,omitempty"`
+	MaxNumInodes                 string `json:"maxNumInodes,omitempty"`
 	AllocInodes                  string `json:"allocInodes,omitempty"`
 	PermissionChangeMode         string `json:"permissionChangeMode,omitempty"`
 	Comment                      string `json:"comment,omitempty"`
