@@ -59,7 +59,6 @@ var _ = Describe("block_device_utils_test", func() {
             Expect(cmd).To(Equal("sudo"))
             Expect(args).To(Equal([]string{"rescan-scsi-bus", "-r"}))
         })
-        /*
         It("Rescan ISCSI fails if iscsiadm command missing", func() {
             fakeExec.IsExecutableReturns(cmdErr)
             err = bdUtils.Rescan(block_device_utils.ISCSI)
@@ -69,7 +68,6 @@ var _ = Describe("block_device_utils_test", func() {
             Expect(fakeExec.IsExecutableCallCount()).To(Equal(1))
             Expect(fakeExec.IsExecutableArgsForCall(0)).To(Equal("iscsiadm"))
         })
-        */
         It("Rescan SCSI fails if rescan-scsi-bus command missing", func() {
             fakeExec.IsExecutableReturns(cmdErr)
             err = bdUtils.Rescan(block_device_utils.SCSI)
@@ -88,6 +86,10 @@ var _ = Describe("block_device_utils_test", func() {
             fakeExec.ExecuteReturns([]byte{}, cmdErr)
             err = bdUtils.Rescan(block_device_utils.SCSI)
             Expect(err.Error()).To(MatchRegexp(cmdErr.Error()))
+        })
+        It("Rescan fails if unknown protocol", func() {
+            err = bdUtils.Rescan(2)
+            Expect(err).To(HaveOccurred())
         })
     })
     Context(".ReloadMultipath", func() {
@@ -135,6 +137,15 @@ var _ = Describe("block_device_utils_test", func() {
         It("Discover fails if multipath -ll command fails", func() {
             volumeId := "volume-id"
             fakeExec.ExecuteReturns([]byte{}, cmdErr)
+            _, err := bdUtils.Discover(volumeId)
+            Expect(err).To(HaveOccurred())
+            Expect(err.Error()).To(MatchRegexp(cmdErr.Error()))
+        })
+        It("Discover fails if stat fails", func() {
+            volumeId := "volume-id"
+            result := "mpath"
+            fakeExec.ExecuteReturns([]byte(fmt.Sprintf("%s (%s) dm-1", result, volumeId)), nil)
+            fakeExec.StatReturns(nil, cmdErr)
             _, err := bdUtils.Discover(volumeId)
             Expect(err).To(HaveOccurred())
             Expect(err.Error()).To(MatchRegexp(cmdErr.Error()))

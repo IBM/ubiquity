@@ -52,7 +52,6 @@ func (h *StorageApiHandler) Activate() http.HandlerFunc {
 		}
 		if len(activateRequest.Backends) != 0 {
 			for _, b := range activateRequest.Backends {
-				fmt.Printf("Activating just one backend %s", b)
 				h.logger.Printf("Activating just one backend %s", b)
 				backend, ok := h.backends[b]
 				if !ok {
@@ -69,22 +68,18 @@ func (h *StorageApiHandler) Activate() http.HandlerFunc {
 			}
 		} else {
 			var errors string
-			fmt.Printf("Activating all backends")
 			h.logger.Printf("Activating all backends")
 			errors = ""
 			for name, backend := range h.backends {
 				err := backend.Activate(activateRequest)
 				if err != nil {
-					h.logger.Printf("Error activating %s", err.Error())
+					h.logger.Printf(fmt.Sprintf("Error activating %s %s", name, err.Error()))
 					errors = fmt.Sprintf("%s,%s", errors, name)
 				}
 			}
 			if errors != "" {
 				utils.WriteResponse(w, http.StatusInternalServerError, &resources.GenericResponse{Err: errors})
 				return
-			} else {
-				h.logger.Printf("Error - fail to activate due to error : [%s]", errors)
-				h.logger.Printf("But since SCBE succeeded lets ignore and finish activation. (TODO its a tmp hack)", errors)
 			}
 		}
 

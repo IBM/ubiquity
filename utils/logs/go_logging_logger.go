@@ -30,7 +30,7 @@ type goLoggingLogger struct {
     logger *logging.Logger
 }
 
-func NewGoLoggingLogger(level Level, writer io.Writer) *goLoggingLogger {
+func newGoLoggingLogger(level Level, writer io.Writer) *goLoggingLogger {
     newLogger := logging.MustGetLogger("")
     newLogger.ExtraCalldepth = 1
     format := logging.MustStringFormatter("%{time:2006-01-02 15:04:05.999} %{level:.5s} %{pid} %{shortfile} %{shortpkg}::%{shortfunc} %{message}")

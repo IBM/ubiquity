@@ -29,44 +29,60 @@ type blockDeviceMounterUtils struct {
 	cleanMPDeviceLock *sync.RWMutex
 }
 
-// MountDeviceFlow create filesystem on the device (if needed) and then mount it on a given mountpoint
-func (s *blockDeviceMounterUtils) MountDeviceFlow(devicePath string, fsType string, mountPoint string) error {
-	defer s.logger.Trace(logs.INFO, logs.Args{{"devicePath", devicePath}, {"fsType", fsType}, {"mountPoint", mountPoint}})()
+func NewBlockDeviceMounterUtilsWithBlockDeviceUtils(blockDeviceUtils block_device_utils.BlockDeviceUtils) BlockDeviceMounterUtils {
+	return newBlockDeviceMounterUtils(blockDeviceUtils)
+}
 
-	needToCreateFS, err := s.blockDeviceUtils.CheckFs(devicePath)
+func NewBlockDeviceMounterUtils() BlockDeviceMounterUtils {
+	return newBlockDeviceMounterUtils(block_device_utils.NewBlockDeviceUtils())
+}
+
+func newBlockDeviceMounterUtils(blockDeviceUtils block_device_utils.BlockDeviceUtils) BlockDeviceMounterUtils {
+	return &blockDeviceMounterUtils{logger: logs.GetLogger(),
+		blockDeviceUtils:  blockDeviceUtils,
+		rescanLock:        &sync.RWMutex{},
+		cleanMPDeviceLock: &sync.RWMutex{},
+	}
+}
+
+// MountDeviceFlow create filesystem on the device (if needed) and then mount it on a given mountpoint
+func (b *blockDeviceMounterUtils) MountDeviceFlow(devicePath string, fsType string, mountPoint string) error {
+	defer b.logger.Trace(logs.INFO, logs.Args{{"devicePath", devicePath}, {"fsType", fsType}, {"mountPoint", mountPoint}})()
+
+	needToCreateFS, err := b.blockDeviceUtils.CheckFs(devicePath)
 	if err != nil {
-		return s.logger.ErrorRet(err, "CheckFs failed")
+		return b.logger.ErrorRet(err, "CheckFs failed")
 	}
 	if needToCreateFS {
-		if err = s.blockDeviceUtils.MakeFs(devicePath, fsType); err != nil {
-			return s.logger.ErrorRet(err, "MakeFs failed")
+		if err = b.blockDeviceUtils.MakeFs(devicePath, fsType); err != nil {
+			return b.logger.ErrorRet(err, "MakeFs failed")
 		}
 	}
-	if err = s.blockDeviceUtils.MountFs(devicePath, mountPoint); err != nil {
-		return s.logger.ErrorRet(err, "MountFs failed")
+	if err = b.blockDeviceUtils.MountFs(devicePath, mountPoint); err != nil {
+		return b.logger.ErrorRet(err, "MountFs failed")
 	}
 
 	return nil
 }
 
 // UnmountDeviceFlow umount device, clean device and remove mountpoint folder
-func (s *blockDeviceMounterUtils) UnmountDeviceFlow(devicePath string) error {
-	defer s.logger.Trace(logs.INFO, logs.Args{{"devicePath", devicePath}})
+func (b *blockDeviceMounterUtils) UnmountDeviceFlow(devicePath string) error {
+	defer b.logger.Trace(logs.INFO, logs.Args{{"devicePath", devicePath}})
 
-	err := s.blockDeviceUtils.UmountFs(devicePath)
+	err := b.blockDeviceUtils.UmountFs(devicePath)
 	if err != nil {
-		return s.logger.ErrorRet(err, "UmountFs failed")
+		return b.logger.ErrorRet(err, "UmountFs failed")
 	}
 
 	// locking for concurrent md delete operation
-	s.logger.Debug("Ask for cleanMPDeviceLock for device", logs.Args{{"device", devicePath}})
-	s.cleanMPDeviceLock.Lock()
-	s.logger.Debug("Recived cleanMPDeviceLock for device", logs.Args{{"device", devicePath}})
-	defer s.cleanMPDeviceLock.Unlock()
-	defer s.logger.Debug("Released cleanMPDeviceLock for device", logs.Args{{"device", devicePath}})
+	b.logger.Debug("Ask for cleanMPDeviceLock for device", logs.Args{{"device", devicePath}})
+	b.cleanMPDeviceLock.Lock()
+	b.logger.Debug("Recived cleanMPDeviceLock for device", logs.Args{{"device", devicePath}})
+	defer b.cleanMPDeviceLock.Unlock()
+	defer b.logger.Debug("Released cleanMPDeviceLock for device", logs.Args{{"device", devicePath}})
 
-	if err := s.blockDeviceUtils.Cleanup(devicePath); err != nil {
-		return s.logger.ErrorRet(err, "Cleanup failed")
+	if err := b.blockDeviceUtils.Cleanup(devicePath); err != nil {
+		return b.logger.ErrorRet(err, "Cleanup failed")
 	}
 
 	// TODO delete the directory here
@@ -78,20 +94,20 @@ func (s *blockDeviceMounterUtils) UnmountDeviceFlow(devicePath string) error {
 // 2. SCSI rescan
 // 3. multipathing rescan
 // return error if one of the steps fail
-func (s *blockDeviceMounterUtils) RescanAll(withISCSI bool, wwn string, rescanForCleanUp bool) error {
-	defer s.logger.Trace(logs.INFO, logs.Args{{"withISCSI", withISCSI}})
+func (b *blockDeviceMounterUtils) RescanAll(withISCSI bool, wwn string, rescanForCleanUp bool) error {
+	defer b.logger.Trace(logs.INFO, logs.Args{{"withISCSI", withISCSI}})
 
 	// locking for concurrent rescans and reduce rescans if no need
-	s.logger.Debug("Ask for rescanLock for volumeWWN", logs.Args{{"volumeWWN", wwn}})
-	s.rescanLock.Lock() // Prevent rescan in parallel
-	s.logger.Debug("Recived rescanLock for volumeWWN", logs.Args{{"volumeWWN", wwn}})
-	defer s.rescanLock.Unlock()
-	defer s.logger.Debug("Released rescanLock for volumeWWN", logs.Args{{"volumeWWN", wwn}})
+	b.logger.Debug("Ask for rescanLock for volumeWWN", logs.Args{{"volumeWWN", wwn}})
+	b.rescanLock.Lock() // Prevent rescan in parallel
+	b.logger.Debug("Recived rescanLock for volumeWWN", logs.Args{{"volumeWWN", wwn}})
+	defer b.rescanLock.Unlock()
+	defer b.logger.Debug("Released rescanLock for volumeWWN", logs.Args{{"volumeWWN", wwn}})
 
-	device, _ := s.Discover(wwn)
+	device, _ := b.Discover(wwn)
 	if !rescanForCleanUp && (device != "") {
 		// if need rescan for discover new device but the new device is already exist then skip the rescan
-		s.logger.Debug(
+		b.logger.Debug(
 			"Skip rescan, because there is already multiple device for volumeWWN",
 			logs.Args{{"volumeWWN", wwn}, {"multiple", device}})
 		return nil
@@ -100,21 +116,21 @@ func (s *blockDeviceMounterUtils) RescanAll(withISCSI bool, wwn string, rescanFo
 
 	// Do the rescans operations
 	if withISCSI {
-		if err := s.blockDeviceUtils.Rescan(block_device_utils.ISCSI); err != nil {
-			return s.logger.ErrorRet(err, "Rescan failed", logs.Args{{"protocol", block_device_utils.ISCSI}})
+		if err := b.blockDeviceUtils.Rescan(block_device_utils.ISCSI); err != nil {
+			return b.logger.ErrorRet(err, "Rescan failed", logs.Args{{"protocol", block_device_utils.ISCSI}})
 		}
 	}
-	if err := s.blockDeviceUtils.Rescan(block_device_utils.SCSI); err != nil {
-		return s.logger.ErrorRet(err, "Rescan failed", logs.Args{{"protocol", block_device_utils.SCSI}})
+	if err := b.blockDeviceUtils.Rescan(block_device_utils.SCSI); err != nil {
+		return b.logger.ErrorRet(err, "Rescan failed", logs.Args{{"protocol", block_device_utils.SCSI}})
 	}
 	if !rescanForCleanUp {
-		if err := s.blockDeviceUtils.ReloadMultipath(); err != nil {
-			return s.logger.ErrorRet(err, "ReloadMultipath failed")
+		if err := b.blockDeviceUtils.ReloadMultipath(); err != nil {
+			return b.logger.ErrorRet(err, "ReloadMultipath failed")
 		}
 	}
 	return nil
 }
 
-func (s *blockDeviceMounterUtils) Discover(volumeWwn string) (string, error) {
-	return s.blockDeviceUtils.Discover(volumeWwn)
+func (b *blockDeviceMounterUtils) Discover(volumeWwn string) (string, error) {
+	return b.blockDeviceUtils.Discover(volumeWwn)
 }

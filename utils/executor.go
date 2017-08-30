@@ -21,6 +21,7 @@ import (
 	"github.com/IBM/ubiquity/utils/logs"
 	"os"
 	"os/exec"
+	"path/filepath"
 )
 
 //go:generate counterfeiter -o ../fakes/fake_executor.go . Executor
@@ -30,8 +31,10 @@ type Executor interface { // basic host dependent functions
 	Mkdir(string, os.FileMode) error
 	MkdirAll(string, os.FileMode) error
 	RemoveAll(string) error
+	Remove(string) error
 	Hostname() (string, error)
 	IsExecutable(string) error
+	EvalSymlinks(path string) (string, error)
 }
 
 type executor struct {
@@ -82,6 +85,9 @@ func (e *executor) RemoveAll(path string) error {
 
 	return os.RemoveAll(path)
 }
+func (e *executor) Remove(path string) error {
+	return os.Remove(path)
+}
 
 func (e *executor) Hostname() (string, error) {
 	return os.Hostname()
@@ -91,3 +97,10 @@ func (e *executor) IsExecutable(path string) error {
 	_, err := exec.LookPath(path)
 	return err
 }
+
+func (e *executor) EvalSymlinks(path string) (string, error) {
+	evalSlink, err := filepath.EvalSymlinks(path)
+	return evalSlink, err
+}
+
+

@@ -25,6 +25,7 @@ import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"testing"
+	"errors"
 )
 
 var _ = Describe("block_device_mounter_utils_test", func() {
@@ -32,6 +33,7 @@ var _ = Describe("block_device_mounter_utils_test", func() {
 		fakeBlockDeviceUtils    *fakes.FakeBlockDeviceUtils
 		blockDeviceMounterUtils block_device_mounter_utils.BlockDeviceMounterUtils
 		err                     error
+		callErr                 error = errors.New("error")
 	)
 
 	BeforeEach(func() {
@@ -41,36 +43,35 @@ var _ = Describe("block_device_mounter_utils_test", func() {
 
 	Context(".MountDeviceFlow", func() {
 		It("should fail if checkfs failed", func() {
-			fakeBlockDeviceUtils.CheckFsReturns(true, fmt.Errorf("error"))
+			fakeBlockDeviceUtils.CheckFsReturns(true, callErr)
 			err = blockDeviceMounterUtils.MountDeviceFlow("fake_device", "fake_fstype", "fake_mountp")
 			Expect(err).To(HaveOccurred())
-			Expect(err.Error()).To(Equal("error"))
+			Expect(err).To(MatchError(callErr))
 		})
 		It("should fail if mkfs failed", func() {
 			fakeBlockDeviceUtils.CheckFsReturns(true, nil)
-			fakeBlockDeviceUtils.MakeFsReturns(fmt.Errorf("error"))
+			fakeBlockDeviceUtils.MakeFsReturns(callErr)
 			err = blockDeviceMounterUtils.MountDeviceFlow("fake_device", "fake_fstype", "fake_mountp")
 			Expect(err).To(HaveOccurred())
-			Expect(err.Error()).To(Equal("error"))
+			Expect(err).To(MatchError(callErr))
 			Expect(fakeBlockDeviceUtils.MakeFsCallCount()).To(Equal(1))
-
 		})
 		It("should fail if mkfs failed", func() {
 			fakeBlockDeviceUtils.CheckFsReturns(true, nil)
-			fakeBlockDeviceUtils.MakeFsReturns(fmt.Errorf("error"))
+			fakeBlockDeviceUtils.MakeFsReturns(callErr)
 			err = blockDeviceMounterUtils.MountDeviceFlow("fake_device", "fake_fstype", "fake_mountp")
 			Expect(err).To(HaveOccurred())
-			Expect(err.Error()).To(Equal("error"))
+			Expect(err).To(MatchError(callErr))
 			Expect(fakeBlockDeviceUtils.MakeFsCallCount()).To(Equal(1))
 
 		})
 		It("should fail if mountfs failed", func() {
 			fakeBlockDeviceUtils.CheckFsReturns(true, nil)
 			fakeBlockDeviceUtils.MakeFsReturns(nil)
-			fakeBlockDeviceUtils.MountFsReturns(fmt.Errorf("error"))
+			fakeBlockDeviceUtils.MountFsReturns(callErr)
 			err = blockDeviceMounterUtils.MountDeviceFlow("fake_device", "fake_fstype", "fake_mountp")
 			Expect(err).To(HaveOccurred())
-			Expect(err.Error()).To(Equal("error"))
+			Expect(err).To(MatchError(callErr))
 			Expect(fakeBlockDeviceUtils.MountFsCallCount()).To(Equal(1))
 		})
 		It("should succeed (with create fs) if all if cool", func() {
@@ -98,13 +99,23 @@ var _ = Describe("block_device_mounter_utils_test", func() {
 			Expect(err).NotTo(HaveOccurred())
 			Expect(fakeBlockDeviceUtils.RescanCallCount()).To(Equal(0))
 		})
-		It("should fail if scsi rescan fail", func() {
-			fakeBlockDeviceUtils.RescanReturnsOnCall(0, nil)
-			fakeBlockDeviceUtils.RescanReturnsOnCall(1, fmt.Errorf("error"))
+		It("should fail if iscsi rescan fail", func() {
+			fakeBlockDeviceUtils.RescanReturnsOnCall(0, callErr)
 			fakeBlockDeviceUtils.DiscoverReturns("", fmt.Errorf("device not exist yet"))
 			err = blockDeviceMounterUtils.RescanAll(true, "wwn", false)
 			Expect(err).To(HaveOccurred())
-			Expect(err.Error()).To(Equal("error"))
+			Expect(err).To(MatchError(callErr))
+			Expect(fakeBlockDeviceUtils.RescanCallCount()).To(Equal(1))
+			protocol := fakeBlockDeviceUtils.RescanArgsForCall(0)
+			Expect(protocol).To(Equal(block_device_utils.ISCSI))
+		})
+		It("should fail if scsi rescan fail", func() {
+			fakeBlockDeviceUtils.RescanReturnsOnCall(0, nil)
+			fakeBlockDeviceUtils.RescanReturnsOnCall(1, callErr)
+			fakeBlockDeviceUtils.DiscoverReturns("", fmt.Errorf("device not exist yet"))
+			err = blockDeviceMounterUtils.RescanAll(true, "wwn", false)
+			Expect(err).To(HaveOccurred())
+			Expect(err).To(MatchError(callErr))
 			Expect(fakeBlockDeviceUtils.RescanCallCount()).To(Equal(2))
 			protocol := fakeBlockDeviceUtils.RescanArgsForCall(0)
 			Expect(protocol).To(Equal(block_device_utils.ISCSI))
@@ -113,11 +124,11 @@ var _ = Describe("block_device_mounter_utils_test", func() {
 		})
 		It("should fail if scsi rescan fail even if for clean up", func() {
 			fakeBlockDeviceUtils.RescanReturnsOnCall(0, nil)
-			fakeBlockDeviceUtils.RescanReturnsOnCall(1, fmt.Errorf("error"))
+			fakeBlockDeviceUtils.RescanReturnsOnCall(1, callErr)
 			fakeBlockDeviceUtils.DiscoverReturns("", fmt.Errorf("device not exist yet"))
 			err = blockDeviceMounterUtils.RescanAll(true, "wwn", true)
 			Expect(err).To(HaveOccurred())
-			Expect(err.Error()).To(Equal("error"))
+			Expect(err).To(MatchError(callErr))
 			Expect(fakeBlockDeviceUtils.RescanCallCount()).To(Equal(2))
 			protocol := fakeBlockDeviceUtils.RescanArgsForCall(0)
 			Expect(protocol).To(Equal(block_device_utils.ISCSI))
@@ -127,11 +138,11 @@ var _ = Describe("block_device_mounter_utils_test", func() {
 		It("should fail if ReloadMultipath fail", func() {
 			fakeBlockDeviceUtils.RescanReturnsOnCall(0, nil)
 			fakeBlockDeviceUtils.RescanReturnsOnCall(1, nil)
-			fakeBlockDeviceUtils.ReloadMultipathReturns(fmt.Errorf("error"))
+			fakeBlockDeviceUtils.ReloadMultipathReturns(callErr)
 			fakeBlockDeviceUtils.DiscoverReturns("", fmt.Errorf("device not exist yet"))
 			err = blockDeviceMounterUtils.RescanAll(true, "wwn", false)
 			Expect(err).To(HaveOccurred())
-			Expect(err.Error()).To(Equal("error"))
+			Expect(err).To(MatchError(callErr))
 			Expect(fakeBlockDeviceUtils.RescanCallCount()).To(Equal(2))
 			protocol := fakeBlockDeviceUtils.RescanArgsForCall(0)
 			Expect(protocol).To(Equal(block_device_utils.ISCSI))
@@ -168,17 +179,17 @@ var _ = Describe("block_device_mounter_utils_test", func() {
 	})
 	Context(".UnmountDeviceFlow", func() {
 		It("should fail if unmount failed", func() {
-			fakeBlockDeviceUtils.UmountFsReturns(fmt.Errorf("error"))
+			fakeBlockDeviceUtils.UmountFsReturns(callErr)
 			err = blockDeviceMounterUtils.UnmountDeviceFlow("fake_device")
 			Expect(err).To(HaveOccurred())
-			Expect(err.Error()).To(Equal("error"))
+			Expect(err).To(MatchError(callErr))
 		})
 		It("should fail if Cleanup failed", func() {
 			fakeBlockDeviceUtils.UmountFsReturns(nil)
-			fakeBlockDeviceUtils.CleanupReturns(fmt.Errorf("error"))
+			fakeBlockDeviceUtils.CleanupReturns(callErr)
 			err = blockDeviceMounterUtils.UnmountDeviceFlow("fake_device")
 			Expect(err).To(HaveOccurred())
-			Expect(err.Error()).To(Equal("error"))
+			Expect(err).To(MatchError(callErr))
 			Expect(fakeBlockDeviceUtils.CleanupCallCount()).To(Equal(1))
 		})
 		It("should succees if all is cool", func() {
@@ -188,9 +199,7 @@ var _ = Describe("block_device_mounter_utils_test", func() {
 			Expect(err).NotTo(HaveOccurred())
 			Expect(fakeBlockDeviceUtils.CleanupCallCount()).To(Equal(1))
 		})
-
 	})
-
 })
 
 func TestGetBlockDeviceUtils(t *testing.T) {
