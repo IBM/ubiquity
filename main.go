@@ -34,6 +34,7 @@ import (
 	"github.com/IBM/ubiquity/web_server"
 	"github.com/jinzhu/gorm"
 	_ "github.com/jinzhu/gorm/dialects/sqlite"
+	"github.com/IBM/ubiquity/database"
 )
 
 var configFile = flag.String(
@@ -94,6 +95,8 @@ func main() {
 	if err := db.AutoMigrate(&resources.Volume{}).Error; err != nil {
 		panic(err)
 	}
+
+	defer database.InitSqlite(path.Join(ubiquityConfigPath, "ubiquity.db"))()
 
 	clients, err := local.GetLocalClients(logger, config, db)
 	if err != nil {

@@ -73,6 +73,7 @@ const DefaultForScbeConfigParamDefaultVolumeSize = "1"    // if customer don't m
 const DefaultForScbeConfigParamDefaultFilesystem = "ext4" // if customer don't mention fstype, then the default is ext4
 const PathToMountUbiquityBlockDevices = "/ubiquity/%s"    // %s is the WWN of the volume # TODO this should be moved to docker plugin side
 const OptionNameForVolumeFsType = "fstype"                // the option name of the fstype and also the key in the volumeConfig
+const DatabseSuffix = "ibm-ubiquity-db"
 
 type SshConfig struct {
 	User string
