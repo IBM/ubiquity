@@ -18,12 +18,10 @@ package scbe
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
 	"github.com/IBM/ubiquity/resources"
 	"github.com/IBM/ubiquity/utils"
 	"github.com/IBM/ubiquity/utils/logs"
-	"github.com/jinzhu/gorm"
 	"strconv"
 	"strings"
 	"sync"
@@ -31,7 +29,7 @@ import (
 
 type scbeLocalClient struct {
 	logger         logs.Logger
-	dataModel      ScbeDataModel
+	dataModel      ScbeDataModelWrapper
 	scbeRestClient ScbeRestClient
 	isActivated    bool
 	config         resources.ScbeConfig
@@ -55,17 +53,13 @@ var (
 	SupportedFSTypes = []string{"ext4", "xfs"}
 )
 
-func NewScbeLocalClient(config resources.ScbeConfig, database *gorm.DB) (resources.StorageClient, error) {
-	logger := logs.GetLogger()
-	datamodel := NewScbeDataModel(database, resources.SCBE)
-	err := datamodel.CreateVolumeTable()
-	if err != nil {
-		return &scbeLocalClient{}, logger.ErrorRet(err, "failed")
-	}
+func NewScbeLocalClient(config resources.ScbeConfig) (resources.StorageClient, error) {
+	datamodel := NewScbeDataModelWrapper()
 	scbeRestClient := NewScbeRestClient(config.ConnectionInfo)
 	return NewScbeLocalClientWithNewScbeRestClientAndDataModel(config, datamodel, scbeRestClient)
 }
-func NewScbeLocalClientWithNewScbeRestClientAndDataModel(config resources.ScbeConfig, dataModel ScbeDataModel, scbeRestClient ScbeRestClient) (resources.StorageClient, error) {
+
+func NewScbeLocalClientWithNewScbeRestClientAndDataModel(config resources.ScbeConfig, dataModel ScbeDataModelWrapper, scbeRestClient ScbeRestClient) (resources.StorageClient, error) {
 	if err := validateScbeConfig(&config); err != nil {
 		return &scbeLocalClient{}, err
 	}
@@ -78,29 +72,64 @@ func NewScbeLocalClientWithNewScbeRestClientAndDataModel(config resources.ScbeCo
 		activationLock: &sync.RWMutex{},
 		locker:         utils.NewLocker(),
 	}
-	if err := basicScbeLocalClientStartupAndValidation(client); err != nil {
+
+	if err := client.basicScbeLocalClientStartupAndValidation(); err != nil {
 		return &scbeLocalClient{}, err
 	}
+
 	return client, nil
 }
 
 // basicScbeLocalClientStartup validate config params, login to SCBE and validate default exist
-func basicScbeLocalClientStartupAndValidation(s *scbeLocalClient) error {
-	if err := s.scbeRestClient.Login(); err != nil {
-		return s.logger.ErrorRet(err, "scbeRestClient.Login() failed")
-	}
-	s.logger.Info("scbeRestClient.Login() succeeded", logs.Args{{"SCBE", s.config.ConnectionInfo.ManagementIP}})
+func (s *scbeLocalClient) basicScbeLocalClientStartupAndValidation() error {
+	defer s.logger.Trace(logs.DEBUG)()
 
+	// login
+	s.logger.Info("validate scbeRestClient.Login", logs.Args{{"SCBE", s.config.ConnectionInfo.ManagementIP}})
+	if err := s.scbeRestClient.Login(); err != nil {
+		return s.logger.ErrorRet(err, "scbeRestClient.Login failed")
+	}
+
+	// service existence
+	s.logger.Info("validate scbeRestClient.ServiceExist", logs.Args{{"DefaultService", s.config.DefaultService}})
 	isExist, err := s.scbeRestClient.ServiceExist(s.config.DefaultService)
 	if err != nil {
 		return s.logger.ErrorRet(err, "scbeRestClient.ServiceExist failed")
 	}
-
 	if isExist == false {
 		return s.logger.ErrorRet(&activateDefaultServiceError{s.config.DefaultService, s.config.ConnectionInfo.ManagementIP}, "failed")
 	}
-	s.logger.Info("The default service exist in SCBE", logs.Args{{s.config.ConnectionInfo.ManagementIP, s.config.DefaultService}})
+
+	// db volume
+	volumes, err := s.scbeRestClient.GetVolumes("")
+	if err != nil {
+		return s.logger.ErrorRet(err, "scbeRestClient.GetVolumes failed")
+	}
+	for _, volInfo := range volumes {
+		if isDatabaseVolume(volInfo.Name) && s.isInstanceVolume(volInfo.Name) {
+			host, err := s.scbeRestClient.GetVolMapping(volInfo.Wwn)
+			if err != nil {
+				return s.logger.ErrorRet(err, "scbeRestClient.GetVolMapping failed")
+			}
+			volume := &ScbeVolume{
+				Volume: resources.Volume{Name: volInfo.Name, Backend: resources.SCBE},
+				WWN:      volInfo.Wwn,
+				AttachTo: host,
+			}
+			s.logger.Info("update db volume", logs.Args{{"volume", volume}})
+			s.dataModel.UpdateDatabaseVolume(volume)
+			break
+		}
+	}
+
 	return nil
+}
+
+func (s *scbeLocalClient) isInstanceVolume(volName string) bool {
+	defer s.logger.Trace(logs.DEBUG)()
+	isInstanceVolume := strings.HasPrefix(volName, fmt.Sprintf(ComposeVolumeName, s.config.UbiquityInstanceName, ""))
+	logs.GetLogger().Debug("", logs.Args{{volName, isInstanceVolume}})
+	return isInstanceVolume
 }
 
 func validateScbeConfig(config *resources.ScbeConfig) error {
@@ -155,14 +184,9 @@ func (s *scbeLocalClient) Activate(activateRequest resources.ActivateRequest) er
 func (s *scbeLocalClient) CreateVolume(createVolumeRequest resources.CreateVolumeRequest) (err error) {
 	defer s.logger.Trace(logs.DEBUG)()
 
-	_, volExists, err := s.dataModel.GetVolume(createVolumeRequest.Name)
-	if err != nil {
+	// verify volume does not exist
+	if _, err = s.dataModel.GetVolume(createVolumeRequest.Name, false); err != nil {
 		return s.logger.ErrorRet(err, "dataModel.GetVolume failed", logs.Args{{"name", createVolumeRequest.Name}})
-	}
-
-	// validate volume doesn't exist
-	if volExists {
-		return s.logger.ErrorRet(&volAlreadyExistsError{createVolumeRequest.Name}, "failed")
 	}
 
 	// validate size option given
@@ -230,14 +254,11 @@ func (s *scbeLocalClient) CreateVolume(createVolumeRequest resources.CreateVolum
 func (s *scbeLocalClient) RemoveVolume(removeVolumeRequest resources.RemoveVolumeRequest) (err error) {
 	defer s.logger.Trace(logs.DEBUG)()
 
-	existingVolume, volExists, err := s.dataModel.GetVolume(removeVolumeRequest.Name)
+	existingVolume, err := s.dataModel.GetVolume(removeVolumeRequest.Name, true)
 	if err != nil {
 		return s.logger.ErrorRet(err, "dataModel.GetVolume failed")
 	}
 
-	if volExists == false {
-		return s.logger.ErrorRet(fmt.Errorf("Volume [%s] not found", removeVolumeRequest.Name), "failed")
-	}
 	if existingVolume.AttachTo != EmptyHost {
 		return s.logger.ErrorRet(&CannotDeleteVolWhichAttachedToHostError{removeVolumeRequest.Name, existingVolume.AttachTo}, "failed")
 	}
@@ -256,12 +277,9 @@ func (s *scbeLocalClient) RemoveVolume(removeVolumeRequest resources.RemoveVolum
 func (s *scbeLocalClient) GetVolume(getVolumeRequest resources.GetVolumeRequest) (resources.Volume, error) {
 	defer s.logger.Trace(logs.DEBUG)()
 
-	existingVolume, volExists, err := s.dataModel.GetVolume(getVolumeRequest.Name)
+	existingVolume, err := s.dataModel.GetVolume(getVolumeRequest.Name, true)
 	if err != nil {
 		return resources.Volume{}, s.logger.ErrorRet(err, "dataModel.GetVolume failed")
-	}
-	if volExists == false {
-		return resources.Volume{}, s.logger.ErrorRet(errors.New("Volume not found"), "failed")
 	}
 
 	return resources.Volume{
@@ -274,14 +292,9 @@ func (s *scbeLocalClient) GetVolumeConfig(getVolumeConfigRequest resources.GetVo
 	defer s.logger.Trace(logs.DEBUG)()
 
 	// get volume wwn from name
-	scbeVolume, volExists, err := s.dataModel.GetVolume(getVolumeConfigRequest.Name)
+	scbeVolume, err := s.dataModel.GetVolume(getVolumeConfigRequest.Name, true)
 	if err != nil {
 		return nil, s.logger.ErrorRet(err, "dataModel.GetVolume failed")
-	}
-
-	// verify volume exists
-	if !volExists {
-		return nil, s.logger.ErrorRet(errors.New("Volume not found"), "failed")
 	}
 
 	// get volume full info from scbe
@@ -324,13 +337,9 @@ func (s *scbeLocalClient) Attach(attachRequest resources.AttachRequest) (string,
 			&InValidRequestError{"attachRequest", "Name", attachRequest.Name, "none empty string"}, "failed")
 	}
 
-	existingVolume, volExists, err := s.dataModel.GetVolume(attachRequest.Name)
+	existingVolume, err := s.dataModel.GetVolume(attachRequest.Name, true)
 	if err != nil {
 		return "", s.logger.ErrorRet(err, "dataModel.GetVolume failed")
-	}
-
-	if !volExists {
-		return "", s.logger.ErrorRet(&volumeNotFoundError{attachRequest.Name}, "failed")
 	}
 
 	if existingVolume.AttachTo == attachRequest.Host {
@@ -363,13 +372,9 @@ func (s *scbeLocalClient) Detach(detachRequest resources.DetachRequest) (err err
 	defer s.logger.Trace(logs.DEBUG)()
 	host2detach := detachRequest.Host
 
-	existingVolume, volExists, err := s.dataModel.GetVolume(detachRequest.Name)
+	existingVolume, err := s.dataModel.GetVolume(detachRequest.Name, true)
 	if err != nil {
 		return s.logger.ErrorRet(err, "dataModel.GetVolume failed")
-	}
-
-	if !volExists {
-		return s.logger.ErrorRet(&volumeNotFoundError{detachRequest.Name}, "failed")
 	}
 
 	// Fail if vol already detach

@@ -184,7 +184,7 @@ var _ = Describe("datamodel integration testing with live DB", func() {
 		db, err = gorm.Open("sqlite3", path.Join(DBPath, "integration-ubiquity.db"))
 		Expect(err).NotTo(HaveOccurred(), "failed to connect database")
 		Expect(db.AutoMigrate(&resources.Volume{}).Error).NotTo(HaveOccurred(), "fail to create Volume basic table")
-		datamodel = scbe.NewScbeDataModel(db, resources.SCBE)
+		datamodel = scbe.NewScbeDataModel(db)
 		Expect(datamodel.CreateVolumeTable()).ToNot(HaveOccurred())
 		Expect(db.HasTable(scbe.ScbeVolume{})).To(Equal(true))
 	})

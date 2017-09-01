@@ -50,17 +50,22 @@ type ScbeVolume struct {
 	FSType   string
 }
 
-func NewScbeDataModel(db *gorm.DB, backend string) ScbeDataModel {
-	return &scbeDataModel{logger: logs.GetLogger(), database: db, backend: backend}
+func NewScbeDataModel(db *gorm.DB) ScbeDataModel {
+	return &scbeDataModel{logger: logs.GetLogger(), database: db, backend: resources.SCBE}
 }
 
 // CreateVolumeTable create the SCBE backend table
 func (d *scbeDataModel) CreateVolumeTable() error {
 	defer d.logger.Trace(logs.DEBUG)()
 
-	if err := d.database.AutoMigrate(&ScbeVolume{}).Error; err != nil {
-		return d.logger.ErrorRet(err, "failed")
+	if err := d.database.AutoMigrate(&resources.Volume{}).Error; err != nil {
+		return d.logger.ErrorRet(err, "AutoMigrate failed")
 	}
+
+	if err := d.database.AutoMigrate(&ScbeVolume{}).Error; err != nil {
+		return d.logger.ErrorRet(err, "AutoMigrate failed")
+	}
+
 	return nil
 }
 
