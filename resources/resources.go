@@ -108,6 +108,7 @@ type UbiquityPluginConfig struct {
 
 type UbiquityDockerPluginConfig struct {
 	PluginsDirectory string
+	Hostname string
 }
 
 type UbiquityServerConnectionInfo struct {
