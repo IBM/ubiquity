@@ -26,7 +26,6 @@ import (
 
 	"time"
 
-	"github.com/BurntSushi/toml"
 	"github.com/IBM/ubiquity/local"
 	"github.com/IBM/ubiquity/resources"
 	"github.com/IBM/ubiquity/utils"
@@ -36,33 +35,21 @@ import (
 	_ "github.com/jinzhu/gorm/dialects/sqlite"
 )
 
-var configFile = flag.String(
-	"config",
-	"ubiquity-server.conf",
-	"config file with ubiquity server configuration params",
-)
-
 const (
 	HeartbeatInterval = 5 //seconds
 )
 
 func main() {
 	flag.Parse()
-	var config resources.UbiquityServerConfig
 
-	fmt.Printf("Starting Ubiquity Storage API server with %s config file\n", *configFile)
-
-	if _, err := os.Stat(*configFile); os.IsNotExist(err) {
-		panic(fmt.Sprintf("Cannot open config file: %s, aborting...", *configFile))
+	config, err := utils.LoadConfig()
+	if err != nil {
+		panic(fmt.Errorf("Failed to load config", err.Error()))
 	}
+	fmt.Printf("Starting Ubiquity Storage API server with config %#v\n", config)
 
-	if _, err := toml.DecodeFile(*configFile, &config); err != nil {
-		fmt.Println(err)
-		return
-	}
-
-	defer logs.InitFileLogger(logs.GetLogLevelFromString(config.LogLevel), path.Join(config.LogPath, "ubiquity.log"))()
-	logger, logFile := utils.SetupLogger(config.LogPath, "ubiquity")
+	defer logs.InitFileLogger(logs.GetLogLevelFromString(os.Getenv("LOG_LEVEL")), path.Join(config.LogPath, "ubiquity.log"))()
+	logger, logFile := utils.SetupLogger(os.Getenv("LOG_PATH"), "ubiquity")
 	defer utils.CloseLogs(logFile)
 
 	spectrumExecutor := utils.NewExecutor()

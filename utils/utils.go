@@ -215,3 +215,59 @@ func ConvertToBytes(logger *log.Logger, inputStr string) (uint64, error) {
 
 	return retValue, nil
 }
+
+func LoadConfig() (resources.UbiquityServerConfig, error) {
+
+	config := resources.UbiquityServerConfig{}
+	port, err := strconv.ParseInt(os.Getenv("PORT"), 0, 32)
+	if err != nil {
+		return config, err
+	}
+	config.Port = int(port)
+	config.LogPath = os.Getenv("LOG_PATH")
+	config.ConfigPath = os.Getenv("CONFIG_PATH")
+	config.DefaultBackend = os.Getenv("DEFAULT_BACKEND")
+	config.LogLevel = os.Getenv("LOG_LEVEL")
+
+	sscConfig := resources.SpectrumScaleConfig{}
+	sshConfig := resources.SshConfig{}
+	sshConfig.User = os.Getenv("SSC_SSH_USER")
+	sshConfig.Host = os.Getenv("SSC_SSH_HOST")
+	sshConfig.Port = os.Getenv("SSC_SSH_PORT")
+
+	//restConfig := resources.RestConfig{}
+	//Endpoint string
+	//User     string
+	//Password string
+	//Hostname string
+	sscConfig.DefaultFilesystemName = os.Getenv("DEFAULT_FILESYSTEM_NAME")
+	sscConfig.NfsServerAddr = os.Getenv("SSC_NFS_SERVER_ADDRESS")
+	sscConfig.ForceDelete, err = strconv.ParseBool(os.Getenv("FORCE_DELETE"))
+	if err != nil {
+		return config, err
+	}
+	//sscConfig.SshConfig = sshConfig
+	//sscConfig.RestConfig = restConfig
+
+	//scbeConfig := resources.ScbeConfig{}
+
+	//ConfigPath           string // TODO consider to remove later
+	//ConnectionInfo       ConnectionInfo
+	//DefaultService       string // SCBE storage service to be used by default if not mentioned by plugin
+	//DefaultVolumeSize    string // The default volume size in case not specified by user
+	//UbiquityInstanceName string // Prefix for the volume name in the storage side (max length 15 char)
+	//
+	//DefaultFilesystemType string
+	//
+	//
+	//CredentialInfo CredentialInfo
+	//Port           int
+	//ManagementIP   string
+	//SkipVerifySSL  bool
+	//
+	//UserName string `json:"username"`
+	//Password string `json:"password"`
+	//Group    string `json:"group"`
+
+	return config, nil
+}

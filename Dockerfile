@@ -11,5 +11,4 @@ RUN apk --no-cache add ca-certificates
 WORKDIR /root/
 RUN mkdir -p /tmp/ubiquity
 COPY --from=0 /go/src/github.com/IBM/ubiquity/ubiquity .
-COPY --from=0 /go/src/github.com/IBM/ubiquity/ubiquity-server.conf .
 CMD ["./ubiquity"]
