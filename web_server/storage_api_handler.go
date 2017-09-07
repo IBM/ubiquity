@@ -27,6 +27,7 @@ import (
 
 	"github.com/IBM/ubiquity/model"
 	"github.com/jinzhu/gorm"
+	"github.com/IBM/ubiquity/database"
 )
 
 type StorageApiHandler struct {
@@ -327,10 +328,22 @@ func (h *StorageApiHandler) ListVolumes() http.HandlerFunc {
 }
 
 func (h *StorageApiHandler) getBackend(name string) (resources.StorageClient, error) {
+	var backendName string
+	var err error
 
-	backendName, err := model.GetBackendForVolume(h.database, name)
-	if err != nil {
-		return nil, fmt.Errorf("Volume not found")
+	// open db connection and lookup volume - upon error go to default backend
+	dbConnection := database.NewConnection()
+	if err = dbConnection.Open(); err != nil {
+		backendName = h.config.DefaultBackend
+		h.logger.Printf("no db connection, going to DefaultBackend %s", backendName)
+	} else {
+		defer dbConnection.Close()
+		if backendName, err = model.GetBackendForVolume(h.database, name); err != nil {
+			backendName = h.config.DefaultBackend
+			h.logger.Printf("volume %s not found, going to DefaultBackend %s", name, backendName)
+		} else {
+			h.logger.Printf("volume %s found, going to backend %s", name, backendName)
+		}
 	}
 
 	backend, exists := h.backends[backendName]
