@@ -47,6 +47,9 @@ var _ = Describe("ScbeDataModelWrapper test", func() {
 		dataModelWrapper = scbe.NewScbeDataModelWrapper()
 		os.Remove(sqliteDbPath)
 	})
+    AfterEach(func() {
+        database.UnregisterAllMigrations()
+    })
 
 	Context("Database cannot be accessed yet", func() {
         Context("InsertVolume", func() {

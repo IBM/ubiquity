@@ -21,7 +21,6 @@ import (
 	"github.com/IBM/ubiquity/utils/logs"
 	"strings"
 	"github.com/IBM/ubiquity/database"
-	"errors"
 )
 
 //go:generate counterfeiter -o ../../fakes/fake_ScbeDataModelWrapper.go . ScbeDataModelWrapper
@@ -36,11 +35,12 @@ type ScbeDataModelWrapper interface {
 
 type scbeDataModelWrapper struct {
 	logger   logs.Logger
-	isTableCreated bool
 	dbVolume *ScbeVolume
 }
 
 func NewScbeDataModelWrapper() ScbeDataModelWrapper {
+	database.RegisterMigration(resources.Volume{})
+	database.RegisterMigration(&ScbeVolume{})
 	return &scbeDataModelWrapper{logger: logs.GetLogger()}
 }
 
@@ -55,33 +55,6 @@ func (d *scbeDataModelWrapper) UpdateDatabaseVolume(newVolume *ScbeVolume) {
 	defer d.logger.Trace(logs.DEBUG)()
 	d.logger.Debug("", logs.Args{{"dbVolume", d.dbVolume}, {"newVolume", newVolume}})
 	d.dbVolume = newVolume
-}
-
-func (d *scbeDataModelWrapper) createTableIfNeeded(dbConnection database.Connection) error {
-	defer d.logger.Trace(logs.DEBUG)()
-	var err error
-
-	// create table only if not created yet
-	d.logger.Debug("check", logs.Args{{"isTableCreated", d.isTableCreated}})
-	if !d.isTableCreated {
-
-		// sanity
-		if dbConnection.GetDb() == nil {
-			return d.logger.ErrorRet(errors.New("dbConnection.GetDb() is nil"), "failed")
-		}
-
-		// create volume table
-		dataModel := NewScbeDataModel(dbConnection.GetDb())
-		if err = dataModel.CreateVolumeTable(); err != nil {
-			return d.logger.ErrorRet(err, "dataModel.CreateVolumeTable failed")
-		}
-
-		// mark table as created
-		d.isTableCreated = true
-		d.logger.Debug("set", logs.Args{{"isTableCreated", d.isTableCreated}})
- 	}
-
-	return nil
 }
 
 func (d *scbeDataModelWrapper) GetVolume(name string, mustExist bool) (ScbeVolume, error) {
@@ -106,11 +79,6 @@ func (d *scbeDataModelWrapper) GetVolume(name string, mustExist bool) (ScbeVolum
 			return ScbeVolume{}, d.logger.ErrorRet(err, "dbConnection.Open failed")
 		}
 		defer dbConnection.Close()
-
-		// create table if needed
-		if err = d.createTableIfNeeded(dbConnection); err != nil {
-			return ScbeVolume{}, d.logger.ErrorRet(err, "createTableIfNeeded failed")
-		}
 
 		// get volume
 		dataModel := NewScbeDataModel(dbConnection.GetDb())
@@ -155,11 +123,6 @@ func (d *scbeDataModelWrapper) DeleteVolume(name string) error {
 		}
 		defer dbConnection.Close()
 
-		// create table if needed
-		if err = d.createTableIfNeeded(dbConnection); err != nil {
-			return d.logger.ErrorRet(err, "createTableIfNeeded failed")
-		}
-
 		// delete volume
 		dataModel := NewScbeDataModel(dbConnection.GetDb())
 		if err = dataModel.DeleteVolume(name); err != nil {
@@ -193,11 +156,6 @@ func (d *scbeDataModelWrapper) InsertVolume(volumeName string, wwn string, attac
 		}
 		defer dbConnection.Close()
 
-		// create table if needed
-		if err = d.createTableIfNeeded(dbConnection); err != nil {
-			return d.logger.ErrorRet(err, "createTableIfNeeded failed")
-		}
-
 		// insert volume
 		dataModel := NewScbeDataModel(dbConnection.GetDb())
 		if err = dataModel.InsertVolume(volumeName, wwn, attachTo, fstype); err != nil {
@@ -218,11 +176,6 @@ func (d *scbeDataModelWrapper) ListVolumes() ([]ScbeVolume, error) {
 	err = dbConnection.Open()
 	if err == nil {
 		defer dbConnection.Close()
-
-		// create table if needed
-		if err = d.createTableIfNeeded(dbConnection); err != nil {
-			return nil, d.logger.ErrorRet(err, "createTableIfNeeded failed")
-		}
 
 		// list volumes
 		dataModel := NewScbeDataModel(dbConnection.GetDb())
@@ -260,11 +213,6 @@ func (d *scbeDataModelWrapper) UpdateVolumeAttachTo(volumeName string, scbeVolum
 			return d.logger.ErrorRet(err, "dbConnection.Open failed")
 		}
 		defer dbConnection.Close()
-
-		// create table if needed
-		if err = d.createTableIfNeeded(dbConnection); err != nil {
-			return d.logger.ErrorRet(err, "createTableIfNeeded failed")
-		}
 
 		// delete volume
 		dataModel := NewScbeDataModel(dbConnection.GetDb())

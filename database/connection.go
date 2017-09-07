@@ -98,6 +98,12 @@ func (c *Connection) Open() (error) {
         return c.logger.ErrorRet(err, "failed")
     }
 
+    // do migrations
+    if err = doMigrations(*c); err != nil {
+        defer c.Close()
+        return c.logger.ErrorRet(err, "doMigrations failed")
+    }
+
     return nil
 }
 

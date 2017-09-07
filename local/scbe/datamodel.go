@@ -27,7 +27,6 @@ import (
 
 //go:generate counterfeiter -o ../../fakes/fake_ScbeDataModel.go . ScbeDataModel
 type ScbeDataModel interface {
-	CreateVolumeTable() error
 	DeleteVolume(name string) error
 	InsertVolume(volumeName string, wwn string, attachTo string, fstype string) error
 	GetVolume(name string) (ScbeVolume, bool, error)
@@ -52,21 +51,6 @@ type ScbeVolume struct {
 
 func NewScbeDataModel(db *gorm.DB) ScbeDataModel {
 	return &scbeDataModel{logger: logs.GetLogger(), database: db, backend: resources.SCBE}
-}
-
-// CreateVolumeTable create the SCBE backend table
-func (d *scbeDataModel) CreateVolumeTable() error {
-	defer d.logger.Trace(logs.DEBUG)()
-
-	if err := d.database.AutoMigrate(&resources.Volume{}).Error; err != nil {
-		return d.logger.ErrorRet(err, "AutoMigrate failed")
-	}
-
-	if err := d.database.AutoMigrate(&ScbeVolume{}).Error; err != nil {
-		return d.logger.ErrorRet(err, "AutoMigrate failed")
-	}
-
-	return nil
 }
 
 // DeleteVolume if vol exist in DB then delete it (both in the generic table and the specific one)
