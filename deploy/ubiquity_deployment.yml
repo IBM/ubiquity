@@ -46,8 +46,10 @@ spec:
             value: "info"
           - name: DEFAULT_FILESYSTEM_NAME
             value: "gold"
+            #This variable is needed just in case of spectrum scale nfs backend
           - name: SSC_NFS_SERVER_ADDRESS
             value: "127.0.0.1"
+            #The SSC_SSH_* variables are needed in cas of using ssh with spectrum scale
           - name: SSC_SSH_HOST
             value: "192.168.10.10"
           - name: SSC_SSH_PORT
@@ -56,6 +58,7 @@ spec:
             value: "ubiquity"
           - name: FORCE_DELETE
             value: "false"
+            # The following variables are specific to SCBE
           - name: SCBE_DEFAULT_SERVICE
             value: "gold"
           - name: "DEFAULT_VOLUME_SIZE"
@@ -74,3 +77,11 @@ spec:
             value: "USER"
           - name: SCBE_PASSWORD
             value: "PASSWORD"
+        #This volume is needed just for spectrum scale backend
+        volumeMounts:
+          - name: ssc
+            mountPath: /usr/lpp
+      volumes:
+        - name: ssc
+          hostPath:
+            path: /usr/lpp
