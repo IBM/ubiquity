@@ -7,8 +7,7 @@ metadata:
     app: ubiquity
 spec:
   ports:
-    - nodePort: 31999
-      port: 9999
+    - port: 9999
       protocol: TCP
       targetPort: 9999
   type: NodePort
@@ -28,7 +27,8 @@ spec:
     spec:
       containers:
       - name: ubiquity
-        image: midoblgsm/ubiquity
+        image: artifactory.haifa.ibm.com:5030/ubiquity/ubiquity
+#        image: midoblgsm/ubiquity
         imagePullPolicy: Always
         ports:
         - containerPort: 9999
