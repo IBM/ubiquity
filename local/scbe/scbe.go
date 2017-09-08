@@ -25,6 +25,7 @@ import (
 	"strconv"
 	"strings"
 	"sync"
+	"github.com/IBM/ubiquity/database"
 )
 
 type scbeLocalClient struct {
@@ -106,13 +107,13 @@ func (s *scbeLocalClient) basicScbeLocalClientStartupAndValidation() error {
 		return s.logger.ErrorRet(err, "scbeRestClient.GetVolumes failed")
 	}
 	for _, volInfo := range volumes {
-		if isDatabaseVolume(volInfo.Name) && s.isInstanceVolume(volInfo.Name) {
+		if database.IsDatabaseVolume(volInfo.Name) && s.isInstanceVolume(volInfo.Name) {
 			host, err := s.scbeRestClient.GetVolMapping(volInfo.Wwn)
 			if err != nil {
 				return s.logger.ErrorRet(err, "scbeRestClient.GetVolMapping failed")
 			}
 			volume := &ScbeVolume{
-				Volume: resources.Volume{Name: volInfo.Name, Backend: resources.SCBE},
+				Volume: resources.Volume{Name: database.VolumeNameSuffix, Backend: resources.SCBE},
 				WWN:      volInfo.Wwn,
 				AttachTo: host,
 			}

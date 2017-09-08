@@ -24,7 +24,6 @@ import (
 	"github.com/IBM/ubiquity/resources"
 
 	"github.com/gorilla/mux"
-	"github.com/jinzhu/gorm"
 )
 
 type StorageApiServer struct {
@@ -32,8 +31,8 @@ type StorageApiServer struct {
 	logger            *log.Logger
 }
 
-func NewStorageApiServer(logger *log.Logger, backends map[string]resources.StorageClient, config resources.UbiquityServerConfig, database *gorm.DB) (*StorageApiServer, error) {
-	return &StorageApiServer{storageApiHandler: NewStorageApiHandler(logger, backends, database, config), logger: logger}, nil
+func NewStorageApiServer(logger *log.Logger, backends map[string]resources.StorageClient, config resources.UbiquityServerConfig) (*StorageApiServer, error) {
+	return &StorageApiServer{storageApiHandler: NewStorageApiHandler(logger, backends, config), logger: logger}, nil
 }
 
 func (s *StorageApiServer) InitializeHandler() http.Handler {

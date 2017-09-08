@@ -19,7 +19,6 @@ package scbe
 import (
 	"github.com/IBM/ubiquity/resources"
 	"github.com/IBM/ubiquity/utils/logs"
-	"strings"
 	"github.com/IBM/ubiquity/database"
 )
 
@@ -44,13 +43,6 @@ func NewScbeDataModelWrapper() ScbeDataModelWrapper {
 	return &scbeDataModelWrapper{logger: logs.GetLogger()}
 }
 
-func isDatabaseVolume(volName string) bool {
-	defer logs.GetLogger().Trace(logs.DEBUG)()
-	isDatabaseVolume := strings.HasSuffix(volName, resources.DatabseVolumeNameSuffix)
-	logs.GetLogger().Debug("", logs.Args{{volName, isDatabaseVolume}})
-	return isDatabaseVolume
-}
-
 func (d *scbeDataModelWrapper) UpdateDatabaseVolume(newVolume *ScbeVolume) {
 	defer d.logger.Trace(logs.DEBUG)()
 	d.logger.Debug("", logs.Args{{"dbVolume", d.dbVolume}, {"newVolume", newVolume}})
@@ -63,7 +55,7 @@ func (d *scbeDataModelWrapper) GetVolume(name string, mustExist bool) (ScbeVolum
 	var volume ScbeVolume
 	var exists bool
 
-	if isDatabaseVolume(name) {
+	if database.IsDatabaseVolume(name) {
 
 		// work with memory object
 		exists = d.dbVolume != nil
@@ -104,7 +96,7 @@ func (d *scbeDataModelWrapper) DeleteVolume(name string) error {
 	defer d.logger.Trace(logs.DEBUG)()
 	var err error
 
-	if isDatabaseVolume(name) {
+	if database.IsDatabaseVolume(name) {
 
 		// sanity
 		if d.dbVolume == nil {
@@ -137,7 +129,7 @@ func (d *scbeDataModelWrapper) InsertVolume(volumeName string, wwn string, attac
 	defer d.logger.Trace(logs.DEBUG)()
 	var err error
 
-	if isDatabaseVolume(volumeName) {
+	if database.IsDatabaseVolume(volumeName) {
 
 		// sanity
 		if d.dbVolume != nil {
@@ -195,7 +187,7 @@ func (d *scbeDataModelWrapper) UpdateVolumeAttachTo(volumeName string, scbeVolum
 	defer d.logger.Trace(logs.DEBUG)()
 	var err error
 
-	if isDatabaseVolume(volumeName) {
+	if database.IsDatabaseVolume(volumeName) {
 
 		// sanity
 		if d.dbVolume == nil {

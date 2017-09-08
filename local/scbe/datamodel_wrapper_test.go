@@ -21,7 +21,6 @@ import (
 	. "github.com/onsi/gomega"
 	"github.com/IBM/ubiquity/database"
 	"github.com/IBM/ubiquity/local/scbe"
-	"github.com/IBM/ubiquity/resources"
 	"os"
 )
 
@@ -35,10 +34,10 @@ var _ = Describe("ScbeDataModelWrapper test", func() {
 		volumeWwn          string = "wwn"
 	    volumeAttachTo     string = "host"
 		volumeFsType       string = "volumeFsType"
-		volumeNameDb       string = volumeName + resources.DatabseVolumeNameSuffix
-		volumeWwnDb        string = volumeWwn + resources.DatabseVolumeNameSuffix
-		volumeAttachToDb   string = volumeAttachTo + resources.DatabseVolumeNameSuffix
-		volumeFsTypeDb     string = volumeFsType + resources.DatabseVolumeNameSuffix
+		volumeNameDb       string = volumeName + database.VolumeNameSuffix
+		volumeWwnDb        string = volumeWwn + database.VolumeNameSuffix
+		volumeAttachToDb   string = volumeAttachTo + database.VolumeNameSuffix
+		volumeFsTypeDb     string = volumeFsType + database.VolumeNameSuffix
 		scbeVolume         scbe.ScbeVolume
         listVolumes        []scbe.ScbeVolume
 	)
