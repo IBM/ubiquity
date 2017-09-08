@@ -35,18 +35,6 @@ func initConnectionFactory(connectionFactory ConnectionFactory) func() {
     return func() { globalConnectionFactory = nil }
 }
 
-func InitPostgres(hostname string) func() {
-    return initConnectionFactory(&postgresFactory{host: hostname})
-}
-
-func InitSqlite(filepath string) func() {
-    return initConnectionFactory(&sqliteFactory{path: filepath})
-}
-
-func InitTestError() func() {
-    return initConnectionFactory(&testErrorFactory{})
-}
-
 type ConnectionFactory interface {
     newConnection() (*gorm.DB, error)
 }

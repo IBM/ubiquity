@@ -96,14 +96,16 @@ func main() {
 		panic(err)
 	}
 
-	defer database.InitSqlite(path.Join(ubiquityConfigPath, "ubiquity.db"))()
+	// init database
+	os.Setenv(database.KeySqlitePath, path.Join(ubiquityConfigPath, "ubiquity.db"))
+	defer database.Initialize()()
 
 	clients, err := local.GetLocalClients(logger, config, db)
 	if err != nil {
 		panic(err)
 	}
 
-	server, err := web_server.NewStorageApiServer(logger, clients, config, db)
+	server, err := web_server.NewStorageApiServer(logger, clients, config)
 	if err != nil {
 		log.Fatal(fmt.Sprintf("Error creating Storage API server [%s]...", err.Error()))
 	}
