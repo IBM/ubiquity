@@ -149,33 +149,40 @@ type ActivateRequest struct {
 }
 
 type CreateVolumeRequest struct {
+	CredentialInfo CredentialInfo
 	Name    string
 	Backend string
 	Opts    map[string]interface{}
 }
 
 type RemoveVolumeRequest struct {
+	CredentialInfo CredentialInfo
 	Name string
 }
 
 type ListVolumesRequest struct {
+	CredentialInfo CredentialInfo
 	//TODO add filter
 	Backends []string
 }
 
 type AttachRequest struct {
+	CredentialInfo CredentialInfo
 	Name string
 	Host string
 }
 
 type DetachRequest struct {
+	CredentialInfo CredentialInfo
 	Name string
 	Host string
 }
 type GetVolumeRequest struct {
+	CredentialInfo CredentialInfo
 	Name string
 }
 type GetVolumeConfigRequest struct {
+	CredentialInfo CredentialInfo
 	Name string
 }
 type ActivateResponse struct {
@@ -185,10 +192,6 @@ type ActivateResponse struct {
 
 type GenericResponse struct {
 	Err string
-}
-
-type GenericRequest struct {
-	Name string
 }
 
 type MountRequest struct {
