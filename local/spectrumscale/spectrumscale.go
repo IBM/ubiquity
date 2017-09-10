@@ -55,6 +55,7 @@ const (
 	Quota     string = "quota"
 
 	Filesystem string = "filesystem"
+	FilesystemMountPoint string = "fsMountPoint"
 
 	IsPreexisting string = "isPreexisting"
 
@@ -324,6 +325,14 @@ func (s *spectrumLocalClient) GetVolumeConfig(getVolumeConfigRequest resources.G
 
 		volumeConfigDetails[FilesetID] = existingVolume.Fileset
 		volumeConfigDetails[Filesystem] = existingVolume.FileSystem
+
+		fsMountpoint, err := s.connector.GetFilesystemMountpoint(existingVolume.FileSystem)
+		if err != nil {
+			s.logger.Println(err.Error())
+			return nil, err
+		}
+		volumeConfigDetails[FilesystemMountPoint] = fsMountpoint
+
 		volumeConfigDetails[Cluster] = existingVolume.ClusterId
 		if existingVolume.GID != "" {
 			volumeConfigDetails[UserSpecifiedGID] = existingVolume.GID
