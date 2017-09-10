@@ -357,6 +357,10 @@ func (s *spectrumLocalClient) Attach(attachRequest resources.AttachRequest) (vol
 		return "", fmt.Errorf("Volume not found")
 	}
 
+	if len(attachRequest.ContainerOrchestrator) > 0 && attachRequest.ContainerOrchestrator == "docker" {
+		existingVolume.Volume.Mountpoint = path.Join(resources.DockerPropagatedMount, attachRequest.Name)
+	}
+
 	volumeMountpoint, err = s.getVolumeMountPoint(existingVolume)
 
 	if err != nil {
@@ -807,6 +811,10 @@ func (s *spectrumLocalClient) validateAndParseParams(logger *log.Logger, opts ma
 func (s *spectrumLocalClient) getVolumeMountPoint(volume SpectrumScaleVolume) (string, error) {
 	s.logger.Println("getVolumeMountPoint start")
 	defer s.logger.Println("getVolumeMountPoint end")
+
+	if len(volume.Volume.Mountpoint) > 0 {
+		return volume.Volume.Mountpoint, nil
+	}
 
 	fsMountpoint, err := s.connector.GetFilesystemMountpoint(volume.FileSystem)
 	if err != nil {
