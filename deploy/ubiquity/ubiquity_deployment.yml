@@ -27,8 +27,7 @@ spec:
     spec:
       containers:
       - name: ubiquity
-        image: artifactory.haifa.ibm.com:5030/ubiquity/ubiquity
-#        image: midoblgsm/ubiquity
+        image: IBMubiquityIMAGE # place holder
         imagePullPolicy: Always
         ports:
         - containerPort: 9999
