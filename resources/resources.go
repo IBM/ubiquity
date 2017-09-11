@@ -104,6 +104,7 @@ type UbiquityPluginConfig struct {
 	ScbeRemoteConfig        ScbeRemoteConfig
 	Backends                []string
 	LogLevel                string
+	CredentialInfo          CredentialInfo
 }
 
 type UbiquityDockerPluginConfig struct {
