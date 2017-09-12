@@ -234,12 +234,17 @@ func LoadConfig() (resources.UbiquityServerConfig, error) {
 	sshConfig.User = os.Getenv("SSC_SSH_USER")
 	sshConfig.Host = os.Getenv("SSC_SSH_HOST")
 	sshConfig.Port = os.Getenv("SSC_SSH_PORT")
-	sscConfig.SshConfig = sshConfig
-	//restConfig := resources.RestConfig{}
-	//Endpoint string
-	//User     string
-	//Password string
-	//Hostname string
+	if sshConfig.User != "" && sshConfig.Host != "" && sshConfig.Port != "" {
+		sscConfig.SshConfig = sshConfig
+	}
+	restConfig := resources.RestConfig{}
+	restConfig.Endpoint = os.Getenv("SSC_REST_ENDPOINT")
+	restConfig.User = os.Getenv("SSC_REST_USER")
+	restConfig.Password = os.Getenv("SSC_REST_PASSWORD")
+	restConfig.Hostname = os.Getenv("SSC_REST_HOSTNAME")
+	if restConfig.User != "" && restConfig.Hostname != "" && restConfig.Password != "" {
+		sscConfig.RestConfig = restConfig
+	}
 	sscConfig.DefaultFilesystemName = os.Getenv("DEFAULT_FILESYSTEM_NAME")
 	sscConfig.NfsServerAddr = os.Getenv("SSC_NFS_SERVER_ADDRESS")
 	forceDelete, err := strconv.ParseBool(os.Getenv("FORCE_DELETE"))
@@ -250,8 +255,6 @@ func LoadConfig() (resources.UbiquityServerConfig, error) {
 		sscConfig.ForceDelete = forceDelete
 	}
 	config.SpectrumScaleConfig = sscConfig
-	//sscConfig.SshConfig = sshConfig
-	//sscConfig.RestConfig = restConfig
 
 	scbeConfig := resources.ScbeConfig{}
 	scbeConfig.DefaultService = os.Getenv("SCBE_DEFAULT_SERVICE")
