@@ -145,6 +145,7 @@ type Mounter interface {
 }
 
 type ActivateRequest struct {
+	CredentialInfo CredentialInfo
 	Backends []string
 	Opts     map[string]string
 }
