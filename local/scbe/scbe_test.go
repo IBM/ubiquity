@@ -579,7 +579,7 @@ var _ = Describe("scbeLocalClient", func() {
 			}
 			fakeScbeDataModel.GetVolumeReturns(scbe.ScbeVolume{WWN: "wwn", FSType: "ext4"}, nil)
 			fakeScbeRestClient.GetVolumesReturns(volumes, nil)
-			volConfig, err := client.GetVolumeConfig(resources.GetVolumeConfigRequest{"name"})
+			volConfig, err := client.GetVolumeConfig(resources.GetVolumeConfigRequest{Name:"name"})
 			Expect(err).To(Not(HaveOccurred()))
 			Expect(len(volConfig)).To(Equal(val.Type().NumField() + scbe.GetVolumeConfigExtraParams))
 			fstype, ok := volConfig[resources.OptionNameForVolumeFsType]
@@ -596,19 +596,19 @@ var _ = Describe("scbeLocalClient", func() {
 		})
 		It("fail upon GetVolume error", func() {
 			fakeScbeDataModel.GetVolumeReturns(scbe.ScbeVolume{}, fakeErr)
-			_, err := client.GetVolumeConfig(resources.GetVolumeConfigRequest{"name"})
+			_, err := client.GetVolumeConfig(resources.GetVolumeConfigRequest{Name:"name"})
 			Expect(err).To(HaveOccurred())
 			Expect(err).To(MatchError(fakeErr))
 		})
 		It("fail if GetVolume returns false", func() {
 			fakeScbeDataModel.GetVolumeReturns(scbe.ScbeVolume{WWN: "wwn"}, nil)
-			_, err := client.GetVolumeConfig(resources.GetVolumeConfigRequest{"name"})
+			_, err := client.GetVolumeConfig(resources.GetVolumeConfigRequest{Name:"name"})
 			Expect(err).To(HaveOccurred())
 		})
 		It("fail upon GetVolumes error", func() {
 			fakeScbeDataModel.GetVolumeReturns(scbe.ScbeVolume{WWN: "wwn"}, nil)
 			fakeScbeRestClient.GetVolumesReturns(nil, fakeErr)
-			_, err := client.GetVolumeConfig(resources.GetVolumeConfigRequest{"name"})
+			_, err := client.GetVolumeConfig(resources.GetVolumeConfigRequest{Name:"name"})
 			Expect(err).To(HaveOccurred())
 			Expect(err).To(MatchError(fakeErr))
 		})
@@ -616,7 +616,7 @@ var _ = Describe("scbeLocalClient", func() {
 			volumes := make([]scbe.ScbeVolumeInfo, 0)
 			fakeScbeDataModel.GetVolumeReturns(scbe.ScbeVolume{WWN: "wwn"}, nil)
 			fakeScbeRestClient.GetVolumesReturns(volumes, nil)
-			_, err := client.GetVolumeConfig(resources.GetVolumeConfigRequest{"name"})
+			_, err := client.GetVolumeConfig(resources.GetVolumeConfigRequest{Name:"name"})
 			Expect(err).To(HaveOccurred())
 		})
 	})
