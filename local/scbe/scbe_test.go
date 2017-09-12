@@ -457,7 +457,12 @@ var _ = Describe("scbeLocalClient", func() {
 		Expect(fakeScbeRestClient.LoginCallCount()).To(Equal(1))
 		Expect(fakeScbeRestClient.ServiceExistCallCount()).To(Equal(1))
 	})
-
+	Context(".Activate", func() {
+		It("should succeed", func() {
+			err := client.Activate(resources.ActivateRequest{})
+			Expect(err).To(Not(HaveOccurred()))
+		})
+	})
 	Context(".Attach", func() {
 		It("should fail to attach request is bad", func() {
 			_, err := client.Attach(resources.AttachRequest{Name: "AAA", Host: scbe.EmptyHost})
@@ -469,7 +474,6 @@ var _ = Describe("scbeLocalClient", func() {
 			_, ok = err.(*scbe.InValidRequestError)
 			Expect(ok).To(Equal(true))
 		})
-
 		It("should fail to attach the volume if GetVolume failed", func() {
 			fakeScbeDataModel.GetVolumeReturns(scbe.ScbeVolume{}, fakeErr)
 			_, err := client.Attach(fakeAttachRequest)
@@ -674,3 +678,87 @@ var _ = Describe("scbeLocalClient", func() {
 	})
 
 })
+
+var _ = Describe("scbeLocalClient", func() {
+	var (
+		client             resources.StorageClient
+		fakeScbeDataModel  *fakes.FakeScbeDataModelWrapper
+		fakeScbeRestClient *fakes.FakeScbeRestClient
+		fakeConfig         resources.ScbeConfig
+		fakeCredentialInfo resources.CredentialInfo
+		fakeConnectionInfo resources.ConnectionInfo
+		err                error
+	)
+	BeforeEach(func() {
+		fakeCredentialInfo = resources.CredentialInfo{UserName: "user1", Password: "pass1"}
+		fakeConnectionInfo = resources.ConnectionInfo{CredentialInfo: fakeCredentialInfo}
+		fakeConfig = resources.ScbeConfig{
+			ConfigPath:     "/tmp",
+			DefaultService: fakeDefaultProfile,
+			ConnectionInfo: fakeConnectionInfo,
+		}
+	})
+	Context(".getAuthenticatedScbeRestClient", func() {
+		It("call with same credentialInfo should not login again", func() {
+			fakeScbeDataModel = new(fakes.FakeScbeDataModelWrapper)
+			fakeScbeRestClient = new(fakes.FakeScbeRestClient)
+			fakeScbeRestClient.LoginReturns(nil)
+			fakeScbeRestClient.ServiceExistReturns(true, nil)
+			defer scbe.InitScbeRestClientGen(GenFakeScbeRestClient(nil))()
+			client, err = scbe.NewScbeLocalClientWithNewScbeRestClientAndDataModel(
+				fakeConfig,
+				fakeScbeDataModel,
+				fakeScbeRestClient)
+			Expect(err).ToNot(HaveOccurred())
+			Expect(fakeScbeRestClient.LoginCallCount()).To(Equal(1))
+			Expect(fakeScbeRestClient.ServiceExistCallCount()).To(Equal(1))
+			Expect(fakeScbeRestClient.LoginCallCount()).To(Equal(1))
+			err = client.Activate(resources.ActivateRequest{CredentialInfo: fakeCredentialInfo})
+			Expect(err).To(Not(HaveOccurred()))
+			Expect(fakeScbeRestClient.LoginCallCount()).To(Equal(1))
+		})
+	})
+	Context(".getAuthenticatedScbeRestClient", func() {
+		It("call with other credentialInfo should login again and cache the new client", func() {
+			fakeScbeDataModel = new(fakes.FakeScbeDataModelWrapper)
+			fakeScbeRestClient = new(fakes.FakeScbeRestClient)
+			fakeScbeRestClient.LoginReturns(nil)
+			fakeScbeRestClient.ServiceExistReturns(true, nil)
+			otherFakeScbeRestClient := new(fakes.FakeScbeRestClient)
+			otherFakeScbeRestClient.LoginReturns(nil)
+			otherFakeScbeRestClient.ServiceExistReturns(true, nil)
+			defer scbe.InitScbeRestClientGen(GenFakeScbeRestClient(otherFakeScbeRestClient))()
+			client, err = scbe.NewScbeLocalClientWithNewScbeRestClientAndDataModel(
+				fakeConfig,
+				fakeScbeDataModel,
+				fakeScbeRestClient)
+			Expect(err).ToNot(HaveOccurred())
+			Expect(fakeScbeRestClient.LoginCallCount()).To(Equal(1))
+			Expect(fakeScbeRestClient.ServiceExistCallCount()).To(Equal(1))
+			Expect(otherFakeScbeRestClient.LoginCallCount()).To(Equal(0))
+			newCredentialInfo := resources.CredentialInfo{UserName: "user2", Password: "pass2"}
+			err = client.Activate(resources.ActivateRequest{CredentialInfo: newCredentialInfo})
+			Expect(err).To(Not(HaveOccurred()))
+			Expect(otherFakeScbeRestClient.LoginCallCount()).To(Equal(1))
+			volumes := make([]scbe.ScbeVolumeInfo, 1)
+			vol := &volumes[0]
+			val := reflect.Indirect(reflect.ValueOf(vol))
+			for i := 0; i < val.Type().NumField(); i++ {
+				reflect.ValueOf(vol).Elem().Field(i).SetString(val.Type().Field(i).Name)
+			}
+			fakeScbeDataModel.GetVolumeReturns(scbe.ScbeVolume{WWN: "wwn", FSType: "ext4"}, nil)
+			otherFakeScbeRestClient.GetVolumesReturns(volumes, nil)
+			_, err := client.GetVolumeConfig(resources.GetVolumeConfigRequest{CredentialInfo: resources.CredentialInfo{UserName: "user2", Password: "pass2"}, Name:"name"})
+			Expect(err).To(Not(HaveOccurred()))
+			Expect(otherFakeScbeRestClient.LoginCallCount()).To(Equal(1))
+			Expect(otherFakeScbeRestClient.GetVolumesCallCount()).To(Equal(1))
+		})
+	})
+})
+
+
+func GenFakeScbeRestClient(newClient scbe.ScbeRestClient) scbe.ScbeRestClientGen {
+	return func(conInfo resources.ConnectionInfo) (scbe.ScbeRestClient, error) {
+		return newClient, nil
+	}
+}
