@@ -15,6 +15,8 @@ import:
   version: ^1.2.0
 - package: github.com/op/go-logging
   version: 970db520ece77730c7e4724c61121037378659d9
+- package: github.com/golang/sync/syncmap
+  version: f52d1811a62927559de87708c8913c1650ce4f26
 testImport:
 - package: github.com/onsi/ginkgo
   version: bb93381d543b0e5725244abe752214a110791d01
