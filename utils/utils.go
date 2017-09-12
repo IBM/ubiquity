@@ -234,7 +234,7 @@ func LoadConfig() (resources.UbiquityServerConfig, error) {
 	sshConfig.User = os.Getenv("SSC_SSH_USER")
 	sshConfig.Host = os.Getenv("SSC_SSH_HOST")
 	sshConfig.Port = os.Getenv("SSC_SSH_PORT")
-
+	sscConfig.SshConfig = sshConfig
 	//restConfig := resources.RestConfig{}
 	//Endpoint string
 	//User     string
@@ -242,32 +242,45 @@ func LoadConfig() (resources.UbiquityServerConfig, error) {
 	//Hostname string
 	sscConfig.DefaultFilesystemName = os.Getenv("DEFAULT_FILESYSTEM_NAME")
 	sscConfig.NfsServerAddr = os.Getenv("SSC_NFS_SERVER_ADDRESS")
-	sscConfig.ForceDelete, err = strconv.ParseBool(os.Getenv("FORCE_DELETE"))
+	forceDelete, err := strconv.ParseBool(os.Getenv("FORCE_DELETE"))
 	if err != nil {
-		return config, err
+		fmt.Printf("ForceDelete env is not setup, will be setup to false")
+		sscConfig.ForceDelete = false
+	} else {
+		sscConfig.ForceDelete = forceDelete
 	}
+	config.SpectrumScaleConfig = sscConfig
 	//sscConfig.SshConfig = sshConfig
 	//sscConfig.RestConfig = restConfig
 
-	//scbeConfig := resources.ScbeConfig{}
+	scbeConfig := resources.ScbeConfig{}
+	scbeConfig.DefaultService = os.Getenv("SCBE_DEFAULT_SERVICE")
+	scbeConfig.DefaultVolumeSize = os.Getenv("DEFAULT_VOLUME_SIZE")
+	scbeConfig.UbiquityInstanceName = os.Getenv("UBIQUITY_INSTANCE_NAME")
+	scbeConfig.DefaultFilesystemType = os.Getenv("DEFAULT_FSTYPE")
+	scbeCred := resources.CredentialInfo{}
+	scbeCred.UserName = os.Getenv("SCBE_USERNAME")
+	scbeCred.Password = os.Getenv("SCBE_PASSWORD")
 
-	//ConfigPath           string // TODO consider to remove later
-	//ConnectionInfo       ConnectionInfo
-	//DefaultService       string // SCBE storage service to be used by default if not mentioned by plugin
-	//DefaultVolumeSize    string // The default volume size in case not specified by user
-	//UbiquityInstanceName string // Prefix for the volume name in the storage side (max length 15 char)
-	//
-	//DefaultFilesystemType string
-	//
-	//
-	//CredentialInfo CredentialInfo
-	//Port           int
-	//ManagementIP   string
-	//SkipVerifySSL  bool
-	//
-	//UserName string `json:"username"`
-	//Password string `json:"password"`
-	//Group    string `json:"group"`
+	scbeConnectionInfo := resources.ConnectionInfo{}
+	scbeConnectionInfo.ManagementIP = os.Getenv("SCBE_MANAGEMENT_IP")
+	scbePort, err := strconv.ParseInt(os.Getenv("SCBE_MANAGEMENT_PORT"), 0, 32)
+	if err != nil {
+		return config, fmt.Errorf("Error reading SCBE_MANAGEMENT_PORT var%#v", err)
+	}
+	scbeConnectionInfo.Port = int(scbePort)
+	skipVSSL := os.Getenv("SKIP_VERIFY_SSL")
+
+	skipVerifySSL, err := strconv.ParseBool(skipVSSL)
+
+	if err != nil {
+		return config, fmt.Errorf("Error reading SKIP_VERIFY_SSL var%#v", err)
+	}
+	scbeConnectionInfo.SkipVerifySSL = skipVerifySSL
+
+	scbeConnectionInfo.CredentialInfo = scbeCred
+	scbeConfig.ConnectionInfo = scbeConnectionInfo
+	config.ScbeConfig = scbeConfig
 
 	return config, nil
 }
