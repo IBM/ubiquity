@@ -57,7 +57,7 @@ var (
 
 func NewScbeLocalClient(config resources.ScbeConfig) (resources.StorageClient, error) {
 	datamodel := NewScbeDataModelWrapper()
-	scbeRestClient := NewScbeRestClient(config.ConnectionInfo)
+	scbeRestClient := newScbeRestClientGen(config.ConnectionInfo)
 	return NewScbeLocalClientWithNewScbeRestClientAndDataModel(config, datamodel, scbeRestClient)
 }
 
@@ -129,9 +129,9 @@ func (s *scbeLocalClient) basicScbeLocalClientStartupAndValidation(restClient Sc
 }
 
 func (s *scbeLocalClient) getAuthenticatedScbeRestClient(credential resources.CredentialInfo) (ScbeRestClient, error) {
-	restClient, exists := s.restClients.Load(s.config.ConnectionInfo.CredentialInfo)
+	restClient, exists := s.restClients.Load(credential)
 	if !exists {
-		newClient := NewScbeRestClient(resources.ConnectionInfo{
+		newClient := newScbeRestClientGen(resources.ConnectionInfo{
 			CredentialInfo: credential, Port: s.config.ConnectionInfo.Port, ManagementIP: s.config.ConnectionInfo.ManagementIP, SkipVerifySSL: s.config.ConnectionInfo.SkipVerifySSL})
 		if err := newClient.Login(); err != nil {
 			return nil, s.logger.ErrorRet(err, "newClient.Login() failed")
