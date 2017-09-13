@@ -181,7 +181,14 @@ func validateScbeConfig(config *resources.ScbeConfig) error {
 
 func (s *scbeLocalClient) Activate(activateRequest resources.ActivateRequest) error {
 	defer s.logger.Trace(logs.DEBUG)()
-	s.activationLock.RLock()
+
+    // authenticate
+    _, err := s.getAuthenticatedScbeRestClient(activateRequest.CredentialInfo)
+    if err != nil {
+        return s.logger.ErrorRet(err, "getAuthenticatedScbeRestClient failed")
+    }
+
+    s.activationLock.RLock()
 	if s.isActivated {
 		s.activationLock.RUnlock()
 		return nil
