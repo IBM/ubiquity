@@ -40,10 +40,6 @@ type remoteClient struct {
 	mounterPerBackend map[string]resources.Mounter
 }
 
-func NewRemoteClient(logger *log.Logger, storageApiURL string, config resources.UbiquityPluginConfig) (resources.StorageClient, error) {
-	return &remoteClient{logger: logger, storageApiURL: storageApiURL, httpClient: &http.Client{}, config: config, mounterPerBackend: make(map[string]resources.Mounter)}, nil
-}
-
 func (s *remoteClient) Activate(activateRequest resources.ActivateRequest) error {
 	s.logger.Println("remoteClient: Activate start")
 	defer s.logger.Println("remoteClient: Activate end")
