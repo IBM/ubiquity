@@ -110,7 +110,7 @@ func main() {
 		log.Fatal(fmt.Sprintf("Error creating Storage API server [%s]...", err.Error()))
 	}
 
-	log.Fatal(server.Start(config.Port))
+	log.Fatal(server.Start())
 }
 
 func keepAlive(heartbeat utils.Heartbeat) {
