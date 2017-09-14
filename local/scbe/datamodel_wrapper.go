@@ -137,7 +137,7 @@ func (d *scbeDataModelWrapper) InsertVolume(volumeName string, wwn string, attac
 		}
 
 		// work with memory object
-		d.UpdateDatabaseVolume(&ScbeVolume{Volume: resources.Volume{Name: volumeName, Backend: resources.SCBE}, WWN: wwn, AttachTo: attachTo})
+		d.UpdateDatabaseVolume(&ScbeVolume{Volume: resources.Volume{Name: volumeName, Backend: resources.SCBE}, WWN: wwn, AttachTo: attachTo, FSType: fstype})
 
 	} else {
 
