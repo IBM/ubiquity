@@ -249,7 +249,7 @@ func LoadConfig() (resources.UbiquityServerConfig, error) {
 	sscConfig.NfsServerAddr = os.Getenv("SSC_NFS_SERVER_ADDRESS")
 	forceDelete, err := strconv.ParseBool(os.Getenv("FORCE_DELETE"))
 	if err != nil {
-		fmt.Printf("ForceDelete env is not setup, will be setup to false")
+		fmt.Printf("ForceDelete for SpectrumScale env is not setup, will be setup to false")
 		sscConfig.ForceDelete = false
 	} else {
 		sscConfig.ForceDelete = forceDelete
@@ -269,17 +269,21 @@ func LoadConfig() (resources.UbiquityServerConfig, error) {
 	scbeConnectionInfo.ManagementIP = os.Getenv("SCBE_MANAGEMENT_IP")
 	scbePort, err := strconv.ParseInt(os.Getenv("SCBE_MANAGEMENT_PORT"), 0, 32)
 	if err != nil {
-		return config, fmt.Errorf("Error reading SCBE_MANAGEMENT_PORT var%#v", err)
+		fmt.Errorf("SCBE_MANAGEMENT_PORT not set, will use default")
+		scbeConnectionInfo.Port = resources.ScbeDefaultPort
+	} else {
+		scbeConnectionInfo.Port = int(scbePort)
 	}
-	scbeConnectionInfo.Port = int(scbePort)
 	skipVSSL := os.Getenv("SKIP_VERIFY_SSL")
 
 	skipVerifySSL, err := strconv.ParseBool(skipVSSL)
 
 	if err != nil {
-		return config, fmt.Errorf("Error reading SKIP_VERIFY_SSL var%#v", err)
+		fmt.Errorf("SKIP_VERIFY_SSL not set, will use default")
+		scbeConnectionInfo.SkipVerifySSL = resources.ScbeDefaultSkipVerifySSL
+	} else {
+		scbeConnectionInfo.SkipVerifySSL = skipVerifySSL
 	}
-	scbeConnectionInfo.SkipVerifySSL = skipVerifySSL
 
 	scbeConnectionInfo.CredentialInfo = scbeCred
 	scbeConfig.ConnectionInfo = scbeConnectionInfo
