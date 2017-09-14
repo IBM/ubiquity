@@ -97,6 +97,16 @@ func (s *remoteClient) RemoveVolume(removeVolumeRequest resources.RemoveVolumeRe
 	s.logger.Println("remoteClient: remove start")
 	defer s.logger.Println("remoteClient: remove end")
 
+	var volume resources.Volume
+	if removeVolumeRequest.ContainerOrchestrator == "docker" {
+		getVolumeRequest := resources.GetVolumeRequest{Name: removeVolumeRequest.Name}
+		var err error
+		volume, err = s.GetVolume(getVolumeRequest)
+		if err != nil {
+			return err
+		}
+	}
+
 	removeRemoteURL := utils.FormatURL(s.storageApiURL, "volumes", removeVolumeRequest.Name)
 
 	response, err := utils.HttpExecute(s.httpClient, s.logger, "DELETE", removeRemoteURL, removeVolumeRequest)
@@ -110,6 +120,17 @@ func (s *remoteClient) RemoveVolume(removeVolumeRequest resources.RemoveVolumeRe
 		return utils.ExtractErrorResponse(response)
 	}
 
+	if removeVolumeRequest.ContainerOrchestrator == "docker" {
+		mounter, err := s.getMounterForBackend(volume.Backend)
+		if err != nil {
+			return fmt.Errorf("Error determining mounter for volume: %s", err.Error())
+		}
+		afterRemoveRequest := resources.AfterRemoveRequest{Name:removeVolumeRequest.Name}
+		err = mounter.ActionAfterRemove(afterRemoveRequest)
+		if err != nil {
+			return err
+		}
+	}
 	return nil
 }
 
@@ -198,6 +219,9 @@ func (s *remoteClient) Attach(attachRequest resources.AttachRequest) (string, er
 	mounter, err := s.getMounterForBackend(volume.Backend)
 	if err != nil {
 		return "", fmt.Errorf("Error determining mounter for volume: %s", err.Error())
+	}
+	if attachRequest.ContainerOrchestrator == "docker" {
+		volumeConfig["ContainerOrchestrator"] = "docker"
 	}
 	mountRequest := resources.MountRequest{Mountpoint: attachResponse.Mountpoint, VolumeConfig: volumeConfig}
 	mountpoint, err := mounter.Mount(mountRequest)

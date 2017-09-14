@@ -118,3 +118,8 @@ func (s *scbeMounter) ActionAfterDetach(request resources.AfterDetachRequest) er
 	}
 	return nil
 }
+
+func (s *scbeMounter) ActionAfterRemove( request resources.AfterRemoveRequest) error {
+	// No-op for scbe backend
+	return nil
+}

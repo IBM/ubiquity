@@ -142,6 +142,7 @@ type Mounter interface {
 	Mount(mountRequest MountRequest) (string, error)
 	Unmount(unmountRequest UnmountRequest) error
 	ActionAfterDetach(request AfterDetachRequest) error
+	ActionAfterRemove( request AfterRemoveRequest) error
 }
 
 type ActivateRequest struct {
@@ -156,7 +157,8 @@ type CreateVolumeRequest struct {
 }
 
 type RemoveVolumeRequest struct {
-	Name string
+	Name                  string
+	ContainerOrchestrator string
 }
 
 type ListVolumesRequest struct {
@@ -207,6 +209,11 @@ type UnmountRequest struct {
 type AfterDetachRequest struct {
 	VolumeConfig map[string]interface{}
 }
+
+type AfterRemoveRequest struct {
+	Name string
+}
+
 type AttachResponse struct {
 	Mountpoint string
 	Err        string

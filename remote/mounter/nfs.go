@@ -145,3 +145,8 @@ func (s *nfsMounter) ActionAfterDetach(request resources.AfterDetachRequest) err
 	// no action needed for SSc
 	return nil
 }
+
+func (s *nfsMounter) ActionAfterRemove( request resources.AfterRemoveRequest) error {
+	// No-op for spectrum-scale-nfs backend as of now
+	return nil
+}

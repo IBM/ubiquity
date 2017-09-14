@@ -59,6 +59,17 @@ type FakeMounter struct {
 	actionAfterDetachReturnsOnCall map[int]struct {
 		result1 error
 	}
+	ActionAfterRemoveStub        func(request resources.AfterRemoveRequest) error
+	actionAfterRemoveMutex       sync.RWMutex
+	actionAfterRemoveArgsForCall []struct {
+		request resources.AfterRemoveRequest
+	}
+	actionAfterRemoveReturns struct {
+		result1 error
+	}
+	actionAfterRemoveReturnsOnCall map[int]struct {
+		result1 error
+	}
 	invocations      map[string][][]interface{}
 	invocationsMutex sync.RWMutex
 }
@@ -210,6 +221,54 @@ func (fake *FakeMounter) ActionAfterDetachReturnsOnCall(i int, result1 error) {
 	}{result1}
 }
 
+func (fake *FakeMounter) ActionAfterRemove(request resources.AfterRemoveRequest) error {
+	fake.actionAfterRemoveMutex.Lock()
+	ret, specificReturn := fake.actionAfterRemoveReturnsOnCall[len(fake.actionAfterRemoveArgsForCall)]
+	fake.actionAfterRemoveArgsForCall = append(fake.actionAfterRemoveArgsForCall, struct {
+		request resources.AfterRemoveRequest
+	}{request})
+	fake.recordInvocation("ActionAfterRemove", []interface{}{request})
+	fake.actionAfterRemoveMutex.Unlock()
+	if fake.ActionAfterRemoveStub != nil {
+		return fake.ActionAfterRemoveStub(request)
+	}
+	if specificReturn {
+		return ret.result1
+	}
+	return fake.actionAfterRemoveReturns.result1
+}
+
+func (fake *FakeMounter) ActionAfterRemoveCallCount() int {
+	fake.actionAfterRemoveMutex.RLock()
+	defer fake.actionAfterRemoveMutex.RUnlock()
+	return len(fake.actionAfterRemoveArgsForCall)
+}
+
+func (fake *FakeMounter) ActionAfterRemoveArgsForCall(i int) resources.AfterRemoveRequest {
+	fake.actionAfterRemoveMutex.RLock()
+	defer fake.actionAfterRemoveMutex.RUnlock()
+	return fake.actionAfterRemoveArgsForCall[i].request
+}
+
+func (fake *FakeMounter) ActionAfterRemoveReturns(result1 error) {
+	fake.ActionAfterRemoveStub = nil
+	fake.actionAfterRemoveReturns = struct {
+		result1 error
+	}{result1}
+}
+
+func (fake *FakeMounter) ActionAfterRemoveReturnsOnCall(i int, result1 error) {
+	fake.ActionAfterRemoveStub = nil
+	if fake.actionAfterRemoveReturnsOnCall == nil {
+		fake.actionAfterRemoveReturnsOnCall = make(map[int]struct {
+			result1 error
+		})
+	}
+	fake.actionAfterRemoveReturnsOnCall[i] = struct {
+		result1 error
+	}{result1}
+}
+
 func (fake *FakeMounter) Invocations() map[string][][]interface{} {
 	fake.invocationsMutex.RLock()
 	defer fake.invocationsMutex.RUnlock()
@@ -219,6 +278,8 @@ func (fake *FakeMounter) Invocations() map[string][][]interface{} {
 	defer fake.unmountMutex.RUnlock()
 	fake.actionAfterDetachMutex.RLock()
 	defer fake.actionAfterDetachMutex.RUnlock()
+	fake.actionAfterRemoveMutex.RLock()
+	defer fake.actionAfterRemoveMutex.RUnlock()
 	copiedInvocations := map[string][][]interface{}{}
 	for key, value := range fake.invocations {
 		copiedInvocations[key] = value
