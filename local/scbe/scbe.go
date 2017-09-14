@@ -116,6 +116,7 @@ func (s *scbeLocalClient) basicScbeLocalClientStartupAndValidation() error {
 				Volume: resources.Volume{Name: database.VolumeNameSuffix, Backend: resources.SCBE},
 				WWN:      volInfo.Wwn,
 				AttachTo: host,
+				FSType: s.config.DefaultFilesystemType,
 			}
 			s.logger.Info("update db volume", logs.Args{{"volume", volume}})
 			s.dataModel.UpdateDatabaseVolume(volume)
