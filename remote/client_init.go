@@ -70,7 +70,7 @@ func (s *remoteClient) initialize() error {
 	} else {
 		s.httpClient.Transport = &http.Transport{TLSClientConfig: &tls.Config{InsecureSkipVerify: true}}
 	}
-	logger.Info("", logs.Args{{protocol, verifyFileCA}})
+	logger.Info("", logs.Args{{"url", s.storageApiURL}, {"CA", verifyFileCA}})
 	return nil
 }
 
