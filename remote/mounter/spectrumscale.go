@@ -194,7 +194,7 @@ func (s *spectrumScaleMounter) establishSshConnection() error {
 		return err
 	}
 
-	args = []string{path.Join(resources.DockerHostRootMountpath, "/root/.ssh/id_rsa")}
+	args = []string{"/root/.ssh/id_rsa"}
 	output, err = s.executor.Execute("ssh-add", args)
 	if err != nil {
 		s.logger.Printf("Failed to add host private-key to ssh-agent, output: %s error: %s", string(output), err.Error())

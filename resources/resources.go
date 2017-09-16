@@ -73,7 +73,6 @@ const DefaultForScbeConfigParamDefaultVolumeSize = "1"    // if customer don't m
 const DefaultForScbeConfigParamDefaultFilesystem = "ext4" // if customer don't mention fstype, then the default is ext4
 const PathToMountUbiquityBlockDevices = "/ubiquity/%s"    // %s is the WWN of the volume # TODO this should be moved to docker plugin side
 const OptionNameForVolumeFsType = "fstype"                // the option name of the fstype and also the key in the volumeConfig
-const DockerHostRootMountpath = "/host"                   // Container path for the Docker hosts' root filesystem
 const DockerPropagatedMount = "/ubiquity"                 // Mountpoint, within the plugin container,for all Docker volumes
 
 type SshConfig struct {
