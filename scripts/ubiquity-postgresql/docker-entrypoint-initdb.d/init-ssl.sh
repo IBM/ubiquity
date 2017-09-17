@@ -12,11 +12,11 @@ set -e
 echo "Configuring Postgres for SSL!"
 
 if [ -z "$POSTGRES_USER" ]; then
-  export POSTGRES_USER="postgres";
+  export POSTGRES_USER="postgres"
 fi
 
 if [ -z "$POSTGRES_EMAIL" ]; then
-  export POSTGRES_EMAIL="user@test.com";
+  export POSTGRES_EMAIL="user@test.com"
 fi
 
 export SSLDIR="/var/lib/postgresql/ssl"
