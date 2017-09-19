@@ -26,6 +26,9 @@ import (
     "net/http"
     "encoding/json"
     "errors"
+    "fmt"
+    "os"
+    "crypto/x509"
 )
 
 // SimpleRestClient is an interface that wrapper the http requests to provide easy REST API operations,
@@ -49,6 +52,7 @@ const (
     HTTP_SUCCEED_POST    = 201
     HTTP_SUCCEED_DELETED = 204
     HTTP_AUTH_KEY        = "Authorization"
+    KEY_VERIFY_SCBE_CERT = "UBIQUITY_SERVER_VERIFY_SCBE_CERT"
 )
 
 // simpleRestClient implements SimpleRestClient interface.
@@ -64,13 +68,13 @@ type simpleRestClient struct {
     headers        map[string]string
 }
 
-func NewSimpleRestClient(conInfo resources.ConnectionInfo, baseURL string, authURL string, referrer string) SimpleRestClient {
+func NewSimpleRestClient(conInfo resources.ConnectionInfo, baseURL string, authURL string, referrer string) (SimpleRestClient, error) {
     headers := map[string]string{"Content-Type": "application/json", "referer": referrer}
-    client := &http.Client{}
-    if conInfo.SkipVerifySSL {
-        client.Transport = &http.Transport{TLSClientConfig: &tls.Config{InsecureSkipVerify: true}}
+    client := &simpleRestClient{logger: logs.GetLogger(), connectionInfo: conInfo, baseURL: baseURL, authURL: authURL, referrer: referrer, httpClient: &http.Client{}, headers: headers}
+    if err := client.initTransport(); err != nil {
+        return nil, client.logger.ErrorRet(err, "client.initTransport failed")
     }
-    return &simpleRestClient{logger: logs.GetLogger(), connectionInfo: conInfo, baseURL: baseURL, authURL: authURL, referrer: referrer, httpClient: client, headers: headers}
+    return client, nil
 }
 
 func (s *simpleRestClient) Login() error {
@@ -198,4 +202,33 @@ func (s *simpleRestClient) Delete(resource_url string, payload []byte, exitStatu
         exitStatus = HTTP_SUCCEED_DELETED // Default value
     }
     return s.genericAction("DELETE", resource_url, payload, nil, exitStatus, nil)
+}
+
+
+func (s *simpleRestClient) initTransport() error {
+    defer s.logger.Trace(logs.DEBUG)()
+    exec := utils.NewExecutor()
+
+    emptyConnection := resources.ConnectionInfo{}
+    if s.connectionInfo != emptyConnection {
+        verifyFileCA := os.Getenv(KEY_VERIFY_SCBE_CERT)
+        if verifyFileCA != "" {
+            if _, err := exec.Stat(verifyFileCA); err != nil {
+                return s.logger.ErrorRet(err, "failed")
+            }
+            caCert, err := ioutil.ReadFile(verifyFileCA)
+            if err != nil {
+                return s.logger.ErrorRet(err, "failed")
+            }
+            caCertPool := x509.NewCertPool()
+            if ok := caCertPool.AppendCertsFromPEM(caCert); !ok {
+                return fmt.Errorf("parse %v failed", verifyFileCA)
+            }
+            s.httpClient.Transport = &http.Transport{TLSClientConfig: &tls.Config{RootCAs: caCertPool}}
+        } else {
+            s.httpClient.Transport = &http.Transport{TLSClientConfig: &tls.Config{InsecureSkipVerify: true}}
+        }
+        s.logger.Info("", logs.Args{{KEY_VERIFY_SCBE_CERT, verifyFileCA}})
+    }
+    return nil
 }

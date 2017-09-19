@@ -43,12 +43,13 @@ var _ = Describe("restClient integration testing with existing SCBE instance", f
 			Skip(err.Error())
 		}
 		credentialInfo = resources.CredentialInfo{scbeUser, scbePassword, "flocker"}
-		conInfo = resources.ConnectionInfo{credentialInfo, scbePort, scbeIP, true}
-		client = scbe.NewSimpleRestClient(
+		conInfo = resources.ConnectionInfo{credentialInfo, scbePort, scbeIP}
+		client, err = scbe.NewSimpleRestClient(
 			conInfo,
 			"https://"+scbeIP+":"+strconv.Itoa(scbePort)+"/api/v1",
 			scbe.UrlScbeResourceGetAuth,
 			"https://"+scbeIP+":"+strconv.Itoa(scbePort)+"/")
+		Expect(err).ToNot(HaveOccurred())
 	})
 
 	Context(".Login", func() {
@@ -85,8 +86,9 @@ var _ = Describe("ScbeRestClient integration testing with existing SCBE instance
 			Skip(err.Error())
 		}
 		credentialInfo = resources.CredentialInfo{scbeUser, scbePassword, "flocker"}
-		conInfo = resources.ConnectionInfo{credentialInfo, scbePort, scbeIP, true}
-		scbeRestClient = scbe.NewScbeRestClient(conInfo)
+		conInfo = resources.ConnectionInfo{credentialInfo, scbePort, scbeIP}
+		scbeRestClient, err = scbe.NewScbeRestClient(conInfo)
+		Expect(err).ToNot(HaveOccurred())
 	})
 
 	Context(".Login", func() {
@@ -126,8 +128,9 @@ var _ = Describe("ScbeRestClient volume operations integration testing with exis
 			Skip(err.Error())
 		}
 		credentialInfo = resources.CredentialInfo{scbeUser, scbePassword, "flocker"}
-		conInfo = resources.ConnectionInfo{credentialInfo, scbePort, scbeIP, true}
-		scbeRestClient = scbe.NewScbeRestClient(conInfo)
+		conInfo = resources.ConnectionInfo{credentialInfo, scbePort, scbeIP}
+		scbeRestClient, err = scbe.NewScbeRestClient(conInfo)
+		Expect(err).ToNot(HaveOccurred())
 
 		err = scbeRestClient.Login()
 		Expect(err).ToNot(HaveOccurred())
