@@ -40,10 +40,6 @@ type remoteClient struct {
 	mounterPerBackend map[string]resources.Mounter
 }
 
-func NewRemoteClient(logger *log.Logger, storageApiURL string, config resources.UbiquityPluginConfig) (resources.StorageClient, error) {
-	return &remoteClient{logger: logger, storageApiURL: storageApiURL, httpClient: &http.Client{}, config: config, mounterPerBackend: make(map[string]resources.Mounter)}, nil
-}
-
 func (s *remoteClient) Activate(activateRequest resources.ActivateRequest) error {
 	s.logger.Println("remoteClient: Activate start")
 	defer s.logger.Println("remoteClient: Activate end")
@@ -54,6 +50,7 @@ func (s *remoteClient) Activate(activateRequest resources.ActivateRequest) error
 
 	// call remote activate
 	activateURL := utils.FormatURL(s.storageApiURL, "activate")
+	activateRequest.CredentialInfo = s.config.CredentialInfo
 	response, err := utils.HttpExecute(s.httpClient, s.logger, "POST", activateURL, activateRequest)
 	if err != nil {
 		s.logger.Printf("Error in activate remote call %#v", err)
@@ -79,6 +76,7 @@ func (s *remoteClient) CreateVolume(createVolumeRequest resources.CreateVolumeRe
 		createVolumeRequest.Opts["nfsClientConfig"] = s.config.SpectrumNfsRemoteConfig.ClientConfig
 	}
 
+	createVolumeRequest.CredentialInfo = s.config.CredentialInfo
 	response, err := utils.HttpExecute(s.httpClient, s.logger, "POST", createRemoteURL, createVolumeRequest)
 	if err != nil {
 		s.logger.Printf("Error in create volume remote call %s", err.Error())
@@ -99,6 +97,7 @@ func (s *remoteClient) RemoveVolume(removeVolumeRequest resources.RemoveVolumeRe
 
 	removeRemoteURL := utils.FormatURL(s.storageApiURL, "volumes", removeVolumeRequest.Name)
 
+	removeVolumeRequest.CredentialInfo = s.config.CredentialInfo
 	response, err := utils.HttpExecute(s.httpClient, s.logger, "DELETE", removeRemoteURL, removeVolumeRequest)
 	if err != nil {
 		s.logger.Printf("Error in remove volume remote call %#v", err)
@@ -118,6 +117,7 @@ func (s *remoteClient) GetVolume(getVolumeRequest resources.GetVolumeRequest) (r
 	defer s.logger.Println("remoteClient: get finish")
 
 	getRemoteURL := utils.FormatURL(s.storageApiURL, "volumes", getVolumeRequest.Name)
+	getVolumeRequest.CredentialInfo = s.config.CredentialInfo
 	response, err := utils.HttpExecute(s.httpClient, s.logger, "GET", getRemoteURL, getVolumeRequest)
 	if err != nil {
 		s.logger.Printf("Error in get volume remote call %#v", err)
@@ -144,6 +144,7 @@ func (s *remoteClient) GetVolumeConfig(getVolumeConfigRequest resources.GetVolum
 	defer s.logger.Println("remoteClient: GetVolumeConfig finish")
 
 	getRemoteURL := utils.FormatURL(s.storageApiURL, "volumes", getVolumeConfigRequest.Name, "config")
+	getVolumeConfigRequest.CredentialInfo = s.config.CredentialInfo
 	response, err := utils.HttpExecute(s.httpClient, s.logger, "GET", getRemoteURL, getVolumeConfigRequest)
 	if err != nil {
 		s.logger.Printf("Error in get volume remote call %#v", err)
@@ -170,6 +171,7 @@ func (s *remoteClient) Attach(attachRequest resources.AttachRequest) (string, er
 	defer s.logger.Println("remoteClient: attach end")
 
 	attachRemoteURL := utils.FormatURL(s.storageApiURL, "volumes", attachRequest.Name, "attach")
+	attachRequest.CredentialInfo = s.config.CredentialInfo
 	response, err := utils.HttpExecute(s.httpClient, s.logger, "PUT", attachRemoteURL, attachRequest)
 	if err != nil {
 		s.logger.Printf("Error in attach volume remote call %#v", err)
@@ -232,6 +234,7 @@ func (s *remoteClient) Detach(detachRequest resources.DetachRequest) error {
 	}
 
 	detachRemoteURL := utils.FormatURL(s.storageApiURL, "volumes", detachRequest.Name, "detach")
+	detachRequest.CredentialInfo = s.config.CredentialInfo
 	response, err := utils.HttpExecute(s.httpClient, s.logger, "PUT", detachRemoteURL, detachRequest)
 	if err != nil {
 		s.logger.Printf("Error in detach volume remote call %#v", err)
@@ -257,6 +260,7 @@ func (s *remoteClient) ListVolumes(listVolumesRequest resources.ListVolumesReque
 	defer s.logger.Println("remoteClient: list end")
 
 	listRemoteURL := utils.FormatURL(s.storageApiURL, "volumes")
+	listVolumesRequest.CredentialInfo = s.config.CredentialInfo
 	response, err := utils.HttpExecute(s.httpClient, s.logger, "GET", listRemoteURL, listVolumesRequest)
 	if err != nil {
 		s.logger.Printf("Error in list volume remote call %#v", err)

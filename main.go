@@ -33,6 +33,7 @@ import (
 	"github.com/IBM/ubiquity/web_server"
 	"github.com/jinzhu/gorm"
 	_ "github.com/jinzhu/gorm/dialects/sqlite"
+	"github.com/IBM/ubiquity/database"
 )
 
 const (
@@ -82,17 +83,21 @@ func main() {
 		panic(err)
 	}
 
+	// init database
+	os.Setenv(database.KeySqlitePath, path.Join(ubiquityConfigPath, "ubiquity.db"))
+	defer database.Initialize()()
+
 	clients, err := local.GetLocalClients(logger, config, db)
 	if err != nil {
 		panic(err)
 	}
 
-	server, err := web_server.NewStorageApiServer(logger, clients, config, db)
+	server, err := web_server.NewStorageApiServer(logger, clients, config)
 	if err != nil {
 		log.Fatal(fmt.Sprintf("Error creating Storage API server [%s]...", err.Error()))
 	}
 
-	log.Fatal(server.Start(config.Port))
+	log.Fatal(server.Start())
 }
 
 func keepAlive(heartbeat utils.Heartbeat) {

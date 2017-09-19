@@ -10,6 +10,7 @@ import:
   version: ^1.0.0
   subpackages:
   - dialects/sqlite
+  - dialects/postgres
 - package: github.com/mattn/go-sqlite3
   version: ^1.2.0
 - package: github.com/op/go-logging
