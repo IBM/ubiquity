@@ -67,7 +67,8 @@ var _ = Describe("restClient", func() {
 		err    error
 	)
 	BeforeEach(func() {
-		client = scbe.NewSimpleRestClient(resources.ConnectionInfo{}, fakeScbeUrlBase+"/"+suffix, fakeScbeUrlAuth, fakeScbeUrlReferer)
+		client, err = scbe.NewSimpleRestClient(resources.ConnectionInfo{}, fakeScbeUrlBase+"/"+suffix, fakeScbeUrlAuth, fakeScbeUrlReferer)
+		Expect(err).ToNot(HaveOccurred())
 	})
 
 	Context(".Login", func() {
@@ -114,7 +115,8 @@ var _ = Describe("restClient", func() {
 		err    error
 	)
 	BeforeEach(func() {
-		client = scbe.NewSimpleRestClient(resources.ConnectionInfo{}, fakeScbeUrlBase+"/"+suffix, fakeScbeUrlAuth, fakeScbeUrlReferer)
+		client, err = scbe.NewSimpleRestClient(resources.ConnectionInfo{}, fakeScbeUrlBase+"/"+suffix, fakeScbeUrlAuth, fakeScbeUrlReferer)
+		Expect(err).ToNot(HaveOccurred())
 		loginResponse := scbe.LoginResponse{Token: "fake-token"}
 		marshalledResponse, err := json.Marshal(loginResponse)
 		Expect(err).ToNot(HaveOccurred())

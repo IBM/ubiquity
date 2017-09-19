@@ -46,7 +46,6 @@ UbiquityInstanceName = "instance1" # A prefix for any new volume created on the 
 [ScbeConfig.ConnectionInfo]
 managementIp = "IP Address"     # SCBE server IP or FQDN.
 Port = 8440                     # SCBE server port. Optional parameter. Default is 8440.
-SkipVerifySSL = true            # false verifies SCB SSL certificate or false ignores the certificate. Default is true.
 
 [ScbeConfig.ConnectionInfo.CredentialInfo]
 Username = "user"               # User name defined for SCBE Ubiquity interface.

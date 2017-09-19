@@ -56,7 +56,10 @@ var (
 
 func NewScbeLocalClient(config resources.ScbeConfig) (resources.StorageClient, error) {
 	datamodel := NewScbeDataModelWrapper()
-	scbeRestClient := NewScbeRestClient(config.ConnectionInfo)
+	scbeRestClient, err := NewScbeRestClient(config.ConnectionInfo)
+	if err != nil {
+		return nil, logs.GetLogger().ErrorRet(err, "NewScbeRestClient failed")
+	}
 	return NewScbeLocalClientWithNewScbeRestClientAndDataModel(config, datamodel, scbeRestClient)
 }
 
