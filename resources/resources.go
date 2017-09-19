@@ -73,7 +73,7 @@ const DefaultForScbeConfigParamDefaultFilesystem = "ext4" // if customer don't m
 const PathToMountUbiquityBlockDevices = "/ubiquity/%s"    // %s is the WWN of the volume # TODO this should be moved to docker plugin side
 const OptionNameForVolumeFsType = "fstype"                // the option name of the fstype and also the key in the volumeConfig
 const ScbeDefaultPort = 8440                              // the default port for SCBE management
-const ScbeDefaultSkipVerifySSL = true                     // the default value for SCBE skipVerifySSL
+
 type SshConfig struct {
 	User string
 	Host string
@@ -145,20 +145,20 @@ type Mounter interface {
 
 type ActivateRequest struct {
 	CredentialInfo CredentialInfo
-	Backends []string
-	Opts     map[string]string
+	Backends       []string
+	Opts           map[string]string
 }
 
 type CreateVolumeRequest struct {
 	CredentialInfo CredentialInfo
-	Name    string
-	Backend string
-	Opts    map[string]interface{}
+	Name           string
+	Backend        string
+	Opts           map[string]interface{}
 }
 
 type RemoveVolumeRequest struct {
 	CredentialInfo CredentialInfo
-	Name string
+	Name           string
 }
 
 type ListVolumesRequest struct {
@@ -169,22 +169,22 @@ type ListVolumesRequest struct {
 
 type AttachRequest struct {
 	CredentialInfo CredentialInfo
-	Name string
-	Host string
+	Name           string
+	Host           string
 }
 
 type DetachRequest struct {
 	CredentialInfo CredentialInfo
-	Name string
-	Host string
+	Name           string
+	Host           string
 }
 type GetVolumeRequest struct {
 	CredentialInfo CredentialInfo
-	Name string
+	Name           string
 }
 type GetVolumeConfigRequest struct {
 	CredentialInfo CredentialInfo
-	Name string
+	Name           string
 }
 type ActivateResponse struct {
 	Implements []string

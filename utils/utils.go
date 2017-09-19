@@ -274,16 +274,6 @@ func LoadConfig() (resources.UbiquityServerConfig, error) {
 	} else {
 		scbeConnectionInfo.Port = int(scbePort)
 	}
-	skipVSSL := os.Getenv("SKIP_VERIFY_SSL")
-
-	skipVerifySSL, err := strconv.ParseBool(skipVSSL)
-
-	if err != nil {
-		fmt.Errorf("SKIP_VERIFY_SSL not set, will use default")
-		scbeConnectionInfo.SkipVerifySSL = resources.ScbeDefaultSkipVerifySSL
-	} else {
-		scbeConnectionInfo.SkipVerifySSL = skipVerifySSL
-	}
 
 	scbeConnectionInfo.CredentialInfo = scbeCred
 	scbeConfig.ConnectionInfo = scbeConnectionInfo
