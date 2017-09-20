@@ -21,12 +21,50 @@ import (
     "github.com/IBM/ubiquity/utils/logs"
 )
 
-const KeyPsqlHost = "UBIQUITY_DB_PSQL_HOST"
-const KeySqlitePath = "UBIQUITY_DB_SQLITE_PATH"
+const (
+    KeyPsqlHost = "UBIQUITY_DB_PSQL_HOST"
+    KeySqlitePath = "UBIQUITY_DB_SQLITE_PATH"
+    KeyPsqlUser = "UBIQUITY_DB_USER"
+    KeyPsqlPassword = "UBIQUITY_DB_PASSWORD"
+    KeyPsqlDbName = "UBIQUITY_DB_NAME"
+    KeyPsqlPort = "UBIQUITY_DB_PORT"
+)
+
+func GetPsqlConnectionParams(hostname string) string {
+    // add host
+    str := "host=" + hostname
+    // add user
+    psqlUser := os.Getenv(KeyPsqlUser)
+    if psqlUser == "" {
+        psqlUser = "postgres"
+    }
+    str += " user=" + psqlUser
+    // add dbname
+    psqlDbName := os.Getenv(KeyPsqlDbName)
+    if psqlDbName == "" {
+        psqlDbName = "postgres"
+    }
+    str += " dbname=" + psqlDbName
+    // add password
+    psqlPassword := os.Getenv(KeyPsqlPassword)
+    if psqlPassword != "" {
+        str += " password=" + psqlPassword
+    }
+    // add port
+    psqlPort := os.Getenv(KeyPsqlPort)
+    if psqlPort != "" {
+        str += " port=" + psqlPort
+    }
+    return str
+}
+
+func GetPsqlSslParams() string {
+    return "sslmode=disable"
+}
 
 func InitPostgres(hostname string) func() {
     defer logs.GetLogger().Trace(logs.DEBUG)()
-    return initConnectionFactory(&postgresFactory{host: hostname})
+    return initConnectionFactory(&postgresFactory{psql: GetPsqlConnectionParams(hostname) + " " + GetPsqlSslParams()})
 }
 
 func InitSqlite(filepath string) func() {
