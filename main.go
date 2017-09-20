@@ -22,10 +22,9 @@ import (
 	"os"
 	"path"
 
-	"flag"
-
 	"time"
 
+	"github.com/IBM/ubiquity/database"
 	"github.com/IBM/ubiquity/local"
 	"github.com/IBM/ubiquity/resources"
 	"github.com/IBM/ubiquity/utils"
@@ -33,7 +32,6 @@ import (
 	"github.com/IBM/ubiquity/web_server"
 	"github.com/jinzhu/gorm"
 	_ "github.com/jinzhu/gorm/dialects/sqlite"
-	"github.com/IBM/ubiquity/database"
 )
 
 const (
@@ -41,20 +39,25 @@ const (
 )
 
 func main() {
-	flag.Parse()
-
 	config, err := utils.LoadConfig()
 	if err != nil {
-		panic(fmt.Errorf("Failed to load config", err.Error()))
+		panic(fmt.Errorf("Failed to load config %s", err.Error()))
 	}
 	fmt.Printf("Starting Ubiquity Storage API server with config %#v\n", config)
+	_, err = os.Stat(config.LogPath)
+	if err != os.ErrNotExist {
+		err = os.MkdirAll(config.LogPath, 0640)
+		if err != nil {
+			panic(fmt.Errorf("Failed to setup log dir"))
+		}
+	}
 
-	defer logs.InitFileLogger(logs.GetLogLevelFromString(os.Getenv("LOG_LEVEL")), path.Join(config.LogPath, "ubiquity.log"))()
+	defer logs.InitLogger(logs.GetLogLevelFromString(os.Getenv("LOG_LEVEL")), path.Join(config.LogPath, "ubiquity.log"))()
 	logger, logFile := utils.SetupLogger(os.Getenv("LOG_PATH"), "ubiquity")
 	defer utils.CloseLogs(logFile)
 
-	spectrumExecutor := utils.NewExecutor()
-	ubiquityConfigPath, err := utils.SetupConfigDirectory(logger, spectrumExecutor, config.ConfigPath)
+	executor := utils.NewExecutor()
+	ubiquityConfigPath, err := utils.SetupConfigDirectory(logger, executor, config.ConfigPath)
 	if err != nil {
 		panic(err.Error())
 	}

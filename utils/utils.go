@@ -137,8 +137,8 @@ func SetupConfigDirectory(logger *log.Logger, executor Executor, configPath stri
 	logger.Printf("User specified config path: %s", configPath)
 
 	if _, err := executor.Stat(ubiquityConfigPath); os.IsNotExist(err) {
-		args := []string{ubiquityConfigPath}
-		_, err := executor.Execute("mkdir", args)
+
+		err = os.MkdirAll(ubiquityConfigPath	, 0640)
 		if err != nil {
 			logger.Printf("Error creating directory %s", err.Error())
 			return "", err
@@ -249,7 +249,6 @@ func LoadConfig() (resources.UbiquityServerConfig, error) {
 	sscConfig.NfsServerAddr = os.Getenv("SSC_NFS_SERVER_ADDRESS")
 	forceDelete, err := strconv.ParseBool(os.Getenv("FORCE_DELETE"))
 	if err != nil {
-		fmt.Printf("ForceDelete for SpectrumScale env is not setup, will be setup to false")
 		sscConfig.ForceDelete = false
 	} else {
 		sscConfig.ForceDelete = forceDelete
@@ -269,7 +268,6 @@ func LoadConfig() (resources.UbiquityServerConfig, error) {
 	scbeConnectionInfo.ManagementIP = os.Getenv("SCBE_MANAGEMENT_IP")
 	scbePort, err := strconv.ParseInt(os.Getenv("SCBE_MANAGEMENT_PORT"), 0, 32)
 	if err != nil {
-		fmt.Errorf("SCBE_MANAGEMENT_PORT not set, will use default")
 		scbeConnectionInfo.Port = resources.ScbeDefaultPort
 	} else {
 		scbeConnectionInfo.Port = int(scbePort)
