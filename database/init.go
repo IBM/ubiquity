@@ -30,7 +30,7 @@ const (
     KeyPsqlPort = "UBIQUITY_DB_PORT"
     KeyPsqlTimeout = "UBIQUITY_DB_CONNECT_TIMEOUT"
     KeyPsqlSslMode = "UBIQUITY_DB_SSL_MODE"
-    KeyPsqlSslRootCert = "UBIQUITY_DB_SSL_ROOT_CRT"
+    KeyPsqlSslRootCert = "UBIQUITY_DB_SSL_ROOT_CERT"
 )
 
 func GetPsqlConnectionParams(hostname string) string {
