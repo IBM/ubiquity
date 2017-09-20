@@ -28,11 +28,15 @@ const (
     KeyPsqlPassword = "UBIQUITY_DB_PASSWORD"
     KeyPsqlDbName = "UBIQUITY_DB_NAME"
     KeyPsqlPort = "UBIQUITY_DB_PORT"
+    KeyPsqlTimeout = "UBIQUITY_DB_CONNECT_TIMEOUT"
+    KeyPsqlSslMode = "UBIQUITY_DB_SSL_MODE"
+    KeyPsqlSslRootCert = "UBIQUITY_DB_SSL_ROOT_CRT"
 )
 
 func GetPsqlConnectionParams(hostname string) string {
+    str := ""
     // add host
-    str := "host=" + hostname
+    str += "host=" + hostname
     // add user
     psqlUser := os.Getenv(KeyPsqlUser)
     if psqlUser == "" {
@@ -55,11 +59,28 @@ func GetPsqlConnectionParams(hostname string) string {
     if psqlPort != "" {
         str += " port=" + psqlPort
     }
+    // add connect_timeout
+    psqlTimeout := os.Getenv(KeyPsqlTimeout)
+    if psqlTimeout != "" {
+        str += " connect_timeout=" + psqlTimeout
+    }
     return str
 }
 
 func GetPsqlSslParams() string {
-    return "sslmode=disable"
+    str := ""
+    // add sslmode
+    psqlSslMode := os.Getenv(KeyPsqlSslMode)
+    if psqlSslMode == "" {
+        psqlSslMode = "disable"
+    }
+    str += "sslmode=" + psqlSslMode
+    // add sslrootcert
+    psqlSslRootCert := os.Getenv(KeyPsqlSslRootCert)
+    if psqlSslRootCert != "" {
+        str += " sslrootcert=" + psqlSslRootCert
+    }
+    return str
 }
 
 func InitPostgres(hostname string) func() {
