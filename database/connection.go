@@ -20,7 +20,6 @@ import (
     "github.com/jinzhu/gorm"
     _ "github.com/jinzhu/gorm/dialects/postgres"
     _ "github.com/jinzhu/gorm/dialects/sqlite"
-    "fmt"
     "github.com/IBM/ubiquity/utils/logs"
     "errors"
 )
@@ -40,7 +39,7 @@ type ConnectionFactory interface {
 }
 
 type postgresFactory struct {
-    host     string
+    psql     string
 }
 
 type sqliteFactory struct {
@@ -51,7 +50,7 @@ type testErrorFactory struct {
 }
 
 func (f *postgresFactory) newConnection() (*gorm.DB, error) {
-    return gorm.Open("postgres", fmt.Sprintf("host=%s user=postgres dbname=postgres sslmode=disable", f.host))
+    return gorm.Open("postgres", f.psql)
 }
 
 func (f *sqliteFactory) newConnection() (*gorm.DB, error) {
