@@ -28,18 +28,22 @@ import (
 
 var _ = Describe("Init", func() {
     var (
-        hostname      string = "my-hostname"
-        defaultUser   string = "postgres"
-        defaultDbName string = "postgres"
-        newUser       string = "my-user"
-        newDbName     string = "my-dbname"
-        newPassword   string = "my-password"
-        newPort       string = "my-port"
+        hostname       string = "my-hostname"
+        defaultUser    string = "postgres"
+        defaultDbName  string = "postgres"
+        newUser        string = "my-user"
+        newDbName      string = "my-dbname"
+        newPassword    string = "my-password"
+        newPort        string = "my-port"
+        newTimeout     string = "my-timeout"
+        defaultSslMode string = "disable"
+        newSslMode     string = "my-sslmode"
+        newSslRootCert string = "my-sslrootcert"
     )
     BeforeEach(func() {
     })
 
-    Context(".Postgres", func() {
+    Context(".Postgres connection", func() {
         It("only hostname", func() {
             res := database.GetPsqlConnectionParams(hostname)
             Expect(res).To(Equal(fmt.Sprintf("host=%s user=%s dbname=%s", hostname, defaultUser, defaultDbName)))
@@ -79,6 +83,32 @@ var _ = Describe("Init", func() {
             os.Unsetenv(database.KeyPsqlPassword)
             os.Unsetenv(database.KeyPsqlPort)
             Expect(res).To(Equal(fmt.Sprintf("host=%s user=%s dbname=%s password=%s port=%s", hostname, newUser, newDbName, newPassword, newPort)))
+        })
+        It("hostname timeout", func() {
+            os.Setenv(database.KeyPsqlTimeout, newTimeout)
+            res := database.GetPsqlConnectionParams(hostname)
+            os.Unsetenv(database.KeyPsqlTimeout)
+            Expect(res).To(Equal(fmt.Sprintf("host=%s user=%s dbname=%s connect_timeout=%s", hostname, defaultUser, defaultDbName, newTimeout)))
+        })
+    })
+    Context(".Postgres ssl", func() {
+        It("empty", func() {
+            res := database.GetPsqlSslParams()
+            Expect(res).To(Equal(fmt.Sprintf("sslmode=%s", defaultSslMode)))
+        })
+        It("sslmode", func() {
+            os.Setenv(database.KeyPsqlSslMode, newSslMode)
+            res := database.GetPsqlSslParams()
+            os.Unsetenv(database.KeyPsqlSslMode)
+            Expect(res).To(Equal(fmt.Sprintf("sslmode=%s", newSslMode)))
+        })
+        It("sslmode sslrootcert", func() {
+            os.Setenv(database.KeyPsqlSslMode, newSslMode)
+            os.Setenv(database.KeyPsqlSslRootCert, newSslRootCert)
+            res := database.GetPsqlSslParams()
+            os.Unsetenv(database.KeyPsqlSslMode)
+            os.Unsetenv(database.KeyPsqlSslRootCert)
+            Expect(res).To(Equal(fmt.Sprintf("sslmode=%s sslrootcert=%s", newSslMode, newSslRootCert)))
         })
     })
 })
