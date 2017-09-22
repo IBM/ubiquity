@@ -187,7 +187,7 @@ func (s *spectrumScaleMounter) establishSshConnection() error {
 	s.logger.Println("spectrumScaleMounter: establishSshConnection start")
 	defer s.logger.Println("spectrumScaleMounter: establishSshConnection end")
 
-	args := []string{}
+	args := []string{"/bin/sh"}
 	output, err := s.executor.Execute("ssh-agent", args)
 	if err != nil {
 		s.logger.Printf("Failed to start ssh-agent, output: %s error: %s", string(output), err.Error())
