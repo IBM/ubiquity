@@ -29,7 +29,7 @@ import (
 type spectrumScaleMounter struct {
 	logger        *log.Logger
 	executor      utils.Executor
-	isSshEnabled  bool
+	isHostnameSet bool
 	hostname      string
 }
 
@@ -183,23 +183,9 @@ func (s *spectrumScaleMounter) ActionAfterRemove( request resources.AfterRemoveR
 	return nil
 }
 
-func (s *spectrumScaleMounter) establishSshConnection() error {
-	s.logger.Println("spectrumScaleMounter: establishSshConnection start")
-	defer s.logger.Println("spectrumScaleMounter: establishSshConnection end")
-
-	args := []string{}
-	output, err := s.executor.Execute("/root/start-ssh-agent", args)
-	if err != nil {
-		s.logger.Printf("Failed to start ssh-agent, output: %s error: %s", string(output), err.Error())
-		return err
-	}
-
-	args = []string{"/root/.ssh/id_rsa"}
-	output, err = s.executor.Execute("ssh-add", args)
-	if err != nil {
-		s.logger.Printf("Failed to add host private-key to ssh-agent, output: %s error: %s", string(output), err.Error())
-		return err
-	}
+func (s *spectrumScaleMounter) setHostname() error {
+	s.logger.Println("spectrumScaleMounter: setHostname start")
+	defer s.logger.Println("spectrumScaleMounter: setHostname end")
 
 	hostname,err := os.Hostname()
 	if err != nil {
@@ -214,16 +200,16 @@ func (s *spectrumScaleMounter) execSshCmdOnHost(command string, args []string) (
 	s.logger.Println("spectrumScaleMounter: execSshCmdOnHost start")
 	defer s.logger.Println("spectrumScaleMounter: execSshCmdOnHost end")
 
-	if !s.isSshEnabled {
-		err := s.establishSshConnection()
+	if !s.isHostnameSet {
+		err := s.setHostname()
 		if err != nil {
 			return err
 		}
-		s.isSshEnabled = true
+		s.isHostnameSet = true
 	}
 
 	userAndHost := fmt.Sprintf("%s@%s", "root", s.hostname)
-	sshCmdArgs := []string{"-o", "StrictHostKeyChecking=no", userAndHost}
+	sshCmdArgs := []string{"-i", "/root/.ssh/id_rsa", "-o", "StrictHostKeyChecking=no", userAndHost, command}
 	sshCmdArgs = append(sshCmdArgs, args...)
 
 	output, err := s.executor.Execute("ssh", sshCmdArgs)
