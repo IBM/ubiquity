@@ -28,6 +28,7 @@ import (
 
 	"github.com/IBM/ubiquity/remote/mounter"
 	"github.com/IBM/ubiquity/utils"
+	"io/ioutil"
 )
 
 type remoteClient struct {
@@ -82,6 +83,8 @@ func (s *remoteClient) CreateVolume(createVolumeRequest resources.CreateVolumeRe
 		s.logger.Printf("Error in create volume remote call %s", err.Error())
 		return fmt.Errorf("Error in create volume remote call(http error)")
 	}
+	_, err = ioutil.ReadAll(response.Body)
+	defer response.Body.Close()
 
 	if response.StatusCode != http.StatusOK {
 		s.logger.Printf("Error in create volume remote call %#v", response)
@@ -103,6 +106,8 @@ func (s *remoteClient) RemoveVolume(removeVolumeRequest resources.RemoveVolumeRe
 		s.logger.Printf("Error in remove volume remote call %#v", err)
 		return fmt.Errorf("Error in remove volume remote call")
 	}
+	_, err = ioutil.ReadAll(response.Body)
+	defer response.Body.Close()
 
 	if response.StatusCode != http.StatusOK {
 		s.logger.Printf("Error in remove volume remote call %#v", response)
@@ -240,6 +245,8 @@ func (s *remoteClient) Detach(detachRequest resources.DetachRequest) error {
 		s.logger.Printf("Error in detach volume remote call %#v", err)
 		return fmt.Errorf("Error in detach volume remote call")
 	}
+	_, err = ioutil.ReadAll(response.Body)
+	defer response.Body.Close()
 
 	if response.StatusCode != http.StatusOK {
 		s.logger.Printf("Error in detach volume remote call %#v", response)

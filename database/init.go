@@ -21,12 +21,71 @@ import (
     "github.com/IBM/ubiquity/utils/logs"
 )
 
-const KeyPsqlHost = "UBIQUITY_DB_PSQL_HOST"
-const KeySqlitePath = "UBIQUITY_DB_SQLITE_PATH"
+const (
+    KeyPsqlHost = "UBIQUITY_DB_PSQL_HOST"
+    KeySqlitePath = "UBIQUITY_DB_SQLITE_PATH"
+    KeyPsqlUser = "UBIQUITY_DB_USER"
+    KeyPsqlPassword = "UBIQUITY_DB_PASSWORD"
+    KeyPsqlDbName = "UBIQUITY_DB_NAME"
+    KeyPsqlPort = "UBIQUITY_DB_PORT"
+    KeyPsqlTimeout = "UBIQUITY_DB_CONNECT_TIMEOUT"
+    KeyPsqlSslMode = "UBIQUITY_DB_SSL_MODE"
+    KeyPsqlSslRootCert = "UBIQUITY_DB_SSL_ROOT_CERT"
+)
+
+func GetPsqlConnectionParams(hostname string) string {
+    str := ""
+    // add host
+    str += "host=" + hostname
+    // add user
+    psqlUser := os.Getenv(KeyPsqlUser)
+    if psqlUser == "" {
+        psqlUser = "postgres"
+    }
+    str += " user=" + psqlUser
+    // add dbname
+    psqlDbName := os.Getenv(KeyPsqlDbName)
+    if psqlDbName == "" {
+        psqlDbName = "postgres"
+    }
+    str += " dbname=" + psqlDbName
+    // add password
+    psqlPassword := os.Getenv(KeyPsqlPassword)
+    if psqlPassword != "" {
+        str += " password=" + psqlPassword
+    }
+    // add port
+    psqlPort := os.Getenv(KeyPsqlPort)
+    if psqlPort != "" {
+        str += " port=" + psqlPort
+    }
+    // add connect_timeout
+    psqlTimeout := os.Getenv(KeyPsqlTimeout)
+    if psqlTimeout != "" {
+        str += " connect_timeout=" + psqlTimeout
+    }
+    return str
+}
+
+func GetPsqlSslParams() string {
+    str := ""
+    // add sslmode
+    psqlSslMode := os.Getenv(KeyPsqlSslMode)
+    if psqlSslMode == "" {
+        psqlSslMode = "disable"
+    }
+    str += "sslmode=" + psqlSslMode
+    // add sslrootcert
+    psqlSslRootCert := os.Getenv(KeyPsqlSslRootCert)
+    if psqlSslRootCert != "" {
+        str += " sslrootcert=" + psqlSslRootCert
+    }
+    return str
+}
 
 func InitPostgres(hostname string) func() {
     defer logs.GetLogger().Trace(logs.DEBUG)()
-    return initConnectionFactory(&postgresFactory{host: hostname})
+    return initConnectionFactory(&postgresFactory{psql: GetPsqlConnectionParams(hostname) + " " + GetPsqlSslParams()})
 }
 
 func InitSqlite(filepath string) func() {
