@@ -50,6 +50,8 @@ type testErrorFactory struct {
 }
 
 func (f *postgresFactory) newConnection() (*gorm.DB, error) {
+    logger := logs.GetLogger()
+    logger.Debug("", logs.Args{{"psql": f.psql}})
     return gorm.Open("postgres", f.psql)
 }
 
