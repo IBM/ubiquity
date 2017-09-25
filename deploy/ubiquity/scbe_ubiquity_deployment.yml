@@ -1,0 +1,45 @@
+apiVersion: "extensions/v1beta1"
+kind: Deployment
+metadata:
+  name: ubiquity
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: ubiquity
+    spec:
+      containers:
+      - name: ubiquity
+        image: IBMubiquityIMAGE # place holder
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 9999
+          name: ubiquity-port
+        env:
+          - name: PORT             # Ubiquity port
+            value: "9999"
+          - name: LOG_PATH         # Ubiquity log file directory
+            value: "/tmp"
+          - name: DEFAULT_BACKEND
+            value: "scbe"
+          - name: LOG_LEVEL        # debug / info / error
+            value: "info"
+          - name: SCBE_DEFAULT_SERVICE
+            value: "gold"
+          - name: DEFAULT_VOLUME_SIZE
+            value: "2"
+          - name: UBIQUITY_INSTANCE_NAME
+            value: "instance1"
+          - name: DEFAULT_FSTYPE
+            value: "ext4"
+          - name: SCBE_MANAGEMENT_IP
+            value: "IP"
+          - name: SCBE_MANAGEMENT_PORT
+            value: "8440"
+          - name: SKIP_VERIFY_SSL
+            value: "true"
+          - name: SCBE_USERNAME
+            value: "USER"
+          - name: SCBE_PASSWORD
+            value: "PASSWORD"

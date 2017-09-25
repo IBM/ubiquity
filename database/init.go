@@ -27,7 +27,7 @@ const (
     KeyPsqlUser = "UBIQUITY_DB_USER"
     KeyPsqlPassword = "UBIQUITY_DB_PASSWORD"
     KeyPsqlDbName = "UBIQUITY_DB_NAME"
-    KeyPsqlPort = "UBIQUITY_DB_PORT"
+    KeyPsqlPort = "UBIQUITY_DB_PSQL_PORT"
     KeyPsqlTimeout = "UBIQUITY_DB_CONNECT_TIMEOUT"
     KeyPsqlSslMode = "UBIQUITY_DB_SSL_MODE"
     KeyPsqlSslRootCert = "UBIQUITY_DB_SSL_ROOT_CERT"

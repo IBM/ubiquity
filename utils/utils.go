@@ -21,7 +21,6 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
-	"os/user"
 
 	"github.com/IBM/ubiquity/resources"
 
@@ -138,26 +137,15 @@ func SetupConfigDirectory(logger *log.Logger, executor Executor, configPath stri
 	logger.Printf("User specified config path: %s", configPath)
 
 	if _, err := executor.Stat(ubiquityConfigPath); os.IsNotExist(err) {
-		args := []string{"mkdir", ubiquityConfigPath}
-		_, err := executor.Execute("sudo", args)
+
+		err = os.MkdirAll(ubiquityConfigPath	, 0640)
 		if err != nil {
 			logger.Printf("Error creating directory %s", err.Error())
 			return "", err
 		}
 
 	}
-	currentUser, err := user.Current()
-	if err != nil {
-		logger.Printf("Error determining current user: %s", err.Error())
-		return "", err
-	}
 
-	args := []string{"chown", "-R", fmt.Sprintf("%s:%s", currentUser.Uid, currentUser.Gid), ubiquityConfigPath}
-	_, err = executor.Execute("sudo", args)
-	if err != nil {
-		logger.Printf("Error setting permissions on config directory %s", ubiquityConfigPath)
-		return "", err
-	}
 	return ubiquityConfigPath, nil
 }
 
@@ -170,36 +158,36 @@ func StringInSlice(a string, list []string) bool {
 	return false
 }
 
-func ConvertToBytes(logger *log.Logger, inputStr string) (uint64,error) {
+func ConvertToBytes(logger *log.Logger, inputStr string) (uint64, error) {
 	var Iter int
 	var byteSlice []byte
 	var retValue uint64
 	var uintMax64 uint64
 
 	byteSlice = []byte(inputStr)
-	uintMax64 = (1 << 64) - 1	
+	uintMax64 = (1 << 64) - 1
 
-	for Iter=0; Iter < len(byteSlice); Iter++ {
-		if (('0' <= byteSlice[Iter]) && 
-		   (byteSlice[Iter] <= '9')) {
+	for Iter = 0; Iter < len(byteSlice); Iter++ {
+		if ('0' <= byteSlice[Iter]) &&
+			(byteSlice[Iter] <= '9') {
 			continue
 		} else {
 			break
 		}
 	}
 
-	if (Iter == 0) {
-		return 0, fmt.Errorf("Invalid number specified %v",inputStr)
+	if Iter == 0 {
+		return 0, fmt.Errorf("Invalid number specified %v", inputStr)
 	}
 
-	retValue,err := strconv.ParseUint(inputStr[:Iter], 10, 64)
+	retValue, err := strconv.ParseUint(inputStr[:Iter], 10, 64)
 
 	if err != nil {
-		return 0, fmt.Errorf("ParseUint Failed for %v",inputStr[:Iter])
+		return 0, fmt.Errorf("ParseUint Failed for %v", inputStr[:Iter])
 	}
 
-	if (Iter == len(inputStr)) {
-		logger.Printf("Input string has no Unit, returning %v\n",retValue)
+	if Iter == len(inputStr) {
+		logger.Printf("Input string has no Unit, returning %v\n", retValue)
 		return retValue, nil
 	}
 
@@ -207,23 +195,87 @@ func ConvertToBytes(logger *log.Logger, inputStr string) (uint64,error) {
 	unit = strings.ToLower(unit)
 
 	switch unit {
-		case "b", "bytes":
-			/* Nothing to do here */
-	    	case "k", "kb", "kilobytes", "kilobyte":
-			retValue *= 1024
-		case "m", "mb", "megabytes", "megabyte":
-			retValue *= (1024*1024)
-		case "g", "gb", "gigabytes", "gigabyte":
-			retValue *= (1024*1024*1024)
-		case "t", "tb", "terabytes", "terabyte":
-			retValue *= (1024*1024*1024*1024)
-		default:
-			return 0, fmt.Errorf("Invalid Unit %v supplied with %v",unit, inputStr)
+	case "b", "bytes":
+		/* Nothing to do here */
+	case "k", "kb", "kilobytes", "kilobyte":
+		retValue *= 1024
+	case "m", "mb", "megabytes", "megabyte":
+		retValue *= (1024 * 1024)
+	case "g", "gb", "gigabytes", "gigabyte":
+		retValue *= (1024 * 1024 * 1024)
+	case "t", "tb", "terabytes", "terabyte":
+		retValue *= (1024 * 1024 * 1024 * 1024)
+	default:
+		return 0, fmt.Errorf("Invalid Unit %v supplied with %v", unit, inputStr)
 	}
-	
+
 	if retValue > uintMax64 {
-		return 0, fmt.Errorf("Overflow detected %v",inputStr)
+		return 0, fmt.Errorf("Overflow detected %v", inputStr)
 	}
 
 	return retValue, nil
+}
+
+func LoadConfig() (resources.UbiquityServerConfig, error) {
+
+	config := resources.UbiquityServerConfig{}
+	port, err := strconv.ParseInt(os.Getenv("PORT"), 0, 32)
+	if err != nil {
+		return config, err
+	}
+	config.Port = int(port)
+	config.LogPath = os.Getenv("LOG_PATH")
+	config.ConfigPath = os.Getenv("CONFIG_PATH")
+	config.DefaultBackend = os.Getenv("DEFAULT_BACKEND")
+	config.LogLevel = os.Getenv("LOG_LEVEL")
+
+	sscConfig := resources.SpectrumScaleConfig{}
+	sshConfig := resources.SshConfig{}
+	sshConfig.User = os.Getenv("SSC_SSH_USER")
+	sshConfig.Host = os.Getenv("SSC_SSH_HOST")
+	sshConfig.Port = os.Getenv("SSC_SSH_PORT")
+	if sshConfig.User != "" && sshConfig.Host != "" && sshConfig.Port != "" {
+		sscConfig.SshConfig = sshConfig
+	}
+	restConfig := resources.RestConfig{}
+	restConfig.Endpoint = os.Getenv("SSC_REST_ENDPOINT")
+	restConfig.User = os.Getenv("SSC_REST_USER")
+	restConfig.Password = os.Getenv("SSC_REST_PASSWORD")
+	restConfig.Hostname = os.Getenv("SSC_REST_HOSTNAME")
+	if restConfig.User != "" && restConfig.Hostname != "" && restConfig.Password != "" {
+		sscConfig.RestConfig = restConfig
+	}
+	sscConfig.DefaultFilesystemName = os.Getenv("DEFAULT_FILESYSTEM_NAME")
+	sscConfig.NfsServerAddr = os.Getenv("SSC_NFS_SERVER_ADDRESS")
+	forceDelete, err := strconv.ParseBool(os.Getenv("FORCE_DELETE"))
+	if err != nil {
+		sscConfig.ForceDelete = false
+	} else {
+		sscConfig.ForceDelete = forceDelete
+	}
+	config.SpectrumScaleConfig = sscConfig
+
+	scbeConfig := resources.ScbeConfig{}
+	scbeConfig.DefaultService = os.Getenv("SCBE_DEFAULT_SERVICE")
+	scbeConfig.DefaultVolumeSize = os.Getenv("DEFAULT_VOLUME_SIZE")
+	scbeConfig.UbiquityInstanceName = os.Getenv("UBIQUITY_INSTANCE_NAME")
+	scbeConfig.DefaultFilesystemType = os.Getenv("DEFAULT_FSTYPE")
+	scbeCred := resources.CredentialInfo{}
+	scbeCred.UserName = os.Getenv("SCBE_USERNAME")
+	scbeCred.Password = os.Getenv("SCBE_PASSWORD")
+
+	scbeConnectionInfo := resources.ConnectionInfo{}
+	scbeConnectionInfo.ManagementIP = os.Getenv("SCBE_MANAGEMENT_IP")
+	scbePort, err := strconv.ParseInt(os.Getenv("SCBE_MANAGEMENT_PORT"), 0, 32)
+	if err != nil {
+		scbeConnectionInfo.Port = resources.ScbeDefaultPort
+	} else {
+		scbeConnectionInfo.Port = int(scbePort)
+	}
+
+	scbeConnectionInfo.CredentialInfo = scbeCred
+	scbeConfig.ConnectionInfo = scbeConnectionInfo
+	config.ScbeConfig = scbeConfig
+
+	return config, nil
 }
