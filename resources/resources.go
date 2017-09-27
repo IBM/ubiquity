@@ -105,6 +105,7 @@ type UbiquityPluginConfig struct {
 	Backends                []string
 	LogLevel                string
 	CredentialInfo          CredentialInfo
+	SslConfig               UbiquityPluginSslConfig
 }
 
 type UbiquityDockerPluginConfig struct {
@@ -120,6 +121,11 @@ type UbiquityServerConnectionInfo struct {
 
 type ScbeRemoteConfig struct {
 	SkipRescanISCSI bool
+}
+
+type UbiquityPluginSslConfig struct {
+	UseSsl      bool
+	VerifyCa    string
 }
 
 //go:generate counterfeiter -o ../fakes/fake_storage_client.go . StorageClient
