@@ -30,8 +30,8 @@ import (
 	"github.com/IBM/ubiquity/utils/logs"
 )
 
-const keyUseSsl = "UBIQUITY_PLUGIN_USE_SSL"
-const keyVerifyCA = "UBIQUITY_PLUGIN_VERIFY_CA"
+const KeyUseSsl = "UBIQUITY_PLUGIN_USE_SSL"
+const KeyVerifyCA = "UBIQUITY_PLUGIN_VERIFY_CA"
 const storageAPIURL = "%s://%s:%d/ubiquity_storage"
 
 func NewRemoteClient(logger *log.Logger, storageApiURL string, config resources.UbiquityPluginConfig) (resources.StorageClient, error) {
@@ -53,7 +53,7 @@ func (s *remoteClient) initialize() error {
 	protocol := s.getProtocol()
 	s.storageApiURL = fmt.Sprintf(storageAPIURL, protocol, s.config.UbiquityServer.Address, s.config.UbiquityServer.Port)
 	s.httpClient = &http.Client{}
-	verifyFileCA := os.Getenv(keyVerifyCA)
+	verifyFileCA := os.Getenv(KeyVerifyCA)
 	if verifyFileCA != "" {
 		if _, err := exec.Stat(verifyFileCA); err != nil {
 			return logger.ErrorRet(err, "failed")
@@ -75,7 +75,7 @@ func (s *remoteClient) initialize() error {
 }
 
 func (s *remoteClient) getProtocol() string {
-	useSsl := os.Getenv(keyUseSsl)
+	useSsl := os.Getenv(KeyUseSsl)
 	if strings.ToLower(useSsl) == "true" {
 		return "https"
 	} else {
