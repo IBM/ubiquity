@@ -56,7 +56,7 @@ func (s *spectrumScaleMounter) Mount(mountRequest resources.MountRequest) (strin
 			target =  path.Join(target, directory.(string))
 		}
 
-		_,err := os.Stat(mountRequest.Mountpoint)
+		_,err := os.Lstat(mountRequest.Mountpoint)
 		if err != nil {
 			if os.IsNotExist(err) {
 				// create symlink DockerPropagatedMount -> spectrum scale Mountpoint(target)
