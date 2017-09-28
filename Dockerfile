@@ -7,7 +7,15 @@ RUN CGO_ENABLED=1 GOOS=linux go build -tags netgo -v -a --ldflags '-w -linkmode 
 
 
 FROM alpine:latest
-RUN apk --no-cache add ca-certificates
+RUN apk --no-cache add ca-certificates openssl
 WORKDIR /root/
 COPY --from=0 /go/src/github.com/IBM/ubiquity/ubiquity .
-CMD ["./ubiquity"]
+
+COPY docker-entrypoint.sh .
+RUN chmod 755 docker-entrypoint.sh
+
+ENV PATH=/root:$PATH
+
+ENTRYPOINT ["docker-entrypoint.sh"]
+CMD ["ubiquity"]
+
