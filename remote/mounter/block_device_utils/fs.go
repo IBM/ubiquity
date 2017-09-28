@@ -78,7 +78,7 @@ func (b *blockDeviceUtils) UmountFs(mpoint string) error {
 	if err := b.exec.IsExecutable(umountCmd); err != nil {
 		return b.logger.ErrorRet(&commandNotFoundError{umountCmd, err}, "failed")
 	}
-	args := []string{umountCmd, mpoint}
+	args := []string{mpoint}
 	if _, err := b.exec.Execute(umountCmd, args); err != nil {
 		return b.logger.ErrorRet(&commandExecuteError{umountCmd, err}, "failed")
 	}
