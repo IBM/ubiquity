@@ -27,6 +27,7 @@ import (
 	"os"
 	"path"
 	"strconv"
+	"github.com/IBM/ubiquity/database"
 )
 
 var _ = Describe("restClient integration testing with existing SCBE instance", func() {
@@ -42,12 +43,13 @@ var _ = Describe("restClient integration testing with existing SCBE instance", f
 			Skip(err.Error())
 		}
 		credentialInfo = resources.CredentialInfo{scbeUser, scbePassword, "flocker"}
-		conInfo = resources.ConnectionInfo{credentialInfo, scbePort, scbeIP, true}
-		client = scbe.NewSimpleRestClient(
+		conInfo = resources.ConnectionInfo{credentialInfo, scbePort, scbeIP}
+		client, err = scbe.NewSimpleRestClient(
 			conInfo,
 			"https://"+scbeIP+":"+strconv.Itoa(scbePort)+"/api/v1",
 			scbe.UrlScbeResourceGetAuth,
 			"https://"+scbeIP+":"+strconv.Itoa(scbePort)+"/")
+		Expect(err).ToNot(HaveOccurred())
 	})
 
 	Context(".Login", func() {
@@ -84,8 +86,9 @@ var _ = Describe("ScbeRestClient integration testing with existing SCBE instance
 			Skip(err.Error())
 		}
 		credentialInfo = resources.CredentialInfo{scbeUser, scbePassword, "flocker"}
-		conInfo = resources.ConnectionInfo{credentialInfo, scbePort, scbeIP, true}
-		scbeRestClient = scbe.NewScbeRestClient(conInfo)
+		conInfo = resources.ConnectionInfo{credentialInfo, scbePort, scbeIP}
+		scbeRestClient, err = scbe.NewScbeRestClient(conInfo)
+		Expect(err).ToNot(HaveOccurred())
 	})
 
 	Context(".Login", func() {
@@ -125,8 +128,9 @@ var _ = Describe("ScbeRestClient volume operations integration testing with exis
 			Skip(err.Error())
 		}
 		credentialInfo = resources.CredentialInfo{scbeUser, scbePassword, "flocker"}
-		conInfo = resources.ConnectionInfo{credentialInfo, scbePort, scbeIP, true}
-		scbeRestClient = scbe.NewScbeRestClient(conInfo)
+		conInfo = resources.ConnectionInfo{credentialInfo, scbePort, scbeIP}
+		scbeRestClient, err = scbe.NewScbeRestClient(conInfo)
+		Expect(err).ToNot(HaveOccurred())
 
 		err = scbeRestClient.Login()
 		Expect(err).ToNot(HaveOccurred())
@@ -170,6 +174,7 @@ var _ = Describe("datamodel integration testing with live DB", func() {
 		DBPath    string
 		db        *gorm.DB
 		datamodel scbe.ScbeDataModel
+		dbConnection database.Connection
 	)
 	BeforeEach(func() {
 		// Get environment variable for the tests
@@ -181,12 +186,18 @@ var _ = Describe("datamodel integration testing with live DB", func() {
 		// create DB
 		logs.GetLogger().Debug("Obtaining handle to DB")
 		var err error
-		db, err = gorm.Open("sqlite3", path.Join(DBPath, "integration-ubiquity.db"))
+		database.InitSqlite(path.Join(DBPath, "integration-ubiquity.db"))
+		database.RegisterMigration(&resources.Volume{})
+		database.RegisterMigration(&scbe.ScbeVolume{})
+		dbConnection = database.NewConnection()
+		err = dbConnection.Open()
 		Expect(err).NotTo(HaveOccurred(), "failed to connect database")
-		Expect(db.AutoMigrate(&resources.Volume{}).Error).NotTo(HaveOccurred(), "fail to create Volume basic table")
-		datamodel = scbe.NewScbeDataModel(db, resources.SCBE)
-		Expect(datamodel.CreateVolumeTable()).ToNot(HaveOccurred())
+		db = dbConnection.GetDb()
+		datamodel = scbe.NewScbeDataModel(db)
 		Expect(db.HasTable(scbe.ScbeVolume{})).To(Equal(true))
+	})
+	AfterEach(func() {
+		dbConnection.Close()
 	})
 
 	Context(".table", func() {

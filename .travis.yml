@@ -1,7 +1,7 @@
 language: go
 
 go:
-  - 1.7
+  - 1.9
 
 install:
   - sh scripts/run_glide_up

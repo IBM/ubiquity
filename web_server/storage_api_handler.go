@@ -19,26 +19,22 @@ package web_server
 import (
 	"log"
 	"net/http"
-
 	"github.com/IBM/ubiquity/resources"
 	"github.com/IBM/ubiquity/utils"
-
 	"fmt"
-
 	"github.com/IBM/ubiquity/model"
-	"github.com/jinzhu/gorm"
+	"github.com/IBM/ubiquity/database"
 )
 
 type StorageApiHandler struct {
 	logger   *log.Logger
 	backends map[string]resources.StorageClient
-	database *gorm.DB
 	config   resources.UbiquityServerConfig
 	locker   utils.Locker
 }
 
-func NewStorageApiHandler(logger *log.Logger, backends map[string]resources.StorageClient, database *gorm.DB, config resources.UbiquityServerConfig) *StorageApiHandler {
-	return &StorageApiHandler{logger: logger, backends: backends, database: database, config: config, locker: utils.NewLocker()}
+func NewStorageApiHandler(logger *log.Logger, backends map[string]resources.StorageClient, config resources.UbiquityServerConfig) *StorageApiHandler {
+	return &StorageApiHandler{logger: logger, backends: backends, config: config, locker: utils.NewLocker()}
 }
 
 func (h *StorageApiHandler) Activate() http.HandlerFunc {
@@ -108,9 +104,7 @@ func (h *StorageApiHandler) CreateVolume() http.HandlerFunc {
 		}
 
 		h.locker.ReadLock(createVolumeRequest.Name) // will block if another caller is already in process of creating volume with same name
-		//TODO: err needs to be check for db connection issues
-		exists, _ := model.VolumeExists(h.database, createVolumeRequest.Name)
-		if exists == true {
+		if exists := h.getVolumeExists(createVolumeRequest.Name); exists == true {
 			utils.WriteResponse(w, 409, &resources.GenericResponse{Err: fmt.Sprintf("Volume `%s` already exists", createVolumeRequest.Name)})
 			h.locker.ReadUnlock(createVolumeRequest.Name)
 			return
@@ -326,21 +320,6 @@ func (h *StorageApiHandler) ListVolumes() http.HandlerFunc {
 	}
 }
 
-func (h *StorageApiHandler) getBackend(name string) (resources.StorageClient, error) {
-
-	backendName, err := model.GetBackendForVolume(h.database, name)
-	if err != nil {
-		return nil, fmt.Errorf("Volume not found")
-	}
-
-	backend, exists := h.backends[backendName]
-	if !exists {
-		h.logger.Printf("Cannot find backend %s", backendName)
-		return nil, fmt.Errorf("Cannot find backend %s", backend)
-	}
-	return backend, nil
-}
-
 func (h *StorageApiHandler) GetCapabilities() http.HandlerFunc {
 	return func(w http.ResponseWriter, req *http.Request) {
 
@@ -373,4 +352,71 @@ func (h *StorageApiHandler) GetCapabilities() http.HandlerFunc {
 		h.logger.Printf("GetCapabilities response: %#v\n", capabilities)
 		utils.WriteResponse(w, http.StatusOK, capabilities)
 	}
+}
+
+func (h *StorageApiHandler) getBackend(name string) (resources.StorageClient, error) {
+	var backendName string
+
+	// get backend name for volume
+	if backendName = h.getBackendName(name); backendName == "" {
+		h.logger.Printf("volume %s not found", name)
+		return nil, fmt.Errorf("volume %s not found", name)
+	}
+
+	// fetch client by name
+	backend, exists := h.backends[backendName]
+	if !exists {
+		h.logger.Printf("Cannot find backend %s", backendName)
+		return nil, fmt.Errorf("Cannot find backend %s", backend)
+	}
+	return backend, nil
+}
+
+func (h *StorageApiHandler) getBackendName(name string) string {
+	var backendName string
+	var err error
+
+	// open db connection - upon error goto DefaultBackend
+	dbConnection := database.NewConnection()
+	if err = dbConnection.Open(); err != nil {
+		h.logger.Printf("no db connection, going to DefaultBackend %s", h.config.DefaultBackend)
+		return h.config.DefaultBackend
+	}
+
+	// detect backend by volume name - for db volume goto DefaultBackend upon error
+	defer dbConnection.Close()
+	if backendName, err = model.GetBackendForVolume(dbConnection.GetDb(), name); err != nil {
+		if database.IsDatabaseVolume(name) {
+			h.logger.Printf("volume %s not found, going to DefaultBackend %s", name, h.config.DefaultBackend)
+			return h.config.DefaultBackend
+		} else {
+			h.logger.Printf("volume %s not found", name)
+			return ""
+		}
+	}
+
+	h.logger.Printf("volume %s found, going to backend %s", name, backendName)
+	return backendName
+}
+
+func (h *StorageApiHandler) getVolumeExists(volumeName string) bool {
+	var exists bool
+	var err error
+
+	// open db connection
+	dbConnection := database.NewConnection()
+	if err = dbConnection.Open(); err != nil {
+		h.logger.Printf("no db connection, assume volume %s does not exist", volumeName)
+		return false
+	}
+
+	// lookup volume
+	defer dbConnection.Close()
+	if exists, err = model.VolumeExists(dbConnection.GetDb(), volumeName); err != nil {
+		h.logger.Printf("VolumeExists failed, assume volume %s does not exist", volumeName)
+		return false
+	}
+
+	h.logger.Printf("VolumeExists %s is %v", volumeName, exists)
+	return exists
 }

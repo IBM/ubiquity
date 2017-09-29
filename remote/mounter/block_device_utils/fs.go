@@ -17,9 +17,9 @@
 package block_device_utils
 
 import (
+	"github.com/IBM/ubiquity/utils/logs"
 	"os/exec"
 	"syscall"
-	"github.com/IBM/ubiquity/utils/logs"
 )
 
 func (b *blockDeviceUtils) CheckFs(mpath string) (bool, error) {

@@ -18,12 +18,12 @@ package connectors
 
 import (
 	"fmt"
-	"log"
-	"path"
-	"strings"
-
 	"github.com/IBM/ubiquity/resources"
 	"github.com/IBM/ubiquity/utils"
+	"log"
+	"net/url"
+	"path"
+	"strings"
 )
 
 type spectrum_mmcli struct {
@@ -42,8 +42,8 @@ func NewSpectrumMMCLIWithExecutor(logger *log.Logger, executor utils.Executor) (
 
 func (s *spectrum_mmcli) GetClusterId() (string, error) {
 	spectrumCommand := "/usr/lpp/mmfs/bin/mmlscluster"
-	args := []string{}
-	return GetClusterIdInternal(s.logger, s.executor, spectrumCommand, args)
+	//args := []string{spectrumCommand}
+	return GetClusterIdInternal(s.logger, s.executor, spectrumCommand, nil)
 }
 
 func GetClusterIdInternal(logger *log.Logger, executor utils.Executor, command string, args []string) (string, error) {
@@ -192,7 +192,7 @@ func GetFilesystemMountpointInternal(logger *log.Logger, executor utils.Executor
 			mountpoint := strings.TrimSpace(tokens[8])
 
 			//Todo this should be changed to url.PathUnescape when available
-			mountpoint, err := utils.PathUnescape(mountpoint)
+			mountpoint, err := url.PathUnescape(mountpoint)
 			if err != nil {
 				logger.Printf("Error decoding mountpoint: %s\n", err)
 			} else {

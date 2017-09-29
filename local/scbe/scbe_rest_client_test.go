@@ -43,8 +43,9 @@ var _ = Describe("ScbeRestClient", func() {
     BeforeEach(func() {
         fakeSimpleRestClient = new(fakes.FakeSimpleRestClient)
         credentialInfo := resources.CredentialInfo{"user", "password", "flocker"}
-        conInfo := resources.ConnectionInfo{credentialInfo, 8440, "ip", true}
-        scbeRestClient = scbe.NewScbeRestClientWithSimpleRestClient(conInfo, fakeSimpleRestClient)
+        conInfo := resources.ConnectionInfo{credentialInfo, 8440, "ip"}
+        scbeRestClient, err = scbe.NewScbeRestClientWithSimpleRestClient(conInfo, fakeSimpleRestClient)
+        Expect(err).NotTo(HaveOccurred())
     })
 
 

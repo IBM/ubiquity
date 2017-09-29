@@ -398,4 +398,21 @@ var _ = Describe("spectrum_mmcli", func() {
 			Expect(err).ToNot(HaveOccurred())
 		})
 	})
+	Context(".ExportNfs", func() {
+		It("should fail when execute command errors", func() {
+			errorMsg := fmt.Sprintf("error executing command")
+			fakeExec.ExecuteReturns(nil, fmt.Errorf(errorMsg))
+
+			err = spectrumMMCLI.ExportNfs("fake-mount","fake-config")
+			Expect(err).To(HaveOccurred())
+			Expect(err.Error()).To(Equal(fmt.Sprintf("Failed to export fileset via Nfs: %s",errorMsg)))
+		})
+
+		It("should succeed when execute command does not error", func() {
+			fakeExec.ExecuteReturns(nil, nil)
+
+			err := spectrumMMCLI.ExportNfs("fake-mount","fake-config")
+			Expect(err).ToNot(HaveOccurred())
+		})
+	})
 })

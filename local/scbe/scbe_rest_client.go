@@ -54,16 +54,16 @@ const (
 	DefaultSizeUnit        = "gb"
 )
 
-func NewScbeRestClient(conInfo resources.ConnectionInfo) ScbeRestClient {
+func NewScbeRestClient(conInfo resources.ConnectionInfo) (ScbeRestClient, error) {
 	return newScbeRestClient(conInfo, nil)
 }
 
 // NewScbeRestClientWithNewRestClient for mocking during test # TODO consider to remove it to test file
-func NewScbeRestClientWithSimpleRestClient(conInfo resources.ConnectionInfo, simpleClient SimpleRestClient) ScbeRestClient {
+func NewScbeRestClientWithSimpleRestClient(conInfo resources.ConnectionInfo, simpleClient SimpleRestClient) (ScbeRestClient, error) {
 	return newScbeRestClient(conInfo, simpleClient)
 }
 
-func newScbeRestClient(conInfo resources.ConnectionInfo, simpleClient SimpleRestClient) ScbeRestClient {
+func newScbeRestClient(conInfo resources.ConnectionInfo, simpleClient SimpleRestClient) (ScbeRestClient, error) {
 	// Set default SCBE port if not mentioned
 	if conInfo.Port == 0 {
 		conInfo.Port = DefaultScbePort
@@ -74,9 +74,12 @@ func newScbeRestClient(conInfo resources.ConnectionInfo, simpleClient SimpleRest
 	if simpleClient == nil {
 		referrer := fmt.Sprintf(UrlScbeReferer, conInfo.ManagementIP, conInfo.Port)
 		baseUrl := referrer + UrlScbeBaseSuffix
-		simpleClient = NewSimpleRestClient(conInfo, baseUrl, UrlScbeResourceGetAuth, referrer)
+		var err error
+		if simpleClient, err = NewSimpleRestClient(conInfo, baseUrl, UrlScbeResourceGetAuth, referrer); err != nil {
+			return nil, logs.GetLogger().ErrorRet(err, "NewSimpleRestClient failed")
+		}
 	}
-	return &scbeRestClient{logs.GetLogger(), conInfo, simpleClient}
+	return &scbeRestClient{logs.GetLogger(), conInfo, simpleClient}, nil
 }
 
 func (s *scbeRestClient) Login() error {

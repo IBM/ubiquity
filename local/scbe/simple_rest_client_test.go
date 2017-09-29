@@ -24,6 +24,8 @@ import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega" // including the whole package inside the file
 	"net/http"
+	"os"
+	"io/ioutil"
 )
 
 const (
@@ -34,6 +36,7 @@ const (
 	fakeScbeUrlAuthFull = fakeScbeUrlBase + "/" + suffix + "/" + fakeScbeUrlAuth
 	fakeScbeUrlReferer  = fakeScbeUrlBase + "/"
 	fakeScbeUrlApi      = fakeScbeUrlBase + "/" + suffix
+	fakeCert            = "/tmp/fake_cert.crt"
 )
 
 var fakeServiceJsonResponse string = `
@@ -67,7 +70,8 @@ var _ = Describe("restClient", func() {
 		err    error
 	)
 	BeforeEach(func() {
-		client = scbe.NewSimpleRestClient(resources.ConnectionInfo{}, fakeScbeUrlBase+"/"+suffix, fakeScbeUrlAuth, fakeScbeUrlReferer)
+		client, err = scbe.NewSimpleRestClient(resources.ConnectionInfo{}, fakeScbeUrlBase+"/"+suffix, fakeScbeUrlAuth, fakeScbeUrlReferer)
+		Expect(err).ToNot(HaveOccurred())
 	})
 
 	Context(".Login", func() {
@@ -114,7 +118,8 @@ var _ = Describe("restClient", func() {
 		err    error
 	)
 	BeforeEach(func() {
-		client = scbe.NewSimpleRestClient(resources.ConnectionInfo{}, fakeScbeUrlBase+"/"+suffix, fakeScbeUrlAuth, fakeScbeUrlReferer)
+		client, err = scbe.NewSimpleRestClient(resources.ConnectionInfo{}, fakeScbeUrlBase+"/"+suffix, fakeScbeUrlAuth, fakeScbeUrlReferer)
+		Expect(err).ToNot(HaveOccurred())
 		loginResponse := scbe.LoginResponse{Token: "fake-token"}
 		marshalledResponse, err := json.Marshal(loginResponse)
 		Expect(err).ToNot(HaveOccurred())
@@ -200,3 +205,35 @@ func TokenExpiredResponder(num *int, retryToken string) httpmock.Responder {
 		}
 	}
 }
+
+
+var _ = Describe("restClient", func() {
+	var (
+		client scbe.SimpleRestClient
+		err    error
+	)
+	BeforeEach(func() {
+	})
+	Context(".initTransport", func() {
+		It("succeeds without certificate", func() {
+			client, err = scbe.NewSimpleRestClient(resources.ConnectionInfo{ManagementIP: fakeScbeQfdn}, fakeScbeUrlBase+"/"+suffix, fakeScbeUrlAuth, fakeScbeUrlReferer)
+			Expect(err).ToNot(HaveOccurred())
+		})
+		It("fails if no certificate", func() {
+			os.Remove(fakeCert)
+			os.Setenv(scbe.KEY_VERIFY_SCBE_CERT, fakeCert)
+			client, err = scbe.NewSimpleRestClient(resources.ConnectionInfo{ManagementIP: fakeScbeQfdn}, fakeScbeUrlBase+"/"+suffix, fakeScbeUrlAuth, fakeScbeUrlReferer)
+			os.Setenv(scbe.KEY_VERIFY_SCBE_CERT, "")
+			Expect(err).To(HaveOccurred())
+		})
+		It("fails if certificate parse error", func() {
+			os.Remove(fakeCert)
+			err := ioutil.WriteFile(fakeCert, []byte("fake\n"), 0644)
+			Expect(err).ToNot(HaveOccurred())
+			os.Setenv(scbe.KEY_VERIFY_SCBE_CERT, fakeCert)
+			client, err = scbe.NewSimpleRestClient(resources.ConnectionInfo{ManagementIP: fakeScbeQfdn}, fakeScbeUrlBase+"/"+suffix, fakeScbeUrlAuth, fakeScbeUrlReferer)
+			os.Setenv(scbe.KEY_VERIFY_SCBE_CERT, "")
+			Expect(err).To(HaveOccurred())
+		})
+	})
+})
