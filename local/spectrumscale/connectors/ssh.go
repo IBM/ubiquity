@@ -50,7 +50,7 @@ func NewSpectrumSSHWithExecutor(logger *log.Logger, sshConfig resources.SshConfi
 func (s *spectrum_ssh) GetClusterId() (string, error) {
 	spectrumCommand := "/usr/lpp/mmfs/bin/mmlscluster"
 	userAndHost := fmt.Sprintf("%s@%s", s.user, s.host)
-	args := []string{userAndHost, "-p", s.port, spectrumCommand}
+	args := []string{"-i", "/root/.ssh/id_rsa", "-o", "StrictHostKeyChecking=no", userAndHost, "-p", s.port, spectrumCommand}
 	return GetClusterIdInternal(s.logger, s.executor, "ssh", args)
 }
 func (s *spectrum_ssh) IsFilesystemMounted(filesystemName string) (bool, error) {
@@ -63,7 +63,7 @@ func (s *spectrum_ssh) IsFilesystemMounted(filesystemName string) (bool, error) 
 	}
 	spectrumCommand := "/usr/lpp/mmfs/bin/mmlsmount"
 	userAndHost := fmt.Sprintf("%s@%s", s.user, s.host)
-	args := []string{userAndHost, "-p", s.port, spectrumCommand, filesystemName, "-L", "-Y"}
+	args := []string{"-i", "/root/.ssh/id_rsa", "-o", "StrictHostKeyChecking=no", userAndHost, "-p", s.port, spectrumCommand, filesystemName, "-L", "-Y"}
 	isMounted, err := IsFilesystemMountedInternal(s.logger, s.executor, filesystemName, "ssh", args)
 	s.isMounted = isMounted
 	return s.isMounted, err
@@ -79,7 +79,7 @@ func (s *spectrum_ssh) MountFileSystem(filesystemName string) error {
 
 	spectrumCommand := "/usr/lpp/mmfs/bin/mmmount"
 	userAndHost := fmt.Sprintf("%s@%s", s.user, s.host)
-	args := []string{userAndHost, "-p", s.port, spectrumCommand, filesystemName, "-a"}
+	args := []string{"-i", "/root/.ssh/id_rsa", "-o", "StrictHostKeyChecking=no", userAndHost, "-p", s.port, spectrumCommand, filesystemName, "-a"}
 
 	err := MountFileSystemInternal(s.logger, s.executor, filesystemName, "ssh", args)
 	if err != nil {
@@ -96,7 +96,7 @@ func (s *spectrum_ssh) ListFilesystems() ([]string, error) {
 func (s *spectrum_ssh) GetFilesystemMountpoint(filesystemName string) (string, error) {
 	spectrumCommand := "/usr/lpp/mmfs/bin/mmlsfs"
 	userAndHost := fmt.Sprintf("%s@%s", s.user, s.host)
-	args := []string{userAndHost, "-p", s.port, spectrumCommand, filesystemName, "-T", "-Y"}
+	args := []string{"-i", "/root/.ssh/id_rsa", "-o", "StrictHostKeyChecking=no", userAndHost, "-p", s.port, spectrumCommand, filesystemName, "-T", "-Y"}
 	return GetFilesystemMountpointInternal(s.logger, s.executor, filesystemName, "ssh", args)
 }
 
@@ -109,7 +109,7 @@ func (s *spectrum_ssh) CreateFileset(filesystemName string, filesetName string, 
 	// create fileset
 	spectrumCommand := "/usr/lpp/mmfs/bin/mmcrfileset"
 	userAndHost := fmt.Sprintf("%s@%s", s.user, s.host)
-	args := []string{userAndHost, "-p", s.port, spectrumCommand, filesystemName, filesetName, "-t", "'fileset for container volume'"}
+	args := []string{"-i", "/root/.ssh/id_rsa", "-o", "StrictHostKeyChecking=no", userAndHost, "-p", s.port, spectrumCommand, filesystemName, filesetName, "-t", "'fileset for container volume'"}
 
 	filesetType, filesetTypeSpecified := opts[UserSpecifiedFilesetType]
 	inodeLimit, inodeLimitSpecified := opts[UserSpecifiedInodeLimit]
@@ -131,7 +131,7 @@ func (s *spectrum_ssh) DeleteFileset(filesystemName string, filesetName string) 
 
 	spectrumCommand := "/usr/lpp/mmfs/bin/mmdelfileset"
 	userAndHost := fmt.Sprintf("%s@%s", s.user, s.host)
-	args := []string{userAndHost, "-p", s.port, spectrumCommand, filesystemName, filesetName, "-f"}
+	args := []string{"-i", "/root/.ssh/id_rsa", "-o", "StrictHostKeyChecking=no", userAndHost, "-p", s.port, spectrumCommand, filesystemName, filesetName, "-f"}
 	return DeleteFilesetInternal(s.logger, s.executor, filesystemName, filesetName, "ssh", args)
 }
 
@@ -141,7 +141,7 @@ func (s *spectrum_ssh) IsFilesetLinked(filesystemName string, filesetName string
 
 	spectrumCommand := "/usr/lpp/mmfs/bin/mmlsfileset"
 	userAndHost := fmt.Sprintf("%s@%s", s.user, s.host)
-	args := []string{userAndHost, "-p", s.port, spectrumCommand, filesystemName, filesetName, "-Y"}
+	args := []string{"-i", "/root/.ssh/id_rsa", "-o", "StrictHostKeyChecking=no", userAndHost, "-p", s.port, spectrumCommand, filesystemName, filesetName, "-Y"}
 	s.logger.Printf("%#v\n", args)
 	return IsFilesetLinkedInternal(s.logger, s.executor, filesystemName, filesetName, "ssh", args)
 }
@@ -161,7 +161,7 @@ func (s *spectrum_ssh) LinkFileset(filesystemName string, filesetName string) er
 	spectrumCommand := "/usr/lpp/mmfs/bin/mmlinkfileset"
 	filesetPath := path.Join(mountpoint, filesetName)
 	userAndHost := fmt.Sprintf("%s@%s", s.user, s.host)
-	args := []string{userAndHost, "-p", s.port, spectrumCommand, filesystemName, filesetName, "-J", filesetPath}
+	args := []string{"-i", "/root/.ssh/id_rsa", "-o", "StrictHostKeyChecking=no", userAndHost, "-p", s.port, spectrumCommand, filesystemName, filesetName, "-J", filesetPath}
 	s.logger.Printf("Args for link fileset%#v", args)
 	err = LinkFilesetInternal(s.logger, s.executor, filesystemName, filesetName, "ssh", args)
 	if err != nil {
@@ -177,7 +177,7 @@ func (s *spectrum_ssh) UnlinkFileset(filesystemName string, filesetName string) 
 
 	spectrumCommand := "/usr/lpp/mmfs/bin/mmunlinkfileset"
 	userAndHost := fmt.Sprintf("%s@%s", s.user, s.host)
-	args := []string{userAndHost, "-p", s.port, spectrumCommand, filesystemName, filesetName}
+	args := []string{"-i", "/root/.ssh/id_rsa", "-o", "StrictHostKeyChecking=no", userAndHost, "-p", s.port, spectrumCommand, filesystemName, filesetName}
 	return UnlinkFilesetInternal(s.logger, s.executor, filesystemName, filesetName, "ssh", args)
 }
 
@@ -191,7 +191,7 @@ func (s *spectrum_ssh) ListFileset(filesystemName string, filesetName string) (r
 
 	spectrumCommand := "/usr/lpp/mmfs/bin/mmlsfileset"
 	userAndHost := fmt.Sprintf("%s@%s", s.user, s.host)
-	args := []string{userAndHost, "-p", s.port, spectrumCommand, filesystemName, filesetName, "-Y"}
+	args := []string{"-i", "/root/.ssh/id_rsa", "-o", "StrictHostKeyChecking=no", userAndHost, "-p", s.port, spectrumCommand, filesystemName, filesetName, "-Y"}
 	return ListFilesetInternal(s.logger, s.executor, filesystemName, filesetName, "ssh", args)
 }
 
@@ -202,7 +202,7 @@ func (s *spectrum_ssh) ListFilesetQuota(filesystemName string, filesetName strin
 
 	spectrumCommand := "/usr/lpp/mmfs/bin/mmlsquota"
 	userAndHost := fmt.Sprintf("%s@%s", s.user, s.host)
-	args := []string{userAndHost, "-p", s.port, spectrumCommand, "-j", filesetName, filesystemName, "--block-size", "auto"}
+	args := []string{"-i", "/root/.ssh/id_rsa", "-o", "StrictHostKeyChecking=no", userAndHost, "-p", s.port, spectrumCommand, "-j", filesetName, filesystemName, "--block-size", "auto"}
 	return ListFilesetQuotaInternal(s.logger, s.executor, filesystemName, filesetName, "ssh", args)
 }
 
@@ -214,7 +214,7 @@ func (s *spectrum_ssh) SetFilesetQuota(filesystemName string, filesetName string
 
 	spectrumCommand := "/usr/lpp/mmfs/bin/mmsetquota"
 	userAndHost := fmt.Sprintf("%s@%s", s.user, s.host)
-	args := []string{userAndHost, "-p", s.port, spectrumCommand, filesystemName + ":" + filesetName, "--block", quota + ":" + quota}
+	args := []string{"-i", "/root/.ssh/id_rsa", "-o", "StrictHostKeyChecking=no", userAndHost, "-p", s.port, spectrumCommand, filesystemName + ":" + filesetName, "--block", quota + ":" + quota}
 	return SetFilesetQuotaInternal(s.logger, s.executor, filesystemName, filesetName, quota, "ssh", args)
 }
 
@@ -226,7 +226,7 @@ func (s *spectrum_ssh) ExportNfs(volumeMountpoint string, clientConfig string) e
 
 	spectrumCommand := "/usr/lpp/mmfs/bin/mmnfs"
 	userAndHost := fmt.Sprintf("%s@%s", s.user, s.host)
-	args := []string{userAndHost, "-p", s.port, "sudo", spectrumCommand, "export", "add", volumeMountpoint, "--client", quotedClientConf}
+	args := []string{"-i", "/root/.ssh/id_rsa", "-o", "StrictHostKeyChecking=no", userAndHost, "-p", s.port, "sudo", spectrumCommand, "export", "add", volumeMountpoint, "--client", quotedClientConf}
 	return ExportNfsInternal(s.logger, s.executor, "ssh", args)
 }
 
@@ -237,6 +237,6 @@ func (s *spectrum_ssh) UnexportNfs(volumeMountpoint string) error {
 
 	spectrumCommand := "/usr/lpp/mmfs/bin/mmnfs"
 	userAndHost := fmt.Sprintf("%s@%s", s.user, s.host)
-	args := []string{userAndHost, "-p", s.port, spectrumCommand, "export", "remove", volumeMountpoint, "--force"}
+	args := []string{"-i", "/root/.ssh/id_rsa", "-o", "StrictHostKeyChecking=no", userAndHost, "-p", s.port, spectrumCommand, "export", "remove", volumeMountpoint, "--force"}
 	return UnexportNfsInternal(s.logger, s.executor, "ssh", args)
 }
