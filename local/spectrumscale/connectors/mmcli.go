@@ -73,8 +73,8 @@ func GetClusterIdInternal(logger *log.Logger, executor utils.Executor, command s
 }
 
 func (s *spectrum_mmcli) IsFilesystemMounted(filesystemName string) (bool, error) {
-	s.logger.Println("spectrumLocalClient: isMounted start")
-	defer s.logger.Println("spectrumLocalClient: isMounted end")
+	s.logger.Println("spectrumMMCLIConnector: isMounted start")
+	defer s.logger.Println("spectrumMMCLIConnector: isMounted end")
 
 	if s.isMounted == true {
 		s.isMounted = true
@@ -103,7 +103,7 @@ func IsFilesystemMountedInternal(logger *log.Logger, executor utils.Executor, fi
 			logger.Printf("error in getting hostname %v", err)
 			return false, err
 		}
-		logger.Printf("spectrumLocalClient: node name: %s\n", currentNode)
+		logger.Printf("spectrumMMCLIConnector: node name: %s\n", currentNode)
 		for _, node := range mountedNodes {
 			if node == currentNode {
 				return true, nil
@@ -132,8 +132,8 @@ func extractMountedNodes(spectrumOutput string) []string {
 }
 
 func (s *spectrum_mmcli) MountFileSystem(filesystemName string) error {
-	s.logger.Println("spectrumLocalClient: mount start")
-	defer s.logger.Println("spectrumLocalClient: mount end")
+	s.logger.Println("spectrumMMCLIConnector: mount start")
+	defer s.logger.Println("spectrumMMCLIConnector: mount end")
 
 	if s.isMounted == true {
 		return nil
@@ -206,8 +206,8 @@ func GetFilesystemMountpointInternal(logger *log.Logger, executor utils.Executor
 }
 
 func (s *spectrum_mmcli) CreateFileset(filesystemName string, filesetName string, opts map[string]interface{}) error {
-	s.logger.Println("spectrumLocalClient: createFileset start")
-	defer s.logger.Println("spectrumLocalClient: createFileset end")
+	s.logger.Println("spectrumMMCLIConnector: createFileset start")
+	defer s.logger.Println("spectrumMMCLIConnector: createFileset end")
 
 	s.logger.Printf("creating a new fileset: %s\n", filesetName)
 
@@ -240,8 +240,8 @@ func CreateFilesetInternal(logger *log.Logger, executor utils.Executor, filesyst
 	return nil
 }
 func (s *spectrum_mmcli) DeleteFileset(filesystemName string, filesetName string) error {
-	s.logger.Println("spectrumLocalClient: deleteFileset start")
-	defer s.logger.Println("spectrumLocalClient: deleteFileset end")
+	s.logger.Println("spectrumMMCLIConnector: deleteFileset start")
+	defer s.logger.Println("spectrumMMCLIConnector: deleteFileset end")
 
 	spectrumCommand := "/usr/lpp/mmfs/bin/mmdelfileset"
 	args := []string{filesystemName, filesetName, "-f"}
@@ -254,12 +254,12 @@ func DeleteFilesetInternal(logger *log.Logger, executor utils.Executor, filesyst
 		logger.Printf("Failed to remove fileset %s: %s ", filesetName, err.Error())
 		return fmt.Errorf("Failed to remove fileset %s: %s ", filesetName, err.Error())
 	}
-	logger.Printf("spectrumLocalClient: deleteFileset output: %s\n", string(output))
+	logger.Printf("spectrumMMCLIConnector: deleteFileset output: %s\n", string(output))
 	return nil
 }
 func (s *spectrum_mmcli) IsFilesetLinked(filesystemName string, filesetName string) (bool, error) {
-	s.logger.Println("spectrumLocalClient: isFilesetLinked start")
-	defer s.logger.Println("spectrumLocalClient: isFilesetLinked end")
+	s.logger.Println("spectrumMMCLIConnector: isFilesetLinked start")
+	defer s.logger.Println("spectrumMMCLIConnector: isFilesetLinked end")
 
 	spectrumCommand := "/usr/lpp/mmfs/bin/mmlsfileset"
 	args := []string{filesystemName, filesetName, "-Y"}
@@ -296,8 +296,8 @@ func IsFilesetLinkedInternal(logger *log.Logger, executor utils.Executor, filesy
 }
 
 func (s *spectrum_mmcli) LinkFileset(filesystemName string, filesetName string) error {
-	s.logger.Println("spectrumLocalClient: linkFileset start")
-	defer s.logger.Println("spectrumLocalClient: linkFileset end")
+	s.logger.Println("spectrumMMCLIConnector: linkFileset start")
+	defer s.logger.Println("spectrumMMCLIConnector: linkFileset end")
 
 	s.logger.Printf("Trying to link: %s,%s", filesystemName, filesetName)
 
@@ -329,8 +329,8 @@ func LinkFilesetInternal(logger *log.Logger, executor utils.Executor, filesystem
 }
 
 func (s *spectrum_mmcli) UnlinkFileset(filesystemName string, filesetName string) error {
-	s.logger.Println("spectrumLocalClient: unlinkFileset start")
-	defer s.logger.Println("spectrumLocalClient: unlinkFileset end")
+	s.logger.Println("spectrumMMCLIConnector: unlinkFileset start")
+	defer s.logger.Println("spectrumMMCLIConnector: unlinkFileset end")
 
 	spectrumCommand := "/usr/lpp/mmfs/bin/mmunlinkfileset"
 	args := []string{filesystemName, filesetName}
@@ -342,7 +342,7 @@ func UnlinkFilesetInternal(logger *log.Logger, executor utils.Executor, filesyst
 	if err != nil {
 		return fmt.Errorf("Failed to unlink fileset %s: %s", filesetName, err.Error())
 	}
-	logger.Printf("spectrumLocalClient: unLinkfileset output: %s\n", string(output))
+	logger.Printf("spectrumMMCLIConnector: unLinkfileset output: %s\n", string(output))
 	return nil
 }
 
@@ -350,8 +350,8 @@ func (s *spectrum_mmcli) ListFilesets(filesystemName string) ([]resources.Volume
 	return nil, nil
 }
 func (s *spectrum_mmcli) ListFileset(filesystemName string, filesetName string) (resources.Volume, error) {
-	s.logger.Println("spectrumLocalClient: ListFileset start")
-	defer s.logger.Println("spectrumLocalClient: ListFileset end")
+	s.logger.Println("spectrumMMCLIConnector: ListFileset start")
+	defer s.logger.Println("spectrumMMCLIConnector: ListFileset end")
 
 	spectrumCommand := "/usr/lpp/mmfs/bin/mmlsfileset"
 	args := []string{filesystemName, filesetName, "-Y"}
@@ -369,8 +369,8 @@ func ListFilesetInternal(logger *log.Logger, executor utils.Executor, filesystem
 
 //TODO modify quota from string to Capacity (see kubernetes)
 func (s *spectrum_mmcli) ListFilesetQuota(filesystemName string, filesetName string) (string, error) {
-	s.logger.Println("spectrumLocalClient: verifyFilesetQuota start")
-	defer s.logger.Println("spectrumLocalClient: verifyFilesetQuota end")
+	s.logger.Println("spectrumMMCLIConnector: verifyFilesetQuota start")
+	defer s.logger.Println("spectrumMMCLIConnector: verifyFilesetQuota end")
 
 	spectrumCommand := "/usr/lpp/mmfs/bin/mmlsquota"
 	args := []string{"-j", filesetName, filesystemName, "--block-size", "auto"}
@@ -405,8 +405,8 @@ func ListFilesetQuotaInternal(logger *log.Logger, executor utils.Executor, files
 }
 
 func (s *spectrum_mmcli) SetFilesetQuota(filesystemName string, filesetName string, quota string) error {
-	s.logger.Println("spectrumLocalClient: setFilesetQuota start")
-	defer s.logger.Println("spectrumLocalClient: setFilesetQuota end")
+	s.logger.Println("spectrumMMCLIConnector: setFilesetQuota start")
+	defer s.logger.Println("spectrumMMCLIConnector: setFilesetQuota end")
 
 	s.logger.Printf("setting quota to %s for fileset %s\n", quota, filesetName)
 
@@ -428,8 +428,8 @@ func SetFilesetQuotaInternal(logger *log.Logger, executor utils.Executor, filesy
 }
 
 func (s *spectrum_mmcli) ExportNfs(volumeMountpoint string, clientConfig string) error {
-	s.logger.Println("spectrumLocalClient: ExportNfs start")
-	defer s.logger.Println("spectrumLocalClient: ExportNfs end")
+	s.logger.Println("spectrumMMCLIConnector: ExportNfs start")
+	defer s.logger.Println("spectrumMMCLIConnector: ExportNfs end")
 
 	spectrumCommand := "/usr/lpp/mmfs/bin/mmnfs"
 	args := []string{"export", "add", volumeMountpoint, "--client", clientConfig}
@@ -451,8 +451,8 @@ func ExportNfsInternal(logger *log.Logger, executor utils.Executor, command stri
 }
 
 func (s *spectrum_mmcli) UnexportNfs(volumeMountpoint string) error {
-	s.logger.Println("spectrumLocalClient: UnexportNfs start")
-	defer s.logger.Println("spectrumLocalClient: UnexportNfs end")
+	s.logger.Println("spectrumMMCLIConnector: UnexportNfs start")
+	defer s.logger.Println("spectrumMMCLIConnector: UnexportNfs end")
 
 	spectrumCommand := "/usr/lpp/mmfs/bin/mmnfs"
 	args := []string{"export", "remove", volumeMountpoint, "--force"}
@@ -471,4 +471,85 @@ func UnexportNfsInternal(logger *log.Logger, executor utils.Executor, command st
 
 	logger.Printf("UnexportNfs output: %s\n", string(output))
 	return nil
+}
+
+func (s *spectrum_mmcli) CreateLightweightVolume(filesystemName string, filesetName string, directory string) error {
+	s.logger.Println("spectrumMMCLIConnector: CreateLightweightVolume start")
+	defer s.logger.Println("spectrumMMCLIConnector: CreateLightweightVolume end")
+
+	lightweightVolumeName := GenerateLightweightVolumeName(directory)
+
+	mountpoint, err := s.GetFilesystemMountpoint(filesystemName)
+	if err != nil {
+		s.logger.Println(err.Error())
+		return err
+	}
+
+	//open permissions on enclosing fileset
+	args := []string{ "777", path.Join(mountpoint, filesetName)}
+	err = UpdateFilesetPermissions(s.logger, s.executor, "chmod", args)
+	if err != nil {
+		s.logger.Printf("Failed update permissions of fileset %s containing LtWt volumes with error: %s", filesetName, err.Error())
+		return err
+	}
+
+	lightweightVolumePath := path.Join(mountpoint, filesetName, lightweightVolumeName)
+	args = []string{ "-p", lightweightVolumePath}
+	err = CreateLightweightVolumeInternal(s.logger, s.executor, "mkdir", args)
+	if err != nil {
+		s.logger.Printf("Failed to create directory path %s : %s", lightweightVolumePath, err.Error())
+		return err
+	}
+	s.logger.Printf("Created LightWeight volume at directory path: %s\n", lightweightVolumePath)
+	return nil
+}
+
+func UpdateFilesetPermissions(logger *log.Logger, executor utils.Executor, command string, args []string) error {
+	_, err := executor.Execute(command, args)
+	if err != nil {
+		logger.Printf("Failed  to update permissions of fileset %s\n", err.Error())
+		return err
+	}
+	return nil
+}
+
+func CreateLightweightVolumeInternal(logger *log.Logger, executor utils.Executor, command string, args []string) error {
+	_, err := executor.Execute(command, args)
+	if err != nil {
+		logger.Printf("Failed to create directory path: %s", err.Error())
+		return err
+	}
+	return nil
+}
+
+func (s *spectrum_mmcli) DeleteLightweightVolume(filesystemName string, filesetName string, directory string) error {
+	s.logger.Println("spectrumMMCLIConnector: DeleteLightweightVolume start")
+	defer s.logger.Println("spectrumMMCLIConnector: DeleteLightweightVolume end")
+
+	mountpoint, err := s.GetFilesystemMountpoint(filesystemName)
+	if err != nil {
+		s.logger.Println(err.Error())
+		return err
+	}
+	lightweightVolumePath := path.Join(mountpoint, filesetName, directory)
+
+	args := []string{"-rf", lightweightVolumePath}
+	err = DeleteLightweightVolumeInternal(s.logger, s.executor, "rm", args)
+	if err != nil {
+		return err
+	}
+    return nil
+}
+
+func DeleteLightweightVolumeInternal(logger *log.Logger, executor utils.Executor, command string, args []string) error {
+	_, err := executor.Execute(command, args)
+	if err != nil {
+		logger.Printf("Failed to remove directory path: %s", err.Error())
+		return err
+	}
+	return nil
+}
+
+func GenerateLightweightVolumeName(name string) string {
+	return name //TODO: check for convension/valid names
 }

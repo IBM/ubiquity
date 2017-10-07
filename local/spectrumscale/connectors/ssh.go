@@ -54,8 +54,8 @@ func (s *spectrum_ssh) GetClusterId() (string, error) {
 	return GetClusterIdInternal(s.logger, s.executor, "ssh", args)
 }
 func (s *spectrum_ssh) IsFilesystemMounted(filesystemName string) (bool, error) {
-	s.logger.Println("spectrumLocalClient: isMounted start")
-	defer s.logger.Println("spectrumLocalClient: isMounted end")
+	s.logger.Println("spectrumSSHConnector: isMounted start")
+	defer s.logger.Println("spectrumSSHConnector: isMounted end")
 
 	if s.isMounted == true {
 		s.isMounted = true
@@ -70,8 +70,8 @@ func (s *spectrum_ssh) IsFilesystemMounted(filesystemName string) (bool, error) 
 
 }
 func (s *spectrum_ssh) MountFileSystem(filesystemName string) error {
-	s.logger.Println("spectrumLocalClient: mount start")
-	defer s.logger.Println("spectrumLocalClient: mount end")
+	s.logger.Println("spectrumSSHConnector: mount start")
+	defer s.logger.Println("spectrumSSHConnector: mount end")
 
 	if s.isMounted == true {
 		return nil
@@ -101,8 +101,8 @@ func (s *spectrum_ssh) GetFilesystemMountpoint(filesystemName string) (string, e
 }
 
 func (s *spectrum_ssh) CreateFileset(filesystemName string, filesetName string, opts map[string]interface{}) error {
-	s.logger.Println("spectrumLocalClient: createFileset start")
-	defer s.logger.Println("spectrumLocalClient: createFileset end")
+	s.logger.Println("spectrumSSHConnector: createFileset start")
+	defer s.logger.Println("spectrumSSHConnector: createFileset end")
 
 	s.logger.Printf("creating a new fileset: %s\n", filesetName)
 
@@ -126,8 +126,8 @@ func (s *spectrum_ssh) CreateFileset(filesystemName string, filesetName string, 
 }
 
 func (s *spectrum_ssh) DeleteFileset(filesystemName string, filesetName string) error {
-	s.logger.Println("spectrumLocalClient: deleteFileset start")
-	defer s.logger.Println("spectrumLocalClient: deleteFileset end")
+	s.logger.Println("spectrumSSHConnector: deleteFileset start")
+	defer s.logger.Println("spectrumSSHConnector: deleteFileset end")
 
 	spectrumCommand := "/usr/lpp/mmfs/bin/mmdelfileset"
 	userAndHost := fmt.Sprintf("%s@%s", s.user, s.host)
@@ -136,8 +136,8 @@ func (s *spectrum_ssh) DeleteFileset(filesystemName string, filesetName string) 
 }
 
 func (s *spectrum_ssh) IsFilesetLinked(filesystemName string, filesetName string) (bool, error) {
-	s.logger.Println("spectrumLocalClient: isFilesetLinked start")
-	defer s.logger.Println("spectrumLocalClient: isFilesetLinked end")
+	s.logger.Println("spectrumSSHConnector: isFilesetLinked start")
+	defer s.logger.Println("spectrumSSHConnector: isFilesetLinked end")
 
 	spectrumCommand := "/usr/lpp/mmfs/bin/mmlsfileset"
 	userAndHost := fmt.Sprintf("%s@%s", s.user, s.host)
@@ -147,8 +147,8 @@ func (s *spectrum_ssh) IsFilesetLinked(filesystemName string, filesetName string
 }
 
 func (s *spectrum_ssh) LinkFileset(filesystemName string, filesetName string) error {
-	s.logger.Println("spectrumLocalClient: linkFileset start")
-	defer s.logger.Println("spectrumLocalClient: linkFileset end")
+	s.logger.Println("spectrumSSHConnector: linkFileset start")
+	defer s.logger.Println("spectrumSSHConnector: linkFileset end")
 
 	s.logger.Printf("Trying to link: %s,%s", filesystemName, filesetName)
 
@@ -172,8 +172,8 @@ func (s *spectrum_ssh) LinkFileset(filesystemName string, filesetName string) er
 }
 
 func (s *spectrum_ssh) UnlinkFileset(filesystemName string, filesetName string) error {
-	s.logger.Println("spectrumLocalClient: unlinkFileset start")
-	defer s.logger.Println("spectrumLocalClient: unlinkFileset end")
+	s.logger.Println("spectrumSSHConnector: unlinkFileset start")
+	defer s.logger.Println("spectrumSSHConnector: unlinkFileset end")
 
 	spectrumCommand := "/usr/lpp/mmfs/bin/mmunlinkfileset"
 	userAndHost := fmt.Sprintf("%s@%s", s.user, s.host)
@@ -186,8 +186,8 @@ func (s *spectrum_ssh) ListFilesets(filesystemName string) ([]resources.Volume, 
 }
 
 func (s *spectrum_ssh) ListFileset(filesystemName string, filesetName string) (resources.Volume, error) {
-	s.logger.Println("spectrumLocalClient: ListFileset start")
-	defer s.logger.Println("spectrumLocalClient: ListFileset end")
+	s.logger.Println("spectrumSSHConnector: ListFileset start")
+	defer s.logger.Println("spectrumSSHConnector: ListFileset end")
 
 	spectrumCommand := "/usr/lpp/mmfs/bin/mmlsfileset"
 	userAndHost := fmt.Sprintf("%s@%s", s.user, s.host)
@@ -197,8 +197,8 @@ func (s *spectrum_ssh) ListFileset(filesystemName string, filesetName string) (r
 
 //TODO modify quota from string to Capacity (see kubernetes)
 func (s *spectrum_ssh) ListFilesetQuota(filesystemName string, filesetName string) (string, error) {
-	s.logger.Println("spectrumLocalClient: verifyFilesetQuota start")
-	defer s.logger.Println("spectrumLocalClient: verifyFilesetQuota end")
+	s.logger.Println("spectrumSSHConnector: verifyFilesetQuota start")
+	defer s.logger.Println("spectrumSSHConnector: verifyFilesetQuota end")
 
 	spectrumCommand := "/usr/lpp/mmfs/bin/mmlsquota"
 	userAndHost := fmt.Sprintf("%s@%s", s.user, s.host)
@@ -207,8 +207,8 @@ func (s *spectrum_ssh) ListFilesetQuota(filesystemName string, filesetName strin
 }
 
 func (s *spectrum_ssh) SetFilesetQuota(filesystemName string, filesetName string, quota string) error {
-	s.logger.Println("spectrumLocalClient: setFilesetQuota start")
-	defer s.logger.Println("spectrumLocalClient: setFilesetQuota end")
+	s.logger.Println("spectrumSSHConnector: setFilesetQuota start")
+	defer s.logger.Println("spectrumSSHConnector: setFilesetQuota end")
 
 	s.logger.Printf("setting quota to %s for fileset %s\n", quota, filesetName)
 
@@ -220,8 +220,8 @@ func (s *spectrum_ssh) SetFilesetQuota(filesystemName string, filesetName string
 
 func (s *spectrum_ssh) ExportNfs(volumeMountpoint string, clientConfig string) error {
 
-	s.logger.Println("spectrumLocalClient: ExportNfs start")
-	defer s.logger.Println("spectrumLocalClient: ExportNfs end")
+	s.logger.Println("spectrumSSHConnector: ExportNfs start")
+	defer s.logger.Println("spectrumSSHConnector: ExportNfs end")
 	quotedClientConf := fmt.Sprintf("'%s'",clientConfig)
 
 	spectrumCommand := "/usr/lpp/mmfs/bin/mmnfs"
@@ -232,11 +232,63 @@ func (s *spectrum_ssh) ExportNfs(volumeMountpoint string, clientConfig string) e
 
 func (s *spectrum_ssh) UnexportNfs(volumeMountpoint string) error {
 
-	s.logger.Println("spectrumLocalClient: UnexportNfs start")
-	defer s.logger.Println("spectrumLocalClient: UnexportNfs end")
+	s.logger.Println("spectrumSSHConnector: UnexportNfs start")
+	defer s.logger.Println("spectrumSSHConnector: UnexportNfs end")
 
 	spectrumCommand := "/usr/lpp/mmfs/bin/mmnfs"
 	userAndHost := fmt.Sprintf("%s@%s", s.user, s.host)
 	args := []string{"-i", "/root/.ssh/id_rsa", "-o", "StrictHostKeyChecking=no", userAndHost, "-p", s.port, spectrumCommand, "export", "remove", volumeMountpoint, "--force"}
 	return UnexportNfsInternal(s.logger, s.executor, "ssh", args)
+}
+
+func (s *spectrum_ssh) CreateLightweightVolume(filesystemName string, filesetName string, directory string) error {
+	s.logger.Println("spectrumSSHConnector: CreateLightweightVolume start")
+	defer s.logger.Println("spectrumSSHConnector: CreateLightweightVolume end")
+
+	lightweightVolumeName := GenerateLightweightVolumeName(directory)
+
+	mountpoint, err := s.GetFilesystemMountpoint(filesystemName)
+	if err != nil {
+		s.logger.Println(err.Error())
+		return err
+	}
+
+	//open permissions on enclosing fileset
+	userAndHost := fmt.Sprintf("%s@%s", s.user, s.host)
+	args := []string{"-i", "/root/.ssh/id_rsa", "-o", "StrictHostKeyChecking=no", userAndHost, "-p", s.port, "chmod", "777", path.Join(mountpoint, filesetName)}
+	err = UpdateFilesetPermissions(s.logger, s.executor, "ssh", args)
+	if err != nil {
+		s.logger.Printf("Failed update permissions of fileset %s containing LtWt volumes with error: %s", filesetName, err.Error())
+		return err
+	}
+
+	lightweightVolumePath := path.Join(mountpoint, filesetName, lightweightVolumeName)
+	args = []string{"-i", "/root/.ssh/id_rsa", "-o", "StrictHostKeyChecking=no", userAndHost, "-p", s.port, "mkdir", "-p", lightweightVolumePath}
+	err = CreateLightweightVolumeInternal(s.logger, s.executor, "ssh", args)
+	if err != nil {
+		s.logger.Printf("Failed to create directory path %s : %s", lightweightVolumePath, err.Error())
+		return err
+	}
+	s.logger.Printf("Created LightWeight volume at directory path: %s\n", lightweightVolumePath)
+	return nil
+}
+
+func (s *spectrum_ssh) DeleteLightweightVolume(filesystemName string, filesetName string, directory string) error {
+	s.logger.Println("spectrumSSHConnector: DeleteLightweightVolume start")
+	defer s.logger.Println("spectrumSSHConnector: DeleteLightweightVolume end")
+
+	mountpoint, err := s.GetFilesystemMountpoint(filesystemName)
+	if err != nil {
+		s.logger.Println(err.Error())
+		return err
+	}
+	lightweightVolumePath := path.Join(mountpoint, filesetName, directory)
+
+	userAndHost := fmt.Sprintf("%s@%s", s.user, s.host)
+	args := []string{"-i", "/root/.ssh/id_rsa", "-o", "StrictHostKeyChecking=no", userAndHost, "-p", s.port, "rm", "-rf", lightweightVolumePath}
+	err = DeleteLightweightVolumeInternal(s.logger, s.executor, "ssh", args)
+	if err != nil {
+		return err
+	}
+	return nil
 }

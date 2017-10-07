@@ -1350,7 +1350,7 @@ var _ = Describe("spectrumRestV2", func() {
 	               restConfig.User = ""
 	               restConfig.Password = "fakepassword"
 	               restConfig.Hostname = "fakehostname"
-                       spectrumRestV2, err = connectors.NewSpectrumRestV2(logger, restConfig)
+                       //spectrumRestV2, err = connectors.NewSpectrumRestV2(logger, restConfig)
                        spectrumRestV2, client, err = connectors.NewspectrumRestV2WithClient(logger, restConfig)
 			err = spectrumRestV2.UnexportNfs(fileset)
 			Expect(err).To(HaveOccurred())

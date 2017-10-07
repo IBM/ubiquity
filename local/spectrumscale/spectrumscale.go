@@ -230,17 +230,8 @@ func (s *spectrumLocalClient) RemoveVolume(removeVolumeRequest resources.RemoveV
 		}
 
 		if s.config.ForceDelete == true && existingVolume.IsPreexisting == false {
-			mountpoint, err := s.connector.GetFilesystemMountpoint(existingVolume.FileSystem)
+			err := s.connector.DeleteLightweightVolume(existingVolume.FileSystem, existingVolume.Fileset, existingVolume.Directory)
 			if err != nil {
-				s.logger.Println(err.Error())
-				return err
-			}
-			lightweightVolumePath := path.Join(mountpoint, existingVolume.Fileset, existingVolume.Directory)
-
-			err = s.executor.RemoveAll(lightweightVolumePath)
-
-			if err != nil {
-				s.logger.Println(err.Error())
 				return err
 			}
 		}
@@ -554,44 +545,18 @@ func (s *spectrumLocalClient) createLightweightVolume(filesystem, name, fileset 
 		}
 	}
 
-	lightweightVolumeName := generateLightweightVolumeName(name)
-
-	mountpoint, err := s.connector.GetFilesystemMountpoint(filesystem)
-	if err != nil {
-		s.logger.Println(err.Error())
-		return err
-	}
-	//open permissions on enclosing fileset
-	args := []string{ "777", path.Join(mountpoint, fileset)}
-	_, err = s.executor.Execute("chmod", args)
-
-	if err != nil {
-		s.logger.Printf("Failed update permissions of fileset %s containing LTW volumes with error: %s", fileset, err.Error())
-		return err
-	}
-
-	lightweightVolumePath := path.Join(mountpoint, fileset, lightweightVolumeName)
-	args = []string{ "-p", lightweightVolumePath}
-	_, err = s.executor.Execute("mkdir", args)
-
-	if err != nil {
-		s.logger.Printf("Failed to create directory path %s : %s", lightweightVolumePath, err.Error())
-		return err
-	}
-	s.logger.Printf("creating directory for lwv: %s\n", lightweightVolumePath)
-
-	err = s.dataModel.InsertLightweightVolume(fileset, lightweightVolumeName, name, filesystem, false, opts)
-
+	err = s.connector.CreateLightweightVolume(filesystem, fileset, name)
 	if err != nil {
 		return err
 	}
 
-	s.logger.Printf("Created LightWeight volume at directory path: %s\n", lightweightVolumePath)
+	err = s.dataModel.InsertLightweightVolume(fileset, name, name, filesystem, false, opts)
+	if err != nil {
+		return err
+	}
+
+	s.logger.Printf("Created LightWeight volume with filesystem %s, fileset %s, directory %s\n", filesystem, fileset, name)
 	return nil
-}
-
-func generateLightweightVolumeName(name string) string {
-	return name //TODO: check for convension/valid names
 }
 
 func generateFilesetName(name string) string {

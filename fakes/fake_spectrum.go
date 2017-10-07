@@ -224,6 +224,32 @@ type FakeSpectrumScaleConnector struct {
 	unexportNfsReturnsOnCall map[int]struct {
 		result1 error
 	}
+	CreateLightweightVolumeStub        func(filesystemName string, filesetName string, directory string) error
+	createLightweightVolumeMutex       sync.RWMutex
+	createLightweightVolumeArgsForCall []struct {
+		filesystemName string
+		filesetName    string
+		directory      string
+	}
+	createLightweightVolumeReturns struct {
+		result1 error
+	}
+	createLightweightVolumeReturnsOnCall map[int]struct {
+		result1 error
+	}
+	DeleteLightweightVolumeStub        func(filesystemName string, filesetName string, directory string) error
+	deleteLightweightVolumeMutex       sync.RWMutex
+	deleteLightweightVolumeArgsForCall []struct {
+		filesystemName string
+		filesetName    string
+		directory      string
+	}
+	deleteLightweightVolumeReturns struct {
+		result1 error
+	}
+	deleteLightweightVolumeReturnsOnCall map[int]struct {
+		result1 error
+	}
 	invocations      map[string][][]interface{}
 	invocationsMutex sync.RWMutex
 }
@@ -1015,6 +1041,106 @@ func (fake *FakeSpectrumScaleConnector) UnexportNfsReturnsOnCall(i int, result1 
 	}{result1}
 }
 
+func (fake *FakeSpectrumScaleConnector) CreateLightweightVolume(filesystemName string, filesetName string, directory string) error {
+	fake.createLightweightVolumeMutex.Lock()
+	ret, specificReturn := fake.createLightweightVolumeReturnsOnCall[len(fake.createLightweightVolumeArgsForCall)]
+	fake.createLightweightVolumeArgsForCall = append(fake.createLightweightVolumeArgsForCall, struct {
+		filesystemName string
+		filesetName    string
+		directory      string
+	}{filesystemName, filesetName, directory})
+	fake.recordInvocation("CreateLightweightVolume", []interface{}{filesystemName, filesetName, directory})
+	fake.createLightweightVolumeMutex.Unlock()
+	if fake.CreateLightweightVolumeStub != nil {
+		return fake.CreateLightweightVolumeStub(filesystemName, filesetName, directory)
+	}
+	if specificReturn {
+		return ret.result1
+	}
+	return fake.createLightweightVolumeReturns.result1
+}
+
+func (fake *FakeSpectrumScaleConnector) CreateLightweightVolumeCallCount() int {
+	fake.createLightweightVolumeMutex.RLock()
+	defer fake.createLightweightVolumeMutex.RUnlock()
+	return len(fake.createLightweightVolumeArgsForCall)
+}
+
+func (fake *FakeSpectrumScaleConnector) CreateLightweightVolumeArgsForCall(i int) (string, string, string) {
+	fake.createLightweightVolumeMutex.RLock()
+	defer fake.createLightweightVolumeMutex.RUnlock()
+	return fake.createLightweightVolumeArgsForCall[i].filesystemName, fake.createLightweightVolumeArgsForCall[i].filesetName, fake.createLightweightVolumeArgsForCall[i].directory
+}
+
+func (fake *FakeSpectrumScaleConnector) CreateLightweightVolumeReturns(result1 error) {
+	fake.CreateLightweightVolumeStub = nil
+	fake.createLightweightVolumeReturns = struct {
+		result1 error
+	}{result1}
+}
+
+func (fake *FakeSpectrumScaleConnector) CreateLightweightVolumeReturnsOnCall(i int, result1 error) {
+	fake.CreateLightweightVolumeStub = nil
+	if fake.createLightweightVolumeReturnsOnCall == nil {
+		fake.createLightweightVolumeReturnsOnCall = make(map[int]struct {
+			result1 error
+		})
+	}
+	fake.createLightweightVolumeReturnsOnCall[i] = struct {
+		result1 error
+	}{result1}
+}
+
+func (fake *FakeSpectrumScaleConnector) DeleteLightweightVolume(filesystemName string, filesetName string, directory string) error {
+	fake.deleteLightweightVolumeMutex.Lock()
+	ret, specificReturn := fake.deleteLightweightVolumeReturnsOnCall[len(fake.deleteLightweightVolumeArgsForCall)]
+	fake.deleteLightweightVolumeArgsForCall = append(fake.deleteLightweightVolumeArgsForCall, struct {
+		filesystemName string
+		filesetName    string
+		directory      string
+	}{filesystemName, filesetName, directory})
+	fake.recordInvocation("DeleteLightweightVolume", []interface{}{filesystemName, filesetName, directory})
+	fake.deleteLightweightVolumeMutex.Unlock()
+	if fake.DeleteLightweightVolumeStub != nil {
+		return fake.DeleteLightweightVolumeStub(filesystemName, filesetName, directory)
+	}
+	if specificReturn {
+		return ret.result1
+	}
+	return fake.deleteLightweightVolumeReturns.result1
+}
+
+func (fake *FakeSpectrumScaleConnector) DeleteLightweightVolumeCallCount() int {
+	fake.deleteLightweightVolumeMutex.RLock()
+	defer fake.deleteLightweightVolumeMutex.RUnlock()
+	return len(fake.deleteLightweightVolumeArgsForCall)
+}
+
+func (fake *FakeSpectrumScaleConnector) DeleteLightweightVolumeArgsForCall(i int) (string, string, string) {
+	fake.deleteLightweightVolumeMutex.RLock()
+	defer fake.deleteLightweightVolumeMutex.RUnlock()
+	return fake.deleteLightweightVolumeArgsForCall[i].filesystemName, fake.deleteLightweightVolumeArgsForCall[i].filesetName, fake.deleteLightweightVolumeArgsForCall[i].directory
+}
+
+func (fake *FakeSpectrumScaleConnector) DeleteLightweightVolumeReturns(result1 error) {
+	fake.DeleteLightweightVolumeStub = nil
+	fake.deleteLightweightVolumeReturns = struct {
+		result1 error
+	}{result1}
+}
+
+func (fake *FakeSpectrumScaleConnector) DeleteLightweightVolumeReturnsOnCall(i int, result1 error) {
+	fake.DeleteLightweightVolumeStub = nil
+	if fake.deleteLightweightVolumeReturnsOnCall == nil {
+		fake.deleteLightweightVolumeReturnsOnCall = make(map[int]struct {
+			result1 error
+		})
+	}
+	fake.deleteLightweightVolumeReturnsOnCall[i] = struct {
+		result1 error
+	}{result1}
+}
+
 func (fake *FakeSpectrumScaleConnector) Invocations() map[string][][]interface{} {
 	fake.invocationsMutex.RLock()
 	defer fake.invocationsMutex.RUnlock()
@@ -1050,7 +1176,15 @@ func (fake *FakeSpectrumScaleConnector) Invocations() map[string][][]interface{}
 	defer fake.exportNfsMutex.RUnlock()
 	fake.unexportNfsMutex.RLock()
 	defer fake.unexportNfsMutex.RUnlock()
-	return fake.invocations
+	fake.createLightweightVolumeMutex.RLock()
+	defer fake.createLightweightVolumeMutex.RUnlock()
+	fake.deleteLightweightVolumeMutex.RLock()
+	defer fake.deleteLightweightVolumeMutex.RUnlock()
+	copiedInvocations := map[string][][]interface{}{}
+	for key, value := range fake.invocations {
+		copiedInvocations[key] = value
+	}
+	return copiedInvocations
 }
 
 func (fake *FakeSpectrumScaleConnector) recordInvocation(key string, args []interface{}) {

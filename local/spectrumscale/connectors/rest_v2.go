@@ -33,6 +33,7 @@ import (
 type spectrumRestV2 struct {
 	logger     *log.Logger
 	httpClient *http.Client
+	executor   utils.Executor
 	endpoint   string
 	user       string
 	password   string
@@ -131,7 +132,7 @@ func NewSpectrumRestV2(logger *log.Logger, restConfig resources.RestConfig) (Spe
 	tr := &http.Transport{
 		TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
 	}
-	return &spectrumRestV2{logger: logger, httpClient: &http.Client{Transport: tr}, endpoint: endpoint, user: user, password: password, hostname: hostname}, nil
+	return &spectrumRestV2{logger: logger, httpClient: &http.Client{Transport: tr}, executor:utils.NewExecutor(), endpoint: endpoint, user: user, password: password, hostname: hostname}, nil
 }
 
 func NewspectrumRestV2WithClient(logger *log.Logger, restConfig resources.RestConfig) (SpectrumScaleConnector, *http.Client, error) {
@@ -591,6 +592,56 @@ func (s *spectrumRestV2) UnexportNfs(volumeMountpoint string) error {
 
 	if err != nil {
 		return fmt.Errorf("Unable to remove export %v:%v. Please refer Ubiquity server logs for more details",volumeMountpoint, err)
+	}
+	return nil
+}
+
+func (s *spectrumRestV2) CreateLightweightVolume(filesystemName string, filesetName string, directory string) error {
+	s.logger.Println("spectrumRestConnector: CreateLightweightVolume start")
+	defer s.logger.Println("spectrumRestConnector: CreateLightweightVolume end")
+
+	lightweightVolumeName := GenerateLightweightVolumeName(directory)
+
+	mountpoint, err := s.GetFilesystemMountpoint(filesystemName)
+	if err != nil {
+		s.logger.Println(err.Error())
+		return err
+	}
+
+	//open permissions on enclosing fileset
+	args := []string{ "777", path.Join(mountpoint, filesetName)}
+	err = UpdateFilesetPermissions(s.logger, s.executor, "chmod", args)
+	if err != nil {
+		s.logger.Printf("Failed update permissions of fileset %s containing LtWt volumes with error: %s", filesetName, err.Error())
+		return err
+	}
+
+	lightweightVolumePath := path.Join(mountpoint, filesetName, lightweightVolumeName)
+	args = []string{ "-p", lightweightVolumePath}
+	err = CreateLightweightVolumeInternal(s.logger, s.executor, "mkdir", args)
+	if err != nil {
+		s.logger.Printf("Failed to create directory path %s : %s", lightweightVolumePath, err.Error())
+		return err
+	}
+	s.logger.Printf("Created LightWeight volume at directory path: %s\n", lightweightVolumePath)
+	return nil
+}
+
+func (s *spectrumRestV2) DeleteLightweightVolume(filesystemName string, filesetName string, directory string) error {
+	s.logger.Println("spectrumRestConnector: DeleteLightweightVolume start")
+	defer s.logger.Println("spectrumRestConnector: DeleteLightweightVolume end")
+
+	mountpoint, err := s.GetFilesystemMountpoint(filesystemName)
+	if err != nil {
+		s.logger.Println(err.Error())
+		return err
+	}
+	lightweightVolumePath := path.Join(mountpoint, filesetName, directory)
+
+	args := []string{"-rf", lightweightVolumePath}
+	err = DeleteLightweightVolumeInternal(s.logger, s.executor, "rm", args)
+	if err != nil {
+		return err
 	}
 	return nil
 }
