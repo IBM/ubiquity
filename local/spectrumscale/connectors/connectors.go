@@ -47,6 +47,7 @@ type SpectrumScaleConnector interface {
 	//Lightweight volume operations
 	CreateLightweightVolume(filesystemName string, filesetName string, directory string) error
 	DeleteLightweightVolume(filesystemName string, filesetName string, directory string) error
+	LightweightVolumeExists(filesystemName string, filesetName string, directory string) (bool, error)
 }
 
 const (

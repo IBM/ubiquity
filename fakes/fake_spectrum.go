@@ -250,6 +250,21 @@ type FakeSpectrumScaleConnector struct {
 	deleteLightweightVolumeReturnsOnCall map[int]struct {
 		result1 error
 	}
+	LightweightVolumeExistsStub        func(filesystemName string, filesetName string, directory string) (bool, error)
+	lightweightVolumeExistsMutex       sync.RWMutex
+	lightweightVolumeExistsArgsForCall []struct {
+		filesystemName string
+		filesetName    string
+		directory      string
+	}
+	lightweightVolumeExistsReturns struct {
+		result1 bool
+		result2 error
+	}
+	lightweightVolumeExistsReturnsOnCall map[int]struct {
+		result1 bool
+		result2 error
+	}
 	invocations      map[string][][]interface{}
 	invocationsMutex sync.RWMutex
 }
@@ -1141,6 +1156,59 @@ func (fake *FakeSpectrumScaleConnector) DeleteLightweightVolumeReturnsOnCall(i i
 	}{result1}
 }
 
+func (fake *FakeSpectrumScaleConnector) LightweightVolumeExists(filesystemName string, filesetName string, directory string) (bool, error) {
+	fake.lightweightVolumeExistsMutex.Lock()
+	ret, specificReturn := fake.lightweightVolumeExistsReturnsOnCall[len(fake.lightweightVolumeExistsArgsForCall)]
+	fake.lightweightVolumeExistsArgsForCall = append(fake.lightweightVolumeExistsArgsForCall, struct {
+		filesystemName string
+		filesetName    string
+		directory      string
+	}{filesystemName, filesetName, directory})
+	fake.recordInvocation("LightweightVolumeExists", []interface{}{filesystemName, filesetName, directory})
+	fake.lightweightVolumeExistsMutex.Unlock()
+	if fake.LightweightVolumeExistsStub != nil {
+		return fake.LightweightVolumeExistsStub(filesystemName, filesetName, directory)
+	}
+	if specificReturn {
+		return ret.result1, ret.result2
+	}
+	return fake.lightweightVolumeExistsReturns.result1, fake.lightweightVolumeExistsReturns.result2
+}
+
+func (fake *FakeSpectrumScaleConnector) LightweightVolumeExistsCallCount() int {
+	fake.lightweightVolumeExistsMutex.RLock()
+	defer fake.lightweightVolumeExistsMutex.RUnlock()
+	return len(fake.lightweightVolumeExistsArgsForCall)
+}
+
+func (fake *FakeSpectrumScaleConnector) LightweightVolumeExistsArgsForCall(i int) (string, string, string) {
+	fake.lightweightVolumeExistsMutex.RLock()
+	defer fake.lightweightVolumeExistsMutex.RUnlock()
+	return fake.lightweightVolumeExistsArgsForCall[i].filesystemName, fake.lightweightVolumeExistsArgsForCall[i].filesetName, fake.lightweightVolumeExistsArgsForCall[i].directory
+}
+
+func (fake *FakeSpectrumScaleConnector) LightweightVolumeExistsReturns(result1 bool, result2 error) {
+	fake.LightweightVolumeExistsStub = nil
+	fake.lightweightVolumeExistsReturns = struct {
+		result1 bool
+		result2 error
+	}{result1, result2}
+}
+
+func (fake *FakeSpectrumScaleConnector) LightweightVolumeExistsReturnsOnCall(i int, result1 bool, result2 error) {
+	fake.LightweightVolumeExistsStub = nil
+	if fake.lightweightVolumeExistsReturnsOnCall == nil {
+		fake.lightweightVolumeExistsReturnsOnCall = make(map[int]struct {
+			result1 bool
+			result2 error
+		})
+	}
+	fake.lightweightVolumeExistsReturnsOnCall[i] = struct {
+		result1 bool
+		result2 error
+	}{result1, result2}
+}
+
 func (fake *FakeSpectrumScaleConnector) Invocations() map[string][][]interface{} {
 	fake.invocationsMutex.RLock()
 	defer fake.invocationsMutex.RUnlock()
@@ -1180,6 +1248,8 @@ func (fake *FakeSpectrumScaleConnector) Invocations() map[string][][]interface{}
 	defer fake.createLightweightVolumeMutex.RUnlock()
 	fake.deleteLightweightVolumeMutex.RLock()
 	defer fake.deleteLightweightVolumeMutex.RUnlock()
+	fake.lightweightVolumeExistsMutex.RLock()
+	defer fake.lightweightVolumeExistsMutex.RUnlock()
 	copiedInvocations := map[string][][]interface{}{}
 	for key, value := range fake.invocations {
 		copiedInvocations[key] = value

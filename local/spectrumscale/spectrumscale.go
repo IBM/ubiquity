@@ -21,9 +21,7 @@ import (
 
 	"github.com/IBM/ubiquity/utils"
 
-	"os"
 	"path"
-
 	"fmt"
 
 	"github.com/IBM/ubiquity/local/spectrumscale/connectors"
@@ -666,24 +664,13 @@ func (s *spectrumLocalClient) updateDBWithExistingDirectory(filesystem, name, us
 		}
 	}
 
-	mountpoint, err := s.connector.GetFilesystemMountpoint(filesystem)
+	ltwtVolExists,err := s.connector.LightweightVolumeExists(filesystem, userSpecifiedFileset, userSpecifiedDirectory)
 	if err != nil {
-		s.logger.Println(err.Error())
 		return err
 	}
 
-	directoryPath := path.Join(mountpoint, userSpecifiedFileset, userSpecifiedDirectory)
-
-	_, err = s.executor.Stat(directoryPath)
-
-	if err != nil {
-		if os.IsNotExist(err) {
-			s.logger.Printf("directory path %s doesn't exist", directoryPath)
-			return err
-		}
-
-		s.logger.Printf("Error stating directoryPath %s: %s", directoryPath, err.Error())
-		return err
+	if !ltwtVolExists {
+		return fmt.Errorf("Unable to stat directoryPath")
 	}
 
 	err = s.dataModel.InsertLightweightVolume(userSpecifiedFileset, userSpecifiedDirectory, name, filesystem, true, opts)

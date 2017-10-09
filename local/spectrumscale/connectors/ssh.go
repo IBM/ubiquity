@@ -292,3 +292,24 @@ func (s *spectrum_ssh) DeleteLightweightVolume(filesystemName string, filesetNam
 	}
 	return nil
 }
+
+func (s *spectrum_ssh) LightweightVolumeExists(filesystemName string, filesetName string, directory string) (bool, error) {
+	s.logger.Println("spectrumSSHConnector: LightweightVolumeExists start")
+	defer s.logger.Println("spectrumSSHConnector: LightweightVolumeExists end")
+
+	mountpoint, err := s.GetFilesystemMountpoint(filesystemName)
+	if err != nil {
+		s.logger.Println(err.Error())
+		return false, err
+	}
+
+	directoryPath := path.Join(mountpoint, filesetName, directory)
+
+	userAndHost := fmt.Sprintf("%s@%s", s.user, s.host)
+	args := []string{"-i", "/root/.ssh/id_rsa", "-o", "StrictHostKeyChecking=no", userAndHost, "-p", s.port, "stat", directoryPath}
+	err = LightweightVolumeExistsInternal(s.logger, s.executor, "ssh", args)
+	if err != nil {
+		return false, err
+	}
+	return true, nil
+}

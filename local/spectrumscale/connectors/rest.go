@@ -368,6 +368,24 @@ func (s *spectrum_rest) DeleteLightweightVolume(filesystemName string, filesetNa
 	return nil
 }
 
+func (s *spectrum_rest) LightweightVolumeExists(filesystemName string, filesetName string, directory string) (bool, error) {
+
+	mountpoint, err := s.GetFilesystemMountpoint(filesystemName)
+	if err != nil {
+		s.logger.Println(err.Error())
+		return false, err
+	}
+
+	directoryPath := path.Join(mountpoint, filesetName, directory)
+
+	args := []string{directoryPath}
+	err = LightweightVolumeExistsInternal(s.logger, s.executor, "stat", args)
+	if err != nil {
+		return false, err
+	}
+	return true, nil
+}
+
 func (s *spectrum_rest) doHTTP(endpoint string, method string, responseObject interface{}, param interface{}) (interface{}, error) {
 	response, err := utils.HttpExecuteUserAuth(s.httpClient, s.logger, method, endpoint, s.user, s.password, param)
 	if err != nil {

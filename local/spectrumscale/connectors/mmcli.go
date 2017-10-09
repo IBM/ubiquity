@@ -553,3 +553,32 @@ func DeleteLightweightVolumeInternal(logger *log.Logger, executor utils.Executor
 func GenerateLightweightVolumeName(name string) string {
 	return name //TODO: check for convension/valid names
 }
+
+func (s *spectrum_mmcli) LightweightVolumeExists(filesystemName string, filesetName string, directory string) (bool, error) {
+	s.logger.Println("spectrumMMCLIConnector: LightweightVolumeExists start")
+	defer s.logger.Println("spectrumMMCLIConnector: LightweightVolumeExists end")
+
+	mountpoint, err := s.GetFilesystemMountpoint(filesystemName)
+	if err != nil {
+		s.logger.Println(err.Error())
+		return false, err
+	}
+
+	directoryPath := path.Join(mountpoint, filesetName, directory)
+
+	args := []string{directoryPath}
+	err = LightweightVolumeExistsInternal(s.logger, s.executor, "stat", args)
+	if err != nil {
+		return false, err
+	}
+	return true, nil
+}
+
+func LightweightVolumeExistsInternal(logger *log.Logger, executor utils.Executor, command string, args []string) error {
+	_, err := executor.Execute(command, args)
+	if err != nil {
+		logger.Printf("Error stating directoryPath: %s", err.Error())
+		return err
+	}
+	return nil
+}
