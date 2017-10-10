@@ -10,6 +10,7 @@
 set -e
 
 echo "Configuring Postgres for SSL!"
+echo "Running as id $(id -u)"
 
 if [ -z "$POSTGRES_USER" ]; then
   export POSTGRES_USER="postgres"
@@ -19,24 +20,19 @@ if [ -z "$POSTGRES_EMAIL" ]; then
   export POSTGRES_EMAIL="user@test.com"
 fi
 
-export SSLDIR="/var/lib/postgresql/ssl"
-
-# Update HBA to require SSL and Client Cert auth
-head -n -1 /var/lib/postgresql/data/pg_hba.conf > /tmp/pg_hba.conf
-echo "hostssl all all all password" >> /tmp/pg_hba.conf
-mv /tmp/pg_hba.conf /var/lib/postgresql/data/pg_hba.conf
-
-if [ ! -d $SSLDIR ]
+if [ ! -d $PGSSL ]
 then
-    # Create SSL directory
-    mkdir $SSLDIR
-    chown ${POSTGRES_USER}:${POSTGRES_USER} $SSLDIR
+    echo "Creating SSL directory $PGSSL"
+    mkdir $PGSSL
+    chown ${POSTGRES_USER}:${POSTGRES_USER} $PGSSL
+    chmod 700 $PGSSL
 fi
 
-# Create SSL certificates
-cd $SSLDIR
 
-if [ ! -s "$SSLDIR/server.crt" ]
+# Create SSL certificates
+cd $PGSSL
+
+if [ ! -s "$PGSSL/server.crt" ]
 then
     # root CA
     openssl req -new -x509 -nodes -out root.crt -keyout root.key -newkey rsa:4096 -sha512 -subj /CN=TheRootCA
@@ -52,6 +48,11 @@ then
 fi
 
 # edit the configuration files
+
+# Update HBA to require SSL and Client Cert auth
+head -n -1 /var/lib/postgresql/data/pg_hba.conf > /tmp/pg_hba.conf
+echo "hostssl all all all password" >> /tmp/pg_hba.conf
+mv /tmp/pg_hba.conf /var/lib/postgresql/data/pg_hba.conf
 
 sed -i 's/#ssl/ssl/g' /var/lib/postgresql/data/postgresql.conf
 sed -i 's/ssl \= off/ssl \= on/g' /var/lib/postgresql/data/postgresql.conf
