@@ -12,22 +12,9 @@ set -e
 echo "Configuring Postgres for SSL!"
 echo "Running as id $(id -u)"
 
-if [ -z "$POSTGRES_USER" ]; then
-  export POSTGRES_USER="postgres"
-fi
-
 if [ -z "$POSTGRES_EMAIL" ]; then
   export POSTGRES_EMAIL="user@test.com"
 fi
-
-if [ ! -d $PGSSL ]
-then
-    echo "Creating SSL directory $PGSSL"
-    mkdir $PGSSL
-    chown ${POSTGRES_USER}:${POSTGRES_USER} $PGSSL
-    chmod 700 $PGSSL
-fi
-
 
 # Create SSL certificates
 cd $PGSSL
@@ -36,14 +23,14 @@ if [ ! -s "$PGSSL/server.crt" ]
 then
     # root CA
     openssl req -new -x509 -nodes -out root.crt -keyout root.key -newkey rsa:4096 -sha512 -subj /CN=TheRootCA
-    chown ${POSTGRES_USER}:${POSTGRES_USER} root.key
+    chown postgres root.key
     chmod 600 root.key
 
     # Server certificate
     openssl req -new -out server.req -keyout server.key -nodes -newkey rsa:4096 -subj "/CN=$( hostname )/emailAddress=$POSTGRES_EMAIL"
     openssl x509 -req -in server.req -CAkey root.key -CA root.crt -set_serial $RANDOM -sha512 -out server.crt
 
-    chown ${POSTGRES_USER}:${POSTGRES_USER} server.key
+    chown postgres server.key
     chmod 600 server.key
 fi
 
