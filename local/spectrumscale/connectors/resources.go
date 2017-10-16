@@ -309,6 +309,19 @@ type GetFilesystemResponse_v2 struct {
 	Paging      Pages           `json:"paging,omitempty"`
 }
 
+type OwnerInfo struct {
+	User  string	`json:user,omitempty"`
+	UID   int	`json:uid,omitempty"`
+	Group string    `json:group,omitempty"`
+	GID   int	`json:gid,omitempty"`
+}
+
+type OwnerResp_v2 struct {
+	Status Status 	 `json:"status,omitempty"`
+	Owner  OwnerInfo `json:"owner,omitempty"`
+}
+
+
 type BlockInfo struct {
 	Pools               string `json:"pools,omitempty"`
 	Disks               string `json:"disks,omitempty"`

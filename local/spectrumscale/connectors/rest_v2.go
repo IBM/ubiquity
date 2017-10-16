@@ -22,7 +22,6 @@ import (
 	"log"
 	"net/http"
 	"net/url"
-	"os"
 	"path"
 	"time"
 
@@ -169,39 +168,19 @@ func (s *spectrumRestV2) GetClusterId() (string, error) {
 func (s *spectrumRestV2) IsFilesystemMounted(filesystemName string) (bool, error) {
 	s.logger.Println("spectrumRestConnector: IsFilesystemMounted")
 	defer s.logger.Println("spectrumRestConnector: IsFilesystemMounted end")
+	
+	ownerResp := OwnerResp_v2{}
 
-	var currentNode string
-	getNodesURL := utils.FormatURL(s.endpoint, "scalemgmt/v2/nodes")
-	getNodesResponse := GetNodesResponse_v2{}
+	ownerUrl := utils.FormatURL(s.endpoint,fmt.Sprintf("scalemgmt/v2/filesystems/%s/owner/%s",filesystemName,url.QueryEscape("/")))
 
-	s.logger.Println("Get Nodes URL %s", getNodesURL)
-
-	for {
-		err := s.doHTTP(getNodesURL, "GET", &getNodesResponse, nil)
-		if err != nil {
-			s.logger.Printf("error in executing remote call: %v", err)
-			return false, fmt.Errorf("Unable to fetch nodes for %v. Please refer Ubiquity server logs for more details",filesystemName)
-		}
-
-		if s.hostname != "" {
-			s.logger.Printf("Got hostname from config %v", s.hostname)
-			currentNode = s.hostname
-		} else {
-			currentNode, _ = os.Hostname()
-		}
-		s.logger.Printf("spectrum rest Client: node name: %s\n", currentNode)
-		for _, node := range getNodesResponse.Nodes {
-			if node.AdminNodename == currentNode {
-				return true, nil
-			}
-		}
-		if getNodesResponse.Paging.Next == "" {
-			break
-		} else {
-			getNodesURL = getNodesResponse.Paging.Next
-		}
+	err := s.doHTTP(ownerUrl, "GET", &ownerResp, nil)
+	
+	if err != nil {
+		s.logger.Printf("Filesystem %s not mounted. URL tried %s\n",filesystemName,ownerUrl)
+		return false, err
 	}
-	return false, nil
+	s.logger.Printf("Response: %v\n",ownerResp)
+	return true, nil
 }
 
 func (s *spectrumRestV2) MountFileSystem(filesystemName string) error {
