@@ -125,25 +125,23 @@ func NewSpectrumRestV2(logger *log.Logger, restConfig resources.RestConfig) (Spe
 	endpoint := restConfig.Endpoint
 	user := restConfig.User
 	password := restConfig.Password
-	hostname := restConfig.Hostname
 
 	tr := &http.Transport{
 		TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
 	}
-	return &spectrumRestV2{logger: logger, httpClient: &http.Client{Transport: tr}, endpoint: endpoint, user: user, password: password, hostname: hostname}, nil
+	return &spectrumRestV2{logger: logger, httpClient: &http.Client{Transport: tr}, endpoint: endpoint, user: user, password: password}, nil
 }
 
 func NewspectrumRestV2WithClient(logger *log.Logger, restConfig resources.RestConfig) (SpectrumScaleConnector, *http.Client, error) {
 	endpoint := restConfig.Endpoint
 	user := restConfig.User
 	password := restConfig.Password
-	hostname := restConfig.Hostname
 
 	tr := &http.Transport{
 		TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
 	}
 	client := &http.Client{Transport: tr}
-	return &spectrumRestV2{logger: logger, httpClient: client, endpoint: endpoint, user: user, password: password, hostname: hostname}, client, nil
+	return &spectrumRestV2{logger: logger, httpClient: client, endpoint: endpoint, user: user, password: password}, client, nil
 
 }
 
