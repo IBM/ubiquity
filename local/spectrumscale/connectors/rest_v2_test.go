@@ -21,7 +21,7 @@ import (
 	"log"
 	"net/http"
 	"os"
-
+	"net/url"
 	"github.com/IBM/ubiquity/local/spectrumscale/connectors"
 	"github.com/IBM/ubiquity/resources"
 	"github.com/jarcoal/httpmock"
@@ -49,7 +49,6 @@ var _ = Describe("spectrumRestV2", func() {
 		restConfig.Endpoint = fakeurl
 		restConfig.User = "fakeuser"
 		restConfig.Password = "fakepassword"
-		restConfig.Hostname = "fakehostname"
 		spectrumRestV2, client, err = connectors.NewspectrumRestV2WithClient(logger, restConfig)
 		Expect(err).ToNot(HaveOccurred())
 		httpmock.ActivateNonDefault(client)
@@ -95,13 +94,11 @@ var _ = Describe("spectrumRestV2", func() {
 
 	Context(".IsFilesystemMounted", func() {
 		It("Should pass and return true", func() {
-			getnodeResp := connectors.GetNodesResponse_v2{}
-			getnodeResp.Nodes = make([]connectors.Node_v2, 1)
-			getnodeResp.Nodes[0].AdminNodename = "fakehostname"
-			getnodeResp.Status.Code = 200
-			marshalledResponse, err := json.Marshal(getnodeResp)
+			ownerResp := connectors.OwnerResp_v2{}
+			ownerResp.Status.Code = 200
+			marshalledResponse, err := json.Marshal(ownerResp)
 			Expect(err).ToNot(HaveOccurred())
-			registerurl := fakeurl + "/scalemgmt/v2/nodes"
+			registerurl := fakeurl + "/scalemgmt/v2/filesystems/" + filesystem+"/owner/"+url.QueryEscape("/")
 			httpmock.RegisterResponder(
 				"GET",
 				registerurl,
@@ -112,32 +109,12 @@ var _ = Describe("spectrumRestV2", func() {
 			Expect(ismounted).To(Equal(true))
 		})
 
-		It("Should pass but return false as node name is not matching", func() {
-			getnodeResp := connectors.GetNodesResponse_v2{}
-			getnodeResp.Nodes = make([]connectors.Node_v2, 1)
-			getnodeResp.Nodes[0].AdminNodename = "fakehostname1"
-			getnodeResp.Status.Code = 200
-			marshalledResponse, err := json.Marshal(getnodeResp)
+		It("Should fail and return false", func() {
+			ownerResp := connectors.OwnerResp_v2{}
+			ownerResp.Status.Code = 500
+			marshalledResponse, err := json.Marshal(ownerResp)
 			Expect(err).ToNot(HaveOccurred())
-			registerurl := fakeurl + "/scalemgmt/v2/nodes"
-			httpmock.RegisterResponder(
-				"GET",
-				registerurl,
-				httpmock.NewStringResponder(200, string(marshalledResponse)),
-			)
-			ismounted, err := spectrumRestV2.IsFilesystemMounted(filesystem)
-			Expect(err).ToNot(HaveOccurred())
-			Expect(ismounted).To(Equal(false))
-		})
-
-		It("Should fail with http error and return false", func() {
-			getnodeResp := connectors.GetNodesResponse_v2{}
-			getnodeResp.Nodes = make([]connectors.Node_v2, 1)
-			getnodeResp.Nodes[0].AdminNodename = "fakehostname"
-			getnodeResp.Status.Code = 500
-			marshalledResponse, err := json.Marshal(getnodeResp)
-			Expect(err).ToNot(HaveOccurred())
-			registerurl := fakeurl + "/scalemgmt/v2/nodes"
+			registerurl := fakeurl + "/scalemgmt/v2/filesystems/" + filesystem+ "/owner/"+url.QueryEscape("/")
 			httpmock.RegisterResponder(
 				"GET",
 				registerurl,
@@ -147,35 +124,7 @@ var _ = Describe("spectrumRestV2", func() {
 			Expect(err).To(HaveOccurred())
 			Expect(ismounted).To(Equal(false))
 		})
-
-		It("Should pass by getting hostname from system ", func() {
-			getnodeResp := connectors.GetNodesResponse_v2{}
-			getnodeResp.Nodes = make([]connectors.Node_v2, 1)
-			hostn, err := os.Hostname()
-			Expect(err).ToNot(HaveOccurred())
-			getnodeResp.Nodes[0].AdminNodename = hostn
-			getnodeResp.Status.Code = 200
-			marshalledResponse, err := json.Marshal(getnodeResp)
-			Expect(err).ToNot(HaveOccurred())
-			registerurl := fakeurl + "/scalemgmt/v2/nodes"
-			httpmock.RegisterResponder(
-				"GET",
-				registerurl,
-				httpmock.NewStringResponder(200, string(marshalledResponse)),
-			)
-
-			restConfig.Hostname = ""
-
-			nspectrumRestV2, nclient, err := connectors.NewspectrumRestV2WithClient(logger, restConfig)
-			Expect(err).ToNot(HaveOccurred())
-			httpmock.ActivateNonDefault(nclient)
-
-			ismounted, err := nspectrumRestV2.IsFilesystemMounted(filesystem)
-			Expect(err).ToNot(HaveOccurred())
-			Expect(ismounted).To(Equal(true))
-		})
 	})
-
 	Context(".ListFilesystems", func() {
 		It("Should pass by getting proper filesystem", func() {
 			getfilesysResp := connectors.GetFilesystemResponse_v2{}
@@ -1349,7 +1298,6 @@ var _ = Describe("spectrumRestV2", func() {
 			)
 	               restConfig.User = ""
 	               restConfig.Password = "fakepassword"
-	               restConfig.Hostname = "fakehostname"
                        spectrumRestV2, err = connectors.NewSpectrumRestV2(logger, restConfig)
                        spectrumRestV2, client, err = connectors.NewspectrumRestV2WithClient(logger, restConfig)
 			err = spectrumRestV2.UnexportNfs(fileset)
