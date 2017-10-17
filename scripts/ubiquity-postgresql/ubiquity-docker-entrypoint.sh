@@ -9,11 +9,47 @@
 #
 set -e
 
+export PGSSL_PRIVATE="`dirname $UBIQUITY_DB_CERT_PRIVATE`"
+export PGSSL_PUBLIC="`dirname $UBIQUITY_DB_CERT_PUBLIC`"
+
 if [ "$1" = 'postgres' ] && [ "$(id -u)" = '0' ]; then
-    echo "Creating SSL directory $PGSSL and setting ownership to user postgres ..."
-    mkdir -p $PGSSL
-    chown postgres $PGSSL
-    chmod 700 $PGSSL
+
+    echo "Creating SSL directory $PGSSL_PRIVATE and setting ownership to user postgres ..."
+    mkdir -p $PGSSL_PRIVATE
+    chown postgres $PGSSL_PRIVATE
+    chmod 700 $PGSSL_PRIVATE
+
+    if [ "$PGSSL_PUBLIC" != "$PGSSL_PRIVATE" ]; then
+        echo "Creating SSL directory $PGSSL_PUBLIC and setting ownership to user postgres ..."
+        mkdir -p $PGSSL_PUBLIC
+        chown postgres $PGSSL_PUBLIC
+        chmod 700 $PGSSL_PUBLIC
+    fi
+
+    if [ ! -s "$UBIQUITY_DB_CERT_PUBLIC" ]; then
+        echo "Generateing SSL private and public keys..."
+
+        if [ -z "$POSTGRES_EMAIL" ]; then
+          export POSTGRES_EMAIL="user@test.com"
+        fi
+
+        # Create SSL certificates
+        cd $PGSSL_PRIVATE
+
+        # root CA
+        openssl req -new -x509 -nodes -out root.crt -keyout root.key -newkey rsa:4096 -sha512 -subj /CN=TheRootCA
+        chown postgres root.key
+        chmod 600 root.key
+
+        # Server certificate
+        openssl req -new -out server.req -keyout $UBIQUITY_DB_CERT_PRIVATE -nodes -newkey rsa:4096 -subj "/CN=$( hostname )/emailAddress=$POSTGRES_EMAIL"
+        openssl x509 -req -in server.req -CAkey root.key -CA root.crt -set_serial $RANDOM -sha512 -out $UBIQUITY_DB_CERT_PUBLIC
+
+        chown postgres $UBIQUITY_DB_CERT_PRIVATE
+        chmod 600 $UBIQUITY_DB_CERT_PRIVATE
+        chown postgres $UBIQUITY_DB_CERT_PUBLIC
+        chmod 600 $UBIQUITY_DB_CERT_PUBLIC
+    fi
 fi
 
 exec docker-entrypoint.sh "$@"
