@@ -9,21 +9,21 @@
 #
 set -e
 
-export PGSSL_PRIVATE="`dirname $UBIQUITY_DB_CERT_PRIVATE`"
-export PGSSL_PUBLIC="`dirname $UBIQUITY_DB_CERT_PUBLIC`"
+export PGSSL_PRIVATE_DIR="`dirname $UBIQUITY_DB_CERT_PRIVATE`"
+export PGSSL_PUBLIC_DIR="`dirname $UBIQUITY_DB_CERT_PUBLIC`"
 
 if [ "$1" = 'postgres' ] && [ "$(id -u)" = '0' ]; then
 
-    echo "Creating SSL directory $PGSSL_PRIVATE and setting ownership to user postgres ..."
-    mkdir -p $PGSSL_PRIVATE
-    chown postgres $PGSSL_PRIVATE
-    chmod 700 $PGSSL_PRIVATE
+    echo "Creating SSL directory $PGSSL_PRIVATE_DIR and setting ownership to user postgres ..."
+    mkdir -p $PGSSL_PRIVATE_DIR
+    chown postgres $PGSSL_PRIVATE_DIR
+    chmod 700 $PGSSL_PRIVATE_DIR
 
-    if [ "$PGSSL_PUBLIC" != "$PGSSL_PRIVATE" ]; then
-        echo "Creating SSL directory $PGSSL_PUBLIC and setting ownership to user postgres ..."
-        mkdir -p $PGSSL_PUBLIC
-        chown postgres $PGSSL_PUBLIC
-        chmod 700 $PGSSL_PUBLIC
+    if [ "$PGSSL_PUBLIC_DIR" != "$PGSSL_PRIVATE_DIR" ]; then
+        echo "Creating SSL directory $PGSSL_PUBLIC_DIR and setting ownership to user postgres ..."
+        mkdir -p $PGSSL_PUBLIC_DIR
+        chown postgres $PGSSL_PUBLIC_DIR
+        chmod 700 $PGSSL_PUBLIC_DIR
     fi
 
     if [ ! -s "$UBIQUITY_DB_CERT_PUBLIC" ]; then
@@ -34,7 +34,7 @@ if [ "$1" = 'postgres' ] && [ "$(id -u)" = '0' ]; then
         fi
 
         # Create SSL certificates
-        cd $PGSSL_PRIVATE
+        cd $PGSSL_PRIVATE_DIR
 
         # root CA
         openssl req -new -x509 -nodes -out root.crt -keyout root.key -newkey rsa:4096 -sha512 -subj /CN=TheRootCA
