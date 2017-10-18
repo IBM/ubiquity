@@ -14,11 +14,13 @@ COPY --from=0 /go/src/github.com/IBM/ubiquity/ubiquity .
 COPY docker-entrypoint.sh .
 RUN chmod 755 docker-entrypoint.sh
 
+# comments below should be removed when we implement the new SSL_MODE env variable
 ENV PATH=/root:$PATH \
     UBIQUITY_SERVER_CERT_PRIVATE=/var/lib/ubiquity/ssl/private/ubiquity.key \
-    UBIQUITY_SERVER_CERT_PUBLIC=/var/lib/ubiquity/ssl/private/ubiquity.crt \
-    UBIQUITY_SERVER_VERIFY_SCBE_CERT=/var/lib/ubiquity/ssl/public/scbe-trusted-ca.crt \
-    UBIQUITY_DB_SSL_ROOT_CERT=/var/lib/ubiquity/ssl/public/ubiquity-db-trusted-ca.crt
+    UBIQUITY_SERVER_CERT_PUBLIC=/var/lib/ubiquity/ssl/private/ubiquity.crt # \
+#    UBIQUITY_SERVER_VERIFY_SCBE_CERT=/var/lib/ubiquity/ssl/public/scbe-trusted-ca.crt \
+#    UBIQUITY_DB_SSL_ROOT_CERT=/var/lib/ubiquity/ssl/public/ubiquity-db-trusted-ca.crt \
+#    SSL_MODE verify_full
 
 ENTRYPOINT ["docker-entrypoint.sh"]
 CMD ["ubiquity"]
