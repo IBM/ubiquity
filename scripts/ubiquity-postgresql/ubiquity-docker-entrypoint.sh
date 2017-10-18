@@ -26,7 +26,7 @@ if [ "$1" = 'postgres' ] && [ "$(id -u)" = '0' ]; then
         chmod 700 $PGSSL_PUBLIC_DIR
     fi
 
-    if [ ! -s "$UBIQUITY_DB_CERT_PUBLIC" ]; then
+    if [ ! -e "$UBIQUITY_DB_CERT_PUBLIC" ]; then
         echo "Generateing SSL private and public keys..."
 
         if [ -z "$POSTGRES_EMAIL" ]; then
@@ -49,6 +49,10 @@ if [ "$1" = 'postgres' ] && [ "$(id -u)" = '0' ]; then
         chmod 600 $UBIQUITY_DB_CERT_PRIVATE
         chown postgres $UBIQUITY_DB_CERT_PUBLIC
         chmod 600 $UBIQUITY_DB_CERT_PUBLIC
+    else
+        echo "Using SSL private and public keys provided to the container:"
+        echo "    $UBIQUITY_DB_CERT_PRIVATE"
+        echo "    $UBIQUITY_DB_CERT_PUBLIC"
     fi
 fi
 

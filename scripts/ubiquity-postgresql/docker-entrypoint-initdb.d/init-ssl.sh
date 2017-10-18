@@ -14,14 +14,16 @@ echo "Configuring Postgres for SSL!"
 # edit the configuration files - this should be done only after postgresql image initialization!
 
 # Update HBA to require SSL and Client Cert auth
-head -n -1 /var/lib/postgresql/data/pg_hba.conf > /tmp/pg_hba.conf
+PG_HBA=/var/lib/postgresql/data/pg_hba.conf
+head -n -1 $PG_HBA > /tmp/pg_hba.conf
 echo "hostssl all all all password" >> /tmp/pg_hba.conf
-mv /tmp/pg_hba.conf /var/lib/postgresql/data/pg_hba.conf
+mv /tmp/pg_hba.conf $PG_HBA
 
-sed -i 's/#ssl/ssl/g' /var/lib/postgresql/data/postgresql.conf
-sed -i 's/ssl \= off/ssl \= on/g' /var/lib/postgresql/data/postgresql.conf
-sed -i "s~ssl_cert_file = 'server.crt'~ssl_cert_file = '$UBIQUITY_DB_CERT_PUBLIC'~g" /var/lib/postgresql/data/postgresql.conf
-sed -i "s~ssl_key_file = 'server.key'~ssl_key_file = '$UBIQUITY_DB_CERT_PRIVATE'~g" /var/lib/postgresql/data/postgresql.conf
+PG_CONF=/var/lib/postgresql/data/postgresql.conf
+sed -i 's/#ssl/ssl/g' $PG_CONF
+sed -i 's/ssl \= off/ssl \= on/g' $PG_CONF
+sed -i "s~ssl_cert_file = 'server.crt'~ssl_cert_file = '$UBIQUITY_DB_CERT_PUBLIC'~g" $PG_CONF
+sed -i "s~ssl_key_file = 'server.key'~ssl_key_file = '$UBIQUITY_DB_CERT_PRIVATE'~g" $PG_CONF
 
 echo "SSL Configuration - Done!"
 

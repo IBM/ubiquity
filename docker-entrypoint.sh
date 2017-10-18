@@ -4,7 +4,6 @@ set -e
 export SSL_PRIVATE_DIR=`dirname $UBIQUITY_SERVER_CERT_PRIVATE`
 export SSL_PUBLIC_DIR=`dirname $UBIQUITY_SERVER_CERT_PUBLIC`
 
-# to be used when ubiquity will not run as root
 export USER=root
 export GROUP=root
 export EMAIL="user@test.com"
@@ -22,9 +21,9 @@ configure_ssl() {
         chmod 700 $SSL_PUBLIC_DIR
     fi
 
-    if [ ! -s "$UBIQUITY_SERVER_CERT_PUBLIC" ]
+    if [ ! -e "$UBIQUITY_SERVER_CERT_PUBLIC" ]
     then
-        echo "Creating default SSL certificates for ubiquity"
+        echo "Creating default SSL key and certificate for ubiquity"
         cd $SSL_PRIVATE_DIR
 
         # root CA
@@ -33,14 +32,16 @@ configure_ssl() {
         chmod 600 root.key
 
         # Server certificate
+        echo "Creating default SSL key $UBIQUITY_SERVER_CERT_PRIVATE"
         openssl req -new -out server.req -keyout $UBIQUITY_SERVER_CERT_PRIVATE -nodes -newkey rsa:4096 -subj "/CN=$( hostname )/emailAddress=$EMAIL"
+        echo "Creating default SSL certificate $UBIQUITY_SERVER_CERT_PRIVATE"
         openssl x509 -req -in server.req -CAkey root.key -CA root.crt -set_serial $RANDOM -sha512 -out $UBIQUITY_SERVER_CERT_PUBLIC
 
         chown ${USER}:${GROUP} $UBIQUITY_SERVER_CERT_PRIVATE
         chmod 600 $UBIQUITY_SERVER_CERT_PRIVATE
         chown ${USER}:${GROUP} $UBIQUITY_SERVER_CERT_PUBLIC
         chmod 600 $UBIQUITY_SERVER_CERT_PUBLIC
-        echo "Creating default SSL certificates for ubiquity - done!"
+        echo "Creating default SSL key and certificate for ubiquity - done!"
     fi
 
 }
