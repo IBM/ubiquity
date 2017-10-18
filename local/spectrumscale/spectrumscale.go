@@ -355,8 +355,8 @@ func (s *spectrumLocalClient) Attach(attachRequest resources.AttachRequest) (vol
 		return "", fmt.Errorf("Volume not found")
 	}
 
-	if len(attachRequest.ContainerOrchestrator) > 0 && attachRequest.ContainerOrchestrator == "docker" {
-		existingVolume.Volume.Mountpoint = path.Join(resources.DockerPropagatedMount, attachRequest.Name)
+	if len(attachRequest.ContainerOrchestrator) > 0 && attachRequest.ContainerOrchestrator == resources.DockerOrchestrator {
+		existingVolume.Volume.Mountpoint = path.Join(resources.UbiquityMountpoint, attachRequest.Name)
 	}
 
 	volumeMountpoint, err = s.getVolumeMountPoint(existingVolume)

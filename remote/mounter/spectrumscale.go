@@ -44,7 +44,7 @@ func (s *spectrumScaleMounter) Mount(mountRequest resources.MountRequest) (strin
 	var isDockerRequest bool
 	var target string
 	containerOrchestrator, orchestratorSpecified := mountRequest.VolumeConfig["ContainerOrchestrator"]
-	if orchestratorSpecified && containerOrchestrator.(string) == "docker" {
+	if orchestratorSpecified && containerOrchestrator.(string) == resources.DockerOrchestrator {
 		isDockerRequest = true
 
 		// create symlink if it doesn't exist. If it exists, volume has already been mounted.
@@ -59,7 +59,7 @@ func (s *spectrumScaleMounter) Mount(mountRequest resources.MountRequest) (strin
 		_,err := os.Lstat(mountRequest.Mountpoint)
 		if err != nil {
 			if os.IsNotExist(err) {
-				// create symlink DockerPropagatedMount -> spectrum scale Mountpoint(target)
+				// create symlink UbiquityMountpoint -> spectrum scale Mountpoint(target)
 				args := []string{"-s", target, mountRequest.Mountpoint}
 				output, err := s.executor.Execute("ln", args)
 				if err != nil {
@@ -161,7 +161,7 @@ func (s *spectrumScaleMounter) ActionAfterRemove( request resources.AfterRemoveR
 	s.logger.Println("spectrumScaleMounter: ActionAfterRemove start")
 	defer s.logger.Println("spectrumScaleMounter: ActionAfterRemove end")
 
-	volUnderPropagatedMount := path.Join(resources.DockerPropagatedMount, request.Name)
+	volUnderPropagatedMount := path.Join(resources.UbiquityMountpoint, request.Name)
 	_, err := os.Lstat(volUnderPropagatedMount)
 	if err != nil {
 		// if symlink doesn't exist, volume has not been mounted.

@@ -99,7 +99,7 @@ func (s *remoteClient) RemoveVolume(removeVolumeRequest resources.RemoveVolumeRe
 	defer s.logger.Println("remoteClient: remove end")
 
 	var volume resources.Volume
-	if removeVolumeRequest.ContainerOrchestrator == "docker" {
+	if removeVolumeRequest.ContainerOrchestrator == resources.DockerOrchestrator {
 		getVolumeRequest := resources.GetVolumeRequest{Name: removeVolumeRequest.Name}
 		var err error
 		volume, err = s.GetVolume(getVolumeRequest)
@@ -124,7 +124,7 @@ func (s *remoteClient) RemoveVolume(removeVolumeRequest resources.RemoveVolumeRe
 		return utils.ExtractErrorResponse(response)
 	}
 
-	if removeVolumeRequest.ContainerOrchestrator == "docker" {
+	if removeVolumeRequest.ContainerOrchestrator == resources.DockerOrchestrator {
 		mounter, err := s.getMounterForBackend(volume.Backend)
 		if err != nil {
 			return fmt.Errorf("Error determining mounter for volume: %s", err.Error())
@@ -227,8 +227,8 @@ func (s *remoteClient) Attach(attachRequest resources.AttachRequest) (string, er
 	if err != nil {
 		return "", fmt.Errorf("Error determining mounter for volume: %s", err.Error())
 	}
-	if attachRequest.ContainerOrchestrator == "docker" {
-		volumeConfig["ContainerOrchestrator"] = "docker"
+	if attachRequest.ContainerOrchestrator == resources.DockerOrchestrator {
+		volumeConfig["ContainerOrchestrator"] = resources.DockerOrchestrator
 	}
 	mountRequest := resources.MountRequest{Mountpoint: attachResponse.Mountpoint, VolumeConfig: volumeConfig}
 	mountpoint, err := mounter.Mount(mountRequest)

@@ -279,36 +279,3 @@ func LoadConfig() (resources.UbiquityServerConfig, error) {
 
 	return config, nil
 }
-
-func LoadUbiquityPluginConfig() (resources.UbiquityPluginConfig, error) {
-
-	config := resources.UbiquityPluginConfig{}
-
-	config.LogLevel = os.Getenv("LOG_LEVEL")
-	config.LogPath = os.Getenv("LOG_PATH")
-	config.Backends = strings.Split(os.Getenv("BACKENDS"), ",")
-
-	dockerPlugin := resources.UbiquityDockerPluginConfig{}
-	dockerPlugin.PluginsDirectory = os.Getenv("PLUGINS_DIRECTORY")
-	config.DockerPlugin = dockerPlugin
-
-	ubiquity := resources.UbiquityServerConnectionInfo{}
-	port, err := strconv.ParseInt(os.Getenv("UBIQUITY_PORT"), 0, 32)
-	if err != nil {
-		return config, err
-	}
-	ubiquity.Port = int(port)
-	ubiquity.Address = os.Getenv("UBIQUITY_ADDRESS")
-	config.UbiquityServer = ubiquity
-
-	spectrumNfsRemoteConfig := resources.SpectrumNfsRemoteConfig{}
-	spectrumNfsRemoteConfig.ClientConfig = os.Getenv("SPECTRUM_NFS_CLIENT_CONFIG")
-	config.SpectrumNfsRemoteConfig = spectrumNfsRemoteConfig
-
-	scbeRemoteConfig := resources.ScbeRemoteConfig{}
-	scbeSkipRescanIscsi, err := strconv.ParseBool(os.Getenv("SCBE_SKIP_RESCAN_ISCSI"))
-	scbeRemoteConfig.SkipRescanISCSI = scbeSkipRescanIscsi
-	config.ScbeRemoteConfig = scbeRemoteConfig
-
-	return config, nil
-}
