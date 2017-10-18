@@ -1,9 +1,10 @@
 FROM postgres:9.6
 
-ENV PGSSL /var/lib/postgresql/ssl
-RUN mkdir -p "$PGSSL" && chown -R postgres:postgres "$PGSSL" && chmod 777 "$PGSSL"
+ENV UBIQUITY_DB_CERT_PRIVATE="/var/lib/postgresql/ssl/private/ubiquity-db.key" \
+    UBIQUITY_DB_CERT_PUBLIC="/var/lib/postgresql/ssl/private/ubiquity-db.crt"
 
-VOLUME /var/lib/postgresql/ssl
+RUN PGSSL_PRIVATE="`dirname $UBIQUITY_DB_CERT_PRIVATE`" && mkdir -p "$PGSSL_PRIVATE" && chown -R postgres:postgres "$PGSSL_PRIVATE" && chmod 777 "$PGSSL_PRIVATE"
+RUN PGSSL_PUBLIC="`dirname $UBIQUITY_DB_CERT_PUBLIC`" && mkdir -p "$PGSSL_PUBLIC" && chown -R postgres:postgres "$PGSSL_PUBLIC" && chmod 777 "$PGSSL_PUBLIC"
 
 ADD docker-entrypoint-initdb.d /docker-entrypoint-initdb.d/
 
