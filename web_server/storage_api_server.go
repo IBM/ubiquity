@@ -23,10 +23,10 @@ import (
 
 	"github.com/IBM/ubiquity/resources"
 
-	"github.com/gorilla/mux"
-	"github.com/IBM/ubiquity/utils/logs"
-	"os"
 	"github.com/IBM/ubiquity/utils"
+	"github.com/IBM/ubiquity/utils/logs"
+	"github.com/gorilla/mux"
+	"os"
 	"strings"
 )
 
@@ -62,13 +62,13 @@ func (s *StorageApiServer) Start() error {
 	http.Handle("/", router)
 
 	useSsl := os.Getenv(keyUseSsl)
-	if strings.ToLower(useSsl) == "true" {
-		return s.StartSsl()
-	} else {
+	if strings.ToLower(useSsl) == "false" {
 		return s.StartNonSsl()
+	} else {
+		// Ubiquity server uses by default with SSL on
+		return s.StartSsl()
 	}
 }
-
 
 func (s *StorageApiServer) printStartMsg() {
 	fmt.Println(fmt.Sprintf("Starting Storage API server on port %d ....", s.config.Port))
@@ -121,4 +121,3 @@ func (s *StorageApiServer) getCertFilenames() (string, string, error) {
 
 	return publicFilename, privateFilename, nil
 }
-

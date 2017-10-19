@@ -17,17 +17,18 @@
 package remote
 
 import (
+	"crypto/tls"
+	"crypto/x509"
 	"fmt"
-	"log"
-	"net/http"
+	"github.com/IBM/ubiquity/local/scbe"
 	"github.com/IBM/ubiquity/resources"
 	"github.com/IBM/ubiquity/utils"
+	"github.com/IBM/ubiquity/utils/logs"
+	"io/ioutil"
+	"log"
+	"net/http"
 	"os"
 	"strings"
-	"io/ioutil"
-	"crypto/x509"
-	"crypto/tls"
-	"github.com/IBM/ubiquity/utils/logs"
 )
 
 const KeyUseSsl = "UBIQUITY_PLUGIN_USE_SSL"
@@ -54,31 +55,42 @@ func (s *remoteClient) initialize() error {
 	s.storageApiURL = fmt.Sprintf(storageAPIURL, protocol, s.config.UbiquityServer.Address, s.config.UbiquityServer.Port)
 	s.httpClient = &http.Client{}
 	verifyFileCA := os.Getenv(KeyVerifyCA)
-	if verifyFileCA != "" {
-		if _, err := exec.Stat(verifyFileCA); err != nil {
-			return logger.ErrorRet(err, "failed")
+	sslMode := strings.ToLower(os.Getenv(resources.KeySslMode))
+	if sslMode == resources.SslModeVerifyFull {
+		if verifyFileCA != "" {
+			if _, err := exec.Stat(verifyFileCA); err != nil {
+				return logger.ErrorRet(err, "failed")
+			}
+			caCert, err := ioutil.ReadFile(verifyFileCA)
+			if err != nil {
+				return logger.ErrorRet(err, "failed")
+			}
+			caCertPool := x509.NewCertPool()
+			if ok := caCertPool.AppendCertsFromPEM(caCert); !ok {
+				return fmt.Errorf("parse %v failed", verifyFileCA)
+			}
+			s.httpClient.Transport = &http.Transport{TLSClientConfig: &tls.Config{RootCAs: caCertPool}}
+		} else {
+			return scbe.SslModeFullVerifyWithoutCAfile(KeyVerifyCA)
 		}
-		caCert, err := ioutil.ReadFile(verifyFileCA)
-		if err != nil {
-			return logger.ErrorRet(err, "failed")
-		}
-		caCertPool := x509.NewCertPool()
-		if ok := caCertPool.AppendCertsFromPEM(caCert); !ok {
-			return fmt.Errorf("parse %v failed", verifyFileCA)
-		}
-		s.httpClient.Transport = &http.Transport{TLSClientConfig: &tls.Config{RootCAs: caCertPool}}
-	} else {
+	} else if sslMode == resources.SslModeRequire {
+		logger.Info(
+			fmt.Sprintf("Client SSL Mode set to [%s]. Means the communication to ubiquity is InsecureSkipVerify", sslMode))
 		s.httpClient.Transport = &http.Transport{TLSClientConfig: &tls.Config{InsecureSkipVerify: true}}
+	} else {
+		return scbe.SslModeValueInvalid(sslMode)
 	}
+
 	logger.Info("", logs.Args{{"url", s.storageApiURL}, {"CA", verifyFileCA}})
 	return nil
 }
 
 func (s *remoteClient) getProtocol() string {
 	useSsl := os.Getenv(KeyUseSsl)
-	if strings.ToLower(useSsl) == "true" {
-		return "https"
-	} else {
+	if strings.ToLower(useSsl) == "false" {
 		return "http"
+	} else {
+		// Ubiquity client communicates with ubiquity server by default with https
+		return "https"
 	}
 }

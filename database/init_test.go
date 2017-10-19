@@ -21,6 +21,7 @@ import (
     . "github.com/onsi/ginkgo"
     . "github.com/onsi/gomega"
     "github.com/IBM/ubiquity/database"
+    "github.com/IBM/ubiquity/resources"
     "fmt"
     "os"
 )
@@ -36,7 +37,7 @@ var _ = Describe("Init", func() {
         newPassword    string = "my-password"
         newPort        string = "my-port"
         newTimeout     string = "my-timeout"
-        defaultSslMode string = "disable"
+        defaultSslMode string = resources.DefaultDbSslMode
         newSslMode     string = "my-sslmode"
         newSslRootCert string = "my-sslrootcert"
     )
