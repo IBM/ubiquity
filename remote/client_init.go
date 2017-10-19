@@ -56,6 +56,9 @@ func (s *remoteClient) initialize() error {
 	s.httpClient = &http.Client{}
 	verifyFileCA := os.Getenv(KeyVerifyCA)
 	sslMode := strings.ToLower(os.Getenv(resources.KeySslMode))
+        if sslMode == ""{
+           sslMode = resources.DefaultDbSslMode
+        }
 	if sslMode == resources.SslModeVerifyFull {
 		if verifyFileCA != "" {
 			if _, err := exec.Stat(verifyFileCA); err != nil {
