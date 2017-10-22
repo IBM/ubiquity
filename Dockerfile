@@ -20,7 +20,7 @@ ENV PATH=/root:$PATH \
     UBIQUITY_SERVER_CERT_PUBLIC=/var/lib/ubiquity/ssl/private/ubiquity.crt
 #    UBIQUITY_SERVER_VERIFY_SCBE_CERT=/var/lib/ubiquity/ssl/public/scbe-trusted-ca.crt \
 #    UBIQUITY_DB_SSL_ROOT_CERT=/var/lib/ubiquity/ssl/public/ubiquity-db-trusted-ca.crt \
-#    SSL_MODE verify_full
+#    SSL_MODE verify-full
 
 ENTRYPOINT ["docker-entrypoint.sh"]
 CMD ["ubiquity"]

@@ -212,9 +212,9 @@ func (s *simpleRestClient) initTransport() error {
 
     emptyConnection := resources.ConnectionInfo{}
     if s.connectionInfo != emptyConnection {
-	sslMode := strings.ToLower(os.Getenv(resources.KeySslMode))
+	sslMode := strings.ToLower(os.Getenv(resources.KeyScbeSslMode))
         if sslMode == ""{
-           sslMode = resources.DefaultDbSslMode
+           sslMode = resources.DefaultScbeSslMode
         }
 
         if sslMode == resources.SslModeVerifyFull {

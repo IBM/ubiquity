@@ -56,9 +56,9 @@ func (s *remoteClient) initialize() error {
 	s.httpClient = &http.Client{}
 	verifyFileCA := os.Getenv(KeyVerifyCA)
 	sslMode := strings.ToLower(os.Getenv(resources.KeySslMode))
-        if sslMode == ""{
-           sslMode = resources.DefaultDbSslMode
-        }
+	if sslMode == "" {
+		sslMode = resources.DefaultPluginsSslMode
+	}
 	if sslMode == resources.SslModeVerifyFull {
 		if verifyFileCA != "" {
 			if _, err := exec.Stat(verifyFileCA); err != nil {
@@ -74,14 +74,15 @@ func (s *remoteClient) initialize() error {
 			}
 			s.httpClient.Transport = &http.Transport{TLSClientConfig: &tls.Config{RootCAs: caCertPool}}
 		} else {
-			return scbe.SslModeFullVerifyWithoutCAfile(KeyVerifyCA)
+			return logger.ErrorRet(
+				&scbe.SslModeFullVerifyWithoutCAfile{verifyFileCA}, "failed")
 		}
 	} else if sslMode == resources.SslModeRequire {
 		logger.Info(
-			fmt.Sprintf("Client SSL Mode set to [%s]. Means the communication to ubiquity is InsecureSkipVerify", sslMode))
+			fmt.Sprintf("Client SSL Mode set to [%s]. Attention: the communication to ubiquity is InsecureSkipVerify", sslMode))
 		s.httpClient.Transport = &http.Transport{TLSClientConfig: &tls.Config{InsecureSkipVerify: true}}
 	} else {
-		return scbe.SslModeValueInvalid(sslMode)
+		return logger.ErrorRet(&scbe.SslModeValueInvalid{sslMode}, "failed")
 	}
 
 	logger.Info("", logs.Args{{"url", s.storageApiURL}, {"CA", verifyFileCA}})

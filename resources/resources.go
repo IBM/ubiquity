@@ -74,9 +74,12 @@ const PathToMountUbiquityBlockDevices = "/ubiquity/%s"    // %s is the WWN of th
 const OptionNameForVolumeFsType = "fstype"                // the option name of the fstype and also the key in the volumeConfig
 const ScbeDefaultPort = 8440                              // the default port for SCBE management
 const SslModeRequire = "require"
-const SslModeVerifyFull = "verify_full"
-const KeySslMode = "UBIQUITY_PLUGIN_USE_MODE"
-const DefaultDbSslMode = SslModeRequire
+const SslModeVerifyFull = "verify-full"
+const KeySslMode = "UBIQUITY_PLUGIN_SSL_MODE"
+const KeyScbeSslMode = "SCBE_SSL_MODE"
+const DefaultDbSslMode = SslModeVerifyFull
+const DefaultScbeSslMode = SslModeVerifyFull
+const DefaultPluginsSslMode = SslModeVerifyFull
 
 type SshConfig struct {
 	User string
@@ -129,6 +132,7 @@ type ScbeRemoteConfig struct {
 
 type UbiquityPluginSslConfig struct {
 	UseSsl   bool
+	SslMode  string
 	VerifyCa string
 }
 
