@@ -20,7 +20,6 @@ import (
 	"crypto/tls"
 	"crypto/x509"
 	"fmt"
-	"github.com/IBM/ubiquity/local/scbe"
 	"github.com/IBM/ubiquity/resources"
 	"github.com/IBM/ubiquity/utils"
 	"github.com/IBM/ubiquity/utils/logs"
@@ -34,6 +33,25 @@ import (
 const KeyUseSsl = "UBIQUITY_PLUGIN_USE_SSL"
 const KeyVerifyCA = "UBIQUITY_PLUGIN_VERIFY_CA"
 const storageAPIURL = "%s://%s:%d/ubiquity_storage"
+
+
+type SslModeValueInvalid struct {
+	sslModeInValid string
+} // TODO try to reuse SslModeValueInvalid and SslModeFullVerifyWithoutCAfile from scbe.error, for some reason it cannot be used here
+
+func (e *SslModeValueInvalid) Error() string {
+	return fmt.Sprintf("SSL Mode [%s] is invalid. Available values are [%s, %s]",
+		e.sslModeInValid, resources.SslModeRequire, resources.SslModeVerifyFull)
+}
+
+type SslModeFullVerifyWithoutCAfile struct {
+	VerifyCaEnvName string
+}
+
+func (e *SslModeFullVerifyWithoutCAfile) Error() string {
+	return fmt.Sprintf("ENV [%s] is missing. Must set in case of SSL mode [%s]",
+		e.VerifyCaEnvName, resources.SslModeVerifyFull)
+}
 
 func NewRemoteClient(logger *log.Logger, storageApiURL string, config resources.UbiquityPluginConfig) (resources.StorageClient, error) {
 	return &remoteClient{logger: logger, storageApiURL: storageApiURL, httpClient: &http.Client{}, config: config, mounterPerBackend: make(map[string]resources.Mounter)}, nil
@@ -75,14 +93,14 @@ func (s *remoteClient) initialize() error {
 			s.httpClient.Transport = &http.Transport{TLSClientConfig: &tls.Config{RootCAs: caCertPool}}
 		} else {
 			return logger.ErrorRet(
-				&scbe.SslModeFullVerifyWithoutCAfile{verifyFileCA}, "failed")
+				&SslModeFullVerifyWithoutCAfile{KeyVerifyCA}, "failed")
 		}
 	} else if sslMode == resources.SslModeRequire {
 		logger.Info(
 			fmt.Sprintf("Client SSL Mode set to [%s]. Attention: the communication to ubiquity is InsecureSkipVerify", sslMode))
 		s.httpClient.Transport = &http.Transport{TLSClientConfig: &tls.Config{InsecureSkipVerify: true}}
 	} else {
-		return logger.ErrorRet(&scbe.SslModeValueInvalid{sslMode}, "failed")
+		return logger.ErrorRet(&SslModeValueInvalid{sslMode}, "failed")
 	}
 
 	logger.Info("", logs.Args{{"url", s.storageApiURL}, {"CA", verifyFileCA}})
