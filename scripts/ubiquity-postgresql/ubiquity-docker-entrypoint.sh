@@ -13,19 +13,20 @@ export PGSSL_PRIVATE_DIR="`dirname $UBIQUITY_DB_CERT_PRIVATE`"
 export PGSSL_PUBLIC_DIR="`dirname $UBIQUITY_DB_CERT_PUBLIC`"
 
 if [ "$1" = 'postgres' ] && [ "$(id -u)" = '0' ]; then
-    echo "Creating SSL directory $PGSSL_PRIVATE_DIR and setting ownership to user postgres ..."
-    mkdir -p $PGSSL_PRIVATE_DIR
-    chown postgres $PGSSL_PRIVATE_DIR
-    chmod 700 $PGSSL_PRIVATE_DIR
+    if [ ! -e "$UBIQUITY_DB_CERT_PUBLIC" -a ! -e "$UBIQUITY_DB_CERT_PRIVATE" ]
+    then
+        echo "Creating SSL directory $PGSSL_PRIVATE_DIR and setting ownership to user postgres ..."
+        mkdir -p $PGSSL_PRIVATE_DIR
+        chown postgres $PGSSL_PRIVATE_DIR
+        chmod 700 $PGSSL_PRIVATE_DIR
 
-    if [ "$PGSSL_PUBLIC_DIR" != "$PGSSL_PRIVATE_DIR" ]; then
-        echo "Creating SSL directory $PGSSL_PUBLIC_DIR and setting ownership to user postgres ..."
-        mkdir -p $PGSSL_PUBLIC_DIR
-        chown postgres $PGSSL_PUBLIC_DIR
-        chmod 700 $PGSSL_PUBLIC_DIR
-    fi
+        if [ "$PGSSL_PUBLIC_DIR" != "$PGSSL_PRIVATE_DIR" ]; then
+            echo "Creating SSL directory $PGSSL_PUBLIC_DIR and setting ownership to user postgres ..."
+            mkdir -p $PGSSL_PUBLIC_DIR
+            chown postgres $PGSSL_PUBLIC_DIR
+            chmod 700 $PGSSL_PUBLIC_DIR
+        fi
 
-    if [ ! -e "$UBIQUITY_DB_CERT_PUBLIC" ]; then
         echo "Generateing SSL private and public keys..."
 
         if [ -z "$POSTGRES_EMAIL" ]; then
@@ -48,10 +49,12 @@ if [ "$1" = 'postgres' ] && [ "$(id -u)" = '0' ]; then
         chmod 600 $UBIQUITY_DB_CERT_PRIVATE
         chown postgres $UBIQUITY_DB_CERT_PUBLIC
         chmod 600 $UBIQUITY_DB_CERT_PUBLIC
+        echo "Creating default SSL key and certificate for postgres - done!"
+    elif [ -e "$UBIQUITY_DB_CERT_PUBLIC" -a -e "$UBIQUITY_DB_CERT_PRIVATE" ]
+        echo "Ubiquity will be using the provided certificate files : [$UBIQUITY_DB_CERT_PUBLIC] and [$UBIQUITY_DB_CERT_PRIVATE]"
     else
-        echo "Using SSL private and public keys provided to the container:"
-        echo "    $UBIQUITY_DB_CERT_PRIVATE"
-        echo "    $UBIQUITY_DB_CERT_PUBLIC"
+        echo "Error: one of the certificate files is missing : [$UBIQUITY_DB_CERT_PUBLIC] and [$UBIQUITY_DB_CERT_PRIVATE]"
+        exit 2
     fi
 fi
 
