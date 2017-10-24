@@ -13,7 +13,6 @@ export PGSSL_PRIVATE_DIR="`dirname $UBIQUITY_DB_CERT_PRIVATE`"
 export PGSSL_PUBLIC_DIR="`dirname $UBIQUITY_DB_CERT_PUBLIC`"
 
 if [ "$1" = 'postgres' ] && [ "$(id -u)" = '0' ]; then
-
     echo "Creating SSL directory $PGSSL_PRIVATE_DIR and setting ownership to user postgres ..."
     mkdir -p $PGSSL_PRIVATE_DIR
     chown postgres $PGSSL_PRIVATE_DIR
