@@ -51,6 +51,12 @@ if [ "$1" = 'postgres' ] && [ "$(id -u)" = '0' ]; then
         echo "Creating default SSL key and certificate for postgres - done!"
     elif [ -e "$UBIQUITY_DB_CERT_PUBLIC" -a -e "$UBIQUITY_DB_CERT_PRIVATE" ]; then
         echo "Ubiquity will be using the provided certificate files : [$UBIQUITY_DB_CERT_PUBLIC] and [$UBIQUITY_DB_CERT_PRIVATE]"
+        echo "Make sure the permissions of the certificates are ok..."
+        chown postgres $UBIQUITY_DB_CERT_PRIVATE
+        chmod 600 $UBIQUITY_DB_CERT_PRIVATE
+        chown postgres $UBIQUITY_DB_CERT_PUBLIC
+        chmod 600 $UBIQUITY_DB_CERT_PUBLIC
+        ls -l $UBIQUITY_DB_CERT_PRIVATE $UBIQUITY_DB_CERT_PUBLIC
     else
         echo "Error: one of the certificate files is missing : [$UBIQUITY_DB_CERT_PUBLIC] and [$UBIQUITY_DB_CERT_PRIVATE]"
         exit 2
