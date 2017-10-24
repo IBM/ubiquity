@@ -9,8 +9,7 @@ export GROUP=root
 export EMAIL="user@test.com"
 
 configure_ssl() {
-    if [ ! -e "$UBIQUITY_SERVER_CERT_PUBLIC" -a ! -e "$UBIQUITY_SERVER_CERT_PRIVATE" ]
-    then
+    if [ ! -e "$UBIQUITY_SERVER_CERT_PUBLIC" -a ! -e "$UBIQUITY_SERVER_CERT_PRIVATE" ]; then
         echo "Creating SSL directory $SSL_PRIVATE_DIR and setting ownership to user postgres ..."
         mkdir -p $SSL_PRIVATE_DIR
         chown ${USER}:${GROUP} $SSL_PRIVATE_DIR
@@ -42,7 +41,7 @@ configure_ssl() {
         chown ${USER}:${GROUP} $UBIQUITY_SERVER_CERT_PUBLIC
         chmod 600 $UBIQUITY_SERVER_CERT_PUBLIC
         echo "Creating default SSL key and certificate for ubiquity - done!"
-    elif [ -e "$UBIQUITY_SERVER_CERT_PUBLIC" -a -e "$UBIQUITY_SERVER_CERT_PRIVATE" ]
+    elif [ -e "$UBIQUITY_SERVER_CERT_PUBLIC" -a -e "$UBIQUITY_SERVER_CERT_PRIVATE" ]; then
         echo "Ubiquity will be using the provided certificate files : [$UBIQUITY_SERVER_CERT_PUBLIC] and [$UBIQUITY_SERVER_CERT_PRIVATE]"
     else
         echo "Error: one of the certificate files is missing : [$UBIQUITY_SERVER_CERT_PUBLIC] and [$UBIQUITY_SERVER_CERT_PRIVATE]"
