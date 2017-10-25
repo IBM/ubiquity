@@ -26,4 +26,4 @@ psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" <<-EOSQL
     GRANT ALL PRIVILEGES ON DATABASE ${UBIQUITY_DB_NAME} TO ${UBIQUITY_DB_USERNAME};
     ALTER ROLE ${UBIQUITY_DB_USERNAME} password '${UBIQUITY_DB_PASSWORD}';
 EOSQL
-echo "DB user and DB name was created successfully"
+echo "DB user and DB name were created successfully"

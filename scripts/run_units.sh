@@ -10,7 +10,7 @@ go get github.com/modocache/gover
 echo "Run unit tests"
 ginkgo -r -cover
 rc=$?
-echo "-> Finished to run unit tests  (exit code $rc)"
+echo "-> Finished running unit tests  (exit code $rc)"
 echo ""
 
 echo "Report coverage"

@@ -79,7 +79,7 @@ func GetPsqlSslParams() string {
     // add sslrootcert
     psqlSslRootCert := os.Getenv(KeyPsqlSslRootCert)
     if psqlSslRootCert != "" {
-        // if sslmode is verify-full then postgres will verify te certificate, if its require then it will automatically skip verify
+        // if sslmode is verify-full then postgres will verify the certificate, if its require then it will automatically skip verify
         str += " sslrootcert=" + psqlSslRootCert
     }
     return str
