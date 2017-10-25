@@ -194,49 +194,13 @@ func (s *remoteClient) Attach(attachRequest resources.AttachRequest) (string, er
 	if err != nil {
 		return "", fmt.Errorf("Error in unmarshalling response for attach remote call")
 	}
-	getVolumeConfigRequest := resources.GetVolumeConfigRequest{Name: attachRequest.Name}
-	volumeConfig, err := s.GetVolumeConfig(getVolumeConfigRequest)
-	if err != nil {
-		return "", err
-	}
-	getVolumeRequest := resources.GetVolumeRequest{Name: attachRequest.Name}
-	volume, err := s.GetVolume(getVolumeRequest)
 
-	mounter, err := s.getMounterForBackend(volume.Backend)
-	if err != nil {
-		return "", fmt.Errorf("Error determining mounter for volume: %s", err.Error())
-	}
-	mountRequest := resources.MountRequest{Mountpoint: attachResponse.Mountpoint, VolumeConfig: volumeConfig}
-	mountpoint, err := mounter.Mount(mountRequest)
-	if err != nil {
-		return "", err
-	}
-
-	return mountpoint, nil
+	return "", nil
 }
 
 func (s *remoteClient) Detach(detachRequest resources.DetachRequest) error {
 	s.logger.Println("remoteClient: detach start")
 	defer s.logger.Println("remoteClient: detach end")
-
-	getVolumeRequest := resources.GetVolumeRequest{Name: detachRequest.Name}
-	volume, err := s.GetVolume(getVolumeRequest)
-
-	mounter, err := s.getMounterForBackend(volume.Backend)
-	if err != nil {
-		return fmt.Errorf("Volume not found")
-	}
-
-	getVolumeConfigRequest := resources.GetVolumeConfigRequest{Name: detachRequest.Name}
-	volumeConfig, err := s.GetVolumeConfig(getVolumeConfigRequest)
-	if err != nil {
-		return err
-	}
-	unmountRequest := resources.UnmountRequest{VolumeConfig: volumeConfig}
-	err = mounter.Unmount(unmountRequest)
-	if err != nil {
-		return err
-	}
 
 	detachRemoteURL := utils.FormatURL(s.storageApiURL, "volumes", detachRequest.Name, "detach")
 	detachRequest.CredentialInfo = s.config.CredentialInfo
@@ -253,13 +217,7 @@ func (s *remoteClient) Detach(detachRequest resources.DetachRequest) error {
 		return utils.ExtractErrorResponse(response)
 	}
 
-	afterDetachRequest := resources.AfterDetachRequest{VolumeConfig: volumeConfig}
-	if err := mounter.ActionAfterDetach(afterDetachRequest); err != nil {
-		s.logger.Printf(fmt.Sprintf("Error execute action after detaching the volume : %#v", err))
-		return err
-	}
 	return nil
-
 }
 
 func (s *remoteClient) ListVolumes(listVolumesRequest resources.ListVolumesRequest) ([]resources.Volume, error) {
