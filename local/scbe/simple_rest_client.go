@@ -30,6 +30,7 @@ import (
     "os"
     "crypto/x509"
     "strings"
+    "github.com/golang/sync/syncmap"
 )
 
 // SimpleRestClient is an interface that wrapper the http requests to provide easy REST API operations,
@@ -66,12 +67,12 @@ type simpleRestClient struct {
     referrer       string
     connectionInfo resources.ConnectionInfo
     httpClient     *http.Client
-    headers        map[string]string
+    headers        *syncmap.Map
 }
 
 func NewSimpleRestClient(conInfo resources.ConnectionInfo, baseURL string, authURL string, referrer string) (SimpleRestClient, error) {
-    headers := map[string]string{"Content-Type": "application/json", "referer": referrer}
-    client := &simpleRestClient{logger: logs.GetLogger(), connectionInfo: conInfo, baseURL: baseURL, authURL: authURL, referrer: referrer, httpClient: &http.Client{}, headers: headers}
+    client := &simpleRestClient{logger: logs.GetLogger(), connectionInfo: conInfo, baseURL: baseURL, authURL: authURL, referrer: referrer, httpClient: &http.Client{}}
+    client.initHeader()
     if err := client.initTransport(); err != nil {
         return nil, client.logger.ErrorRet(err, "client.initTransport failed")
     }
@@ -88,7 +89,7 @@ func (s *simpleRestClient) Login() error {
 
 func (s *simpleRestClient) getToken() error {
     defer s.logger.Trace(logs.DEBUG)()
-    delete(s.headers, HTTP_AUTH_KEY) // because no need token to get the token only user\password
+    s.headers.Delete(HTTP_AUTH_KEY) // because no need token to get the token only user\password
     var loginResponse = LoginResponse{}
     credentials, err := json.Marshal(s.connectionInfo.CredentialInfo)
     if err != nil {
@@ -100,7 +101,7 @@ func (s *simpleRestClient) getToken() error {
     if loginResponse.Token == "" {
         return s.logger.ErrorRet(errors.New("Token is empty"), "Post failed")
     }
-    s.headers[HTTP_AUTH_KEY] = "Token " + loginResponse.Token
+    s.headers.Store(HTTP_AUTH_KEY, "Token " + loginResponse.Token)
     return nil
 }
 
@@ -137,9 +138,7 @@ func (s *simpleRestClient) genericActionInternal(actionName string, resource_url
     }
 
     // append all the headers to the request
-    for key, value := range s.headers {
-        request.Header.Add(key, value)
-    }
+    s.addHeader(request)
 
     response, err := s.httpClient.Do(request)
     if err != nil {
@@ -147,15 +146,18 @@ func (s *simpleRestClient) genericActionInternal(actionName string, resource_url
     }
 
     // check if client sent a token and it expired
-    if response.StatusCode == http.StatusUnauthorized && s.headers[HTTP_AUTH_KEY] != "" && retryUnauthorized {
+    if response.StatusCode == http.StatusUnauthorized {
+        _, hasAuth := s.headers.Load(HTTP_AUTH_KEY)
+        if hasAuth && retryUnauthorized {
 
-        // login
-        if err = s.Login(); err != nil {
-            return s.logger.ErrorRet(err, "Login failed")
+            // login
+            if err = s.Login(); err != nil {
+                return s.logger.ErrorRet(err, "Login failed")
+            }
+
+            // retry
+            return s.genericActionInternal(actionName, resource_url, payload, params, exitStatus, v, false)
         }
-
-        // retry
-        return s.genericActionInternal(actionName, resource_url, payload, params, exitStatus, v, false)
     }
 
     defer response.Body.Close()
@@ -205,7 +207,6 @@ func (s *simpleRestClient) Delete(resource_url string, payload []byte, exitStatu
     return s.genericAction("DELETE", resource_url, payload, nil, exitStatus, nil)
 }
 
-
 func (s *simpleRestClient) initTransport() error {
     defer s.logger.Trace(logs.DEBUG)()
     exec := utils.NewExecutor()
@@ -245,4 +246,18 @@ func (s *simpleRestClient) initTransport() error {
      }
     }
     return nil
+}
+
+func (s *simpleRestClient) addHeader(request *http.Request) error {
+    s.headers.Range(func(k, v interface{}) bool {
+        request.Header.Add(k.(string), v.(string))
+        return true
+    })
+    return nil
+}
+
+func (s *simpleRestClient) initHeader() {
+    s.headers = new(syncmap.Map)
+    s.headers.Store("Content-Type", "application/json")
+    s.headers.Store("referer", s.referrer)
 }
