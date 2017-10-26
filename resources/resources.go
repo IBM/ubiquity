@@ -73,6 +73,13 @@ const DefaultForScbeConfigParamDefaultFilesystem = "ext4" // if customer don't m
 const PathToMountUbiquityBlockDevices = "/ubiquity/%s"    // %s is the WWN of the volume # TODO this should be moved to docker plugin side
 const OptionNameForVolumeFsType = "fstype"                // the option name of the fstype and also the key in the volumeConfig
 const ScbeDefaultPort = 8440                              // the default port for SCBE management
+const SslModeRequire = "require"
+const SslModeVerifyFull = "verify-full"
+const KeySslMode = "UBIQUITY_PLUGIN_SSL_MODE"
+const KeyScbeSslMode = "SCBE_SSL_MODE"
+const DefaultDbSslMode = SslModeVerifyFull
+const DefaultScbeSslMode = SslModeVerifyFull
+const DefaultPluginsSslMode = SslModeVerifyFull
 
 type SshConfig struct {
 	User string
@@ -124,8 +131,9 @@ type ScbeRemoteConfig struct {
 }
 
 type UbiquityPluginSslConfig struct {
-	UseSsl      bool
-	VerifyCa    string
+	UseSsl   bool
+	SslMode  string
+	VerifyCa string
 }
 
 //go:generate counterfeiter -o ../fakes/fake_storage_client.go . StorageClient

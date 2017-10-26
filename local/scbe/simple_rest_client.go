@@ -29,6 +29,7 @@ import (
     "fmt"
     "os"
     "crypto/x509"
+    "strings"
 )
 
 // SimpleRestClient is an interface that wrapper the http requests to provide easy REST API operations,
@@ -211,24 +212,37 @@ func (s *simpleRestClient) initTransport() error {
 
     emptyConnection := resources.ConnectionInfo{}
     if s.connectionInfo != emptyConnection {
-        verifyFileCA := os.Getenv(KEY_VERIFY_SCBE_CERT)
-        if verifyFileCA != "" {
-            if _, err := exec.Stat(verifyFileCA); err != nil {
-                return s.logger.ErrorRet(err, "failed")
-            }
-            caCert, err := ioutil.ReadFile(verifyFileCA)
-            if err != nil {
-                return s.logger.ErrorRet(err, "failed")
-            }
-            caCertPool := x509.NewCertPool()
-            if ok := caCertPool.AppendCertsFromPEM(caCert); !ok {
-                return fmt.Errorf("parse %v failed", verifyFileCA)
-            }
-            s.httpClient.Transport = &http.Transport{TLSClientConfig: &tls.Config{RootCAs: caCertPool}}
-        } else {
-            s.httpClient.Transport = &http.Transport{TLSClientConfig: &tls.Config{InsecureSkipVerify: true}}
+	sslMode := strings.ToLower(os.Getenv(resources.KeyScbeSslMode))
+        if sslMode == ""{
+           sslMode = resources.DefaultScbeSslMode
         }
-        s.logger.Info("", logs.Args{{KEY_VERIFY_SCBE_CERT, verifyFileCA}})
+
+        if sslMode == resources.SslModeVerifyFull {
+		verifyFileCA := os.Getenv(KEY_VERIFY_SCBE_CERT)
+		if verifyFileCA != "" {
+		    if _, err := exec.Stat(verifyFileCA); err != nil {
+		        return s.logger.ErrorRet(err, "failed")
+		    }
+		    caCert, err := ioutil.ReadFile(verifyFileCA)
+		    if err != nil {
+		        return s.logger.ErrorRet(err, "failed")
+		    }
+		    caCertPool := x509.NewCertPool()
+		    if ok := caCertPool.AppendCertsFromPEM(caCert); !ok {
+		        return fmt.Errorf("parse %v failed", verifyFileCA)
+		    }
+		    s.httpClient.Transport = &http.Transport{TLSClientConfig: &tls.Config{RootCAs: caCertPool}}
+                   s.logger.Info("", logs.Args{{KEY_VERIFY_SCBE_CERT, verifyFileCA}})
+		} else {
+			return s.logger.ErrorRet(&SslModeFullVerifyWithoutCAfile{KEY_VERIFY_SCBE_CERT}, "failed")
+		}
+	} else if sslMode == resources.SslModeRequire {
+	    s.logger.Info(
+                    fmt.Sprintf("Client SSL Mode set to [%s]. Means the communication to ubiquity is InsecureSkipVerify", sslMode))
+            s.httpClient.Transport = &http.Transport{TLSClientConfig: &tls.Config{InsecureSkipVerify: true}}
+        } else {
+            return s.logger.ErrorRet(&SslModeValueInvalid{sslMode}, "failed")
+     }
     }
     return nil
 }

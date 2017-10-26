@@ -19,12 +19,13 @@ package database
 import (
     "os"
     "github.com/IBM/ubiquity/utils/logs"
+    "github.com/IBM/ubiquity/resources"
 )
 
 const (
     KeyPsqlHost = "UBIQUITY_DB_PSQL_HOST"
     KeySqlitePath = "UBIQUITY_DB_SQLITE_PATH"
-    KeyPsqlUser = "UBIQUITY_DB_USER"
+    KeyPsqlUser = "UBIQUITY_DB_USERNAME"
     KeyPsqlPassword = "UBIQUITY_DB_PASSWORD"
     KeyPsqlDbName = "UBIQUITY_DB_NAME"
     KeyPsqlPort = "UBIQUITY_DB_PSQL_PORT"
@@ -71,13 +72,14 @@ func GetPsqlSslParams() string {
     str := ""
     // add sslmode
     psqlSslMode := os.Getenv(KeyPsqlSslMode)
-    if psqlSslMode == "" {
-        psqlSslMode = "disable"
+        if psqlSslMode == "" {
+        psqlSslMode = resources.DefaultDbSslMode
     }
     str += "sslmode=" + psqlSslMode
     // add sslrootcert
     psqlSslRootCert := os.Getenv(KeyPsqlSslRootCert)
     if psqlSslRootCert != "" {
+        // if sslmode is verify-full then postgres will verify the certificate, if its require then it will automatically skip verify
         str += " sslrootcert=" + psqlSslRootCert
     }
     return str
