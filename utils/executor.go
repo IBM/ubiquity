@@ -64,9 +64,6 @@ func (e *executor) Execute(command string, args []string) ([]byte, error) {
 			{"output", string(stdOut[:])},
 		})
 
-	if err != nil {
-		return nil, err
-	}
 	return stdOut, err
 }
 func (e *executor) Stat(path string) (os.FileInfo, error) {
