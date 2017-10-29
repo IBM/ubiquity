@@ -21,6 +21,7 @@ import (
 	"fmt"
 	"github.com/IBM/ubiquity/utils/logs"
 	"github.com/IBM/ubiquity/resources"
+	"strconv"
 )
 
 //go:generate counterfeiter -o ../fakes/fake_scbe_rest_client.go . ScbeRestClient
@@ -187,7 +188,37 @@ func (s *scbeRestClient) UnmapVolume(wwn string, host string) error {
 
 func (s *scbeRestClient) GetVolMapping(wwn string) (string, error) {
 	defer s.logger.Trace(logs.DEBUG)()
-	return "", nil
+	var err error
+	var host string
+
+	payload := map[string]string{}
+	payload["volume"] = wwn
+	s.logger.Debug("get", logs.Args{{"payload", payload}})
+
+	var mappings []ScbeResponseMapping
+	if err = s.client.Get(UrlScbeResourceMapping, payload, HTTP_SUCCEED, &mappings); err != nil {
+		return "", s.logger.ErrorRet(err, "client.Get failed")
+	}
+	s.logger.Debug("", logs.Args{{"mappings", mappings}})
+
+	if len(mappings) > 1 {
+		return "", s.logger.ErrorRet(err, "invalid mappings")
+	}
+
+	if len(mappings) == 1 {
+		var hostResponse ScbeResponseHost
+		hostUrl := fmt.Sprintf("%s/%s", UrlScbeResourceHost, strconv.Itoa(mappings[0].Host))
+		err := s.client.Get(hostUrl, nil, -1, &hostResponse)
+		if err != nil {
+			return "", s.logger.ErrorRet(err, "client.Get failed")
+		}
+
+		s.logger.Debug("", logs.Args{{"hostResponse", hostResponse}})
+		host = hostResponse.Name
+	}
+
+	s.logger.Debug("volume is mapped", logs.Args{{"host", host}})
+	return host, nil
 }
 
 func (s *scbeRestClient) ServiceExist(serviceName string) (exist bool, err error) {
