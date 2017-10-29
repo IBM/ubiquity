@@ -48,7 +48,7 @@ const (
 	ComposeVolumeName        = volumeNamePrefix + "%s_%s" // e.g u_instance1_volName
 	MaxVolumeNameLength      = 63                         // IBM block storage max volume name cannot exceed this length
 
-	GetVolumeConfigExtraParams = 1 // number of extra params added to the VolumeConfig beyond the scbe volume struct
+	GetVolumeConfigExtraParams = 2 // number of extra params added to the VolumeConfig beyond the scbe volume struct
 )
 
 var (
@@ -376,6 +376,10 @@ func (s *scbeLocalClient) GetVolumeConfig(getVolumeConfigRequest resources.GetVo
 
 	// The ubiquity remote will use this extra info to determine the fstype needed to be created on this volume while attaching
 	volConfig[resources.OptionNameForVolumeFsType] = scbeVolume.FSType
+
+	// The ubiquity remote will use this extra info to determine is-attached
+	volConfig[resources.ScbeKeyVolAttachToHost] = scbeVolume.AttachTo
+
 	return volConfig, nil
 }
 

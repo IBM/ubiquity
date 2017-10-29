@@ -72,6 +72,7 @@ const DefaultForScbeConfigParamDefaultVolumeSize = "1"    // if customer don't m
 const DefaultForScbeConfigParamDefaultFilesystem = "ext4" // if customer don't mention fstype, then the default is ext4
 const PathToMountUbiquityBlockDevices = "/ubiquity/%s"    // %s is the WWN of the volume # TODO this should be moved to docker plugin side
 const OptionNameForVolumeFsType = "fstype"                // the option name of the fstype and also the key in the volumeConfig
+const ScbeKeyVolAttachToHost = "attach-to"                // the key in map for volume to host attachments
 const ScbeDefaultPort = 8440                              // the default port for SCBE management
 const SslModeRequire = "require"
 const SslModeVerifyFull = "verify-full"

@@ -581,17 +581,24 @@ var _ = Describe("scbeLocalClient", func() {
 			for i := 0; i < val.Type().NumField(); i++ {
 				reflect.ValueOf(vol).Elem().Field(i).SetString(val.Type().Field(i).Name)
 			}
-			fakeScbeDataModel.GetVolumeReturns(scbe.ScbeVolume{WWN: "wwn", FSType: "ext4"}, nil)
+			fakeScbeDataModel.GetVolumeReturns(scbe.ScbeVolume{WWN: "wwn", FSType: "ext4", AttachTo: fakeHost}, nil)
 			fakeScbeRestClient.GetVolumesReturns(volumes, nil)
 			volConfig, err := client.GetVolumeConfig(resources.GetVolumeConfigRequest{Name:"name"})
+			fmt.Println("LIORT")
+			fmt.Println(volConfig)
+			fmt.Println("LIORT")
+
 			Expect(err).To(Not(HaveOccurred()))
 			Expect(len(volConfig)).To(Equal(val.Type().NumField() + scbe.GetVolumeConfigExtraParams))
 			fstype, ok := volConfig[resources.OptionNameForVolumeFsType]
 			Expect(ok).To(Equal(true))
 			Expect(fstype).To(Equal("ext4"))
+			attachTo, ok := volConfig[resources.ScbeKeyVolAttachToHost]
+			Expect(ok).To(Equal(true))
+			Expect(attachTo).To(Equal(fakeHost))
 
 			for k, v := range volConfig {
-				if k == resources.OptionNameForVolumeFsType {
+				if k == resources.OptionNameForVolumeFsType || k == resources.ScbeKeyVolAttachToHost {
 					continue
 				}
 				Expect(k).To(Not(Equal("")))
