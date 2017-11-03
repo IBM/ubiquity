@@ -52,11 +52,11 @@ func GetLogLevelFromString(level string) Level {
 // It returns a function that clears the global logger.
 // If the global logger is already initialized InitFileLogger panics.
 func InitFileLogger(level Level, filePath string) func() {
-	logFile, err := os.OpenFile(filePath, os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0640)
+	logFile, err := os.OpenFile(filePath, os.O_WRONLY|os.O_CREATE, 0640)
 	if err != nil {
 		panic(fmt.Sprintf("failed to init logger %v", err))
 	}
-	initLogger(level, io.MultiWriter(logFile))
+	initLogger(level, io.MultiWriter(os.Stdout, logFile))
 	return func() { logFile.Close(); logger = nil }
 }
 
@@ -64,7 +64,7 @@ func InitFileLogger(level Level, filePath string) func() {
 // It returns a function that clears the global logger.
 // If the global logger is already initialized InitLogger panics.
 func InitLogger(level Level, filePath string) func() {
-	logFile, err := os.OpenFile(filePath, os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0640)
+	logFile, err := os.OpenFile(filePath, os.O_WRONLY|os.O_CREATE, 0640)
 	if err != nil {
 		panic(fmt.Sprintf("failed to init logger %v", err))
 	}
