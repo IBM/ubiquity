@@ -23,6 +23,9 @@ import (
 	"strings"
 )
 
+const UbiquityK8sFlexVolumeDriverName = "ubiquity-k8s-flex"
+const UbiquityFlexLogFileName = UbiquityK8sFlexVolumeDriverName + ".log"
+
 var logger Logger = nil
 
 func initLogger(level Level, writer io.Writer) {
@@ -56,7 +59,11 @@ func InitFileLogger(level Level, filePath string) func() {
 	if err != nil {
 		panic(fmt.Sprintf("failed to init logger %v", err))
 	}
-	initLogger(level, io.MultiWriter(logFile))
+	if strings.Contains(filePath, UbiquityFlexLogFileName) {
+		initLogger(level, io.MultiWriter(logFile))
+	} else {
+		initLogger(level, io.MultiWriter(os.Stdout))
+	}
 	return func() { logFile.Close(); logger = nil }
 }
 
@@ -68,7 +75,7 @@ func InitLogger(level Level, filePath string) func() {
 	if err != nil {
 		panic(fmt.Sprintf("failed to init logger %v", err))
 	}
-	initLogger(level, io.MultiWriter(os.Stdout, logFile))
+	initLogger(level, io.MultiWriter(os.Stdout))
 	return func() { logFile.Close(); logger = nil }
 }
 
