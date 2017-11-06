@@ -54,11 +54,11 @@ func (e *SslModeFullVerifyWithoutCAfile) Error() string {
 }
 
 func NewRemoteClient(logger *log.Logger, storageApiURL string, config resources.UbiquityPluginConfig) (resources.StorageClient, error) {
-	return &remoteClient{logger: logger, storageApiURL: storageApiURL, httpClient: &http.Client{}, config: config, mounterPerBackend: make(map[string]resources.Mounter)}, nil
+	return &remoteClient{logger: logs.GetLogger(), storageApiURL: storageApiURL, httpClient: &http.Client{}, config: config, mounterPerBackend: make(map[string]resources.Mounter)}, nil
 }
 
 func NewRemoteClientSecure(logger *log.Logger, config resources.UbiquityPluginConfig) (resources.StorageClient, error) {
-	client := &remoteClient{logger: logger, config: config, mounterPerBackend: make(map[string]resources.Mounter)}
+	client := &remoteClient{logger: logs.GetLogger(), legacylogger: logger, config: config, mounterPerBackend: make(map[string]resources.Mounter)}
 	if err := client.initialize(); err != nil {
 		return nil, err
 	}

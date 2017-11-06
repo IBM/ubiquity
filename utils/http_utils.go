@@ -21,13 +21,13 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
-	"log"
 	"net/http"
 	"path"
 	"strings"
 
 	"github.com/IBM/ubiquity/resources"
 	"github.com/gorilla/mux"
+	"github.com/IBM/ubiquity/utils/logs"
 )
 
 func ExtractErrorResponse(response *http.Response) error {
@@ -51,11 +51,12 @@ func FormatURL(url string, entries ...string) string {
 	return fmt.Sprintf("%s%s", base, suffix)
 }
 
-func HttpExecuteUserAuth(httpClient *http.Client, logger *log.Logger, requestType string, requestURL string, user string, password string, rawPayload interface{}) (*http.Response, error) {
+func HttpExecuteUserAuth(httpClient *http.Client, requestType string, requestURL string, user string, password string, rawPayload interface{}) (*http.Response, error) {
+	logger := logs.GetLogger()
 	payload, err := json.MarshalIndent(rawPayload, "", " ")
 	if err != nil {
-		logger.Printf("Internal error marshalling params %#v", err)
-		return nil, fmt.Errorf("Internal error marshalling params")
+		err = fmt.Errorf("Internal error marshalling params %#v", err)
+		return nil, logger.ErrorRet(err, "failed")
 	}
 
 	if user == "" {
@@ -64,8 +65,8 @@ func HttpExecuteUserAuth(httpClient *http.Client, logger *log.Logger, requestTyp
 
 	request, err := http.NewRequest(requestType, requestURL, bytes.NewBuffer(payload))
 	if err != nil {
-		logger.Printf("Error in creating request %#v", err)
-		return nil, fmt.Errorf("Error in creating request")
+		err = fmt.Errorf("Error in creating request %#v", err)
+		return nil, logger.ErrorRet(err, "failed")
 	}
 
 	request.Header.Add("Content-Type", "application/json")
@@ -76,17 +77,18 @@ func HttpExecuteUserAuth(httpClient *http.Client, logger *log.Logger, requestTyp
 
 }
 
-func HttpExecute(httpClient *http.Client, logger *log.Logger, requestType string, requestURL string, rawPayload interface{}) (*http.Response, error) {
+func HttpExecute(httpClient *http.Client, requestType string, requestURL string, rawPayload interface{}) (*http.Response, error) {
+	logger := logs.GetLogger()
 	payload, err := json.MarshalIndent(rawPayload, "", " ")
 	if err != nil {
-		logger.Printf("Internal error marshalling params %#v", err)
-		return nil, fmt.Errorf("Internal error marshalling params")
+		err = fmt.Errorf("Internal error marshalling params %#v", err)
+		return nil, logger.ErrorRet(err, "failed")
 	}
 
 	request, err := http.NewRequest(requestType, requestURL, bytes.NewBuffer(payload))
 	if err != nil {
-		logger.Printf("Error in creating request %#v", err)
-		return nil, fmt.Errorf("Error in creating request")
+		err = fmt.Errorf("Error in creating request %#v", err)
+		return nil, logger.ErrorRet(err, "failed")
 	}
 
 	return httpClient.Do(request)
