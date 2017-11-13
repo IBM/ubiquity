@@ -20,10 +20,13 @@ import (
 	"github.com/IBM/ubiquity/resources"
 )
 
+// type for generation of new ScbeRestClient
 type ScbeRestClientGen func(resources.ConnectionInfo) (ScbeRestClient, error)
 
+// global ScbeRestClient generator
 var globalScbeRestClientGen ScbeRestClientGen = nil
 
+// init global generator, used by tests
 func InitScbeRestClientGen(gen ScbeRestClientGen) func() {
 	if globalScbeRestClientGen != nil {
 		panic("globalScbeRestClientGen already initialized")
@@ -32,6 +35,7 @@ func InitScbeRestClientGen(gen ScbeRestClientGen) func() {
 	return func() { globalScbeRestClientGen = nil }
 }
 
+// default ScbeRestClient generator
 func newScbeRestClientGen(conInfo resources.ConnectionInfo) (ScbeRestClient, error) {
 	if globalScbeRestClientGen != nil {
 		return globalScbeRestClientGen(conInfo)
