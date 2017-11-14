@@ -28,10 +28,9 @@ import (
 //go:generate counterfeiter -o ../../fakes/fake_ScbeDataModel.go . ScbeDataModel
 type ScbeDataModel interface {
 	DeleteVolume(name string) error
-	InsertVolume(volumeName string, wwn string, attachTo string, fstype string) error
+	InsertVolume(volumeName string, wwn string, fstype string) error
 	GetVolume(name string) (ScbeVolume, bool, error)
 	ListVolumes() ([]ScbeVolume, error)
-	UpdateVolumeAttachTo(volumeName string, scbeVolume ScbeVolume, host2attach string) error
 }
 
 type scbeDataModel struct {
@@ -77,14 +76,13 @@ func (d *scbeDataModel) DeleteVolume(name string) error {
 }
 
 // InsertVolume volume name and its details given in opts
-func (d *scbeDataModel) InsertVolume(volumeName string, wwn string, attachTo string, fstype string) error {
+func (d *scbeDataModel) InsertVolume(volumeName string, wwn string, fstype string) error {
 	defer d.logger.Trace(logs.DEBUG)()
 
 	volume := ScbeVolume{
 		Volume: resources.Volume{Name: volumeName,
 			Backend: fmt.Sprintf("%s", d.backend)},
 		WWN:      wwn,
-		AttachTo: attachTo,
 		FSType:   fstype,
 	}
 
@@ -133,13 +131,4 @@ func (d *scbeDataModel) ListVolumes() ([]ScbeVolume, error) {
 	}
 
 	return volumes, nil
-}
-func (d *scbeDataModel) UpdateVolumeAttachTo(volumeName string, scbeVolume ScbeVolume, host2attach string) error {
-	defer d.logger.Trace(logs.DEBUG)()
-
-	err := d.database.Table("scbe_volumes").Where("volume_id = ?", scbeVolume.ID).Update("attach_to", host2attach).Error
-	if err != nil {
-		return d.logger.ErrorRet(err, "failed", logs.Args{{"volumeName", volumeName}})
-	}
-	return nil
 }

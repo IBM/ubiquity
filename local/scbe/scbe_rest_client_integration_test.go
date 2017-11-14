@@ -203,7 +203,7 @@ var _ = Describe("datamodel integration testing with live DB", func() {
 	Context(".table", func() {
 		It("Should to succeed to insert new volume raw and find it in DB", func() {
 			fakeVolName := "volname1"
-			err := datamodel.InsertVolume(fakeVolName, "www1", "host", "ext4")
+			err := datamodel.InsertVolume(fakeVolName, "www1", "ext4")
 			Expect(err).NotTo(HaveOccurred())
 			ScbeVolume, exist, err := datamodel.GetVolume(fakeVolName)
 			Expect(err).NotTo(HaveOccurred())
@@ -213,7 +213,7 @@ var _ = Describe("datamodel integration testing with live DB", func() {
 		})
 		It("Should to succeed to insert new volume and delete it", func() {
 			fakeVolName := "volname1"
-			err := datamodel.InsertVolume(fakeVolName, "www1", "host", "ext4")
+			err := datamodel.InsertVolume(fakeVolName, "www1", "ext4")
 			Expect(err).NotTo(HaveOccurred())
 			_, exist, err := datamodel.GetVolume(fakeVolName)
 			Expect(err).NotTo(HaveOccurred())
@@ -227,7 +227,7 @@ var _ = Describe("datamodel integration testing with live DB", func() {
 			num := 10
 			for i := 0; i < num; i++ {
 				volname = fmt.Sprintf("fakevol %d", i)
-				Expect(datamodel.InsertVolume(volname, "www1", "host", "ext4")).NotTo(HaveOccurred())
+				Expect(datamodel.InsertVolume(volname, "www1", "ext4")).NotTo(HaveOccurred())
 			}
 			vols, err := datamodel.ListVolumes()
 			Expect(err).NotTo(HaveOccurred())
@@ -235,26 +235,22 @@ var _ = Describe("datamodel integration testing with live DB", func() {
 		})
 		It("Should to succeed to insert and then update the attach of the volume", func() {
 			fakeVolName := "volname1"
-			err := datamodel.InsertVolume(fakeVolName, "www1", "host", "ext4")
+			err := datamodel.InsertVolume(fakeVolName, "www1", "ext4")
 			Expect(err).NotTo(HaveOccurred())
-			vol, exist, err := datamodel.GetVolume(fakeVolName)
+			_, exist, err := datamodel.GetVolume(fakeVolName)
 			Expect(err).NotTo(HaveOccurred())
 
 			// Here is the main verification of the update
-			err = datamodel.UpdateVolumeAttachTo(fakeVolName, vol, "")
 			Expect(err).NotTo(HaveOccurred())
-			vol, exist, err = datamodel.GetVolume(fakeVolName)
+			_, exist, err = datamodel.GetVolume(fakeVolName)
 			Expect(err).NotTo(HaveOccurred())
 			Expect(exist).To(Equal(true))
-			Expect(vol.AttachTo).To(Equal(""))
 
 			// Here is the main verification of the update
-			err = datamodel.UpdateVolumeAttachTo(fakeVolName, vol, "newhost")
 			Expect(err).NotTo(HaveOccurred())
-			vol, exist, err = datamodel.GetVolume(fakeVolName)
+			_, exist, err = datamodel.GetVolume(fakeVolName)
 			Expect(err).NotTo(HaveOccurred())
 			Expect(exist).To(Equal(true))
-			Expect(vol.AttachTo).To(Equal("newhost"))
 
 			Expect(datamodel.DeleteVolume(fakeVolName)).NotTo(HaveOccurred())
 		})
