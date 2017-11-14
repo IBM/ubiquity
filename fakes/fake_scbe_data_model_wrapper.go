@@ -33,12 +33,11 @@ type FakeScbeDataModelWrapper struct {
 	deleteVolumeReturnsOnCall map[int]struct {
 		result1 error
 	}
-	InsertVolumeStub        func(volumeName string, wwn string, attachTo string, fstype string) error
+	InsertVolumeStub        func(volumeName string, wwn string, fstype string) error
 	insertVolumeMutex       sync.RWMutex
 	insertVolumeArgsForCall []struct {
 		volumeName string
 		wwn        string
-		attachTo   string
 		fstype     string
 	}
 	insertVolumeReturns struct {
@@ -57,19 +56,6 @@ type FakeScbeDataModelWrapper struct {
 	listVolumesReturnsOnCall map[int]struct {
 		result1 []scbe.ScbeVolume
 		result2 error
-	}
-	UpdateVolumeAttachToStub        func(volumeName string, scbeVolume scbe.ScbeVolume, host2attach string) error
-	updateVolumeAttachToMutex       sync.RWMutex
-	updateVolumeAttachToArgsForCall []struct {
-		volumeName  string
-		scbeVolume  scbe.ScbeVolume
-		host2attach string
-	}
-	updateVolumeAttachToReturns struct {
-		result1 error
-	}
-	updateVolumeAttachToReturnsOnCall map[int]struct {
-		result1 error
 	}
 	UpdateDatabaseVolumeStub        func(newVolume *scbe.ScbeVolume)
 	updateDatabaseVolumeMutex       sync.RWMutex
@@ -180,19 +166,18 @@ func (fake *FakeScbeDataModelWrapper) DeleteVolumeReturnsOnCall(i int, result1 e
 	}{result1}
 }
 
-func (fake *FakeScbeDataModelWrapper) InsertVolume(volumeName string, wwn string, attachTo string, fstype string) error {
+func (fake *FakeScbeDataModelWrapper) InsertVolume(volumeName string, wwn string, fstype string) error {
 	fake.insertVolumeMutex.Lock()
 	ret, specificReturn := fake.insertVolumeReturnsOnCall[len(fake.insertVolumeArgsForCall)]
 	fake.insertVolumeArgsForCall = append(fake.insertVolumeArgsForCall, struct {
 		volumeName string
 		wwn        string
-		attachTo   string
 		fstype     string
-	}{volumeName, wwn, attachTo, fstype})
-	fake.recordInvocation("InsertVolume", []interface{}{volumeName, wwn, attachTo, fstype})
+	}{volumeName, wwn, fstype})
+	fake.recordInvocation("InsertVolume", []interface{}{volumeName, wwn, fstype})
 	fake.insertVolumeMutex.Unlock()
 	if fake.InsertVolumeStub != nil {
-		return fake.InsertVolumeStub(volumeName, wwn, attachTo, fstype)
+		return fake.InsertVolumeStub(volumeName, wwn, fstype)
 	}
 	if specificReturn {
 		return ret.result1
@@ -206,10 +191,10 @@ func (fake *FakeScbeDataModelWrapper) InsertVolumeCallCount() int {
 	return len(fake.insertVolumeArgsForCall)
 }
 
-func (fake *FakeScbeDataModelWrapper) InsertVolumeArgsForCall(i int) (string, string, string, string) {
+func (fake *FakeScbeDataModelWrapper) InsertVolumeArgsForCall(i int) (string, string, string) {
 	fake.insertVolumeMutex.RLock()
 	defer fake.insertVolumeMutex.RUnlock()
-	return fake.insertVolumeArgsForCall[i].volumeName, fake.insertVolumeArgsForCall[i].wwn, fake.insertVolumeArgsForCall[i].attachTo, fake.insertVolumeArgsForCall[i].fstype
+	return fake.insertVolumeArgsForCall[i].volumeName, fake.insertVolumeArgsForCall[i].wwn, fake.insertVolumeArgsForCall[i].fstype
 }
 
 func (fake *FakeScbeDataModelWrapper) InsertVolumeReturns(result1 error) {
@@ -274,55 +259,6 @@ func (fake *FakeScbeDataModelWrapper) ListVolumesReturnsOnCall(i int, result1 []
 	}{result1, result2}
 }
 
-func (fake *FakeScbeDataModelWrapper) UpdateVolumeAttachTo(volumeName string, scbeVolume scbe.ScbeVolume, host2attach string) error {
-	fake.updateVolumeAttachToMutex.Lock()
-	ret, specificReturn := fake.updateVolumeAttachToReturnsOnCall[len(fake.updateVolumeAttachToArgsForCall)]
-	fake.updateVolumeAttachToArgsForCall = append(fake.updateVolumeAttachToArgsForCall, struct {
-		volumeName  string
-		scbeVolume  scbe.ScbeVolume
-		host2attach string
-	}{volumeName, scbeVolume, host2attach})
-	fake.recordInvocation("UpdateVolumeAttachTo", []interface{}{volumeName, scbeVolume, host2attach})
-	fake.updateVolumeAttachToMutex.Unlock()
-	if fake.UpdateVolumeAttachToStub != nil {
-		return fake.UpdateVolumeAttachToStub(volumeName, scbeVolume, host2attach)
-	}
-	if specificReturn {
-		return ret.result1
-	}
-	return fake.updateVolumeAttachToReturns.result1
-}
-
-func (fake *FakeScbeDataModelWrapper) UpdateVolumeAttachToCallCount() int {
-	fake.updateVolumeAttachToMutex.RLock()
-	defer fake.updateVolumeAttachToMutex.RUnlock()
-	return len(fake.updateVolumeAttachToArgsForCall)
-}
-
-func (fake *FakeScbeDataModelWrapper) UpdateVolumeAttachToArgsForCall(i int) (string, scbe.ScbeVolume, string) {
-	fake.updateVolumeAttachToMutex.RLock()
-	defer fake.updateVolumeAttachToMutex.RUnlock()
-	return fake.updateVolumeAttachToArgsForCall[i].volumeName, fake.updateVolumeAttachToArgsForCall[i].scbeVolume, fake.updateVolumeAttachToArgsForCall[i].host2attach
-}
-
-func (fake *FakeScbeDataModelWrapper) UpdateVolumeAttachToReturns(result1 error) {
-	fake.UpdateVolumeAttachToStub = nil
-	fake.updateVolumeAttachToReturns = struct {
-		result1 error
-	}{result1}
-}
-
-func (fake *FakeScbeDataModelWrapper) UpdateVolumeAttachToReturnsOnCall(i int, result1 error) {
-	fake.UpdateVolumeAttachToStub = nil
-	if fake.updateVolumeAttachToReturnsOnCall == nil {
-		fake.updateVolumeAttachToReturnsOnCall = make(map[int]struct {
-			result1 error
-		})
-	}
-	fake.updateVolumeAttachToReturnsOnCall[i] = struct {
-		result1 error
-	}{result1}
-}
 
 func (fake *FakeScbeDataModelWrapper) UpdateDatabaseVolume(newVolume *scbe.ScbeVolume) {
 	fake.updateDatabaseVolumeMutex.Lock()
@@ -359,8 +295,6 @@ func (fake *FakeScbeDataModelWrapper) Invocations() map[string][][]interface{} {
 	defer fake.insertVolumeMutex.RUnlock()
 	fake.listVolumesMutex.RLock()
 	defer fake.listVolumesMutex.RUnlock()
-	fake.updateVolumeAttachToMutex.RLock()
-	defer fake.updateVolumeAttachToMutex.RUnlock()
 	fake.updateDatabaseVolumeMutex.RLock()
 	defer fake.updateDatabaseVolumeMutex.RUnlock()
 	copiedInvocations := map[string][][]interface{}{}

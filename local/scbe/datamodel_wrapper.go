@@ -26,9 +26,8 @@ import (
 type ScbeDataModelWrapper interface {
 	GetVolume(name string, mustExist bool) (ScbeVolume, error)
 	DeleteVolume(name string) error
-	InsertVolume(volumeName string, wwn string, attachTo string, fstype string) error
+	InsertVolume(volumeName string, wwn string, fstype string) error
 	ListVolumes() ([]ScbeVolume, error)
-	UpdateVolumeAttachTo(volumeName string, scbeVolume ScbeVolume, host2attach string) error
 	UpdateDatabaseVolume(newVolume *ScbeVolume)
 }
 
@@ -125,7 +124,7 @@ func (d *scbeDataModelWrapper) DeleteVolume(name string) error {
 	return nil
 }
 
-func (d *scbeDataModelWrapper) InsertVolume(volumeName string, wwn string, attachTo string, fstype string) error {
+func (d *scbeDataModelWrapper) InsertVolume(volumeName string, wwn string, fstype string) error {
 	defer d.logger.Trace(logs.DEBUG)()
 	var err error
 
@@ -137,7 +136,7 @@ func (d *scbeDataModelWrapper) InsertVolume(volumeName string, wwn string, attac
 		}
 
 		// work with memory object
-		d.UpdateDatabaseVolume(&ScbeVolume{Volume: resources.Volume{Name: volumeName, Backend: resources.SCBE}, WWN: wwn, AttachTo: attachTo, FSType: fstype})
+		d.UpdateDatabaseVolume(&ScbeVolume{Volume: resources.Volume{Name: volumeName, Backend: resources.SCBE}, WWN: wwn, FSType: fstype})
 
 	} else {
 
@@ -150,7 +149,7 @@ func (d *scbeDataModelWrapper) InsertVolume(volumeName string, wwn string, attac
 
 		// insert volume
 		dataModel := NewScbeDataModel(dbConnection.GetDb())
-		if err = dataModel.InsertVolume(volumeName, wwn, attachTo, fstype); err != nil {
+		if err = dataModel.InsertVolume(volumeName, wwn, fstype); err != nil {
 			return d.logger.ErrorRet(err, "dataModel.InsertVolume failed")
 		}
 	}
@@ -181,37 +180,4 @@ func (d *scbeDataModelWrapper) ListVolumes() ([]ScbeVolume, error) {
 	}
 
 	return volumes, nil
-}
-
-func (d *scbeDataModelWrapper) UpdateVolumeAttachTo(volumeName string, scbeVolume ScbeVolume, host2attach string) error {
-	defer d.logger.Trace(logs.DEBUG)()
-	var err error
-
-	if database.IsDatabaseVolume(volumeName) {
-
-		// sanity
-		if d.dbVolume == nil {
-			return d.logger.ErrorRet(&volAlreadyExistsError{volumeName}, "failed")
-		}
-
-		// work with memory object
-		d.dbVolume.AttachTo = host2attach
-
-	} else {
-
-		// open db connection
-		dbConnection := database.NewConnection()
-		if err = dbConnection.Open(); err != nil {
-			return d.logger.ErrorRet(err, "dbConnection.Open failed")
-		}
-		defer dbConnection.Close()
-
-		// delete volume
-		dataModel := NewScbeDataModel(dbConnection.GetDb())
-		if err = dataModel.UpdateVolumeAttachTo(volumeName, scbeVolume, host2attach); err != nil {
-			return d.logger.ErrorRet(err, "dataModel.UpdateVolumeAttachTo failed")
-		}
-	}
-
-	return nil
 }
