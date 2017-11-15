@@ -56,13 +56,13 @@ func main() {
 	logger := utils.SetupOldLogger("ubiquity")
 
 	executor := utils.NewExecutor()
-	ubiquityConfigPath, err := utils.SetupConfigDirectory(logger, executor, config.ConfigPath)
+	ubiquityConfigPath, err := utils.SetupConfigDirectory(executor, config.ConfigPath)
 	if err != nil {
 		panic(err.Error())
 	}
 
 	//check if lock exists -- peer ubiquity server(s)
-	heartbeat := utils.NewHeartbeat(logger, ubiquityConfigPath)
+	heartbeat := utils.NewHeartbeat(ubiquityConfigPath)
 
 	logger.Println("Checking for heartbeat....")
 	probeHeartbeatUntilFree(heartbeat)
