@@ -42,7 +42,7 @@ var _ = Describe("restClient integration testing with existing SCBE instance", f
 		if err != nil {
 			Skip(err.Error())
 		}
-		credentialInfo = resources.CredentialInfo{scbeUser, scbePassword, "flocker"}
+		credentialInfo = resources.CredentialInfo{scbeUser, scbePassword, "containers"}
 		conInfo = resources.ConnectionInfo{credentialInfo, scbePort, scbeIP}
 		client, err = scbe.NewSimpleRestClient(
 			conInfo,
@@ -85,7 +85,7 @@ var _ = Describe("ScbeRestClient integration testing with existing SCBE instance
 		if err != nil {
 			Skip(err.Error())
 		}
-		credentialInfo = resources.CredentialInfo{scbeUser, scbePassword, "flocker"}
+		credentialInfo = resources.CredentialInfo{scbeUser, scbePassword, "containers"}
 		conInfo = resources.ConnectionInfo{credentialInfo, scbePort, scbeIP}
 		scbeRestClient, err = scbe.NewScbeRestClient(conInfo)
 		Expect(err).ToNot(HaveOccurred())
@@ -127,7 +127,7 @@ var _ = Describe("ScbeRestClient volume operations integration testing with exis
 		if err != nil {
 			Skip(err.Error())
 		}
-		credentialInfo = resources.CredentialInfo{scbeUser, scbePassword, "flocker"}
+		credentialInfo = resources.CredentialInfo{scbeUser, scbePassword, "containers"}
 		conInfo = resources.ConnectionInfo{credentialInfo, scbePort, scbeIP}
 		scbeRestClient, err = scbe.NewScbeRestClient(conInfo)
 		Expect(err).ToNot(HaveOccurred())

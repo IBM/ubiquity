@@ -21,7 +21,7 @@ The following IBM block storage systems are available:
    * After IBM SCBE is installed, do the following :
 
        1. Log into Spectrum Control Base Edition server at https://SCBE_IP_address:8440.
-       2. Add a Ubiquity interface. Note: The Ubiqity interface username and the password will be used in the ubiquity server configuration file below. In this SCBE version, Ubiquity interface is referred to as “Flocker interface” (this will be modified in future version).
+       2. Add a Ubiquity interface. Note: The Ubiqity interface username and the password will be used in the ubiquity server configuration file below. In this SCBE version, Ubiquity interface is referred to as “Containers interface” (this will be modified in future version).
        3. Add the IBM storage systems to be used with the Ubiquity plugin.
        4. Create storage service(s) with required storage capacities and capabilities. This service(s) will be available for provisioning (as a profile option) from the plugin side ([Docker](https://github.com/IBM/ubiquity-docker-plugin), [Kubernetes](https://github.com/IBM/ubiquity-k8s))
        5. Delegate at least one storage service to the Ubiquity interface.

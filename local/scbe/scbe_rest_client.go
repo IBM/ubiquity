@@ -47,7 +47,7 @@ const (
 	UrlScbeReferer         = "https://%s:%d/"
 	UrlScbeBaseSuffix      = "api/v1"
 	UrlScbeResourceGetAuth = "users/get-auth-token"
-	ScbeFlockerGroupParam  = "flocker"
+	ScbeContainersGroupParam  = "containers"
 	UrlScbeResourceService = "services"
 	UrlScbeResourceVolume  = "volumes"
 	UrlScbeResourceMapping = "mappings"
@@ -69,8 +69,8 @@ func newScbeRestClient(conInfo resources.ConnectionInfo, simpleClient SimpleRest
 	if conInfo.Port == 0 {
 		conInfo.Port = DefaultScbePort
 	}
-	// Add the default SCBE Flocker group to the credentials  # TODO change to ubiquity interface
-	conInfo.CredentialInfo.Group = ScbeFlockerGroupParam
+	// Add the default SCBE Containers group to the credentials  # TODO change to ubiquity interface
+	conInfo.CredentialInfo.Group = ScbeContainersGroupParam
 
 	if simpleClient == nil {
 		referrer := fmt.Sprintf(UrlScbeReferer, conInfo.ManagementIP, conInfo.Port)
