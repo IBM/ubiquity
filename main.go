@@ -52,7 +52,7 @@ func main() {
 		}
 	}
 
-	defer logs.InitLogger(logs.GetLogLevelFromString(os.Getenv("LOG_LEVEL")), path.Join(config.LogPath, "ubiquity.log"))()
+	defer logs.InitStdoutLogger(logs.GetLogLevelFromString(os.Getenv("LOG_LEVEL")))()
 	logger := utils.SetupOldLogger("ubiquity")
 
 	executor := utils.NewExecutor()
