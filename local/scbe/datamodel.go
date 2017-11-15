@@ -44,7 +44,6 @@ type ScbeVolume struct {
 	Volume   resources.Volume
 	VolumeID uint
 	WWN      string
-	AttachTo string
 	FSType   string
 }
 
