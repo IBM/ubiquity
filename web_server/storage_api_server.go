@@ -18,7 +18,6 @@ package web_server
 
 import (
 	"fmt"
-	"log"
 	"net/http"
 
 	"github.com/IBM/ubiquity/resources"
@@ -40,8 +39,8 @@ type StorageApiServer struct {
 	config            resources.UbiquityServerConfig
 }
 
-func NewStorageApiServer(logger *log.Logger, backends map[string]resources.StorageClient, config resources.UbiquityServerConfig) (*StorageApiServer, error) {
-	return &StorageApiServer{storageApiHandler: NewStorageApiHandler(logger, backends, config), logger: logs.GetLogger(), config: config}, nil
+func NewStorageApiServer(backends map[string]resources.StorageClient, config resources.UbiquityServerConfig) (*StorageApiServer, error) {
+	return &StorageApiServer{storageApiHandler: NewStorageApiHandler(backends, config), logger: logs.GetLogger(), config: config}, nil
 }
 
 func (s *StorageApiServer) InitializeHandler() http.Handler {

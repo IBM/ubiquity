@@ -53,28 +53,29 @@ func main() {
 	}
 
 	defer logs.InitStdoutLogger(logs.GetLogLevelFromString(os.Getenv("LOG_LEVEL")))()
-	logger := utils.SetupOldLogger("ubiquity")
+	logger := logs.GetLogger()
+	oldLogger := utils.SetupOldLogger("ubiquity")
 
 	executor := utils.NewExecutor()
-	ubiquityConfigPath, err := utils.SetupConfigDirectory(logger, executor, config.ConfigPath)
+	ubiquityConfigPath, err := utils.SetupConfigDirectory(executor, config.ConfigPath)
 	if err != nil {
 		panic(err.Error())
 	}
 
 	//check if lock exists -- peer ubiquity server(s)
-	heartbeat := utils.NewHeartbeat(logger, ubiquityConfigPath)
+	heartbeat := utils.NewHeartbeat(ubiquityConfigPath)
 
-	logger.Println("Checking for heartbeat....")
+	logger.Info("Checking for heartbeat....")
 	probeHeartbeatUntilFree(heartbeat)
 
 	err = heartbeat.Create()
 	if err != nil {
 		panic("failed to initialize heartbeat")
 	}
-	logger.Println("Heartbeat acquired")
+	logger.Info("Heartbeat acquired")
 	go keepAlive(heartbeat)
 
-	logger.Println("Obtaining handle to DB")
+	logger.Info("Obtaining handle to DB")
 	db, err := gorm.Open("sqlite3", path.Join(ubiquityConfigPath, "ubiquity.db"))
 	if err != nil {
 		panic("failed to connect database")
@@ -89,12 +90,12 @@ func main() {
 	os.Setenv(database.KeySqlitePath, path.Join(ubiquityConfigPath, "ubiquity.db"))
 	defer database.Initialize()()
 
-	clients, err := local.GetLocalClients(logger, config, db)
+	clients, err := local.GetLocalClients(oldLogger, config, db)
 	if err != nil {
 		panic(err)
 	}
 
-	server, err := web_server.NewStorageApiServer(logger, clients, config)
+	server, err := web_server.NewStorageApiServer(clients, config)
 	if err != nil {
 		log.Fatal(fmt.Sprintf("Error creating Storage API server [%s]...", err.Error()))
 	}

@@ -18,7 +18,6 @@ package utils
 
 import (
 	"fmt"
-	"log"
 	"os"
 	"path"
 	"time"
@@ -35,13 +34,12 @@ type Heartbeat interface {
 }
 
 type heartbeat struct {
-	log      *log.Logger
 	filePath string
 }
 
-func NewHeartbeat(log *log.Logger, mountpoint string) Heartbeat {
+func NewHeartbeat(mountpoint string) Heartbeat {
 	filePath := path.Join(mountpoint, ".ubiquity.lock")
-	return &heartbeat{log: log, filePath: filePath}
+	return &heartbeat{filePath: filePath}
 }
 func (l *heartbeat) Exists() (bool, error) {
 	_, err := times.Stat(l.filePath)
