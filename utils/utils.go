@@ -29,6 +29,7 @@ import (
 	"log"
 	"strconv"
 	"strings"
+	"github.com/IBM/ubiquity/utils/logs"
 )
 
 func ReadAndUnmarshal(object interface{}, dir string, fileName string) error {
@@ -129,21 +130,15 @@ func PrintResponse(f resources.FlexVolumeResponse) error {
 	return nil
 }
 
-func SetupConfigDirectory(logger *log.Logger, executor Executor, configPath string) (string, error) {
-	logger.Println("setupConfigPath start")
-	defer logger.Println("setupConfigPath end")
+func SetupConfigDirectory(executor Executor, configPath string) (string, error) {
+	defer logs.GetLogger().Trace(logs.DEBUG)()
 
 	ubiquityConfigPath := path.Join(configPath, ".config")
-	logger.Printf("User specified config path: %s", configPath)
-
 	if _, err := executor.Stat(ubiquityConfigPath); os.IsNotExist(err) {
-
-		err = os.MkdirAll(ubiquityConfigPath	, 0640)
+		err = os.MkdirAll(ubiquityConfigPath,0640)
 		if err != nil {
-			logger.Printf("Error creating directory %s", err.Error())
-			return "", err
+			return "", logs.GetLogger().ErrorRet(err, "error creating directory")
 		}
-
 	}
 
 	return ubiquityConfigPath, nil
