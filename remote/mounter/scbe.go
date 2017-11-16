@@ -113,7 +113,7 @@ func (s *scbeMounter) ActionAfterDetach(request resources.AfterDetachRequest) er
 	volumeWWN := request.VolumeConfig["Wwn"].(string)
 
 	// Rescan OS
-	if err := s.blockDeviceMounterUtils.RescanAll(true, volumeWWN, true); err != nil {
+	if err := s.blockDeviceMounterUtils.RescanAll(!s.config.SkipRescanISCSI, volumeWWN, true); err != nil {
 		return s.logger.ErrorRet(err, "RescanAll failed")
 	}
 	return nil
