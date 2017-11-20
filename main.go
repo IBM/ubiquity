@@ -43,7 +43,9 @@ func main() {
 	if err != nil {
 		panic(fmt.Errorf("Failed to load config %s", err.Error()))
 	}
-	fmt.Printf("Starting Ubiquity Storage API server with config %#v\n", config)
+	configCopyWithPasswordStarred := config
+	configCopyWithPasswordStarred.ScbeConfig.ConnectionInfo.CredentialInfo.Password = "****"
+	fmt.Printf("Starting Ubiquity Storage API server with config %#v\n", configCopyWithPasswordStarred)
 	_, err = os.Stat(config.LogPath)
 	if err != os.ErrNotExist {
 		err = os.MkdirAll(config.LogPath, 0640)
