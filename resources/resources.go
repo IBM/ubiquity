@@ -23,6 +23,7 @@ const (
 	SpectrumScaleNFS string = "spectrum-scale-nfs"
 	SoftlayerNFS     string = "softlayer-nfs"
 	SCBE             string = "scbe"
+	ProductName      string = "Storage Enabler for Containers"
 )
 
 type UbiquityServerConfig struct {
