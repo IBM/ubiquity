@@ -23,6 +23,7 @@ import (
 	"github.com/IBM/ubiquity/utils"
 	"github.com/IBM/ubiquity/utils/logs"
 	"github.com/IBM/ubiquity/remote/mounter/block_device_utils"
+	"sync"
 )
 
 type scbeMounter struct {
@@ -31,6 +32,7 @@ type scbeMounter struct {
 	blockDeviceUtils        block_device_utils.BlockDeviceUtils
 	exec                    utils.Executor
 	config                  resources.ScbeRemoteConfig
+	cleanMPDeviceLock       *sync.RWMutex
 }
 
 func NewScbeMounter(scbeRemoteConfig resources.ScbeRemoteConfig) resources.Mounter {
@@ -120,6 +122,12 @@ func (s *scbeMounter) ActionAfterDetach(request resources.AfterDetachRequest) er
 		s.logger.Debug("Cleanup already occurred.")
 		return nil
 	}
+	// locking for concurrent md delete operation
+	s.logger.Debug("Ask for cleanMPDeviceLock for device", logs.Args{{"device", devicePath}})
+	s.cleanMPDeviceLock.Lock()
+	s.logger.Debug("Recived cleanMPDeviceLock for device", logs.Args{{"device", devicePath}})
+	defer s.cleanMPDeviceLock.Unlock()
+	defer s.logger.Debug("Released cleanMPDeviceLock for device", logs.Args{{"device", devicePath}})
 	if err := s.blockDeviceUtils.Cleanup(devicePath); err != nil {
 		// make sure it's cleaned up, run it a second time.
 		devicePath, err := s.blockDeviceMounterUtils.Discover(volumeWWN)

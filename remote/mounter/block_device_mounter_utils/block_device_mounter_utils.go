@@ -26,7 +26,6 @@ type blockDeviceMounterUtils struct {
 	logger            logs.Logger
 	blockDeviceUtils  block_device_utils.BlockDeviceUtils
 	rescanLock        *sync.RWMutex
-	cleanMPDeviceLock *sync.RWMutex
 }
 
 func NewBlockDeviceMounterUtilsWithBlockDeviceUtils(blockDeviceUtils block_device_utils.BlockDeviceUtils) BlockDeviceMounterUtils {
@@ -41,7 +40,6 @@ func newBlockDeviceMounterUtils(blockDeviceUtils block_device_utils.BlockDeviceU
 	return &blockDeviceMounterUtils{logger: logs.GetLogger(),
 		blockDeviceUtils:  blockDeviceUtils,
 		rescanLock:        &sync.RWMutex{},
-		cleanMPDeviceLock: &sync.RWMutex{},
 	}
 }
 
@@ -73,13 +71,6 @@ func (b *blockDeviceMounterUtils) UnmountDeviceFlow(devicePath string) error {
 	if err != nil {
 		return b.logger.ErrorRet(err, "UmountFs failed")
 	}
-
-	// locking for concurrent md delete operation
-	b.logger.Debug("Ask for cleanMPDeviceLock for device", logs.Args{{"device", devicePath}})
-	b.cleanMPDeviceLock.Lock()
-	b.logger.Debug("Recived cleanMPDeviceLock for device", logs.Args{{"device", devicePath}})
-	defer b.cleanMPDeviceLock.Unlock()
-	defer b.logger.Debug("Released cleanMPDeviceLock for device", logs.Args{{"device", devicePath}})
 
 	// TODO delete the directory here
 	return nil
