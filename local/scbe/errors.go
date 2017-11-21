@@ -28,8 +28,8 @@ type serviceDoesntExistError struct {
 }
 
 func (e *serviceDoesntExistError) Error() string {
-	return fmt.Sprintf("Cannot create volume [%s] on service [%s]. The service does not exist or it is not delegated to the %s interface in [%s]",
-		e.volName, e.serviceName, resources.ProductName, e.scbeName)
+	return fmt.Sprintf("Cannot create volume [%s] on SCBE service [%s]. The service does not exist or it is not delegated to the %s interface in [%s]",
+		e.volName, e.serviceName, resources.ScbeInterfaceName, e.scbeName)
 }
 
 type mappingResponseError struct {
