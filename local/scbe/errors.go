@@ -204,3 +204,11 @@ func (e *SslModeFullVerifyWithoutCAfile) Error() string {
 	return fmt.Sprintf("Environment variable [%s] must be set for the SSL mode [%s]",
 		e.VerifyCaEnvName, resources.SslModeVerifyFull)
 }
+
+type InvalidMappingsForVolume struct {
+	volWwn     string
+}
+
+func (e *InvalidMappingsForVolume) Error() string {
+	return fmt.Sprintf("Invalid mappings for volume [%s]", e.volWwn)
+}

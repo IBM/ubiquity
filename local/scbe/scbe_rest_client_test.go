@@ -181,11 +181,22 @@ var _ = Describe("ScbeRestClient", func() {
         })
     })
     Context(".GetVolMapping", func() {
-        It("succeed", func() {
+        It("succeed with 1 mapping found", func() {
             fakeSimpleRestClient.GetStub = GetVolMappingStubSuccess()
-            host, err := scbeRestClient.GetVolMapping("fakeWwn")
+            host, err := scbeRestClient.GetVolMapping("fakeWwn1")
             Expect(err).NotTo(HaveOccurred())
             Expect(host).To(Equal(fakeHost))
+        })
+        It("succeed with 0 mapping found", func() {
+            fakeSimpleRestClient.GetStub = GetVolMappingStubSuccess()
+            host, err := scbeRestClient.GetVolMapping("fakeWwn0")
+            Expect(err).NotTo(HaveOccurred())
+            Expect(host).To(Equal(""))
+        })
+        It("fail with 2 mapping found", func() {
+            fakeSimpleRestClient.GetStub = GetVolMappingStubSuccess()
+            _, err := scbeRestClient.GetVolMapping("fakeWwn2")
+            Expect(err).To(HaveOccurred())
         })
     })
 })
@@ -212,9 +223,16 @@ func GetVolMappingStubSuccess() func(resource_url string, params map[string]stri
         hostNum := 99
         if strings.Contains(resource_url, scbe.UrlScbeResourceMapping + "") {
             volWwn, _ :=  params["volume"]
-            if volWwn == "fakeWwn" {
+            if volWwn == "fakeWwn1" {
                 var mappings [1]scbe.ScbeResponseMapping
                 mappings[0].Host = hostNum
+                data, err := json.Marshal(mappings)
+                Expect(err).NotTo(HaveOccurred())
+                return json.Unmarshal(data, v)
+            } else if volWwn == "fakeWwn2" {
+                var mappings [2]scbe.ScbeResponseMapping
+                mappings[0].Host = hostNum
+                mappings[1].Host = hostNum
                 data, err := json.Marshal(mappings)
                 Expect(err).NotTo(HaveOccurred())
                 return json.Unmarshal(data, v)
