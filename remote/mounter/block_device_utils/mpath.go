@@ -23,7 +23,6 @@ import (
 	"path/filepath"
 	"regexp"
 	"strings"
-	"time"
 )
 
 const multipathCmd = "multipath"
@@ -85,7 +84,6 @@ func (b *blockDeviceUtils) Cleanup(mpath string) error {
 	if _, err := b.exec.Execute(dmsetupCmd, args); err != nil {
 		return b.logger.ErrorRet(&commandExecuteError{dmsetupCmd, err}, "failed")
 	}
-	time.Sleep(5000 * time.Millisecond)
 	if err := b.exec.IsExecutable(multipathCmd); err != nil {
 		return b.logger.ErrorRet(&commandNotFoundError{multipathCmd, err}, "failed")
 	}
