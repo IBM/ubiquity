@@ -122,8 +122,16 @@ func (s *scbeMounter) ActionAfterDetach(request resources.AfterDetachRequest) er
 	}
 	if err := s.blockDeviceUtils.Cleanup(devicePath); err != nil {
 		// make sure it's cleaned up, run it a second time.
-		s.blockDeviceUtils.Cleanup(devicePath)
-		s.logger.Debug("Cleanup already occurred.")
+		devicePath, err := s.blockDeviceMounterUtils.Discover(volumeWWN)
+		if err != nil {
+			// clean up already occurred.
+			s.logger.Debug("Cleanup already occurred.")
+			return nil
+		}
+		if err := s.blockDeviceUtils.Cleanup(devicePath); err != nil {
+			// Failed a second time - This is an error.
+			return s.logger.ErrorRet(err, "Cleanup failed")
+		}
 		return nil
 	}
 

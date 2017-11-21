@@ -184,21 +184,6 @@ var _ = Describe("block_device_mounter_utils_test", func() {
 			Expect(err).To(HaveOccurred())
 			Expect(err).To(MatchError(callErr))
 		})
-		It("should fail if Cleanup failed", func() {
-			fakeBlockDeviceUtils.UmountFsReturns(nil)
-			fakeBlockDeviceUtils.CleanupReturns(callErr)
-			err = blockDeviceMounterUtils.UnmountDeviceFlow("fake_device")
-			Expect(err).To(HaveOccurred())
-			Expect(err).To(MatchError(callErr))
-			Expect(fakeBlockDeviceUtils.CleanupCallCount()).To(Equal(1))
-		})
-		It("should succees if all is cool", func() {
-			fakeBlockDeviceUtils.UmountFsReturns(nil)
-			fakeBlockDeviceUtils.CleanupReturns(nil)
-			err = blockDeviceMounterUtils.UnmountDeviceFlow("fake_device")
-			Expect(err).NotTo(HaveOccurred())
-			Expect(fakeBlockDeviceUtils.CleanupCallCount()).To(Equal(1))
-		})
 	})
 })
 
