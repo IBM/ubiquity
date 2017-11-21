@@ -21,6 +21,7 @@ import (
 	"fmt"
 	"github.com/IBM/ubiquity/utils/logs"
 	"github.com/IBM/ubiquity/resources"
+	"strconv"
 )
 
 //go:generate counterfeiter -o ../fakes/fake_scbe_rest_client.go . ScbeRestClient
@@ -46,7 +47,7 @@ const (
 	UrlScbeReferer         = "https://%s:%d/"
 	UrlScbeBaseSuffix      = "api/v1"
 	UrlScbeResourceGetAuth = "users/get-auth-token"
-	ScbeFlockerGroupParam  = "flocker"
+	ScbeContainersGroupParam  = "containers"
 	UrlScbeResourceService = "services"
 	UrlScbeResourceVolume  = "volumes"
 	UrlScbeResourceMapping = "mappings"
@@ -54,29 +55,32 @@ const (
 	DefaultSizeUnit        = "gb"
 )
 
-func NewScbeRestClient(conInfo resources.ConnectionInfo) ScbeRestClient {
+func NewScbeRestClient(conInfo resources.ConnectionInfo) (ScbeRestClient, error) {
 	return newScbeRestClient(conInfo, nil)
 }
 
 // NewScbeRestClientWithNewRestClient for mocking during test # TODO consider to remove it to test file
-func NewScbeRestClientWithSimpleRestClient(conInfo resources.ConnectionInfo, simpleClient SimpleRestClient) ScbeRestClient {
+func NewScbeRestClientWithSimpleRestClient(conInfo resources.ConnectionInfo, simpleClient SimpleRestClient) (ScbeRestClient, error) {
 	return newScbeRestClient(conInfo, simpleClient)
 }
 
-func newScbeRestClient(conInfo resources.ConnectionInfo, simpleClient SimpleRestClient) ScbeRestClient {
+func newScbeRestClient(conInfo resources.ConnectionInfo, simpleClient SimpleRestClient) (ScbeRestClient, error) {
 	// Set default SCBE port if not mentioned
 	if conInfo.Port == 0 {
 		conInfo.Port = DefaultScbePort
 	}
-	// Add the default SCBE Flocker group to the credentials  # TODO change to ubiquity interface
-	conInfo.CredentialInfo.Group = ScbeFlockerGroupParam
+	// Add the default SCBE Containers group to the credentials  # TODO change to ubiquity interface
+	conInfo.CredentialInfo.Group = ScbeContainersGroupParam
 
 	if simpleClient == nil {
 		referrer := fmt.Sprintf(UrlScbeReferer, conInfo.ManagementIP, conInfo.Port)
 		baseUrl := referrer + UrlScbeBaseSuffix
-		simpleClient = NewSimpleRestClient(conInfo, baseUrl, UrlScbeResourceGetAuth, referrer)
+		var err error
+		if simpleClient, err = NewSimpleRestClient(conInfo, baseUrl, UrlScbeResourceGetAuth, referrer); err != nil {
+			return nil, logs.GetLogger().ErrorRet(err, "NewSimpleRestClient failed")
+		}
 	}
-	return &scbeRestClient{logs.GetLogger(), conInfo, simpleClient}
+	return &scbeRestClient{logs.GetLogger(), conInfo, simpleClient}, nil
 }
 
 func (s *scbeRestClient) Login() error {
@@ -184,7 +188,37 @@ func (s *scbeRestClient) UnmapVolume(wwn string, host string) error {
 
 func (s *scbeRestClient) GetVolMapping(wwn string) (string, error) {
 	defer s.logger.Trace(logs.DEBUG)()
-	return "", nil
+	var err error
+	var host string
+
+	payload := map[string]string{}
+	payload["volume"] = wwn
+	s.logger.Debug("get", logs.Args{{"payload", payload}})
+
+	var mappings []ScbeResponseMapping
+	if err = s.client.Get(UrlScbeResourceMapping, payload, HTTP_SUCCEED, &mappings); err != nil {
+		return "", s.logger.ErrorRet(err, "client.Get failed")
+	}
+	s.logger.Debug("", logs.Args{{"mappings", mappings}})
+
+	if len(mappings) > 1 {
+		return "", s.logger.ErrorRet(err, "invalid mappings")
+	}
+
+	if len(mappings) == 1 {
+		var hostResponse ScbeResponseHost
+		hostUrl := fmt.Sprintf("%s/%s", UrlScbeResourceHost, strconv.Itoa(mappings[0].Host))
+		err := s.client.Get(hostUrl, nil, -1, &hostResponse)
+		if err != nil {
+			return "", s.logger.ErrorRet(err, "client.Get failed")
+		}
+
+		s.logger.Debug("", logs.Args{{"hostResponse", hostResponse}})
+		host = hostResponse.Name
+	}
+
+	s.logger.Debug("volume is mapped", logs.Args{{"host", host}})
+	return host, nil
 }
 
 func (s *scbeRestClient) ServiceExist(serviceName string) (exist bool, err error) {

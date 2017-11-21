@@ -26,6 +26,11 @@ import (
     "net/http"
     "encoding/json"
     "errors"
+    "fmt"
+    "os"
+    "crypto/x509"
+    "strings"
+    "github.com/golang/sync/syncmap"
 )
 
 // SimpleRestClient is an interface that wrapper the http requests to provide easy REST API operations,
@@ -49,6 +54,7 @@ const (
     HTTP_SUCCEED_POST    = 201
     HTTP_SUCCEED_DELETED = 204
     HTTP_AUTH_KEY        = "Authorization"
+    KEY_VERIFY_SCBE_CERT = "UBIQUITY_SERVER_VERIFY_SCBE_CERT"
 )
 
 // simpleRestClient implements SimpleRestClient interface.
@@ -61,16 +67,16 @@ type simpleRestClient struct {
     referrer       string
     connectionInfo resources.ConnectionInfo
     httpClient     *http.Client
-    headers        map[string]string
+    headers        *syncmap.Map
 }
 
-func NewSimpleRestClient(conInfo resources.ConnectionInfo, baseURL string, authURL string, referrer string) SimpleRestClient {
-    headers := map[string]string{"Content-Type": "application/json", "referer": referrer}
-    client := &http.Client{}
-    if conInfo.SkipVerifySSL {
-        client.Transport = &http.Transport{TLSClientConfig: &tls.Config{InsecureSkipVerify: true}}
+func NewSimpleRestClient(conInfo resources.ConnectionInfo, baseURL string, authURL string, referrer string) (SimpleRestClient, error) {
+    client := &simpleRestClient{logger: logs.GetLogger(), connectionInfo: conInfo, baseURL: baseURL, authURL: authURL, referrer: referrer, httpClient: &http.Client{}}
+    client.initHeader()
+    if err := client.initTransport(); err != nil {
+        return nil, client.logger.ErrorRet(err, "client.initTransport failed")
     }
-    return &simpleRestClient{logger: logs.GetLogger(), connectionInfo: conInfo, baseURL: baseURL, authURL: authURL, referrer: referrer, httpClient: client, headers: headers}
+    return client, nil
 }
 
 func (s *simpleRestClient) Login() error {
@@ -83,7 +89,7 @@ func (s *simpleRestClient) Login() error {
 
 func (s *simpleRestClient) getToken() error {
     defer s.logger.Trace(logs.DEBUG)()
-    delete(s.headers, HTTP_AUTH_KEY) // because no need token to get the token only user\password
+    s.headers.Delete(HTTP_AUTH_KEY) // because no need token to get the token only user\password
     var loginResponse = LoginResponse{}
     credentials, err := json.Marshal(s.connectionInfo.CredentialInfo)
     if err != nil {
@@ -95,7 +101,7 @@ func (s *simpleRestClient) getToken() error {
     if loginResponse.Token == "" {
         return s.logger.ErrorRet(errors.New("Token is empty"), "Post failed")
     }
-    s.headers[HTTP_AUTH_KEY] = "Token " + loginResponse.Token
+    s.headers.Store(HTTP_AUTH_KEY, "Token " + loginResponse.Token)
     return nil
 }
 
@@ -132,9 +138,7 @@ func (s *simpleRestClient) genericActionInternal(actionName string, resource_url
     }
 
     // append all the headers to the request
-    for key, value := range s.headers {
-        request.Header.Add(key, value)
-    }
+    s.addHeader(request)
 
     response, err := s.httpClient.Do(request)
     if err != nil {
@@ -142,15 +146,18 @@ func (s *simpleRestClient) genericActionInternal(actionName string, resource_url
     }
 
     // check if client sent a token and it expired
-    if response.StatusCode == http.StatusUnauthorized && s.headers[HTTP_AUTH_KEY] != "" && retryUnauthorized {
+    if response.StatusCode == http.StatusUnauthorized {
+        _, hasAuth := s.headers.Load(HTTP_AUTH_KEY)
+        if hasAuth && retryUnauthorized {
 
-        // login
-        if err = s.Login(); err != nil {
-            return s.logger.ErrorRet(err, "Login failed")
+            // login
+            if err = s.Login(); err != nil {
+                return s.logger.ErrorRet(err, "Login failed")
+            }
+
+            // retry
+            return s.genericActionInternal(actionName, resource_url, payload, params, exitStatus, v, false)
         }
-
-        // retry
-        return s.genericActionInternal(actionName, resource_url, payload, params, exitStatus, v, false)
     }
 
     defer response.Body.Close()
@@ -198,4 +205,59 @@ func (s *simpleRestClient) Delete(resource_url string, payload []byte, exitStatu
         exitStatus = HTTP_SUCCEED_DELETED // Default value
     }
     return s.genericAction("DELETE", resource_url, payload, nil, exitStatus, nil)
+}
+
+func (s *simpleRestClient) initTransport() error {
+    defer s.logger.Trace(logs.DEBUG)()
+    exec := utils.NewExecutor()
+
+    emptyConnection := resources.ConnectionInfo{}
+    if s.connectionInfo != emptyConnection {
+	sslMode := strings.ToLower(os.Getenv(resources.KeyScbeSslMode))
+        if sslMode == ""{
+           sslMode = resources.DefaultScbeSslMode
+        }
+
+        if sslMode == resources.SslModeVerifyFull {
+		verifyFileCA := os.Getenv(KEY_VERIFY_SCBE_CERT)
+		if verifyFileCA != "" {
+		    if _, err := exec.Stat(verifyFileCA); err != nil {
+		        return s.logger.ErrorRet(err, "failed")
+		    }
+		    caCert, err := ioutil.ReadFile(verifyFileCA)
+		    if err != nil {
+		        return s.logger.ErrorRet(err, "failed")
+		    }
+		    caCertPool := x509.NewCertPool()
+		    if ok := caCertPool.AppendCertsFromPEM(caCert); !ok {
+		        return fmt.Errorf("parse %v failed", verifyFileCA)
+		    }
+		    s.httpClient.Transport = &http.Transport{TLSClientConfig: &tls.Config{RootCAs: caCertPool}}
+                   s.logger.Info("", logs.Args{{KEY_VERIFY_SCBE_CERT, verifyFileCA}})
+		} else {
+			return s.logger.ErrorRet(&SslModeFullVerifyWithoutCAfile{KEY_VERIFY_SCBE_CERT}, "failed")
+		}
+	} else if sslMode == resources.SslModeRequire {
+	    s.logger.Info(
+                    fmt.Sprintf("Client SSL Mode set to [%s]. Means the communication to ubiquity is InsecureSkipVerify", sslMode))
+            s.httpClient.Transport = &http.Transport{TLSClientConfig: &tls.Config{InsecureSkipVerify: true}}
+        } else {
+            return s.logger.ErrorRet(&SslModeValueInvalid{sslMode}, "failed")
+     }
+    }
+    return nil
+}
+
+func (s *simpleRestClient) addHeader(request *http.Request) error {
+    s.headers.Range(func(k, v interface{}) bool {
+        request.Header.Add(k.(string), v.(string))
+        return true
+    })
+    return nil
+}
+
+func (s *simpleRestClient) initHeader() {
+    s.headers = new(syncmap.Map)
+    s.headers.Store("Content-Type", "application/json")
+    s.headers.Store("referer", s.referrer)
 }

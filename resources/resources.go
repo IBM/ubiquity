@@ -55,7 +55,6 @@ type ConnectionInfo struct {
 	CredentialInfo CredentialInfo
 	Port           int
 	ManagementIP   string
-	SkipVerifySSL  bool
 }
 
 type ScbeConfig struct {
@@ -73,6 +72,15 @@ const DefaultForScbeConfigParamDefaultVolumeSize = "1"    // if customer don't m
 const DefaultForScbeConfigParamDefaultFilesystem = "ext4" // if customer don't mention fstype, then the default is ext4
 const PathToMountUbiquityBlockDevices = "/ubiquity/%s"    // %s is the WWN of the volume # TODO this should be moved to docker plugin side
 const OptionNameForVolumeFsType = "fstype"                // the option name of the fstype and also the key in the volumeConfig
+const ScbeKeyVolAttachToHost = "attach-to"                // the key in map for volume to host attachments
+const ScbeDefaultPort = 8440                              // the default port for SCBE management
+const SslModeRequire = "require"
+const SslModeVerifyFull = "verify-full"
+const KeySslMode = "UBIQUITY_PLUGIN_SSL_MODE"
+const KeyScbeSslMode = "SCBE_SSL_MODE"
+const DefaultDbSslMode = SslModeVerifyFull
+const DefaultScbeSslMode = SslModeVerifyFull
+const DefaultPluginsSslMode = SslModeVerifyFull
 
 type SshConfig struct {
 	User string
@@ -104,6 +112,8 @@ type UbiquityPluginConfig struct {
 	ScbeRemoteConfig        ScbeRemoteConfig
 	Backends                []string
 	LogLevel                string
+	CredentialInfo          CredentialInfo
+	SslConfig               UbiquityPluginSslConfig
 }
 
 type UbiquityDockerPluginConfig struct {
@@ -121,6 +131,11 @@ type ScbeRemoteConfig struct {
 	SkipRescanISCSI bool
 }
 
+type UbiquityPluginSslConfig struct {
+	UseSsl   bool
+	SslMode  string
+	VerifyCa string
+}
 
 //go:generate counterfeiter -o ../fakes/fake_storage_client.go . StorageClient
 
@@ -144,39 +159,47 @@ type Mounter interface {
 }
 
 type ActivateRequest struct {
-	Backends []string
-	Opts     map[string]string
+	CredentialInfo CredentialInfo
+	Backends       []string
+	Opts           map[string]string
 }
 
 type CreateVolumeRequest struct {
-	Name    string
-	Backend string
-	Opts    map[string]interface{}
+	CredentialInfo CredentialInfo
+	Name           string
+	Backend        string
+	Opts           map[string]interface{}
 }
 
 type RemoveVolumeRequest struct {
-	Name string
+	CredentialInfo CredentialInfo
+	Name           string
 }
 
 type ListVolumesRequest struct {
+	CredentialInfo CredentialInfo
 	//TODO add filter
 	Backends []string
 }
 
 type AttachRequest struct {
-	Name string
-	Host string
+	CredentialInfo CredentialInfo
+	Name           string
+	Host           string
 }
 
 type DetachRequest struct {
-	Name string
-	Host string
+	CredentialInfo CredentialInfo
+	Name           string
+	Host           string
 }
 type GetVolumeRequest struct {
-	Name string
+	CredentialInfo CredentialInfo
+	Name           string
 }
 type GetVolumeConfigRequest struct {
-	Name string
+	CredentialInfo CredentialInfo
+	Name           string
 }
 type ActivateResponse struct {
 	Implements []string
@@ -185,10 +208,6 @@ type ActivateResponse struct {
 
 type GenericResponse struct {
 	Err string
-}
-
-type GenericRequest struct {
-	Name string
 }
 
 type MountRequest struct {

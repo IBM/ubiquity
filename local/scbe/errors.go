@@ -184,3 +184,21 @@ func (e *InValidRequestError) Error() string {
 		e.paramCurrentValue,
 		e.paramExpectedToBe)
 }
+
+type SslModeValueInvalid struct {
+	sslModeInValid string
+}
+
+func (e *SslModeValueInvalid) Error() string {
+	return fmt.Sprintf("SSL Mode [%s] is invalid. Available values are [%s, %s]",
+		e.sslModeInValid, resources.SslModeRequire, resources.SslModeVerifyFull)
+}
+
+type SslModeFullVerifyWithoutCAfile struct {
+	VerifyCaEnvName string
+}
+
+func (e *SslModeFullVerifyWithoutCAfile) Error() string {
+	return fmt.Sprintf("ENV [%s] is missing. Must set in case of SSL mode [%s]",
+		e.VerifyCaEnvName, resources.SslModeVerifyFull)
+}
