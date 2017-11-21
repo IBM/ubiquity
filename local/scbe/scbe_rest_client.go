@@ -47,7 +47,7 @@ const (
 	UrlScbeReferer         = "https://%s:%d/"
 	UrlScbeBaseSuffix      = "api/v1"
 	UrlScbeResourceGetAuth = "users/get-auth-token"
-	ScbeContainersGroupParam  = "containers"
+	ScbeContainersGroupParam  = "CONTAINERS"
 	UrlScbeResourceService = "services"
 	UrlScbeResourceVolume  = "volumes"
 	UrlScbeResourceMapping = "mappings"
