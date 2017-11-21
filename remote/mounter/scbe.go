@@ -22,11 +22,13 @@ import (
 	"github.com/IBM/ubiquity/resources"
 	"github.com/IBM/ubiquity/utils"
 	"github.com/IBM/ubiquity/utils/logs"
+	"github.com/IBM/ubiquity/remote/mounter/block_device_utils"
 )
 
 type scbeMounter struct {
 	logger                  logs.Logger
 	blockDeviceMounterUtils block_device_mounter_utils.BlockDeviceMounterUtils
+	blockDeviceUtils        block_device_utils.BlockDeviceUtils
 	exec                    utils.Executor
 	config                  resources.ScbeRemoteConfig
 }
@@ -111,6 +113,19 @@ func (s *scbeMounter) Unmount(unmountRequest resources.UnmountRequest) error {
 func (s *scbeMounter) ActionAfterDetach(request resources.AfterDetachRequest) error {
 	defer s.logger.Trace(logs.DEBUG)()
 	volumeWWN := request.VolumeConfig["Wwn"].(string)
+
+	devicePath, err := s.blockDeviceMounterUtils.Discover(volumeWWN)
+	if err != nil {
+		// Already cleaned up
+		s.logger.Debug("Cleanup already occurred.")
+		return nil
+	}
+	if err := s.blockDeviceUtils.Cleanup(devicePath); err != nil {
+		// make sure it's cleaned up, run it a second time.
+		s.blockDeviceUtils.Cleanup(devicePath)
+		s.logger.Debug("Cleanup already occurred.")
+		return nil
+	}
 
 	// Rescan OS
 	if err := s.blockDeviceMounterUtils.RescanAll(!s.config.SkipRescanISCSI, volumeWWN, true); err != nil {

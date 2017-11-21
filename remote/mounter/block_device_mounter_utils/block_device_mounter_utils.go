@@ -81,10 +81,6 @@ func (b *blockDeviceMounterUtils) UnmountDeviceFlow(devicePath string) error {
 	defer b.cleanMPDeviceLock.Unlock()
 	defer b.logger.Debug("Released cleanMPDeviceLock for device", logs.Args{{"device", devicePath}})
 
-	if err := b.blockDeviceUtils.Cleanup(devicePath); err != nil {
-		return b.logger.ErrorRet(err, "Cleanup failed")
-	}
-
 	// TODO delete the directory here
 	return nil
 }
