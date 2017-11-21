@@ -198,6 +198,16 @@ var _ = Describe("ScbeRestClient", func() {
             _, err := scbeRestClient.GetVolMapping("fakeWwn2")
             Expect(err).To(HaveOccurred())
         })
+        It("fail if get mapping failed", func() {
+            fakeSimpleRestClient.GetStub = GetVolMappingStubSuccess()
+            _, err := scbeRestClient.GetVolMapping("fakeWwnGetMapFail")
+            Expect(err).To(HaveOccurred())
+        })
+        It("fail if get host failed", func() {
+            fakeSimpleRestClient.GetStub = GetVolMappingStubSuccess()
+            _, err := scbeRestClient.GetVolMapping("fakeWwnGetHostFail")
+            Expect(err).To(HaveOccurred())
+        })
     })
 })
 
@@ -236,6 +246,14 @@ func GetVolMappingStubSuccess() func(resource_url string, params map[string]stri
                 data, err := json.Marshal(mappings)
                 Expect(err).NotTo(HaveOccurred())
                 return json.Unmarshal(data, v)
+            } else if volWwn == "fakeWwnGetMapFail" {
+                return fmt.Errorf("fakeWwnGetMapFail")
+            } else if volWwn == "fakeWwnGetHostFail" {
+                var mappings [1]scbe.ScbeResponseMapping
+                mappings[0].Host = hostNum + 1
+                data, err := json.Marshal(mappings)
+                Expect(err).NotTo(HaveOccurred())
+                return json.Unmarshal(data, v)
             }
         } else {
             hostUrl := fmt.Sprintf("%s/%s", scbe.UrlScbeResourceHost, strconv.Itoa(hostNum))
@@ -245,6 +263,8 @@ func GetVolMappingStubSuccess() func(resource_url string, params map[string]stri
                 data, err := json.Marshal(hostResponse)
                 Expect(err).NotTo(HaveOccurred())
                 return json.Unmarshal(data, v)
+            } else {
+                return fmt.Errorf("fakeWwnGetHostFail")
             }
         }
         return nil
