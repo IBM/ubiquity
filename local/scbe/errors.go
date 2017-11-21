@@ -28,8 +28,8 @@ type serviceDoesntExistError struct {
 }
 
 func (e *serviceDoesntExistError) Error() string {
-	return fmt.Sprintf("Cannot create volume [%s] on service [%s]. Reason : Service does not exist or not delegated to the Ubiquity interface in [%s]",
-		e.volName, e.serviceName, e.scbeName)
+	return fmt.Sprintf("Cannot create volume [%s] on SCBE service [%s]. The service does not exist or it is not delegated to the %s interface in [%s]",
+		e.volName, e.serviceName, resources.ScbeInterfaceName, e.scbeName)
 }
 
 type mappingResponseError struct {
@@ -37,7 +37,7 @@ type mappingResponseError struct {
 }
 
 func (e *mappingResponseError) Error() string {
-	return fmt.Sprintf("Mapping operation succeed but response is missing the mapping details. %#v", e.mapping)
+	return fmt.Sprintf("Mapping operation succeeded, but the mapping details are missing from the response. %#v", e.mapping)
 }
 
 type volumeNotFoundError struct {
@@ -55,8 +55,8 @@ type hostNotFoundvolumeNotFoundError struct {
 }
 
 func (e *hostNotFoundvolumeNotFoundError) Error() string {
-	return fmt.Sprintf("Host name [%s] was not found on the storage system [%s](according to SCBE caching) that related to volume with WWN [%s]",
-		e.hostName, e.arrayName, e.volName)
+	return fmt.Sprintf("Host name [%s], related to the volume with WWN [%s] was not found on the storage system [%s], according to SCBE caching data",
+		e.hostName, e.volName, e.arrayName)
 }
 
 type activateDefaultServiceError struct {
@@ -65,7 +65,7 @@ type activateDefaultServiceError struct {
 }
 
 func (e *activateDefaultServiceError) Error() string {
-	return fmt.Sprintf("Error in activate SCBE backend. The default service %s does not exist in SCBE %s",
+	return fmt.Sprintf("SCBE backend activation error. The default service [%s] does not exist on SCBE [%s]",
 		e.serviceName, e.scbeName)
 }
 
@@ -83,7 +83,7 @@ type provisionParamMissingError struct {
 }
 
 func (e *provisionParamMissingError) Error() string {
-	return fmt.Sprintf("Fail to provision a volume [%s] because the [%s] option is missing", e.volName, e.param)
+	return fmt.Sprintf("Volume [%s] provisioning failure due to the missing [%s] option", e.volName, e.param)
 }
 
 type FsTypeNotSupportedError struct {
@@ -93,7 +93,7 @@ type FsTypeNotSupportedError struct {
 }
 
 func (e *FsTypeNotSupportedError) Error() string {
-	return fmt.Sprintf("Fail to provision a volume [%s]. Supported filesystem types are [%s] (but given [%s])",
+	return fmt.Sprintf("Volume [%s] provisioning failure due to mismatch in file system type [%s] [%s]",
 		e.volName, e.supportedTypes, e.wrongFStype)
 }
 
@@ -103,7 +103,8 @@ type provisionParamIsNotNumberError struct {
 }
 
 func (e *provisionParamIsNotNumberError) Error() string {
-	return fmt.Sprintf("Fail to provision a volume [%s] because the [%s] option is not a number", e.volName, e.param)
+	return fmt.Sprintf("Volume [%s] provisioning failure due to a non-numeric value set for option [%s]",
+		e.volName, e.param)
 }
 
 type volAlreadyAttachedError struct {
@@ -121,7 +122,8 @@ type CannotDeleteVolWhichAttachedToHostError struct {
 }
 
 func (e *CannotDeleteVolWhichAttachedToHostError) Error() string {
-	return fmt.Sprintf("Cannot delete a volume that is attached to a host. The volume [%s] currently attached to host [%s]", e.volName, e.hostName)
+	return fmt.Sprintf("Volume [%s] deletion failure. Volume is currently attached to host [%s]",
+		e.volName, e.hostName)
 }
 
 type volNotAttachedError struct {
@@ -129,7 +131,7 @@ type volNotAttachedError struct {
 }
 
 func (e *volNotAttachedError) Error() string {
-	return fmt.Sprintf("Volume [%s] not attached", e.volName)
+	return fmt.Sprintf("Volume [%s] is not attached to any host", e.volName)
 }
 
 type ConfigDefaultSizeNotNumError struct {
@@ -137,7 +139,7 @@ type ConfigDefaultSizeNotNumError struct {
 }
 
 func (e *ConfigDefaultSizeNotNumError) Error() string {
-	return fmt.Sprintf("Error in config file. The parameter [%s] must be a number",
+	return fmt.Sprintf("Configuration file error. The [%s] parameter value must be a number",
 		"ScbeConfig.DefaultVolumeSize")
 }
 
@@ -147,7 +149,7 @@ type ConfigDefaultFilesystemTypeNotSupported struct {
 }
 
 func (e *ConfigDefaultFilesystemTypeNotSupported) Error() string {
-	return fmt.Sprintf("Error in config file. The parameter [%s] can be the following values [%s] (given [%s])",
+	return fmt.Sprintf("Configuration file error. The allowed values for parameter [%s] must be [%s] (given [%s])",
 		"ScbeConfig.DefaultFileSystemType", e.supportedTypes, e.wrongFStype)
 }
 
@@ -155,7 +157,7 @@ type ConfigScbeUbiquityInstanceNameWrongSize struct {
 }
 
 func (e *ConfigScbeUbiquityInstanceNameWrongSize) Error() string {
-	return fmt.Sprintf("Error in config file. The parameter [%s] max length is [%d]",
+	return fmt.Sprintf("Configuration file error. The max length of the parameter [%s] value is [%d]",
 		"ScbeConfig.UbiquityInstanceName", resources.UbiquityInstanceNameMaxSize)
 }
 
@@ -165,7 +167,7 @@ type VolumeNameExceededMaxLengthError struct {
 }
 
 func (e *VolumeNameExceededMaxLengthError) Error() string {
-	return fmt.Sprintf("Volume name [%s] is too long(len=%d). Max length should be [%d]",
+	return fmt.Sprintf("The volume name [%s] length [%d] is out of range. The max name length is [%d] characters",
 		e.volName, len(e.volName), e.maxVolumeLength)
 }
 
@@ -178,7 +180,7 @@ type InValidRequestError struct {
 
 func (e *InValidRequestError) Error() string {
 	return fmt.Sprintf(
-		"Request type [%s] not valid. Param [%s]=[%s] but expacted to be [%s]",
+		"Request type [%s] is invalid. The expected value of parameter [%s] [%s] is [%s]",
 		e.requestType,
 		e.badParam,
 		e.paramCurrentValue,
@@ -190,7 +192,7 @@ type SslModeValueInvalid struct {
 }
 
 func (e *SslModeValueInvalid) Error() string {
-	return fmt.Sprintf("SSL Mode [%s] is invalid. Available values are [%s, %s]",
+	return fmt.Sprintf("Illegal SSL mode value [%s]. The allowed values are [%s, %s]",
 		e.sslModeInValid, resources.SslModeRequire, resources.SslModeVerifyFull)
 }
 
@@ -199,6 +201,6 @@ type SslModeFullVerifyWithoutCAfile struct {
 }
 
 func (e *SslModeFullVerifyWithoutCAfile) Error() string {
-	return fmt.Sprintf("ENV [%s] is missing. Must set in case of SSL mode [%s]",
+	return fmt.Sprintf("Environment variable [%s] must be set for the SSL mode [%s]",
 		e.VerifyCaEnvName, resources.SslModeVerifyFull)
 }
