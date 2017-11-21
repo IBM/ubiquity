@@ -40,6 +40,7 @@ type ConnectionFactory interface {
 
 type postgresFactory struct {
     psql     string
+    psqlLog  string
 }
 
 type sqliteFactory struct {
@@ -51,7 +52,7 @@ type testErrorFactory struct {
 
 func (f *postgresFactory) newConnection() (*gorm.DB, error) {
     logger := logs.GetLogger()
-    logger.Debug("", logs.Args{{"psql", f.psql}})
+    logger.Debug("", logs.Args{{"psql", f.psqlLog}})
     return gorm.Open("postgres", f.psql)
 }
 

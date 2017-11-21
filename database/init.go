@@ -20,6 +20,7 @@ import (
     "os"
     "github.com/IBM/ubiquity/utils/logs"
     "github.com/IBM/ubiquity/resources"
+    "strings"
 )
 
 const (
@@ -85,9 +86,23 @@ func GetPsqlSslParams() string {
     return str
 }
 
+func GetPsqlWithPassowrdStarred(psql string) string {
+    slc := strings.Split(psql, " ")
+    newslc := slc[:0]
+    for _, x := range slc {
+        if !strings.HasPrefix(x, "password") {
+            newslc = append(newslc, x)
+        } else {
+            newslc = append(newslc, "password=****")
+        }
+    }
+    return strings.Join(newslc, " ")
+}
+
 func InitPostgres(hostname string) func() {
     defer logs.GetLogger().Trace(logs.DEBUG)()
-    return initConnectionFactory(&postgresFactory{psql: GetPsqlConnectionParams(hostname) + " " + GetPsqlSslParams()})
+    psqlStr := GetPsqlConnectionParams(hostname) + " " + GetPsqlSslParams()
+    return initConnectionFactory(&postgresFactory{psql: psqlStr, psqlLog: GetPsqlWithPassowrdStarred(psqlStr)})
 }
 
 func InitSqlite(filepath string) func() {
