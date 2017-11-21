@@ -532,10 +532,6 @@ var _ = Describe("scbeLocalClient", func() {
 			fakeScbeRestClient.GetVolumesReturns(volumes, nil)
 			fakeScbeRestClient.GetVolMappingReturns(fakeHost, nil)
 			volConfig, err := client.GetVolumeConfig(resources.GetVolumeConfigRequest{Name:"name"})
-			fmt.Println("LIORT")
-			fmt.Println(volConfig)
-			fmt.Println("LIORT")
-
 			Expect(err).To(Not(HaveOccurred()))
 			Expect(len(volConfig)).To(Equal(val.Type().NumField() + scbe.GetVolumeConfigExtraParams))
 			fstype, ok := volConfig[resources.OptionNameForVolumeFsType]

@@ -26,6 +26,8 @@ import (
     "errors"
     "encoding/json"
     "strconv"
+    "strings"
+    "fmt"
 )
 
 
@@ -178,6 +180,14 @@ var _ = Describe("ScbeRestClient", func() {
             Expect(err).To(MatchError(restErr))
         })
     })
+    Context(".GetVolMapping", func() {
+        It("succeed", func() {
+            fakeSimpleRestClient.GetStub = GetVolMappingStubSuccess()
+            host, err := scbeRestClient.GetVolMapping("fakeWwn")
+            Expect(err).NotTo(HaveOccurred())
+            Expect(host).To(Equal(fakeHost))
+        })
+    })
 })
 
 
@@ -194,5 +204,31 @@ func OverridePostStub(override interface{}) func(resource_url string, payload []
     Expect(err).NotTo(HaveOccurred())
     return func(resource_url string, payload []byte, exitStatus int, v interface{}) error {
         return json.Unmarshal(data, v)
+    }
+}
+
+func GetVolMappingStubSuccess() func(resource_url string, params map[string]string, exitStatus int, v interface{}) error {
+    return func(resource_url string, params map[string]string, exitStatus int, v interface{}) error {
+        hostNum := 99
+        if strings.Contains(resource_url, scbe.UrlScbeResourceMapping + "") {
+            volWwn, _ :=  params["volume"]
+            if volWwn == "fakeWwn" {
+                var mappings [1]scbe.ScbeResponseMapping
+                mappings[0].Host = hostNum
+                data, err := json.Marshal(mappings)
+                Expect(err).NotTo(HaveOccurred())
+                return json.Unmarshal(data, v)
+            }
+        } else {
+            hostUrl := fmt.Sprintf("%s/%s", scbe.UrlScbeResourceHost, strconv.Itoa(hostNum))
+            if strings.Contains(resource_url, hostUrl) {
+                var hostResponse scbe.ScbeResponseHost
+                hostResponse.Name = fakeHost
+                data, err := json.Marshal(hostResponse)
+                Expect(err).NotTo(HaveOccurred())
+                return json.Unmarshal(data, v)
+            }
+        }
+        return nil
     }
 }
