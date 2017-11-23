@@ -166,7 +166,7 @@ var _ = Describe("block_device_utils_test", func() {
 			Expect(fakeExec.ExecuteCallCount()).To(Equal(2))
 			cmd1, args1 := fakeExec.ExecuteArgsForCall(0)
 			Expect(cmd1).To(Equal("dmsetup"))
-			Expect(args1).To(Equal([]string{"message", mpath, "0", "\"fail_if_no_path\""}))
+			Expect(args1).To(Equal([]string{"message", mpath, "0", "fail_if_no_path"}))
 			cmd2, args2 := fakeExec.ExecuteArgsForCall(1)
 			Expect(cmd2).To(Equal("multipath"))
 			Expect(args2).To(Equal([]string{"-f", mpath}))
