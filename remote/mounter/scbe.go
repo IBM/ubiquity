@@ -40,6 +40,7 @@ func NewScbeMounter(scbeRemoteConfig resources.ScbeRemoteConfig) resources.Mount
 	return &scbeMounter{
 		logger:                  logs.GetLogger(),
 		blockDeviceMounterUtils: blockDeviceMounterUtils,
+		blockDeviceUtils:        block_device_utils.NewBlockDeviceUtils(),
 		exec: utils.NewExecutor(),
 		config: scbeRemoteConfig,
 	}
