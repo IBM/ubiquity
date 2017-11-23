@@ -202,7 +202,7 @@ func (s *scbeRestClient) GetVolMapping(wwn string) (string, error) {
 	s.logger.Debug("", logs.Args{{"mappings", mappings}})
 
 	if len(mappings) > 1 {
-		return "", s.logger.ErrorRet(err, "invalid mappings")
+		return "", s.logger.ErrorRet(&InvalidMappingsForVolume{wwn}, "failed")
 	}
 
 	if len(mappings) == 1 {
