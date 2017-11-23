@@ -19,7 +19,6 @@ package block_device_mounter_utils
 import (
 	"github.com/IBM/ubiquity/remote/mounter/block_device_utils"
 	"github.com/IBM/ubiquity/utils/logs"
-	"sync"
     "github.com/nightlyone/lockfile"
 	"path/filepath"
 	"os"
@@ -29,8 +28,6 @@ import (
 type blockDeviceMounterUtils struct {
 	logger            logs.Logger
 	blockDeviceUtils  block_device_utils.BlockDeviceUtils
-	rescanLock        *sync.RWMutex
-	cleanMPDeviceLock *sync.RWMutex
 	rescanFlock       lockfile.Lockfile
 	mpathFlock        lockfile.Lockfile
 }
@@ -55,8 +52,6 @@ func newBlockDeviceMounterUtils(blockDeviceUtils block_device_utils.BlockDeviceU
 
 	return &blockDeviceMounterUtils{logger: logs.GetLogger(),
 		blockDeviceUtils:  blockDeviceUtils,
-		rescanLock:        &sync.RWMutex{},
-		cleanMPDeviceLock: &sync.RWMutex{},
 		rescanFlock:       rescanLock,
 		mpathFlock:        mpathLock,
 	}
