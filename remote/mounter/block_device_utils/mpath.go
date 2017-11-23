@@ -80,7 +80,7 @@ func (b *blockDeviceUtils) Cleanup(mpath string) error {
 	if err := b.exec.IsExecutable(dmsetupCmd); err != nil {
 		return b.logger.ErrorRet(&commandNotFoundError{dmsetupCmd, err}, "failed")
 	}
-	args := []string{"message", dev, "0", "\"fail_if_no_path\""}
+	args := []string{"message", dev, "0", "fail_if_no_path"}
 	if _, err := b.exec.Execute(dmsetupCmd, args); err != nil {
 		return b.logger.ErrorRet(&commandExecuteError{dmsetupCmd, err}, "failed")
 	}
