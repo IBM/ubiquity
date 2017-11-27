@@ -26,7 +26,6 @@ import (
 	"strings"
 	"sync"
 	"github.com/IBM/ubiquity/database"
-	"github.com/golang/sync/syncmap"
 )
 
 type scbeLocalClient struct {
@@ -36,7 +35,7 @@ type scbeLocalClient struct {
 	config         resources.ScbeConfig
 	activationLock *sync.RWMutex
 	locker         utils.Locker
-	restClients    *syncmap.Map
+	restClients    *sync.Map
 }
 
 const (
@@ -75,7 +74,7 @@ func NewScbeLocalClientWithNewScbeRestClientAndDataModel(config resources.ScbeCo
 		config:         config,
 		activationLock: &sync.RWMutex{},
 		locker:         utils.NewLocker(),
-		restClients:    new(syncmap.Map),
+		restClients:    new(sync.Map),
 	}
 
 	if err := client.basicScbeLocalClientStartupAndValidation(scbeRestClient); err != nil {

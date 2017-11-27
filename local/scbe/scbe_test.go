@@ -188,7 +188,7 @@ var _ = Describe("scbeLocalClient", func() {
 				fakeScbeDataModel,
 				fakeScbeRestClient)
 			Expect(err).To(HaveOccurred())
-			Expect(err.Error()).To(MatchRegexp("^Error in activate .* does not exist in SCBE"))
+			Expect(err.Error()).To(MatchRegexp("^SCBE backend activation error. The default service .* does not exist on SCBE"))
 			Expect(fakeScbeRestClient.LoginCallCount()).To(Equal(1))
 			Expect(fakeScbeRestClient.ServiceExistCallCount()).To(Equal(1))
 
@@ -532,10 +532,6 @@ var _ = Describe("scbeLocalClient", func() {
 			fakeScbeRestClient.GetVolumesReturns(volumes, nil)
 			fakeScbeRestClient.GetVolMappingReturns(fakeHost, nil)
 			volConfig, err := client.GetVolumeConfig(resources.GetVolumeConfigRequest{Name:"name"})
-			fmt.Println("LIORT")
-			fmt.Println(volConfig)
-			fmt.Println("LIORT")
-
 			Expect(err).To(Not(HaveOccurred()))
 			Expect(len(volConfig)).To(Equal(val.Type().NumField() + scbe.GetVolumeConfigExtraParams))
 			fstype, ok := volConfig[resources.OptionNameForVolumeFsType]
