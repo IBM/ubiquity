@@ -30,7 +30,7 @@ import (
     "os"
     "crypto/x509"
     "strings"
-    "github.com/golang/sync/syncmap"
+    "sync"
 )
 
 // SimpleRestClient is an interface that wrapper the http requests to provide easy REST API operations,
@@ -67,7 +67,7 @@ type simpleRestClient struct {
     referrer       string
     connectionInfo resources.ConnectionInfo
     httpClient     *http.Client
-    headers        *syncmap.Map
+    headers        *sync.Map
 }
 
 func NewSimpleRestClient(conInfo resources.ConnectionInfo, baseURL string, authURL string, referrer string) (SimpleRestClient, error) {
@@ -257,7 +257,7 @@ func (s *simpleRestClient) addHeader(request *http.Request) error {
 }
 
 func (s *simpleRestClient) initHeader() {
-    s.headers = new(syncmap.Map)
+    s.headers = new(sync.Map)
     s.headers.Store("Content-Type", "application/json")
     s.headers.Store("referer", s.referrer)
 }

@@ -24,6 +24,7 @@ import (
     "github.com/IBM/ubiquity/resources"
     "fmt"
     "os"
+    "strings"
 )
 
 
@@ -90,6 +91,19 @@ var _ = Describe("Init", func() {
             res := database.GetPsqlConnectionParams(hostname)
             os.Unsetenv(database.KeyPsqlTimeout)
             Expect(res).To(Equal(fmt.Sprintf("host=%s user=%s dbname=%s connect_timeout=%s", hostname, defaultUser, defaultDbName, newTimeout)))
+        })
+        It("hostname user dbname password port", func() {
+            os.Setenv(database.KeyPsqlUser, newUser)
+            os.Setenv(database.KeyPsqlDbName, newDbName)
+            os.Setenv(database.KeyPsqlPassword, newPassword)
+            os.Setenv(database.KeyPsqlPort, newPort)
+            res := database.GetPsqlConnectionParams(hostname)
+            os.Unsetenv(database.KeyPsqlUser)
+            os.Unsetenv(database.KeyPsqlDbName)
+            os.Unsetenv(database.KeyPsqlPassword)
+            os.Unsetenv(database.KeyPsqlPort)
+            newres := database.GetPsqlWithPassowrdStarred(res)
+            Expect(strings.Contains(newres, newPassword)).To(BeFalse())
         })
     })
     Context(".Postgres ssl", func() {
