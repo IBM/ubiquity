@@ -136,9 +136,22 @@ func (s *scbeMounter) ActionAfterDetach(request resources.AfterDetachRequest) er
 		}
 	}
 
+	devicePath , err = s.blockDeviceMounterUtils.Discover(volumeWWN)
+	if err == nil {
+		// Device was not cleaned up
+		s.logger.Error(fmt.Sprintf("Device %s was not cleaned up", devicePath))
+	}
+
 	// Rescan OS
 	if err := s.blockDeviceMounterUtils.RescanAll(!s.config.SkipRescanISCSI, volumeWWN, true); err != nil {
 		return s.logger.ErrorRet(err, "RescanAll failed")
 	}
+
+	devicePath , err = s.blockDeviceMounterUtils.Discover(volumeWWN)
+	if err == nil {
+		// Device was not cleaned up
+		s.logger.Error(fmt.Sprintf("Device %s was not cleaned up even after rescan", devicePath))
+	}
+
 	return nil
 }
