@@ -76,7 +76,7 @@ func newScbeRestClient(conInfo resources.ConnectionInfo, simpleClient SimpleRest
 		referrer := fmt.Sprintf(UrlScbeReferer, conInfo.ManagementIP, conInfo.Port)
 		baseUrl := referrer + UrlScbeBaseSuffix
 		var err error
-		if simpleClient, err = NewSimpleRestClient(conInfo, baseUrl, UrlScbeResourceGetAuth, referrer); err != nil {
+		if simpleClient, err = NewSimpleRestClient(conInfo, baseUrl, referrer); err != nil {
 			return nil, logs.GetLogger().ErrorRet(err, "NewSimpleRestClient failed")
 		}
 	}

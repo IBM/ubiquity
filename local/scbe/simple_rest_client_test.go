@@ -32,8 +32,7 @@ const (
 	fakeScbeQfdn        = "1.1.1.1"
 	fakeScbeUrlBase     = "https://" + fakeScbeQfdn + ":6666"
 	suffix              = "api/v1"
-	fakeScbeUrlAuth     = "users/get-auth-token"
-	fakeScbeUrlAuthFull = fakeScbeUrlBase + "/" + suffix + "/" + fakeScbeUrlAuth
+	fakeScbeUrlAuthFull = fakeScbeUrlBase + "/" + suffix + "/" + "users/get-auth-token"
 	fakeScbeUrlReferer  = fakeScbeUrlBase + "/"
 	fakeScbeUrlApi      = fakeScbeUrlBase + "/" + suffix
 	fakeCert            = "/tmp/fake_cert.crt"
@@ -70,7 +69,7 @@ var _ = Describe("restClient", func() {
 		err    error
 	)
 	BeforeEach(func() {
-		client, err = scbe.NewSimpleRestClient(resources.ConnectionInfo{}, fakeScbeUrlBase+"/"+suffix, fakeScbeUrlAuth, fakeScbeUrlReferer)
+		client, err = scbe.NewSimpleRestClient(resources.ConnectionInfo{}, fakeScbeUrlBase+"/"+suffix, fakeScbeUrlReferer)
 		Expect(err).ToNot(HaveOccurred())
 	})
 
@@ -118,7 +117,7 @@ var _ = Describe("restClient", func() {
 		err    error
 	)
 	BeforeEach(func() {
-		client, err = scbe.NewSimpleRestClient(resources.ConnectionInfo{}, fakeScbeUrlBase+"/"+suffix, fakeScbeUrlAuth, fakeScbeUrlReferer)
+		client, err = scbe.NewSimpleRestClient(resources.ConnectionInfo{}, fakeScbeUrlBase+"/"+suffix, fakeScbeUrlReferer)
 		Expect(err).ToNot(HaveOccurred())
 		loginResponse := scbe.LoginResponse{Token: "fake-token"}
 		marshalledResponse, err := json.Marshal(loginResponse)
@@ -214,14 +213,14 @@ var _ = Describe("restClient", func() {
 	})
 	Context(".initTransport", func() {
 		It("should fail with default (verify-full) and no certificates", func() {
-			client, err = scbe.NewSimpleRestClient(resources.ConnectionInfo{ManagementIP: fakeScbeQfdn}, fakeScbeUrlBase+"/"+suffix, fakeScbeUrlAuth, fakeScbeUrlReferer)
+			client, err = scbe.NewSimpleRestClient(resources.ConnectionInfo{ManagementIP: fakeScbeQfdn}, fakeScbeUrlBase+"/"+suffix, fakeScbeUrlReferer)
 			Expect(err).To(HaveOccurred())
 			_, ok := err.(*scbe.SslModeFullVerifyWithoutCAfile)
 			Expect(ok).To(Equal(true))
 		})
 		It("should fail if wrong ssl mode", func() {
 			os.Setenv(resources.KeyScbeSslMode, "fake ssl mode")
-			client, err = scbe.NewSimpleRestClient(resources.ConnectionInfo{ManagementIP: fakeScbeQfdn}, fakeScbeUrlBase+"/"+suffix, fakeScbeUrlAuth, fakeScbeUrlReferer)
+			client, err = scbe.NewSimpleRestClient(resources.ConnectionInfo{ManagementIP: fakeScbeQfdn}, fakeScbeUrlBase+"/"+suffix, fakeScbeUrlReferer)
 			os.Unsetenv(resources.KeyScbeSslMode)
 			Expect(err).To(HaveOccurred())
 			_, ok := err.(*scbe.SslModeValueInvalid)
@@ -231,7 +230,7 @@ var _ = Describe("restClient", func() {
 			os.Remove(fakeCert)
 			os.Setenv(scbe.KEY_VERIFY_SCBE_CERT, fakeCert)
 			os.Setenv(resources.KeyScbeSslMode, resources.SslModeVerifyFull)
-			client, err = scbe.NewSimpleRestClient(resources.ConnectionInfo{ManagementIP: fakeScbeQfdn}, fakeScbeUrlBase+"/"+suffix, fakeScbeUrlAuth, fakeScbeUrlReferer)
+			client, err = scbe.NewSimpleRestClient(resources.ConnectionInfo{ManagementIP: fakeScbeQfdn}, fakeScbeUrlBase+"/"+suffix, fakeScbeUrlReferer)
 			os.Unsetenv(resources.KeyScbeSslMode)
 			os.Setenv(scbe.KEY_VERIFY_SCBE_CERT, "")
 			Expect(err).To(HaveOccurred())
@@ -242,14 +241,14 @@ var _ = Describe("restClient", func() {
 			Expect(err).ToNot(HaveOccurred())
 			os.Setenv(scbe.KEY_VERIFY_SCBE_CERT, fakeCert)
 			os.Setenv(resources.KeyScbeSslMode, resources.SslModeVerifyFull)
-			client, err = scbe.NewSimpleRestClient(resources.ConnectionInfo{ManagementIP: fakeScbeQfdn}, fakeScbeUrlBase+"/"+suffix, fakeScbeUrlAuth, fakeScbeUrlReferer)
+			client, err = scbe.NewSimpleRestClient(resources.ConnectionInfo{ManagementIP: fakeScbeQfdn}, fakeScbeUrlBase+"/"+suffix, fakeScbeUrlReferer)
 			os.Unsetenv(resources.KeyScbeSslMode)
 			os.Setenv(scbe.KEY_VERIFY_SCBE_CERT, "")
 			Expect(err).To(HaveOccurred())
 		})
 		It("should succeed with require ssl mode", func() {
 			os.Setenv(resources.KeyScbeSslMode, resources.SslModeRequire)
-			client, err = scbe.NewSimpleRestClient(resources.ConnectionInfo{ManagementIP: fakeScbeQfdn}, fakeScbeUrlBase+"/"+suffix, fakeScbeUrlAuth, fakeScbeUrlReferer)
+			client, err = scbe.NewSimpleRestClient(resources.ConnectionInfo{ManagementIP: fakeScbeQfdn}, fakeScbeUrlBase+"/"+suffix, fakeScbeUrlReferer)
 			os.Unsetenv(resources.KeyScbeSslMode)
 			Expect(err).NotTo(HaveOccurred())
 		})
