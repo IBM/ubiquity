@@ -30,6 +30,16 @@ import (
 	"github.com/IBM/ubiquity/utils/logs"
 )
 
+func ExtractErrorFromResponseBody(body []byte) error {
+	errorResponse := resources.GenericResponse{}
+	err := json.Unmarshal(body, &errorResponse)
+	if err != nil {
+		return logs.GetLogger().ErrorRet(err, "json.Unmarshal failed")
+	}
+
+	return fmt.Errorf(errorResponse.Err)
+}
+
 func ExtractErrorResponse(response *http.Response) error {
 	errorResponse := resources.GenericResponse{}
 	err := UnmarshalResponse(response, &errorResponse)
