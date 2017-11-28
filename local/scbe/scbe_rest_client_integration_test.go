@@ -47,7 +47,6 @@ var _ = Describe("restClient integration testing with existing SCBE instance", f
 		client, err = scbe.NewSimpleRestClient(
 			conInfo,
 			"https://"+scbeIP+":"+strconv.Itoa(scbePort)+"/api/v1",
-			scbe.UrlScbeResourceGetAuth,
 			"https://"+scbeIP+":"+strconv.Itoa(scbePort)+"/")
 		Expect(err).ToNot(HaveOccurred())
 	})
