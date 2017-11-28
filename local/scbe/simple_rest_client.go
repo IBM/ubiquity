@@ -63,15 +63,14 @@ const (
 type simpleRestClient struct {
     logger         logs.Logger
     baseURL        string
-    authURL        string
     referrer       string
     connectionInfo resources.ConnectionInfo
     httpClient     *http.Client
     headers        *sync.Map
 }
 
-func NewSimpleRestClient(conInfo resources.ConnectionInfo, baseURL string, authURL string, referrer string) (SimpleRestClient, error) {
-    client := &simpleRestClient{logger: logs.GetLogger(), connectionInfo: conInfo, baseURL: baseURL, authURL: authURL, referrer: referrer, httpClient: &http.Client{}}
+func NewSimpleRestClient(conInfo resources.ConnectionInfo, baseURL string, referrer string) (SimpleRestClient, error) {
+    client := &simpleRestClient{logger: logs.GetLogger(), connectionInfo: conInfo, baseURL: baseURL, referrer: referrer, httpClient: &http.Client{}}
     client.initHeader()
     if err := client.initTransport(); err != nil {
         return nil, client.logger.ErrorRet(err, "client.initTransport failed")
@@ -95,7 +94,7 @@ func (s *simpleRestClient) getToken() error {
     if err != nil {
         return s.logger.ErrorRet(err, "json.Marshal failed")
     }
-    if err = s.Post(s.authURL, credentials, HTTP_SUCCEED, &loginResponse); err != nil {
+    if err = s.Post(UrlScbeResourceGetAuth, credentials, HTTP_SUCCEED, &loginResponse); err != nil {
         return s.logger.ErrorRet(err, "Post failed")
     }
     if loginResponse.Token == "" {
@@ -116,9 +115,10 @@ func (s *simpleRestClient) genericAction(actionName string, resource_url string,
 
 func (s *simpleRestClient) genericActionInternal(actionName string, resource_url string, payload []byte, params map[string]string, exitStatus int, v interface{}, retryUnauthorized bool) error {
     defer s.logger.Trace(logs.DEBUG)()
-    url := utils.FormatURL(s.baseURL, resource_url)
     var err error
     var request *http.Request
+
+    url := utils.FormatURL(s.baseURL, resource_url)
     if actionName == "GET" {
         request, err = http.NewRequest(actionName, url, nil)
     } else {
@@ -147,8 +147,7 @@ func (s *simpleRestClient) genericActionInternal(actionName string, resource_url
 
     // check if client sent a token and it expired
     if response.StatusCode == http.StatusUnauthorized {
-        _, hasAuth := s.headers.Load(HTTP_AUTH_KEY)
-        if hasAuth && retryUnauthorized {
+        if retryUnauthorized && resource_url != UrlScbeResourceGetAuth {
 
             // login
             if err = s.Login(); err != nil {
