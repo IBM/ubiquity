@@ -55,7 +55,6 @@ func (s *remoteClient) Activate(activateRequest resources.ActivateRequest) error
 	activateRequest.CredentialInfo = s.config.CredentialInfo
 	response, err := utils.HttpExecute(s.httpClient,"POST", activateURL, activateRequest)
 	if err != nil {
-		err = fmt.Errorf("Error in activate remote call %#v", err)
 		return s.logger.ErrorRet(err, "failed")
 	}
 
@@ -79,7 +78,6 @@ func (s *remoteClient) CreateVolume(createVolumeRequest resources.CreateVolumeRe
 	createVolumeRequest.CredentialInfo = s.config.CredentialInfo
 	response, err := utils.HttpExecute(s.httpClient, "POST", createRemoteURL, createVolumeRequest)
 	if err != nil {
-        err = fmt.Errorf("Error in create volume remote call %s", err.Error())
         return s.logger.ErrorRet(err, "failed")
 	}
 	_, err = ioutil.ReadAll(response.Body)
@@ -101,7 +99,6 @@ func (s *remoteClient) RemoveVolume(removeVolumeRequest resources.RemoveVolumeRe
 	removeVolumeRequest.CredentialInfo = s.config.CredentialInfo
 	response, err := utils.HttpExecute(s.httpClient, "DELETE", removeRemoteURL, removeVolumeRequest)
 	if err != nil {
-        err = fmt.Errorf("Error in remove volume remote call %#v", err)
         return s.logger.ErrorRet(err, "failed")
 	}
 	_, err = ioutil.ReadAll(response.Body)
@@ -122,7 +119,6 @@ func (s *remoteClient) GetVolume(getVolumeRequest resources.GetVolumeRequest) (r
 	getVolumeRequest.CredentialInfo = s.config.CredentialInfo
 	response, err := utils.HttpExecute(s.httpClient, "GET", getRemoteURL, getVolumeRequest)
 	if err != nil {
-        err = fmt.Errorf("Error in get volume remote call %#v", err)
         return resources.Volume{}, s.logger.ErrorRet(err, "failed")
 	}
 
@@ -148,7 +144,6 @@ func (s *remoteClient) GetVolumeConfig(getVolumeConfigRequest resources.GetVolum
 	getVolumeConfigRequest.CredentialInfo = s.config.CredentialInfo
 	response, err := utils.HttpExecute(s.httpClient, "GET", getRemoteURL, getVolumeConfigRequest)
 	if err != nil {
-        err = fmt.Errorf("Error in get volume remote call %#v", err)
         return nil, s.logger.ErrorRet(err, "failed")
 	}
 
@@ -174,7 +169,6 @@ func (s *remoteClient) Attach(attachRequest resources.AttachRequest) (string, er
 	attachRequest.CredentialInfo = s.config.CredentialInfo
 	response, err := utils.HttpExecute(s.httpClient, "PUT", attachRemoteURL, attachRequest)
 	if err != nil {
-        err = fmt.Errorf("Error in attach volume remote call %#v", err)
         return "", s.logger.ErrorRet(err, "failed")
 	}
 
@@ -200,7 +194,6 @@ func (s *remoteClient) Detach(detachRequest resources.DetachRequest) error {
 	detachRequest.CredentialInfo = s.config.CredentialInfo
 	response, err := utils.HttpExecute(s.httpClient, "PUT", detachRemoteURL, detachRequest)
 	if err != nil {
-        err = fmt.Errorf("Error in detach volume remote call %#v", err)
         return s.logger.ErrorRet(err, "failed")
 	}
 	_, err = ioutil.ReadAll(response.Body)
@@ -221,7 +214,6 @@ func (s *remoteClient) ListVolumes(listVolumesRequest resources.ListVolumesReque
 	listVolumesRequest.CredentialInfo = s.config.CredentialInfo
 	response, err := utils.HttpExecute(s.httpClient, "GET", listRemoteURL, listVolumesRequest)
 	if err != nil {
-        err = fmt.Errorf("Error in list volume remote call %#v", err)
         return nil, s.logger.ErrorRet(err, "failed")
 	}
 
