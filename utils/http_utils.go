@@ -30,23 +30,27 @@ import (
 	"github.com/IBM/ubiquity/utils/logs"
 )
 
-func ExtractErrorFromResponseBody(body []byte) error {
-	errorResponse := resources.GenericResponse{}
-	err := json.Unmarshal(body, &errorResponse)
-	if err != nil {
-		return logs.GetLogger().ErrorRet(err, "json.Unmarshal failed")
-	}
-
-	return fmt.Errorf(errorResponse.Err)
-}
-
 func ExtractErrorResponse(response *http.Response) error {
 	errorResponse := resources.GenericResponse{}
 	err := UnmarshalResponse(response, &errorResponse)
 	if err != nil {
-		return err
+		return logs.GetLogger().ErrorRet(err, "json.Unmarshal failed")
 	}
-	return fmt.Errorf("%s", errorResponse.Err)
+	return fmt.Errorf(errorResponse.Err)
+}
+
+func UnmarshalResponse(r *http.Response, object interface{}) error {
+	body, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		return logs.GetLogger().ErrorRet(err, "ioutil.ReadAll failed")
+	}
+
+	err = json.Unmarshal(body, object)
+	if err != nil {
+		return logs.GetLogger().ErrorRet(err, "json.Unmarshal failed")
+	}
+
+	return nil
 }
 
 func FormatURL(url string, entries ...string) string {
@@ -129,19 +133,7 @@ func Unmarshal(r *http.Request, object interface{}) error {
 	return nil
 }
 
-func UnmarshalResponse(r *http.Response, object interface{}) error {
-	body, err := ioutil.ReadAll(r.Body)
-	if err != nil {
-		return err
-	}
 
-	err = json.Unmarshal(body, object)
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
 func UnmarshalDataFromRequest(r *http.Request, object interface{}) error {
 	body, err := ioutil.ReadAll(r.Body)
 	if err != nil {
