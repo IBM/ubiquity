@@ -17,25 +17,19 @@
 package remote
 
 import (
-	"fmt"
-	"log"
 	"net/http"
 	"github.com/IBM/ubiquity/resources"
 	"reflect"
 	"github.com/IBM/ubiquity/utils"
 	"github.com/IBM/ubiquity/utils/logs"
-	"io/ioutil"
 )
 
 type remoteClient struct {
 	logger            logs.Logger
-	legacylogger      *log.Logger
 	isActivated       bool
-	isMounted         bool
 	httpClient        *http.Client
 	storageApiURL     string
 	config            resources.UbiquityPluginConfig
-	mounterPerBackend map[string]resources.Mounter
 }
 
 func (s *remoteClient) Activate(activateRequest resources.ActivateRequest) error {
@@ -54,13 +48,9 @@ func (s *remoteClient) Activate(activateRequest resources.ActivateRequest) error
 	}
 
 	defer response.Body.Close()
-	body, err := ioutil.ReadAll(response.Body)
-	if err != nil {
-		return s.logger.ErrorRet(err, "ioutil.ReadAll failed")
-	}
 
 	if response.StatusCode != http.StatusOK {
-		return s.logger.ErrorRet(utils.ExtractErrorFromResponseBody(body), "failed", logs.Args{{"response", response}})
+		return s.logger.ErrorRet(utils.ExtractErrorResponse(response), "failed", logs.Args{{"response", response}})
 	}
 	s.isActivated = true
 	return nil
@@ -82,13 +72,9 @@ func (s *remoteClient) CreateVolume(createVolumeRequest resources.CreateVolumeRe
 	}
 
 	defer response.Body.Close()
-	body, err := ioutil.ReadAll(response.Body)
-	if err != nil {
-		return s.logger.ErrorRet(err, "ioutil.ReadAll failed")
-	}
 
 	if response.StatusCode != http.StatusOK {
-		return s.logger.ErrorRet(utils.ExtractErrorFromResponseBody(body), "failed", logs.Args{{"response", response}})
+		return s.logger.ErrorRet(utils.ExtractErrorResponse(response), "failed", logs.Args{{"response", response}})
 	}
 
 	return nil
@@ -106,13 +92,9 @@ func (s *remoteClient) RemoveVolume(removeVolumeRequest resources.RemoveVolumeRe
 	}
 
 	defer response.Body.Close()
-	body, err := ioutil.ReadAll(response.Body)
-	if err != nil {
-		return s.logger.ErrorRet(err, "ioutil.ReadAll failed")
-	}
 
 	if response.StatusCode != http.StatusOK {
-		return s.logger.ErrorRet(utils.ExtractErrorFromResponseBody(body), "failed", logs.Args{{"response", response}})
+		return s.logger.ErrorRet(utils.ExtractErrorResponse(response), "failed", logs.Args{{"response", response}})
 	}
 
 	return nil
@@ -128,16 +110,16 @@ func (s *remoteClient) GetVolume(getVolumeRequest resources.GetVolumeRequest) (r
 		return resources.Volume{}, s.logger.ErrorRet(err, "failed")
 	}
 
+	defer response.Body.Close()
+
 	if response.StatusCode != http.StatusOK {
-		s.logger.Error(fmt.Sprintf("Error in get volume remote call %#v", response))
-		return resources.Volume{}, s.logger.ErrorRet(utils.ExtractErrorResponse(response), "failed")
+		return resources.Volume{}, s.logger.ErrorRet(utils.ExtractErrorResponse(response), "failed", logs.Args{{"response", response}})
 	}
 
 	getResponse := resources.GetResponse{}
 	err = utils.UnmarshalResponse(response, &getResponse)
 	if err != nil {
-		err = fmt.Errorf("Error in unmarshalling response for get remote call %#v for response %#v", err, response)
-		return resources.Volume{}, s.logger.ErrorRet(err, "failed")
+		return resources.Volume{}, s.logger.ErrorRet(err, "utils.UnmarshalResponse failed", logs.Args{{"response", response}})
 	}
 
 	return getResponse.Volume, nil
@@ -154,15 +136,13 @@ func (s *remoteClient) GetVolumeConfig(getVolumeConfigRequest resources.GetVolum
 	}
 
 	if response.StatusCode != http.StatusOK {
-		s.logger.Error(fmt.Sprintf("Error in get volume remote call %#v", response))
-		return nil, s.logger.ErrorRet(utils.ExtractErrorResponse(response), "failed")
+		return nil, s.logger.ErrorRet(utils.ExtractErrorResponse(response), "failed", logs.Args{{"response", response}})
 	}
 
 	getResponse := resources.GetConfigResponse{}
 	err = utils.UnmarshalResponse(response, &getResponse)
 	if err != nil {
-		err = fmt.Errorf("Error in unmarshalling response for get remote call %#v for response %#v", err, response)
-		return nil, s.logger.ErrorRet(err, "failed")
+		return nil, s.logger.ErrorRet(err, "utils.UnmarshalResponse failed", logs.Args{{"response", response}})
 	}
 
 	return getResponse.VolumeConfig, nil
@@ -179,13 +159,9 @@ func (s *remoteClient) Attach(attachRequest resources.AttachRequest) (string, er
 	}
 
 	defer response.Body.Close()
-	body, err := ioutil.ReadAll(response.Body)
-	if err != nil {
-		return "", s.logger.ErrorRet(err, "ioutil.ReadAll failed")
-	}
 
 	if response.StatusCode != http.StatusOK {
-		return "", s.logger.ErrorRet(utils.ExtractErrorFromResponseBody(body), "failed", logs.Args{{"response", response}})
+		return "", s.logger.ErrorRet(utils.ExtractErrorResponse(response), "failed", logs.Args{{"response", response}})
 	}
 
 	return "", nil
@@ -202,13 +178,9 @@ func (s *remoteClient) Detach(detachRequest resources.DetachRequest) error {
 	}
 
 	defer response.Body.Close()
-	body, err := ioutil.ReadAll(response.Body)
-	if err != nil {
-		return s.logger.ErrorRet(err, "ioutil.ReadAll failed")
-	}
 
 	if response.StatusCode != http.StatusOK {
-		return s.logger.ErrorRet(utils.ExtractErrorFromResponseBody(body), "failed", logs.Args{{"response", response}})
+		return s.logger.ErrorRet(utils.ExtractErrorResponse(response), "failed", logs.Args{{"response", response}})
 	}
 
 	return nil
@@ -225,15 +197,13 @@ func (s *remoteClient) ListVolumes(listVolumesRequest resources.ListVolumesReque
 	}
 
 	if response.StatusCode != http.StatusOK {
-		s.logger.Error(fmt.Sprintf("Error in list volume remote call %#v", err))
-		return nil, s.logger.ErrorRet(utils.ExtractErrorResponse(response), "failed")
+		return nil, s.logger.ErrorRet(utils.ExtractErrorResponse(response), "failed", logs.Args{{"response", response}})
 	}
 
 	listResponse := resources.ListResponse{}
 	err = utils.UnmarshalResponse(response, &listResponse)
 	if err != nil {
-		err = fmt.Errorf("Error in unmarshalling response for get remote call %#v for response %#v", err, response)
-		return []resources.Volume{}, s.logger.ErrorRet(err, "failed")
+		return nil, s.logger.ErrorRet(err, "utils.UnmarshalResponse failed", logs.Args{{"response", response}})
 	}
 
 	return listResponse.Volumes, nil
