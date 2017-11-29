@@ -135,6 +135,8 @@ func (s *remoteClient) GetVolumeConfig(getVolumeConfigRequest resources.GetVolum
 		return nil, s.logger.ErrorRet(err, "failed")
 	}
 
+	defer response.Body.Close()
+
 	if response.StatusCode != http.StatusOK {
 		return nil, s.logger.ErrorRet(utils.ExtractErrorResponse(response), "failed", logs.Args{{"response", response}})
 	}
@@ -195,6 +197,9 @@ func (s *remoteClient) ListVolumes(listVolumesRequest resources.ListVolumesReque
 	if err != nil {
 		return nil, s.logger.ErrorRet(err, "failed")
 	}
+
+	defer response.Body.Close()
+
 
 	if response.StatusCode != http.StatusOK {
 		return nil, s.logger.ErrorRet(utils.ExtractErrorResponse(response), "failed", logs.Args{{"response", response}})
