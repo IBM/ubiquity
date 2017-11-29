@@ -51,3 +51,13 @@ type unsupportedProtocolError struct {
 func (e *unsupportedProtocolError) Error() string {
 	return fmt.Sprintf("Protocol [%v] is not supported", e.protocol)
 }
+
+type noRegexWwnMatchInScsiInqError struct {
+	dev string
+	line string
+}
+
+func (e *noRegexWwnMatchInScsiInqError) Error() string {
+	return fmt.Sprintf("Could not find wwn pattern in sg_inq of mpath devive: [%s] in line Vendor Specific " +
+		"Identifier Extension: [%s]", e.dev, e.line)
+}
