@@ -145,6 +145,8 @@ func (s *simpleRestClient) genericActionInternal(actionName string, resource_url
         return s.logger.ErrorRet(err, "httpClient.Do failed", logs.Args{{actionName, request.URL}})
     }
 
+    defer response.Body.Close()
+
     // check if client sent a token and it expired
     if response.StatusCode == http.StatusUnauthorized {
         if retryUnauthorized && resource_url != UrlScbeResourceGetAuth {
@@ -159,7 +161,6 @@ func (s *simpleRestClient) genericActionInternal(actionName string, resource_url
         }
     }
 
-    defer response.Body.Close()
     data, err := ioutil.ReadAll(response.Body)
     if err != nil {
         return s.logger.ErrorRet(err, "ioutil.ReadAll failed")
