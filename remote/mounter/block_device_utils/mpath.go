@@ -174,6 +174,7 @@ func (b *blockDeviceUtils) GetWwnByScsiInq(dev string) (string, error) {
 			if len(matches) != 2 {
 				return "", b.logger.ErrorRet(&noRegexWwnMatchInScsiInqError{ dev, line }, "failed")
 			}
+			b.logger.Debug(fmt.Sprintf("%#v", matches))
 			wwn = matches[1]
 			return wwn, nil
 		}
