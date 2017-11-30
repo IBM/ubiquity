@@ -95,8 +95,10 @@ func (b *blockDeviceUtils) DiscoverBySgInq(mpathOutput string, volumeWwn string)
 	}
 	dev := ""
 	for scanner.Scan() {
-		if regex.MatchString(scanner.Text()) {
-			dev = strings.Split(scanner.Text(), " ")[0]
+		line := scanner.Text()
+		b.logger.Debug(fmt.Sprintf("%s", line))
+		if regex.MatchString(line) {
+			dev = strings.Split(line, " ")[0]
 			mpathFullPath := b.mpathDevFullPath(dev)
 			wwn, err := b.GetWwnByScsiInq(mpathFullPath)
 			if err != nil {
@@ -107,7 +109,7 @@ func (b *blockDeviceUtils) DiscoverBySgInq(mpathOutput string, volumeWwn string)
 			}
 		}
 	}
-	return "", nil
+	return "", b.logger.ErrorRet(&volumeNotFoundError{volumeWwn}, "failed")
 }
 
 func (b *blockDeviceUtils) GetWwnByScsiInq(dev string) (string, error) {
