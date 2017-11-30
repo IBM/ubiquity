@@ -155,6 +155,9 @@ func (b *blockDeviceUtils) GetWwnByScsiInq(dev string) (string, error) {
 	}
 	wwnRegex := `\[0x(.*?)\]`
 	wwnRegexCompiled, err := regexp.Compile(wwnRegex)
+	if err != nil {
+		return "", b.logger.ErrorRet(err, "failed")
+	}
 	pattern := "(?i)" + "Vendor Specific Identifier Extension:"
 	scanner := bufio.NewScanner(strings.NewReader(string(outputBytes[:])))
 	regex, err := regexp.Compile(pattern)
@@ -165,6 +168,7 @@ func (b *blockDeviceUtils) GetWwnByScsiInq(dev string) (string, error) {
 	found := false
 	for scanner.Scan() {
 		line := scanner.Text()
+		b.logger.Debug(fmt.Sprintf("%s", line))
 		if found {
 			matches := wwnRegexCompiled.FindStringSubmatch(line)
 			if len(matches) != 2 {
