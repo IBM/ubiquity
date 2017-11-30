@@ -104,7 +104,7 @@ func (b *blockDeviceUtils) DiscoverBySgInq(mpathOutput string, volumeWwn string)
 			if err != nil {
 				return "", b.logger.ErrorRet(&volumeNotFoundError{volumeWwn}, "failed")
 			}
-			if wwn == volumeWwn{
+			if strings.ToUpper(wwn) == volumeWwn{
 				return dev, nil
 			}
 		}
