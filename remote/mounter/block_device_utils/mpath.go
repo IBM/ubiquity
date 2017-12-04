@@ -99,6 +99,7 @@ func (b *blockDeviceUtils) DiscoverBySgInq(mpathOutput string, volumeWwn string)
 		line := scanner.Text()
 		b.logger.Debug(fmt.Sprintf("%s", line))
 		if regex.MatchString(line) {
+			// Get the multipath device name at the beginning of the line
 			dev = strings.Split(line, " ")[0]
 			mpathFullPath := b.mpathDevFullPath(dev)
 			wwn, err := b.GetWwnByScsiInq(mpathFullPath)
@@ -116,7 +117,7 @@ func (b *blockDeviceUtils) DiscoverBySgInq(mpathOutput string, volumeWwn string)
 func (b *blockDeviceUtils) GetWwnByScsiInq(dev string) (string, error) {
 	defer b.logger.Trace(logs.DEBUG)()
 	/* scsi inq example
-		sg_inq -p 0x83 /dev/mapper/mpathhe
+	$> sg_inq -p 0x83 /dev/mapper/mpathhe
 		VPD INQUIRY: Device Identification page
 		  Designation descriptor number 1, descriptor length: 20
 			designator_type: NAA,  code_set: Binary
@@ -149,12 +150,16 @@ func (b *blockDeviceUtils) GetWwnByScsiInq(dev string) (string, error) {
 	*/
 	sgInqCmd := "sg_inq"
 
+	if err := b.exec.IsExecutable(sgInqCmd); err != nil {
+		return "", b.logger.ErrorRet(&commandNotFoundError{sgInqCmd, err}, "failed")
+	}
+
 	args := []string{"-p",  "0x83", dev}
 	outputBytes, err := b.exec.Execute(sgInqCmd, args)
 	if err != nil {
 		return "", b.logger.ErrorRet(&commandExecuteError{sgInqCmd, err}, "failed")
 	}
-	wwnRegex := `\[0x(.*?)\]`
+	wwnRegex := "(?i)" + `\[0x(.*?)\]`
 	wwnRegexCompiled, err := regexp.Compile(wwnRegex)
 	if err != nil {
 		return "", b.logger.ErrorRet(err, "failed")
@@ -169,19 +174,17 @@ func (b *blockDeviceUtils) GetWwnByScsiInq(dev string) (string, error) {
 	found := false
 	for scanner.Scan() {
 		line := scanner.Text()
-		b.logger.Debug(fmt.Sprintf("%s", line))
 		if found {
 			matches := wwnRegexCompiled.FindStringSubmatch(line)
 			if len(matches) != 2 {
 				return "", b.logger.ErrorRet(&noRegexWwnMatchInScsiInqError{ dev, line }, "failed")
 			}
-			b.logger.Debug(fmt.Sprintf("%#v", matches))
 			wwn = matches[1]
 			return wwn, nil
 		}
 		if regex.MatchString(line) {
 			found = true
-			// next line is the line we need
+			// its one line after "Vendor Specific Identifier Extension:" line which should contain the WWN
 			continue
 		}
 
