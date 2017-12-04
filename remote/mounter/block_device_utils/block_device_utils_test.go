@@ -309,6 +309,16 @@ var _ = Describe("block_device_utils_test", func() {
 			Expect(cmd).To(Equal("umount"))
 			Expect(args).To(Equal([]string{mpoint}))
 		})
+		FIt("should succeed to UmountFs if mpath is already unmounted", func() {
+			mpoint := "mpoint"
+			fakeExec.ExecuteReturns([]byte{}, errors.New("string " + block_device_utils.NotMountedErrorMessage))
+			err = bdUtils.UmountFs(mpoint)
+			Expect(err).To(Not(HaveOccurred()))
+			Expect(fakeExec.ExecuteCallCount()).To(Equal(1))
+			cmd, args := fakeExec.ExecuteArgsForCall(0)
+			Expect(cmd).To(Equal("umount"))
+			Expect(args).To(Equal([]string{mpoint}))
+		})
 		It("UmountFs fails if umount command missing", func() {
 			mpoint := "mpoint"
 			fakeExec.IsExecutableReturns(cmdErr)

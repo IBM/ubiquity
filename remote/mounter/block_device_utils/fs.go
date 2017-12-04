@@ -22,6 +22,10 @@ import (
 	"syscall"
 )
 
+const (
+	NotMountedErrorMessage = "not mounted" // Error while umount device that is already unmounted
+)
+
 func (b *blockDeviceUtils) CheckFs(mpath string) (bool, error) {
 	defer b.logger.Trace(logs.DEBUG)()
 	// TODO check first if mpath exist
@@ -73,6 +77,8 @@ func (b *blockDeviceUtils) MountFs(mpath string, mpoint string) error {
 }
 
 func (b *blockDeviceUtils) UmountFs(mpoint string) error {
+	// Execute unmount operation (skip, if mpoint its already unmounted)
+
 	defer b.logger.Trace(logs.DEBUG)()
 	umountCmd := "umount"
 	if err := b.exec.IsExecutable(umountCmd); err != nil {
@@ -80,6 +86,10 @@ func (b *blockDeviceUtils) UmountFs(mpoint string) error {
 	}
 	args := []string{mpoint}
 	if _, err := b.exec.Execute(umountCmd, args); err != nil {
+		if b.regExAlreadyMounted.MatchString(err.Error()) {
+			b.logger.Info("Already umounted, so skip the umount operation.", logs.Args{{"mpoint", mpoint}})
+			return nil
+		}
 		return b.logger.ErrorRet(&commandExecuteError{umountCmd, err}, "failed")
 	}
 	b.logger.Info("umounted", logs.Args{{"mpoint", mpoint}})
