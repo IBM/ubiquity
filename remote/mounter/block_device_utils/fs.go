@@ -17,9 +17,13 @@
 package block_device_utils
 
 import (
+	"github.com/IBM/ubiquity/utils/logs"
 	"os/exec"
 	"syscall"
-	"github.com/IBM/ubiquity/utils/logs"
+)
+
+const (
+	NotMountedErrorMessage = "not mounted" // Error while umount device that is already unmounted
 )
 
 func (b *blockDeviceUtils) CheckFs(mpath string) (bool, error) {
@@ -30,8 +34,8 @@ func (b *blockDeviceUtils) CheckFs(mpath string) (bool, error) {
 	if err := b.exec.IsExecutable(blkidCmd); err != nil {
 		return false, b.logger.ErrorRet(&commandNotFoundError{blkidCmd, err}, "failed")
 	}
-	args := []string{blkidCmd, mpath}
-	outputBytes, err := b.exec.Execute("sudo", args)
+	args := []string{mpath}
+	outputBytes, err := b.exec.Execute(blkidCmd, args)
 	if err != nil {
 		if b.IsExitStatusCode(err, 2) {
 			// TODO we can improve it by double check the fs type of this device and maybe log warning if its not the same fstype we expacted
@@ -50,8 +54,8 @@ func (b *blockDeviceUtils) MakeFs(mpath string, fsType string) error {
 	if err := b.exec.IsExecutable(mkfsCmd); err != nil {
 		return b.logger.ErrorRet(&commandNotFoundError{mkfsCmd, err}, "failed")
 	}
-	args := []string{mkfsCmd, "-t", fsType, mpath}
-	if _, err := b.exec.Execute("sudo", args); err != nil {
+	args := []string{"-t", fsType, mpath}
+	if _, err := b.exec.Execute(mkfsCmd, args); err != nil {
 		return b.logger.ErrorRet(&commandExecuteError{mkfsCmd, err}, "failed")
 	}
 	b.logger.Info("created", logs.Args{{"fsType", fsType}, {"mpath", mpath}})
@@ -64,8 +68,8 @@ func (b *blockDeviceUtils) MountFs(mpath string, mpoint string) error {
 	if err := b.exec.IsExecutable(mountCmd); err != nil {
 		return b.logger.ErrorRet(&commandNotFoundError{mountCmd, err}, "failed")
 	}
-	args := []string{mountCmd, mpath, mpoint}
-	if _, err := b.exec.Execute("sudo", args); err != nil {
+	args := []string{mpath, mpoint}
+	if _, err := b.exec.Execute(mountCmd, args); err != nil {
 		return b.logger.ErrorRet(&commandExecuteError{mountCmd, err}, "failed")
 	}
 	b.logger.Info("mounted", logs.Args{{"mpoint", mpoint}})
@@ -73,13 +77,19 @@ func (b *blockDeviceUtils) MountFs(mpath string, mpoint string) error {
 }
 
 func (b *blockDeviceUtils) UmountFs(mpoint string) error {
+	// Execute unmount operation (skip, if mpoint its already unmounted)
+
 	defer b.logger.Trace(logs.DEBUG)()
 	umountCmd := "umount"
 	if err := b.exec.IsExecutable(umountCmd); err != nil {
 		return b.logger.ErrorRet(&commandNotFoundError{umountCmd, err}, "failed")
 	}
-	args := []string{umountCmd, mpoint}
-	if _, err := b.exec.Execute("sudo", args); err != nil {
+	args := []string{mpoint}
+	if _, err := b.exec.Execute(umountCmd, args); err != nil {
+		if b.regExAlreadyMounted.MatchString(err.Error()) {
+			b.logger.Info("Already umounted, so skip the umount operation.", logs.Args{{"mpoint", mpoint}})
+			return nil
+		}
 		return b.logger.ErrorRet(&commandExecuteError{umountCmd, err}, "failed")
 	}
 	b.logger.Info("umounted", logs.Args{{"mpoint", mpoint}})

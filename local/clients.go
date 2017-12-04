@@ -42,7 +42,7 @@ func GetLocalClients(logger *log.Logger, config resources.UbiquityServerConfig, 
 		clients[resources.SpectrumScaleNFS] = spectrumNfsClient
 	}
 
-	ScbeClient, err := scbe.NewScbeLocalClient(config.ScbeConfig, database)
+	ScbeClient, err := scbe.NewScbeLocalClient(config.ScbeConfig)
 	if err != nil {
 		logger.Printf("Not enough params to initialize '%s' client", resources.SCBE)
 	} else {
