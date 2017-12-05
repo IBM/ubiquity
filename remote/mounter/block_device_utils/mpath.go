@@ -24,7 +24,6 @@ import (
 	"regexp"
 	"strings"
 	"fmt"
-	"time"
 )
 
 const multipathCmd = "multipath"
@@ -66,11 +65,13 @@ func (b *blockDeviceUtils) Discover(volumeWwn string) (string, error) {
 	}
 
 	if dev == "" {
+		b.logger.Debug(fmt.Sprintf("using sg_inq to find wwn %s, since we did not find it using multipath -ll ", volumeWwn))
 		dev, err = b.DiscoverBySgInq(string(outputBytes[:]), volumeWwn)
 		if err != nil {
+			b.logger.Error(fmt.Sprintf("wwn %s was not found using sg_inq on all mpath devices", volumeWwn))
 			return "", b.logger.ErrorRet(&volumeNotFoundError{volumeWwn}, "failed")
 		} else {
-			b.logger.Debug(fmt.Sprintf("WWN %s was found using sg_inq, the device is %s.", volumeWwn, dev))
+			b.logger.Info(fmt.Sprintf("WWN %s was found using sg_inq, the device is %s.", volumeWwn, dev))
 		}
 	}
 	mpath := b.mpathDevFullPath(dev)
@@ -89,7 +90,7 @@ func (b *blockDeviceUtils) DiscoverBySgInq(mpathOutput string, volumeWwn string)
 	defer b.logger.Trace(logs.DEBUG)()
 
 	scanner := bufio.NewScanner(strings.NewReader(mpathOutput))
-	pattern := "(?i)" + "^mpath"
+	pattern := "(?i)" + `\s+dm-[0-9]+\s+`
 	regex, err := regexp.Compile(pattern)
 	if err != nil {
 		return "", b.logger.ErrorRet(err, "failed")
@@ -176,6 +177,7 @@ func (b *blockDeviceUtils) GetWwnByScsiInq(dev string) (string, error) {
 		line := scanner.Text()
 		if found {
 			matches := wwnRegexCompiled.FindStringSubmatch(line)
+			b.logger.Debug(fmt.Sprintf("%#v", matches))
 			if len(matches) != 2 {
 				return "", b.logger.ErrorRet(&noRegexWwnMatchInScsiInqError{ dev, line }, "failed")
 			}
@@ -203,7 +205,6 @@ func (b *blockDeviceUtils) Cleanup(mpath string) error {
 	if _, err := b.exec.Execute(dmsetupCmd, args); err != nil {
 		return b.logger.ErrorRet(&commandExecuteError{dmsetupCmd, err}, "failed")
 	}
-	time.Sleep(3000 * time.Millisecond)
 	if err := b.exec.IsExecutable(multipathCmd); err != nil {
 		return b.logger.ErrorRet(&commandNotFoundError{multipathCmd, err}, "failed")
 	}
