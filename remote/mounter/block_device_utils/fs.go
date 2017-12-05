@@ -88,17 +88,17 @@ func (b *blockDeviceUtils) UmountFs(mpoint string) error {
 	if err := b.exec.IsExecutable(umountCmd); err != nil {
 		return b.logger.ErrorRet(&commandNotFoundError{umountCmd, err}, "failed")
 	}
-	isMounted, _err := b.IsDeviceMounted(mpoint)
-	if _err != nil {
-		return _err
-	}
-	if ! isMounted{
-		b.logger.Info("Already umounted, so skip the umount operation.", logs.Args{{"mpoint", mpoint}})
-		return nil
-	}
 
 	args := []string{mpoint}
 	if _, err := b.exec.Execute(umountCmd, args); err != nil {
+		isMounted, _err := b.IsDeviceMounted(mpoint)
+		if _err != nil {
+			return _err
+		}
+		if ! isMounted{
+			b.logger.Info("Already umounted, so skip the umount operation.", logs.Args{{"mpoint", mpoint}})
+			return nil
+		}
 		return b.logger.ErrorRet(&commandExecuteError{umountCmd, err}, "failed")
 	}
 	b.logger.Info("umounted", logs.Args{{"mpoint", mpoint}})

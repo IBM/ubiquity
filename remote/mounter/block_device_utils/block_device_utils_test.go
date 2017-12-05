@@ -361,20 +361,13 @@ mpoint on /ubiquity/mpoint type ext4 (rw,relatime,data=ordered)
 	Context(".UmountFs", func() {
 		It("UmountFs succeeds", func() {
 			mpoint := "/dev/mapper/mpoint"
-			mountOutput := `
-/dev/mapper/mpoint on /ubiquity/mpoint type ext4 (rw,relatime,data=ordered)
-/dev/mapper/yyy on /ubiquity/yyy type ext4 (rw,relatime,data=ordered)
-`
-			fakeExec.ExecuteReturnsOnCall(0, []byte(mountOutput), nil) // mount for isMounted
-			fakeExec.ExecuteReturnsOnCall(1, nil, nil) // the umount command
+			fakeExec.ExecuteReturnsOnCall(0, nil, nil) // the umount command
 			err = bdUtils.UmountFs(mpoint)
 			Expect(err).To(Not(HaveOccurred()))
-			Expect(fakeExec.ExecuteCallCount()).To(Equal(2))
+			Expect(fakeExec.ExecuteCallCount()).To(Equal(1))
 
-			cmd, args := fakeExec.ExecuteArgsForCall(1)
+			cmd, args := fakeExec.ExecuteArgsForCall(0)
 			Expect(cmd).To(Equal("umount"))
-			cmd, _ = fakeExec.ExecuteArgsForCall(0)
-			Expect(cmd).To(Equal("mount"))
 			Expect(args).To(Equal([]string{mpoint}))
 		})
 		It("should succeed to UmountFs if mpath is already unmounted", func() {
@@ -383,12 +376,15 @@ mpoint on /ubiquity/mpoint type ext4 (rw,relatime,data=ordered)
 /XXX/mpoint on /ubiquity/mpoint type ext4 (rw,relatime,data=ordered)
 /dev/mapper/yyy on /ubiquity/yyy type ext4 (rw,relatime,data=ordered)
 `
-			fakeExec.ExecuteReturns([]byte(mountOutput), nil) // mount for isMounted
+			fakeExec.ExecuteReturnsOnCall(0, nil, cmdErr) // the umount command should fail
+			fakeExec.ExecuteReturnsOnCall(1, []byte(mountOutput), nil) // mount for isMounted
 			err = bdUtils.UmountFs(mpoint)
 			Expect(err).To(Not(HaveOccurred()))
-			Expect(fakeExec.ExecuteCallCount()).To(Equal(1))
+			Expect(fakeExec.ExecuteCallCount()).To(Equal(2))
 			cmd, _ := fakeExec.ExecuteArgsForCall(0)
-			Expect(cmd).To(Equal("mount")) // since the umount was not happened at all
+			Expect(cmd).To(Equal("umount")) // first check is the umount
+			cmd, _ = fakeExec.ExecuteArgsForCall(1)
+			Expect(cmd).To(Equal("mount")) // second check is the umount
 		})
 		It("UmountFs fails if umount command missing", func() {
 			mpoint := "/dev/mapper/mpoint"
