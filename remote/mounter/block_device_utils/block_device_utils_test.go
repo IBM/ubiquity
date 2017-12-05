@@ -171,6 +171,24 @@ var _ = Describe("block_device_utils_test", func() {
 			Expect(cmd2).To(Equal("multipath"))
 			Expect(args2).To(Equal([]string{"-f", mpath}))
 		})
+		It("should succeed to Cleanup mpath if the device not exist", func() {
+			mpath := "mpath"
+			fakeExec.StatReturns(nil, cmdErr)
+			fakeExec.IsNotExistReturns(true)
+			err = bdUtils.Cleanup(mpath)
+			Expect(err).ToNot(HaveOccurred())
+			Expect(fakeExec.ExecuteCallCount()).To(Equal(0))
+		})
+		It("should fail to Cleanup mpath if the device state error (rather then not exist)", func() {
+			mpath := "mpath"
+			fakeExec.StatReturns(nil, cmdErr)
+			fakeExec.IsNotExistReturns(false)
+			err = bdUtils.Cleanup(mpath)
+			Expect(err).To(HaveOccurred())
+			Expect(fakeExec.ExecuteCallCount()).To(Equal(0))
+			Expect(fakeExec.IsExecutableCallCount()).To(Equal(0))
+		})
+
 		It("Cleanup fails if dmsetup command missing", func() {
 			mpath := "mpath"
 			fakeExec.IsExecutableReturns(cmdErr)
@@ -309,7 +327,7 @@ var _ = Describe("block_device_utils_test", func() {
 			Expect(cmd).To(Equal("umount"))
 			Expect(args).To(Equal([]string{mpoint}))
 		})
-		FIt("should succeed to UmountFs if mpath is already unmounted", func() {
+		It("should succeed to UmountFs if mpath is already unmounted", func() {
 			mpoint := "mpoint"
 			fakeExec.ExecuteReturns([]byte{}, errors.New("string " + block_device_utils.NotMountedErrorMessage))
 			err = bdUtils.UmountFs(mpoint)

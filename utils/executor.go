@@ -34,6 +34,7 @@ type Executor interface { // basic host dependent functions
 	Remove(string) error
 	Hostname() (string, error)
 	IsExecutable(string) error
+	IsNotExist(error) bool
 	EvalSymlinks(path string) (string, error)
 }
 
@@ -68,6 +69,10 @@ func (e *executor) Execute(command string, args []string) ([]byte, error) {
 }
 func (e *executor) Stat(path string) (os.FileInfo, error) {
 	return os.Stat(path)
+}
+
+func (e *executor) IsNotExist(err error) bool{
+	return os.IsNotExist(err)
 }
 
 func (e *executor) Mkdir(path string, mode os.FileMode) error {
