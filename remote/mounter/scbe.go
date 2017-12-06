@@ -22,13 +22,17 @@ import (
 	"github.com/IBM/ubiquity/resources"
 	"github.com/IBM/ubiquity/utils"
 	"github.com/IBM/ubiquity/utils/logs"
+	"github.com/IBM/ubiquity/remote/mounter/block_device_utils"
+	"sync"
 )
 
 type scbeMounter struct {
 	logger                  logs.Logger
 	blockDeviceMounterUtils block_device_mounter_utils.BlockDeviceMounterUtils
+	blockDeviceUtils        block_device_utils.BlockDeviceUtils
 	exec                    utils.Executor
 	config                  resources.ScbeRemoteConfig
+	cleanMPDeviceLock       *sync.RWMutex
 }
 
 func NewScbeMounter(scbeRemoteConfig resources.ScbeRemoteConfig) resources.Mounter {
@@ -36,6 +40,7 @@ func NewScbeMounter(scbeRemoteConfig resources.ScbeRemoteConfig) resources.Mount
 	return &scbeMounter{
 		logger:                  logs.GetLogger(),
 		blockDeviceMounterUtils: blockDeviceMounterUtils,
+		blockDeviceUtils:        block_device_utils.NewBlockDeviceUtils(),
 		exec: utils.NewExecutor(),
 		config: scbeRemoteConfig,
 	}
@@ -112,9 +117,41 @@ func (s *scbeMounter) ActionAfterDetach(request resources.AfterDetachRequest) er
 	defer s.logger.Trace(logs.DEBUG)()
 	volumeWWN := request.VolumeConfig["Wwn"].(string)
 
+	devicePath, err := s.blockDeviceMounterUtils.Discover(volumeWWN)
+	if err != nil {
+		// Already cleaned up
+		s.logger.Debug("Cleanup already occurred.")
+		return nil
+	}
+	if err := s.blockDeviceUtils.Cleanup(devicePath); err != nil {
+		// make sure it's cleaned up, run it a second time.
+		devicePath, err := s.blockDeviceMounterUtils.Discover(volumeWWN)
+		if err != nil {
+			// clean up already occurred.
+			s.logger.Debug("Cleanup already occurred.")
+
+		} else if err := s.blockDeviceUtils.Cleanup(devicePath); err != nil {
+			// Failed a second time - This is an error.
+			return s.logger.ErrorRet(err, "Cleanup failed")
+		}
+	}
+
+	devicePath , err = s.blockDeviceMounterUtils.Discover(volumeWWN)
+	if err == nil {
+		// Device was not cleaned up
+		s.logger.Error(fmt.Sprintf("Device %s was not cleaned up", devicePath))
+	}
+
 	// Rescan OS
 	if err := s.blockDeviceMounterUtils.RescanAll(!s.config.SkipRescanISCSI, volumeWWN, true); err != nil {
 		return s.logger.ErrorRet(err, "RescanAll failed")
 	}
+
+	devicePath , err = s.blockDeviceMounterUtils.Discover(volumeWWN)
+	if err == nil {
+		// Device was not cleaned up
+		s.logger.Error(fmt.Sprintf("Device %s was not cleaned up even after rescan", devicePath))
+	}
+
 	return nil
 }

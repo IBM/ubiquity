@@ -154,6 +154,7 @@ func (b *blockDeviceMounterUtils) RescanAll(withISCSI bool, wwn string, rescanFo
 			return b.logger.ErrorRet(err, "ReloadMultipath failed")
 		}
 	}
+
 	return nil
 }
 
