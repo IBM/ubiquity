@@ -28,6 +28,8 @@ type BlockDeviceUtils interface {
 	Rescan(protocol Protocol) error
 	ReloadMultipath() error
 	Discover(volumeWwn string) (string, error)
+	GetWwnByScsiInq(dev string) (string, error)
+	DiscoverBySgInq(mpathOutput string, volumeWwn string) (string, error)
 	Cleanup(mpath string) error
 	CheckFs(mpath string) (bool, error)
 	MakeFs(mpath string, fsType string) error
