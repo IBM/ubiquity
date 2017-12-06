@@ -142,6 +142,20 @@ type FakeBlockDeviceUtils struct {
 	umountFsReturnsOnCall map[int]struct {
 		result1 error
 	}
+	IsDeviceMountedStub        func(devPath string) (bool, error)
+	isDeviceMountedMutex       sync.RWMutex
+	isDeviceMountedArgsForCall []struct {
+		devPath string
+	}
+	isDeviceMountedReturns struct {
+		result1 bool
+		result2 error
+	}
+	isDeviceMountedReturnsOnCall map[int]struct {
+		result1 bool
+		result2 error
+	}
+
 	invocations      map[string][][]interface{}
 	invocationsMutex sync.RWMutex
 }
@@ -633,6 +647,57 @@ func (fake *FakeBlockDeviceUtils) UmountFsReturnsOnCall(i int, result1 error) {
 	}{result1}
 }
 
+func (fake *FakeBlockDeviceUtils) IsDeviceMounted(devPath string) (bool, error) {
+	fake.isDeviceMountedMutex.Lock()
+	ret, specificReturn := fake.isDeviceMountedReturnsOnCall[len(fake.isDeviceMountedArgsForCall)]
+	fake.isDeviceMountedArgsForCall = append(fake.isDeviceMountedArgsForCall, struct {
+		devPath string
+	}{devPath})
+	fake.recordInvocation("IsDeviceMounted", []interface{}{devPath})
+	fake.isDeviceMountedMutex.Unlock()
+	if fake.IsDeviceMountedStub != nil {
+		return fake.IsDeviceMountedStub(devPath)
+	}
+	if specificReturn {
+		return ret.result1, ret.result2
+	}
+	return fake.isDeviceMountedReturns.result1, fake.isDeviceMountedReturns.result2
+}
+
+func (fake *FakeBlockDeviceUtils) IsDeviceMountedCallCount() int {
+	fake.isDeviceMountedMutex.RLock()
+	defer fake.isDeviceMountedMutex.RUnlock()
+	return len(fake.isDeviceMountedArgsForCall)
+}
+
+func (fake *FakeBlockDeviceUtils) IsDeviceMountedArgsForCall(i int) string {
+	fake.isDeviceMountedMutex.RLock()
+	defer fake.isDeviceMountedMutex.RUnlock()
+	return fake.isDeviceMountedArgsForCall[i].devPath
+}
+
+func (fake *FakeBlockDeviceUtils) IsDeviceMountedReturns(result1 bool, result2 error) {
+	fake.IsDeviceMountedStub = nil
+	fake.isDeviceMountedReturns = struct {
+		result1 bool
+		result2 error
+	}{result1, result2}
+}
+
+func (fake *FakeBlockDeviceUtils) IsDeviceMountedReturnsOnCall(i int, result1 bool, result2 error) {
+	fake.IsDeviceMountedStub = nil
+	if fake.isDeviceMountedReturnsOnCall == nil {
+		fake.isDeviceMountedReturnsOnCall = make(map[int]struct {
+			result1 bool
+			result2 error
+		})
+	}
+	fake.isDeviceMountedReturnsOnCall[i] = struct {
+		result1 bool
+		result2 error
+	}{result1, result2}
+}
+
 func (fake *FakeBlockDeviceUtils) Invocations() map[string][][]interface{} {
 	fake.invocationsMutex.RLock()
 	defer fake.invocationsMutex.RUnlock()
@@ -656,6 +721,8 @@ func (fake *FakeBlockDeviceUtils) Invocations() map[string][][]interface{} {
 	defer fake.mountFsMutex.RUnlock()
 	fake.umountFsMutex.RLock()
 	defer fake.umountFsMutex.RUnlock()
+	fake.isDeviceMountedMutex.RLock()
+	defer fake.isDeviceMountedMutex.RUnlock()
 	copiedInvocations := map[string][][]interface{}{}
 	for key, value := range fake.invocations {
 		copiedInvocations[key] = value

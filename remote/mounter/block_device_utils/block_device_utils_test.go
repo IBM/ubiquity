@@ -257,6 +257,24 @@ var _ = Describe("block_device_utils_test", func() {
 			Expect(cmd2).To(Equal("multipath"))
 			Expect(args2).To(Equal([]string{"-f", mpath}))
 		})
+		It("should succeed to Cleanup mpath if the device not exist", func() {
+			mpath := "mpath"
+			fakeExec.StatReturns(nil, cmdErr)
+			fakeExec.IsNotExistReturns(true)
+			err = bdUtils.Cleanup(mpath)
+			Expect(err).ToNot(HaveOccurred())
+			Expect(fakeExec.ExecuteCallCount()).To(Equal(0))
+		})
+		It("should fail to Cleanup mpath if the device state error (rather then not exist)", func() {
+			mpath := "mpath"
+			fakeExec.StatReturns(nil, cmdErr)
+			fakeExec.IsNotExistReturns(false)
+			err = bdUtils.Cleanup(mpath)
+			Expect(err).To(HaveOccurred())
+			Expect(fakeExec.ExecuteCallCount()).To(Equal(0))
+			Expect(fakeExec.IsExecutableCallCount()).To(Equal(0))
+		})
+
 		It("Cleanup fails if dmsetup command missing", func() {
 			mpath := "mpath"
 			fakeExec.IsExecutableReturns(cmdErr)
@@ -385,22 +403,82 @@ var _ = Describe("block_device_utils_test", func() {
 		})
 
 	})
+	Context(".IsDeviceMounted", func() {
+		It("should fail if mount command missing", func() {
+			mpoint := "mpoint"
+			fakeExec.IsExecutableReturns(cmdErr)
+			isMounted, err := bdUtils.IsDeviceMounted(mpoint)
+			Expect(err).To(HaveOccurred())
+			Expect(isMounted).To(Equal(false))
+		})
+		It("should fail if mount command missing", func() {
+			mpoint := "mpoint"
+			fakeExec.ExecuteReturns([]byte{}, cmdErr)
+			isMounted, err := bdUtils.IsDeviceMounted(mpoint)
+			Expect(err).To(HaveOccurred())
+			Expect(err.Error()).To(MatchRegexp(cmdErr.Error()))
+			Expect(isMounted).To(Equal(false))
+
+		})
+		It("should return false if device not found in mount output", func() {
+			mpoint := "mpoint"
+			mountOutput := `
+/mpoint on /ubiquity/mpoint type ext4 (rw,relatime,data=ordered)
+/dev/mapper/mpoint on /ubiquity/mpoint type ext4 (rw,relatime,data=ordered)
+`
+			fakeExec.ExecuteReturns([]byte(mountOutput), nil)
+			isMounted, err := bdUtils.IsDeviceMounted(mpoint)
+			Expect(err).ToNot(HaveOccurred())
+			Expect(isMounted).To(Equal(false))
+		})
+		It("should return true if device found in mount output", func() {
+			mpoint := "mpoint"
+			mountOutput := `
+mpoint on /ubiquity/mpoint type ext4 (rw,relatime,data=ordered)
+/dev/mapper/mpoint on /ubiquity/mpoint type ext4 (rw,relatime,data=ordered)
+`
+			fakeExec.ExecuteReturns([]byte(mountOutput), nil)
+			isMounted, err := bdUtils.IsDeviceMounted(mpoint)
+			Expect(err).ToNot(HaveOccurred())
+			Expect(isMounted).To(Equal(true))
+		})
+	})
+
 	Context(".UmountFs", func() {
 		It("UmountFs succeeds", func() {
-			mpoint := "mpoint"
+			mpoint := "/dev/mapper/mpoint"
+			fakeExec.ExecuteReturnsOnCall(0, nil, nil) // the umount command
 			err = bdUtils.UmountFs(mpoint)
 			Expect(err).To(Not(HaveOccurred()))
 			Expect(fakeExec.ExecuteCallCount()).To(Equal(1))
+
 			cmd, args := fakeExec.ExecuteArgsForCall(0)
 			Expect(cmd).To(Equal("umount"))
 			Expect(args).To(Equal([]string{mpoint}))
 		})
+		It("should succeed to UmountFs if mpath is already unmounted", func() {
+			mpoint := "/dev/mapper/mpoint"
+			mountOutput := `
+/XXX/mpoint on /ubiquity/mpoint type ext4 (rw,relatime,data=ordered)
+/dev/mapper/yyy on /ubiquity/yyy type ext4 (rw,relatime,data=ordered)
+`
+			fakeExec.ExecuteReturnsOnCall(0, nil, cmdErr) // the umount command should fail
+			fakeExec.ExecuteReturnsOnCall(1, []byte(mountOutput), nil) // mount for isMounted
+			err = bdUtils.UmountFs(mpoint)
+			Expect(err).To(Not(HaveOccurred()))
+			Expect(fakeExec.ExecuteCallCount()).To(Equal(2))
+			cmd, _ := fakeExec.ExecuteArgsForCall(0)
+			Expect(cmd).To(Equal("umount")) // first check is the umount
+			cmd, _ = fakeExec.ExecuteArgsForCall(1)
+			Expect(cmd).To(Equal("mount")) // second check is the umount
+		})
 		It("UmountFs fails if umount command missing", func() {
-			mpoint := "mpoint"
+			mpoint := "/dev/mapper/mpoint"
 			fakeExec.IsExecutableReturns(cmdErr)
 			err = bdUtils.UmountFs(mpoint)
 			Expect(err).To(HaveOccurred())
 			Expect(err.Error()).To(MatchRegexp(cmdErr.Error()))
+			Expect(fakeExec.ExecuteCallCount()).To(Equal(0))
 		})
 		It("UmountFs fails if umount command fails", func() {
 			mpoint := "mpoint"

@@ -197,10 +197,24 @@ func (b *blockDeviceUtils) GetWwnByScsiInq(dev string) (string, error) {
 func (b *blockDeviceUtils) Cleanup(mpath string) error {
 	defer b.logger.Trace(logs.DEBUG)()
 	dev := path.Base(mpath)
+
+	_, err := b.exec.Stat(mpath)
+	if err != nil {
+		if b.exec.IsNotExist(err) {
+			// In case the mpath device is not even exist on the filesystem, no need to clean it up
+			b.logger.Info("mpath device is not exist, so no need to clean it up", logs.Args{{"mpath", mpath}})
+			return nil
+		} else{
+			b.logger.Error("Cannot read mpath device file", logs.Args{{"mpath", mpath}, {"error", err}})
+			return err
+		}
+	}
+
 	dmsetupCmd := "dmsetup"
 	if err := b.exec.IsExecutable(dmsetupCmd); err != nil {
 		return b.logger.ErrorRet(&commandNotFoundError{dmsetupCmd, err}, "failed")
 	}
+
 	args := []string{"message", dev, "0", "fail_if_no_path"}
 	if _, err := b.exec.Execute(dmsetupCmd, args); err != nil {
 		return b.logger.ErrorRet(&commandExecuteError{dmsetupCmd, err}, "failed")
