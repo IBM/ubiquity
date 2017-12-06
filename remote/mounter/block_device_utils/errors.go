@@ -44,6 +44,14 @@ func (e *volumeNotFoundError) Error() string {
 	return fmt.Sprintf("volume [%v] is not found", e.volName)
 }
 
+type wrongVolumeFoundError struct {
+	volName string
+	reqVolName string
+}
+func (e *wrongVolumeFoundError) Error() string {
+	return fmt.Sprintf("volume [%v] is not found. instead found vol [%s].", e.reqVolName, e.volName)
+}
+
 type unsupportedProtocolError struct {
 	protocol Protocol
 }
