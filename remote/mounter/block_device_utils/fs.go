@@ -96,7 +96,7 @@ func (b *blockDeviceUtils) UmountFs(mpoint string) error {
 			return _err
 		}
 		if ! isMounted{
-			b.logger.Info("Already umounted, so skip the umount operation.", logs.Args{{"mpoint", mpoint}})
+			b.logger.Info("Device already unmounted.", logs.Args{{"mpoint", mpoint}})
 			return nil
 		}
 		return b.logger.ErrorRet(&commandExecuteError{umountCmd, err}, "failed")
