@@ -76,12 +76,12 @@ func (b *blockDeviceUtils) Discover(volumeWwn string) (string, error) {
 	}
 	mpath := b.mpathDevFullPath(dev)
 	// Validate that we have the correct wwn.
-	wwn, err := b.GetWwnByScsiInq(mpath)
+	SqInqWwn, err := b.GetWwnByScsiInq(mpath)
 	if err != nil {
 		return "", b.logger.ErrorRet(&commandExecuteError{"sg_inq", err}, "failed")
 	}
-	if strings.ToLower(wwn) != strings.ToLower(volumeWwn){
-		return "", b.logger.ErrorRet(&wrongVolumeFoundError{wwn, volumeWwn}, "failed")
+	if strings.ToLower(SqInqWwn) != strings.ToLower(volumeWwn){
+		return "", b.logger.ErrorRet(&wrongDeviceFoundError{mpath, volumeWwn, SqInqWwn}, "failed")
 	}
 	if _, err = b.exec.Stat(mpath); err != nil {
 		return "", b.logger.ErrorRet(err, "Stat failed")
