@@ -44,6 +44,18 @@ func (e *volumeNotFoundError) Error() string {
 	return fmt.Sprintf("volume [%v] is not found", e.volName)
 }
 
+type wrongDeviceFoundError struct {
+	devPath string
+	reqVolName string
+	volName string
+}
+
+func (e *wrongDeviceFoundError) Error() string {
+	return fmt.Sprintf("Multipath device [%s] was found as WWN [%s] via multipath -ll command, " +
+		"BUT sg_inq identify this device as a different WWN: [%s]. Check your multipathd.", e.devPath,
+			e.reqVolName, e.volName)
+}
+
 type unsupportedProtocolError struct {
 	protocol Protocol
 }

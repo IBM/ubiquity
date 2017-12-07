@@ -117,16 +117,29 @@ var _ = Describe("block_device_utils_test", func() {
 	})
 	Context(".Discover", func() {
 		It("Discover returns path for volume", func() {
-			volumeId := "volume-id"
+			volumeId := "0x6001738cfc9035eb0000000000cea5f6"
 			result := "mpath"
-			fakeExec.ExecuteReturns([]byte(fmt.Sprintf("%s (%s) dm-1", result, volumeId)), nil)
-			mpath, err := bdUtils.Discover(volumeId)
+			inq_result := fmt.Sprintf(`VPD INQUIRY: Device Identification page
+							Designation descriptor number 1, descriptor length: 20
+							designator_type: NAA,  code_set: Binary
+							associated with the addressed logical unit
+							NAA 6, IEEE Company_id: 0x1738
+							Vendor Specific Identifier: 0xcfc9035eb
+							Vendor Specific Identifier Extension: 0xcea5f6
+							[%s]`, volumeId)
+			fakeExec.ExecuteReturnsOnCall(0, []byte(fmt.Sprintf("%s (%s) dm-1", result, volumeId)),
+				nil)
+			fakeExec.ExecuteReturnsOnCall(1, []byte(fmt.Sprintf("%s", inq_result)), nil) // for getWwnByScsiInq
+			mpath, err := bdUtils.Discover(strings.TrimPrefix(volumeId, "0x"))
 			Expect(err).ToNot(HaveOccurred())
 			Expect(mpath).To(Equal("/dev/mapper/" + result))
-			Expect(fakeExec.ExecuteCallCount()).To(Equal(1))
+			Expect(fakeExec.ExecuteCallCount()).To(Equal(2))
 			cmd, args := fakeExec.ExecuteArgsForCall(0)
 			Expect(cmd).To(Equal("multipath"))
 			Expect(args).To(Equal([]string{"-ll"}))
+			cmd, args = fakeExec.ExecuteArgsForCall(1)
+			Expect(cmd).To(Equal("sg_inq"))
+			Expect(args).To(Equal([]string{"-p",  "0x83", "/dev/mapper/mpath"}))
 		})
 		It("Discover fails if multipath command is missing", func() {
 			volumeId := "volume-id"
@@ -143,13 +156,47 @@ var _ = Describe("block_device_utils_test", func() {
 			Expect(err.Error()).To(MatchRegexp(cmdErr.Error()))
 		})
 		It("Discover fails if stat fails", func() {
-			volumeId := "volume-id"
+			volumeId := "0x6001738cfc9035eb0000000000cea5f6"
 			result := "mpath"
-			fakeExec.ExecuteReturns([]byte(fmt.Sprintf("%s (%s) dm-1", result, volumeId)), nil)
+			inq_result := fmt.Sprintf(`VPD INQUIRY: Device Identification page
+							Designation descriptor number 1, descriptor length: 20
+							designator_type: NAA,  code_set: Binary
+							associated with the addressed logical unit
+							NAA 6, IEEE Company_id: 0x1738
+							Vendor Specific Identifier: 0xcfc9035eb
+							Vendor Specific Identifier Extension: 0xcea5f6
+							[%s]`, volumeId)
+			fakeExec.ExecuteReturnsOnCall(0, []byte(fmt.Sprintf("%s (%s) dm-1", result, volumeId)),
+				nil)
+			fakeExec.ExecuteReturnsOnCall(1, []byte(fmt.Sprintf("%s", inq_result)), nil) // for getWwnByScsiInq
 			fakeExec.StatReturns(nil, cmdErr)
-			_, err := bdUtils.Discover(volumeId)
+			_, err := bdUtils.Discover(strings.TrimPrefix(volumeId, "0x"))
 			Expect(err).To(HaveOccurred())
 			Expect(err.Error()).To(MatchRegexp(cmdErr.Error()))
+		})
+		It("Discover fails if wrong wwn is found", func() {
+			volumeId := "0x6001738cfc9035eb0000000000cea5f6"
+			wrongVolumeId := "0x6001738cfc9035eb000000000079sfjs"
+			result := "mpath"
+			inq_result := fmt.Sprintf(`VPD INQUIRY: Device Identification page
+							Designation descriptor number 1, descriptor length: 20
+							designator_type: NAA,  code_set: Binary
+							associated with the addressed logical unit
+							NAA 6, IEEE Company_id: 0x1738
+							Vendor Specific Identifier: 0xcfc9035eb
+							Vendor Specific Identifier Extension: 0xcea5f6
+							[%s]`, wrongVolumeId)
+			fakeExec.ExecuteReturnsOnCall(0, []byte(fmt.Sprintf("%s (%s) dm-1", result, volumeId)),
+				nil)
+			fakeExec.ExecuteReturnsOnCall(1, []byte(fmt.Sprintf("%s", inq_result)), nil) // for getWwnByScsiInq
+			_, err := bdUtils.Discover(strings.TrimPrefix(volumeId, "0x"))
+			Expect(err).To(HaveOccurred())
+			cmd, args := fakeExec.ExecuteArgsForCall(0)
+			Expect(cmd).To(Equal("multipath"))
+			Expect(args).To(Equal([]string{"-ll"}))
+			cmd, args = fakeExec.ExecuteArgsForCall(1)
+			Expect(cmd).To(Equal("sg_inq"))
+			Expect(args).To(Equal([]string{"-p",  "0x83", "/dev/mapper/mpath"}))
 		})
 		It("Discover fails if volume not found", func() {
 			volumeId := "volume-id"
