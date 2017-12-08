@@ -17,9 +17,17 @@
 package block_device_utils
 
 import (
+	"github.com/IBM/ubiquity/utils/logs"
 	"os/exec"
 	"syscall"
-	"github.com/IBM/ubiquity/utils/logs"
+	"bufio"
+	"strings"
+	"regexp"
+	"fmt"
+)
+
+const (
+	NotMountedErrorMessage = "not mounted" // Error while umount device that is already unmounted
 )
 
 func (b *blockDeviceUtils) CheckFs(mpath string) (bool, error) {
@@ -30,8 +38,8 @@ func (b *blockDeviceUtils) CheckFs(mpath string) (bool, error) {
 	if err := b.exec.IsExecutable(blkidCmd); err != nil {
 		return false, b.logger.ErrorRet(&commandNotFoundError{blkidCmd, err}, "failed")
 	}
-	args := []string{blkidCmd, mpath}
-	outputBytes, err := b.exec.Execute("sudo", args)
+	args := []string{mpath}
+	outputBytes, err := b.exec.Execute(blkidCmd, args)
 	if err != nil {
 		if b.IsExitStatusCode(err, 2) {
 			// TODO we can improve it by double check the fs type of this device and maybe log warning if its not the same fstype we expacted
@@ -50,8 +58,8 @@ func (b *blockDeviceUtils) MakeFs(mpath string, fsType string) error {
 	if err := b.exec.IsExecutable(mkfsCmd); err != nil {
 		return b.logger.ErrorRet(&commandNotFoundError{mkfsCmd, err}, "failed")
 	}
-	args := []string{mkfsCmd, "-t", fsType, mpath}
-	if _, err := b.exec.Execute("sudo", args); err != nil {
+	args := []string{"-t", fsType, mpath}
+	if _, err := b.exec.Execute(mkfsCmd, args); err != nil {
 		return b.logger.ErrorRet(&commandExecuteError{mkfsCmd, err}, "failed")
 	}
 	b.logger.Info("created", logs.Args{{"fsType", fsType}, {"mpath", mpath}})
@@ -64,8 +72,8 @@ func (b *blockDeviceUtils) MountFs(mpath string, mpoint string) error {
 	if err := b.exec.IsExecutable(mountCmd); err != nil {
 		return b.logger.ErrorRet(&commandNotFoundError{mountCmd, err}, "failed")
 	}
-	args := []string{mountCmd, mpath, mpoint}
-	if _, err := b.exec.Execute("sudo", args); err != nil {
+	args := []string{mpath, mpoint}
+	if _, err := b.exec.Execute(mountCmd, args); err != nil {
 		return b.logger.ErrorRet(&commandExecuteError{mountCmd, err}, "failed")
 	}
 	b.logger.Info("mounted", logs.Args{{"mpoint", mpoint}})
@@ -73,18 +81,64 @@ func (b *blockDeviceUtils) MountFs(mpath string, mpoint string) error {
 }
 
 func (b *blockDeviceUtils) UmountFs(mpoint string) error {
+	// Execute unmount operation (skip, if mpoint its already unmounted)
+
 	defer b.logger.Trace(logs.DEBUG)()
 	umountCmd := "umount"
 	if err := b.exec.IsExecutable(umountCmd); err != nil {
 		return b.logger.ErrorRet(&commandNotFoundError{umountCmd, err}, "failed")
 	}
-	args := []string{umountCmd, mpoint}
-	if _, err := b.exec.Execute("sudo", args); err != nil {
+
+	args := []string{mpoint}
+	if _, err := b.exec.Execute(umountCmd, args); err != nil {
+		isMounted, _err := b.IsDeviceMounted(mpoint)
+		if _err != nil {
+			return _err
+		}
+		if ! isMounted{
+			b.logger.Info("Device already unmounted.", logs.Args{{"mpoint", mpoint}})
+			return nil
+		}
 		return b.logger.ErrorRet(&commandExecuteError{umountCmd, err}, "failed")
 	}
 	b.logger.Info("umounted", logs.Args{{"mpoint", mpoint}})
 	return nil
 }
+
+func (b *blockDeviceUtils) IsDeviceMounted(devPath string) (bool, error) {
+	/*
+	   true, nil  : If device is mounted (check via pars the mount output)
+	   false, nil : if device is not mounted
+	   false, err : if failed to discover if device is mounted
+	*/
+
+	defer b.logger.Trace(logs.DEBUG)()
+	mountCmd := "mount"
+	if err := b.exec.IsExecutable(mountCmd); err != nil {
+		return false, b.logger.ErrorRet(&commandNotFoundError{mountCmd, err}, "failed")
+	}
+
+	outputBytes, err := b.exec.Execute(mountCmd, nil)
+	if err != nil {
+		return false, b.logger.ErrorRet(&commandExecuteError{mountCmd, err}, "failed")
+	}
+	scanner := bufio.NewScanner(strings.NewReader(string(outputBytes[:])))
+	pattern := fmt.Sprint("^" + devPath + `\s+`)
+	regex, err := regexp.Compile(pattern)
+	if err != nil {
+		return false, b.logger.ErrorRet(err, "failed")
+	}
+	for scanner.Scan() {
+		line := scanner.Text()
+		if regex.MatchString(line) {
+			b.logger.Debug("Found mpath device as mounted device", logs.Args{{"mpath", devPath}, {"mountLine", line}})
+			return true, nil
+		}
+	}
+	b.logger.Debug("Not found mpath device as mounted device", logs.Args{{"mpath", devPath}})
+	return false, nil
+}
+
 
 func (b *blockDeviceUtils) IsExitStatusCode(err error, code int) bool {
 	defer b.logger.Trace(logs.DEBUG)()

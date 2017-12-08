@@ -24,7 +24,7 @@ type commandNotFoundError struct {
 }
 
 func (e *commandNotFoundError) Error() string {
-	return fmt.Sprintf("command [%b] not found [%b]", e.cmd, e.err)
+	return fmt.Sprintf("command [%v] is not found [%v]", e.cmd, e.err)
 }
 
 type commandExecuteError struct {
@@ -33,7 +33,7 @@ type commandExecuteError struct {
 }
 
 func (e *commandExecuteError) Error() string {
-	return fmt.Sprintf("command [%b] execute failed [%b]", e.cmd, e.err)
+	return fmt.Sprintf("command [%v] execution failure [%v]", e.cmd, e.err)
 }
 
 type volumeNotFoundError struct {
@@ -41,7 +41,19 @@ type volumeNotFoundError struct {
 }
 
 func (e *volumeNotFoundError) Error() string {
-	return fmt.Sprintf("volume [%b] not found", e.volName)
+	return fmt.Sprintf("volume [%v] is not found", e.volName)
+}
+
+type wrongDeviceFoundError struct {
+	devPath string
+	reqVolName string
+	volName string
+}
+
+func (e *wrongDeviceFoundError) Error() string {
+	return fmt.Sprintf("Multipath device [%s] was found as WWN [%s] via multipath -ll command, " +
+		"BUT sg_inq identify this device as a different WWN: [%s]. Check your multipathd.", e.devPath,
+			e.reqVolName, e.volName)
 }
 
 type unsupportedProtocolError struct {
@@ -49,5 +61,15 @@ type unsupportedProtocolError struct {
 }
 
 func (e *unsupportedProtocolError) Error() string {
-	return fmt.Sprintf("unsupported protocol [%v]", e.protocol)
+	return fmt.Sprintf("Protocol [%v] is not supported", e.protocol)
+}
+
+type noRegexWwnMatchInScsiInqError struct {
+	dev string
+	line string
+}
+
+func (e *noRegexWwnMatchInScsiInqError) Error() string {
+	return fmt.Sprintf("Could not find wwn pattern in sg_inq of mpath devive: [%s] in line Vendor Specific " +
+		"Identifier Extension: [%s]", e.dev, e.line)
 }

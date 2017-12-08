@@ -40,8 +40,8 @@ func (b *blockDeviceUtils) RescanISCSI() error {
 	if err := b.exec.IsExecutable(rescanCmd); err != nil {
 		return b.logger.ErrorRet(&commandNotFoundError{rescanCmd, err}, "failed")
 	}
-	args := []string{rescanCmd, "-m", "session", "--rescan"}
-	if _, err := b.exec.Execute("sudo", args); err != nil {
+	args := []string{"-m", "session", "--rescan"}
+	if _, err := b.exec.Execute(rescanCmd, args); err != nil {
 		return b.logger.ErrorRet(&commandExecuteError{rescanCmd, err}, "failed")
 	}
 	return nil
@@ -60,8 +60,8 @@ func (b *blockDeviceUtils) RescanSCSI() error {
 	if rescanCmd == "" {
 		return b.logger.ErrorRet(&commandNotFoundError{commands[0], errors.New("")}, "failed")
 	}
-	args := []string{rescanCmd, "-r"} // TODO should use -r only in clean up
-	if _, err := b.exec.Execute("sudo", args); err != nil {
+	args := []string{"-r"} // TODO should use -r only in clean up
+	if _, err := b.exec.Execute(rescanCmd, args); err != nil {
 		return b.logger.ErrorRet(&commandExecuteError{rescanCmd, err}, "failed")
 	}
 	return nil

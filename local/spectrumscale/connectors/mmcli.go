@@ -18,12 +18,12 @@ package connectors
 
 import (
 	"fmt"
-	"log"
-	"path"
-	"strings"
-
 	"github.com/IBM/ubiquity/resources"
 	"github.com/IBM/ubiquity/utils"
+	"log"
+	"net/url"
+	"path"
+	"strings"
 )
 
 type spectrum_mmcli struct {
@@ -42,8 +42,8 @@ func NewSpectrumMMCLIWithExecutor(logger *log.Logger, executor utils.Executor) (
 
 func (s *spectrum_mmcli) GetClusterId() (string, error) {
 	spectrumCommand := "/usr/lpp/mmfs/bin/mmlscluster"
-	args := []string{spectrumCommand}
-	return GetClusterIdInternal(s.logger, s.executor, "sudo", args)
+	//args := []string{spectrumCommand}
+	return GetClusterIdInternal(s.logger, s.executor, spectrumCommand, nil)
 }
 func GetClusterIdInternal(logger *log.Logger, executor utils.Executor, command string, args []string) (string, error) {
 	var clusterId string
@@ -80,8 +80,8 @@ func (s *spectrum_mmcli) IsFilesystemMounted(filesystemName string) (bool, error
 		return s.isMounted, nil
 	}
 	spectrumCommand := "/usr/lpp/mmfs/bin/mmlsmount"
-	args := []string{spectrumCommand, filesystemName, "-L", "-Y"}
-	isMounted, err := IsFilesystemMountedInternal(s.logger, s.executor, filesystemName, "sudo", args)
+	args := []string{filesystemName, "-L", "-Y"}
+	isMounted, err := IsFilesystemMountedInternal(s.logger, s.executor, filesystemName, spectrumCommand, args)
 	s.isMounted = isMounted
 	return s.isMounted, err
 }
@@ -139,9 +139,9 @@ func (s *spectrum_mmcli) MountFileSystem(filesystemName string) error {
 	}
 
 	spectrumCommand := "/usr/lpp/mmfs/bin/mmmount"
-	args := []string{spectrumCommand, filesystemName, "-a"}
+	args := []string{filesystemName, "-a"}
 
-	err := MountFileSystemInternal(s.logger, s.executor, filesystemName, "sudo", args)
+	err := MountFileSystemInternal(s.logger, s.executor, filesystemName, spectrumCommand, args)
 	if err != nil {
 		s.logger.Printf("error mounting filesystem %v", err)
 		return err
@@ -168,8 +168,8 @@ func (s *spectrum_mmcli) ListFilesystems() ([]string, error) {
 }
 func (s *spectrum_mmcli) GetFilesystemMountpoint(filesystemName string) (string, error) {
 	spectrumCommand := "/usr/lpp/mmfs/bin/mmlsfs"
-	args := []string{spectrumCommand, filesystemName, "-T", "-Y"}
-	return GetFilesystemMountpointInternal(s.logger, s.executor, filesystemName, "sudo", args)
+	args := []string{filesystemName, "-T", "-Y"}
+	return GetFilesystemMountpointInternal(s.logger, s.executor, filesystemName, spectrumCommand, args)
 }
 
 func GetFilesystemMountpointInternal(logger *log.Logger, executor utils.Executor, filesystemName string, command string, args []string) (string, error) {
@@ -191,7 +191,7 @@ func GetFilesystemMountpointInternal(logger *log.Logger, executor utils.Executor
 			mountpoint := strings.TrimSpace(tokens[8])
 
 			//Todo this should be changed to url.PathUnescape when available
-			mountpoint, err := utils.PathUnescape(mountpoint)
+			mountpoint, err := url.PathUnescape(mountpoint)
 			if err != nil {
 				logger.Printf("Error decoding mountpoint: %s\n", err)
 			} else {
@@ -212,7 +212,7 @@ func (s *spectrum_mmcli) CreateFileset(filesystemName string, filesetName string
 
 	// create fileset
 	spectrumCommand := "/usr/lpp/mmfs/bin/mmcrfileset"
-	args := []string{spectrumCommand, filesystemName, filesetName, "-t", "fileset for container volume"}
+	args := []string{filesystemName, filesetName, "-t", "fileset for container volume"}
 
 	filesetType, filesetTypeSpecified := opts[UserSpecifiedFilesetType]
 	inodeLimit, inodeLimitSpecified := opts[UserSpecifiedInodeLimit]
@@ -225,7 +225,7 @@ func (s *spectrum_mmcli) CreateFileset(filesystemName string, filesetName string
 		}
 	}
 
-	return CreateFilesetInternal(s.logger, s.executor, filesystemName, filesetName, "sudo", args)
+	return CreateFilesetInternal(s.logger, s.executor, filesystemName, filesetName, spectrumCommand, args)
 }
 
 func CreateFilesetInternal(logger *log.Logger, executor utils.Executor, filesystemName string, filesetName string, command string, args []string) error {
@@ -243,8 +243,8 @@ func (s *spectrum_mmcli) DeleteFileset(filesystemName string, filesetName string
 	defer s.logger.Println("spectrumLocalClient: deleteFileset end")
 
 	spectrumCommand := "/usr/lpp/mmfs/bin/mmdelfileset"
-	args := []string{spectrumCommand, filesystemName, filesetName, "-f"}
-	return DeleteFilesetInternal(s.logger, s.executor, filesystemName, filesetName, "sudo", args)
+	args := []string{filesystemName, filesetName, "-f"}
+	return DeleteFilesetInternal(s.logger, s.executor, filesystemName, filesetName, spectrumCommand, args)
 }
 
 func DeleteFilesetInternal(logger *log.Logger, executor utils.Executor, filesystemName string, filesetName string, command string, args []string) error {
@@ -261,9 +261,9 @@ func (s *spectrum_mmcli) IsFilesetLinked(filesystemName string, filesetName stri
 	defer s.logger.Println("spectrumLocalClient: isFilesetLinked end")
 
 	spectrumCommand := "/usr/lpp/mmfs/bin/mmlsfileset"
-	args := []string{spectrumCommand, filesystemName, filesetName, "-Y"}
+	args := []string{filesystemName, filesetName, "-Y"}
 	s.logger.Printf("%#v\n", args)
-	return IsFilesetLinkedInternal(s.logger, s.executor, filesystemName, filesetName, "sudo", args)
+	return IsFilesetLinkedInternal(s.logger, s.executor, filesystemName, filesetName, spectrumCommand, args)
 }
 
 func IsFilesetLinkedInternal(logger *log.Logger, executor utils.Executor, filesystemName string, filesetName string, command string, args []string) (bool, error) {
@@ -308,9 +308,9 @@ func (s *spectrum_mmcli) LinkFileset(filesystemName string, filesetName string) 
 
 	spectrumCommand := "/usr/lpp/mmfs/bin/mmlinkfileset"
 	filesetPath := path.Join(mountpoint, filesetName)
-	args := []string{spectrumCommand, filesystemName, filesetName, "-J", filesetPath}
+	args := []string{filesystemName, filesetName, "-J", filesetPath}
 	s.logger.Printf("Args for link fileset%#v", args)
-	err = LinkFilesetInternal(s.logger, s.executor, filesystemName, filesetName, "sudo", args)
+	err = LinkFilesetInternal(s.logger, s.executor, filesystemName, filesetName, spectrumCommand, args)
 	if err != nil {
 		s.logger.Printf("error linking fileset %v", err)
 		return err
@@ -332,8 +332,8 @@ func (s *spectrum_mmcli) UnlinkFileset(filesystemName string, filesetName string
 	defer s.logger.Println("spectrumLocalClient: unlinkFileset end")
 
 	spectrumCommand := "/usr/lpp/mmfs/bin/mmunlinkfileset"
-	args := []string{spectrumCommand, filesystemName, filesetName}
-	return UnlinkFilesetInternal(s.logger, s.executor, filesystemName, filesetName, "sudo", args)
+	args := []string{filesystemName, filesetName}
+	return UnlinkFilesetInternal(s.logger, s.executor, filesystemName, filesetName, spectrumCommand, args)
 }
 
 func UnlinkFilesetInternal(logger *log.Logger, executor utils.Executor, filesystemName string, filesetName string, command string, args []string) error {
@@ -353,8 +353,8 @@ func (s *spectrum_mmcli) ListFileset(filesystemName string, filesetName string) 
 	defer s.logger.Println("spectrumLocalClient: ListFileset end")
 
 	spectrumCommand := "/usr/lpp/mmfs/bin/mmlsfileset"
-	args := []string{spectrumCommand, filesystemName, filesetName, "-Y"}
-	return ListFilesetInternal(s.logger, s.executor, filesystemName, filesetName, "sudo", args)
+	args := []string{filesystemName, filesetName, "-Y"}
+	return ListFilesetInternal(s.logger, s.executor, filesystemName, filesetName, spectrumCommand, args)
 }
 func ListFilesetInternal(logger *log.Logger, executor utils.Executor, filesystemName string, filesetName string, command string, args []string) (resources.Volume, error) {
 	_, err := executor.Execute(command, args)
@@ -372,8 +372,8 @@ func (s *spectrum_mmcli) ListFilesetQuota(filesystemName string, filesetName str
 	defer s.logger.Println("spectrumLocalClient: verifyFilesetQuota end")
 
 	spectrumCommand := "/usr/lpp/mmfs/bin/mmlsquota"
-	args := []string{spectrumCommand, "-j", filesetName, filesystemName, "--block-size", "auto"}
-	return ListFilesetQuotaInternal(s.logger, s.executor, filesystemName, filesetName, "sudo", args)
+	args := []string{"-j", filesetName, filesystemName, "--block-size", "auto"}
+	return ListFilesetQuotaInternal(s.logger, s.executor, filesystemName, filesetName, spectrumCommand, args)
 }
 
 func ListFilesetQuotaInternal(logger *log.Logger, executor utils.Executor, filesystemName string, filesetName string, command string, args []string) (string, error) {
@@ -410,8 +410,8 @@ func (s *spectrum_mmcli) SetFilesetQuota(filesystemName string, filesetName stri
 	s.logger.Printf("setting quota to %s for fileset %s\n", quota, filesetName)
 
 	spectrumCommand := "/usr/lpp/mmfs/bin/mmsetquota"
-	args := []string{spectrumCommand, filesystemName + ":" + filesetName, "--block", quota + ":" + quota}
-	return SetFilesetQuotaInternal(s.logger, s.executor, filesystemName, filesetName, quota, "sudo", args)
+	args := []string{filesystemName + ":" + filesetName, "--block", quota + ":" + quota}
+	return SetFilesetQuotaInternal(s.logger, s.executor, filesystemName, filesetName, quota, spectrumCommand, args)
 }
 
 func SetFilesetQuotaInternal(logger *log.Logger, executor utils.Executor, filesystemName string, filesetName string, quota string, command string, args []string) error {
@@ -431,9 +431,9 @@ func (s *spectrum_mmcli) ExportNfs(volumeMountpoint string, clientConfig string)
 	defer s.logger.Println("spectrumLocalClient: ExportNfs end")
 
 	spectrumCommand := "/usr/lpp/mmfs/bin/mmnfs"
-	args := []string{spectrumCommand, "export", "add", volumeMountpoint, "--client", clientConfig}
+	args := []string{"export", "add", volumeMountpoint, "--client", clientConfig}
 
-	return ExportNfsInternal(s.logger, s.executor, "sudo", args)
+	return ExportNfsInternal(s.logger, s.executor, spectrumCommand, args)
 }
 
 func ExportNfsInternal(logger *log.Logger, executor utils.Executor, command string, args []string) error {
@@ -454,9 +454,9 @@ func (s *spectrum_mmcli) UnexportNfs(volumeMountpoint string) error {
 	defer s.logger.Println("spectrumLocalClient: UnexportNfs end")
 
 	spectrumCommand := "/usr/lpp/mmfs/bin/mmnfs"
-	args := []string{spectrumCommand, "export", "remove", volumeMountpoint, "--force"}
+	args := []string{"export", "remove", volumeMountpoint, "--force"}
 
-	return UnexportNfsInternal(s.logger, s.executor, "sudo", args)
+	return UnexportNfsInternal(s.logger, s.executor, spectrumCommand, args)
 }
 
 func UnexportNfsInternal(logger *log.Logger, executor utils.Executor, command string, args []string) error {

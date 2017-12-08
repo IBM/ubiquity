@@ -27,12 +27,10 @@ import (
 
 //go:generate counterfeiter -o ../../fakes/fake_ScbeDataModel.go . ScbeDataModel
 type ScbeDataModel interface {
-	CreateVolumeTable() error
 	DeleteVolume(name string) error
-	InsertVolume(volumeName string, wwn string, attachTo string, fstype string) error
+	InsertVolume(volumeName string, wwn string, fstype string) error
 	GetVolume(name string) (ScbeVolume, bool, error)
 	ListVolumes() ([]ScbeVolume, error)
-	UpdateVolumeAttachTo(volumeName string, scbeVolume ScbeVolume, host2attach string) error
 }
 
 type scbeDataModel struct {
@@ -46,22 +44,11 @@ type ScbeVolume struct {
 	Volume   resources.Volume
 	VolumeID uint
 	WWN      string
-	AttachTo string
 	FSType   string
 }
 
-func NewScbeDataModel(db *gorm.DB, backend string) ScbeDataModel {
-	return &scbeDataModel{logger: logs.GetLogger(), database: db, backend: backend}
-}
-
-// CreateVolumeTable create the SCBE backend table
-func (d *scbeDataModel) CreateVolumeTable() error {
-	defer d.logger.Trace(logs.DEBUG)()
-
-	if err := d.database.AutoMigrate(&ScbeVolume{}).Error; err != nil {
-		return d.logger.ErrorRet(err, "failed")
-	}
-	return nil
+func NewScbeDataModel(db *gorm.DB) ScbeDataModel {
+	return &scbeDataModel{logger: logs.GetLogger(), database: db, backend: resources.SCBE}
 }
 
 // DeleteVolume if vol exist in DB then delete it (both in the generic table and the specific one)
@@ -88,14 +75,13 @@ func (d *scbeDataModel) DeleteVolume(name string) error {
 }
 
 // InsertVolume volume name and its details given in opts
-func (d *scbeDataModel) InsertVolume(volumeName string, wwn string, attachTo string, fstype string) error {
+func (d *scbeDataModel) InsertVolume(volumeName string, wwn string, fstype string) error {
 	defer d.logger.Trace(logs.DEBUG)()
 
 	volume := ScbeVolume{
 		Volume: resources.Volume{Name: volumeName,
 			Backend: fmt.Sprintf("%s", d.backend)},
 		WWN:      wwn,
-		AttachTo: attachTo,
 		FSType:   fstype,
 	}
 
@@ -144,13 +130,4 @@ func (d *scbeDataModel) ListVolumes() ([]ScbeVolume, error) {
 	}
 
 	return volumes, nil
-}
-func (d *scbeDataModel) UpdateVolumeAttachTo(volumeName string, scbeVolume ScbeVolume, host2attach string) error {
-	defer d.logger.Trace(logs.DEBUG)()
-
-	err := d.database.Table("scbe_volumes").Where("volume_id = ?", scbeVolume.ID).Update("attach_to", host2attach).Error
-	if err != nil {
-		return d.logger.ErrorRet(err, "failed", logs.Args{{"volumeName", volumeName}})
-	}
-	return nil
 }

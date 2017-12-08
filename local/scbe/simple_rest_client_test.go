@@ -23,17 +23,19 @@ import (
 	"github.com/jarcoal/httpmock"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega" // including the whole package inside the file
+	"io/ioutil"
 	"net/http"
+	"os"
 )
 
 const (
 	fakeScbeQfdn        = "1.1.1.1"
 	fakeScbeUrlBase     = "https://" + fakeScbeQfdn + ":6666"
 	suffix              = "api/v1"
-	fakeScbeUrlAuth     = "users/get-auth-token"
-	fakeScbeUrlAuthFull = fakeScbeUrlBase + "/" + suffix + "/" + fakeScbeUrlAuth
+	fakeScbeUrlAuthFull = fakeScbeUrlBase + "/" + suffix + "/" + "users/get-auth-token"
 	fakeScbeUrlReferer  = fakeScbeUrlBase + "/"
 	fakeScbeUrlApi      = fakeScbeUrlBase + "/" + suffix
+	fakeCert            = "/tmp/fake_cert.crt"
 )
 
 var fakeServiceJsonResponse string = `
@@ -67,7 +69,8 @@ var _ = Describe("restClient", func() {
 		err    error
 	)
 	BeforeEach(func() {
-		client = scbe.NewSimpleRestClient(resources.ConnectionInfo{}, fakeScbeUrlBase+"/"+suffix, fakeScbeUrlAuth, fakeScbeUrlReferer)
+		client, err = scbe.NewSimpleRestClient(resources.ConnectionInfo{}, fakeScbeUrlBase+"/"+suffix, fakeScbeUrlReferer)
+		Expect(err).ToNot(HaveOccurred())
 	})
 
 	Context(".Login", func() {
@@ -114,7 +117,8 @@ var _ = Describe("restClient", func() {
 		err    error
 	)
 	BeforeEach(func() {
-		client = scbe.NewSimpleRestClient(resources.ConnectionInfo{}, fakeScbeUrlBase+"/"+suffix, fakeScbeUrlAuth, fakeScbeUrlReferer)
+		client, err = scbe.NewSimpleRestClient(resources.ConnectionInfo{}, fakeScbeUrlBase+"/"+suffix, fakeScbeUrlReferer)
+		Expect(err).ToNot(HaveOccurred())
 		loginResponse := scbe.LoginResponse{Token: "fake-token"}
 		marshalledResponse, err := json.Marshal(loginResponse)
 		Expect(err).ToNot(HaveOccurred())
@@ -176,7 +180,6 @@ var _ = Describe("restClient", func() {
 	})
 })
 
-
 func CountLoginResponder(num *int, retryToken string) httpmock.Responder {
 	*num = 0
 	loginResponse := scbe.LoginResponse{Token: retryToken}
@@ -193,10 +196,61 @@ func TokenExpiredResponder(num *int, retryToken string) httpmock.Responder {
 	return func(req *http.Request) (*http.Response, error) {
 		*num++
 		auth := req.Header[scbe.HTTP_AUTH_KEY]
-		if len(auth) == 1 && auth[0] == "Token " + retryToken {
+		if len(auth) == 1 && auth[0] == "Token "+retryToken {
 			return httpmock.NewStringResponse(http.StatusOK, fakeServiceJsonResponse), nil
 		} else {
 			return httpmock.NewStringResponse(http.StatusUnauthorized, ""), nil
 		}
 	}
 }
+
+var _ = Describe("restClient", func() {
+	var (
+		client scbe.SimpleRestClient
+		err    error
+	)
+	BeforeEach(func() {
+	})
+	Context(".initTransport", func() {
+		It("should fail with default (verify-full) and no certificates", func() {
+			client, err = scbe.NewSimpleRestClient(resources.ConnectionInfo{ManagementIP: fakeScbeQfdn}, fakeScbeUrlBase+"/"+suffix, fakeScbeUrlReferer)
+			Expect(err).To(HaveOccurred())
+			_, ok := err.(*scbe.SslModeFullVerifyWithoutCAfile)
+			Expect(ok).To(Equal(true))
+		})
+		It("should fail if wrong ssl mode", func() {
+			os.Setenv(resources.KeyScbeSslMode, "fake ssl mode")
+			client, err = scbe.NewSimpleRestClient(resources.ConnectionInfo{ManagementIP: fakeScbeQfdn}, fakeScbeUrlBase+"/"+suffix, fakeScbeUrlReferer)
+			os.Unsetenv(resources.KeyScbeSslMode)
+			Expect(err).To(HaveOccurred())
+			_, ok := err.(*scbe.SslModeValueInvalid)
+			Expect(ok).To(Equal(true))
+		})
+		It("fails if no certificate", func() {
+			os.Remove(fakeCert)
+			os.Setenv(scbe.KEY_VERIFY_SCBE_CERT, fakeCert)
+			os.Setenv(resources.KeyScbeSslMode, resources.SslModeVerifyFull)
+			client, err = scbe.NewSimpleRestClient(resources.ConnectionInfo{ManagementIP: fakeScbeQfdn}, fakeScbeUrlBase+"/"+suffix, fakeScbeUrlReferer)
+			os.Unsetenv(resources.KeyScbeSslMode)
+			os.Setenv(scbe.KEY_VERIFY_SCBE_CERT, "")
+			Expect(err).To(HaveOccurred())
+		})
+		It("fails if certificate parse error", func() {
+			os.Remove(fakeCert)
+			err := ioutil.WriteFile(fakeCert, []byte("fake\n"), 0644)
+			Expect(err).ToNot(HaveOccurred())
+			os.Setenv(scbe.KEY_VERIFY_SCBE_CERT, fakeCert)
+			os.Setenv(resources.KeyScbeSslMode, resources.SslModeVerifyFull)
+			client, err = scbe.NewSimpleRestClient(resources.ConnectionInfo{ManagementIP: fakeScbeQfdn}, fakeScbeUrlBase+"/"+suffix, fakeScbeUrlReferer)
+			os.Unsetenv(resources.KeyScbeSslMode)
+			os.Setenv(scbe.KEY_VERIFY_SCBE_CERT, "")
+			Expect(err).To(HaveOccurred())
+		})
+		It("should succeed with require ssl mode", func() {
+			os.Setenv(resources.KeyScbeSslMode, resources.SslModeRequire)
+			client, err = scbe.NewSimpleRestClient(resources.ConnectionInfo{ManagementIP: fakeScbeQfdn}, fakeScbeUrlBase+"/"+suffix, fakeScbeUrlReferer)
+			os.Unsetenv(resources.KeyScbeSslMode)
+			Expect(err).NotTo(HaveOccurred())
+		})
+	})
+})
