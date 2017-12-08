@@ -83,6 +83,12 @@ func (e *executor) ExecuteWithTimeout(mSeconds int ,command string, args []strin
 	err := cmd.Run()
 	stdErr := stderr.Bytes()
 	stdOut := stdout.Bytes()
+	exceededTimeout := false
+	timeoutMessage := ""
+	if ctx.Err() == context.DeadlineExceeded {
+		exceededTimeout = true
+		timeoutMessage = "The command [%s] reached timeout setting [%s]msec, There for it was automatically killed"
+	}
 	e.logger.Debug(
 		"Command executed with args and error and output.",
 		logs.Args{
@@ -90,6 +96,10 @@ func (e *executor) ExecuteWithTimeout(mSeconds int ,command string, args []strin
 			{"args", args},
 			{"error", string(stdErr[:])},
 			{"output", string(stdOut[:])},
+			{"timeout mSeconds", mSeconds},
+			{"exceeded_timeout", exceededTimeout},
+			{"timeout_message",timeoutMessage},
+			{"exit status", err.Error()},
 		})
 
 	return stdOut, err
