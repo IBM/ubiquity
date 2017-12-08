@@ -72,7 +72,7 @@ func (e *executor) Execute(command string, args []string) ([]byte, error) {
 }
 
 func (e *executor) ExecuteWithTimeout(mSeconds int ,command string, args []string) ([]byte, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(mSeconds)*time.Millisecond)
+	ctx, cancel := context.WithTimeout(context.Background(), 4000*time.Millisecond)
 	defer cancel()
 	var stdout bytes.Buffer
 	var stderr bytes.Buffer
