@@ -72,7 +72,7 @@ func (e *executor) Execute(command string, args []string) ([]byte, error) {
 }
 
 func (e *executor) ExecuteWithTimeout(mSeconds int ,command string, args []string) ([]byte, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), 4000*time.Millisecond)
+	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(mSeconds)*time.Millisecond)
 	defer cancel()
 	var stdout bytes.Buffer
 	var stderr bytes.Buffer
@@ -85,7 +85,7 @@ func (e *executor) ExecuteWithTimeout(mSeconds int ,command string, args []strin
 	stdOut := stdout.Bytes()
 	exceededTimeout := false
 	timeoutMessage := ""
-	if ctx.Err() == context.DeadlineExceeded {
+	if err == context.DeadlineExceeded {
 		exceededTimeout = true
 		timeoutMessage = "The command [%s] reached timeout setting [%s]msec, There for it was automatically killed"
 	}
