@@ -129,15 +129,16 @@ var _ = Describe("block_device_utils_test", func() {
 							[%s]`, volumeId)
 			fakeExec.ExecuteReturnsOnCall(0, []byte(fmt.Sprintf("%s (%s) dm-1", result, volumeId)),
 				nil)
-			fakeExec.ExecuteReturnsOnCall(1, []byte(fmt.Sprintf("%s", inq_result)), nil) // for getWwnByScsiInq
+			fakeExec.ExecuteWithTimeoutReturns([]byte(fmt.Sprintf("%s", inq_result)), nil) // for getWwnByScsiInq
 			mpath, err := bdUtils.Discover(strings.TrimPrefix(volumeId, "0x"))
 			Expect(err).ToNot(HaveOccurred())
 			Expect(mpath).To(Equal("/dev/mapper/" + result))
-			Expect(fakeExec.ExecuteCallCount()).To(Equal(2))
+			Expect(fakeExec.ExecuteCallCount()).To(Equal(1))
+			Expect(fakeExec.ExecuteWithTimeoutCallCount()).To(Equal(1))
 			cmd, args := fakeExec.ExecuteArgsForCall(0)
 			Expect(cmd).To(Equal("multipath"))
 			Expect(args).To(Equal([]string{"-ll"}))
-			cmd, args = fakeExec.ExecuteArgsForCall(1)
+			_, cmd, args = fakeExec.ExecuteWithTimeoutArgsForCall(0)
 			Expect(cmd).To(Equal("sg_inq"))
 			Expect(args).To(Equal([]string{"-p",  "0x83", "/dev/mapper/mpath"}))
 		})
@@ -168,7 +169,7 @@ var _ = Describe("block_device_utils_test", func() {
 							[%s]`, volumeId)
 			fakeExec.ExecuteReturnsOnCall(0, []byte(fmt.Sprintf("%s (%s) dm-1", result, volumeId)),
 				nil)
-			fakeExec.ExecuteReturnsOnCall(1, []byte(fmt.Sprintf("%s", inq_result)), nil) // for getWwnByScsiInq
+			fakeExec.ExecuteWithTimeoutReturns([]byte(fmt.Sprintf("%s", inq_result)), nil) // for getWwnByScsiInq
 			fakeExec.StatReturns(nil, cmdErr)
 			_, err := bdUtils.Discover(strings.TrimPrefix(volumeId, "0x"))
 			Expect(err).To(HaveOccurred())
@@ -188,13 +189,13 @@ var _ = Describe("block_device_utils_test", func() {
 							[%s]`, wrongVolumeId)
 			fakeExec.ExecuteReturnsOnCall(0, []byte(fmt.Sprintf("%s (%s) dm-1", result, volumeId)),
 				nil)
-			fakeExec.ExecuteReturnsOnCall(1, []byte(fmt.Sprintf("%s", inq_result)), nil) // for getWwnByScsiInq
+			fakeExec.ExecuteWithTimeoutReturns([]byte(fmt.Sprintf("%s", inq_result)), nil) // for getWwnByScsiInq
 			_, err := bdUtils.Discover(strings.TrimPrefix(volumeId, "0x"))
 			Expect(err).To(HaveOccurred())
 			cmd, args := fakeExec.ExecuteArgsForCall(0)
 			Expect(cmd).To(Equal("multipath"))
 			Expect(args).To(Equal([]string{"-ll"}))
-			cmd, args = fakeExec.ExecuteArgsForCall(1)
+			_, cmd, args = fakeExec.ExecuteWithTimeoutArgsForCall(0)
 			Expect(cmd).To(Equal("sg_inq"))
 			Expect(args).To(Equal([]string{"-p",  "0x83", "/dev/mapper/mpath"}))
 		})
@@ -223,12 +224,12 @@ var _ = Describe("block_device_utils_test", func() {
 							Vendor Specific Identifier: 0xcfc9035eb
 							Vendor Specific Identifier Extension: 0xcea5f6
 							[%s]`, volWwn)
-			fakeExec.ExecuteReturns([]byte(fmt.Sprintf("%s", inq_result)), nil)
+			fakeExec.ExecuteWithTimeoutReturns([]byte(fmt.Sprintf("%s", inq_result)), nil)
 			dev, err := bdUtils.DiscoverBySgInq(mpathOutput, expectedWwn)
 			Expect(dev).To(Equal("mpathhe"))
 			Expect(err).ToNot(HaveOccurred())
-			Expect(fakeExec.ExecuteCallCount()).To(Equal(1))
-			cmd, _ := fakeExec.ExecuteArgsForCall(0)
+			Expect(fakeExec.ExecuteWithTimeoutCallCount()).To(Equal(1))
+			_, cmd, _ := fakeExec.ExecuteWithTimeoutArgsForCall(0)
 			Expect(cmd).To(Equal("sg_inq"))
 		})
 		It("should return wwn command fails", func() {
@@ -246,7 +247,7 @@ var _ = Describe("block_device_utils_test", func() {
 	Context( ".GetWwnByScsiInq", func(){
 		It("GetWwnByScsiInq fails if sg_inq command fails", func() {
 			dev := "dev"
-			fakeExec.ExecuteReturns([]byte{}, cmdErr)
+			fakeExec.ExecuteWithTimeoutReturns([]byte{}, cmdErr)
 			_, err := bdUtils.GetWwnByScsiInq(dev)
 			Expect(err).To(HaveOccurred())
 		})
@@ -261,12 +262,12 @@ var _ = Describe("block_device_utils_test", func() {
 							Vendor Specific Identifier: 0xcfc9035eb
 							Vendor Specific Identifier Extension: 0xcea5f6
 							[%s]`, expecedWwn)
-			fakeExec.ExecuteReturns([]byte(fmt.Sprintf("%s", result)), nil)
+			fakeExec.ExecuteWithTimeoutReturns([]byte(fmt.Sprintf("%s", result)), nil)
 			wwn, err := bdUtils.GetWwnByScsiInq(dev)
 			Expect(err).ToNot(HaveOccurred())
 			Expect(wwn).To(Equal(strings.TrimPrefix(expecedWwn, "0x")))
-			Expect(fakeExec.ExecuteCallCount()).To(Equal(1))
-			cmd, args := fakeExec.ExecuteArgsForCall(0)
+			Expect(fakeExec.ExecuteWithTimeoutCallCount()).To(Equal(1))
+			_, cmd, args := fakeExec.ExecuteWithTimeoutArgsForCall(0)
 			Expect(cmd).To(Equal("sg_inq"))
 			Expect(args).To(Equal([]string{"-p",  "0x83", dev}))
 		})
@@ -281,11 +282,11 @@ var _ = Describe("block_device_utils_test", func() {
 							Vendor Specific Identifier: 0xcfc9035eb
 							Vendor Specific Identifier Extension: 0xcea5f6
 							[%s]`, expecedWwn)
-			fakeExec.ExecuteReturns([]byte(fmt.Sprintf("%s", result)), nil)
+			fakeExec.ExecuteWithTimeoutReturns([]byte(fmt.Sprintf("%s", result)), nil)
 			_, err := bdUtils.GetWwnByScsiInq(dev)
 			Expect(err).To(HaveOccurred())
-			Expect(fakeExec.ExecuteCallCount()).To(Equal(1))
-			cmd, args := fakeExec.ExecuteArgsForCall(0)
+			Expect(fakeExec.ExecuteWithTimeoutCallCount()).To(Equal(1))
+			_, cmd, args := fakeExec.ExecuteWithTimeoutArgsForCall(0)
 			Expect(cmd).To(Equal("sg_inq"))
 			Expect(args).To(Equal([]string{"-p",  "0x83", dev}))
 		})

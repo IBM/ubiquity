@@ -22,6 +22,8 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"context"
+	"time"
 )
 
 //go:generate counterfeiter -o ../fakes/fake_executor.go . Executor
@@ -36,6 +38,7 @@ type Executor interface { // basic host dependent functions
 	IsExecutable(string) error
 	IsNotExist(error) bool
 	EvalSymlinks(path string) (string, error)
+	ExecuteWithTimeout(mSeconds int ,command string, args []string) ([]byte, error)
 }
 
 type executor struct {
@@ -67,6 +70,31 @@ func (e *executor) Execute(command string, args []string) ([]byte, error) {
 
 	return stdOut, err
 }
+
+func (e *executor) ExecuteWithTimeout(mSeconds int ,command string, args []string) ([]byte, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(mSeconds)*time.Millisecond)
+	defer cancel()
+	var stdout bytes.Buffer
+	var stderr bytes.Buffer
+
+	cmd := exec.CommandContext(ctx, command, args...)
+	cmd.Stdout = &stdout
+	cmd.Stderr = &stderr
+	err := cmd.Run()
+	stdErr := stderr.Bytes()
+	stdOut := stdout.Bytes()
+	e.logger.Debug(
+		"Command executed with args and error and output.",
+		logs.Args{
+			{"command", command},
+			{"args", args},
+			{"error", string(stdErr[:])},
+			{"output", string(stdOut[:])},
+		})
+
+	return stdOut, err
+}
+
 func (e *executor) Stat(path string) (os.FileInfo, error) {
 	return os.Stat(path)
 }
