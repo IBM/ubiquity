@@ -89,11 +89,18 @@ func (e *executor) ExecuteWithTimeout(mSeconds int ,command string, args []strin
 	}()
 	stdErr := stderr.Bytes()
 	stdOut := stdout.Bytes()
-	select {
-	case err := <-done:
-		e.logger.Debug(fmt.Sprintf("Command %s Done: %s", command, err))
-	case <-time.After(time.Duration(mSeconds) * time.Millisecond):
-		e.logger.Debug(fmt.Sprintf("Command %s reched timeout after: %d", command, mSeconds))
+	for i := 0; i < 5; i++ {
+		select {
+		case err := <-done:
+			e.logger.Debug(fmt.Sprintf("Command %s Done: %s", command, err))
+			break;
+		case <-time.After(time.Duration(mSeconds) * time.Millisecond):
+			e.logger.Debug(fmt.Sprintf("Command %s reched timeout after: %d", command, mSeconds))
+			break;
+		default:
+			e.logger.Debug(fmt.Sprintf("waiting for cmd %s", command))
+			time.Sleep(1000*time.Millisecond)
+		}
 	}
 	exceededTimeout := false
 	timeoutMessage := ""
