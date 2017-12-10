@@ -87,41 +87,45 @@ func (e *executor) ExecuteWithTimeout(mSeconds int ,command string, args []strin
 	go func() {
 		done <- cmd.Wait()
 	}()
-	stdErr := stderr.Bytes()
-	stdOut := stdout.Bytes()
 	for i := 0; i < 5; i++ {
 		select {
 		case err := <-done:
 			e.logger.Debug(fmt.Sprintf("Command %s Done: %s", command, err))
-			break;
+			stdErr := stderr.Bytes()
+			stdOut := stdout.Bytes()
+			e.logger.Debug(
+				"Command executed with args and error and output.",
+				logs.Args{
+					{"command", command},
+					{"args", args},
+					{"error", string(stdErr[:])},
+					{"output", string(stdOut[:])},
+					{"timeout mSeconds", mSeconds},
+					{"exit status", err.Error()},
+				})
+
+			return stdOut, err
 		case <-time.After(time.Duration(mSeconds) * time.Millisecond):
 			e.logger.Debug(fmt.Sprintf("Command %s reched timeout after: %d", command, mSeconds))
-			break;
+			stdErr := stderr.Bytes()
+			stdOut := stdout.Bytes()
+			e.logger.Debug(
+				"Command executed with args and error and output.",
+				logs.Args{
+					{"command", command},
+					{"args", args},
+					{"error", string(stdErr[:])},
+					{"output", string(stdOut[:])},
+					{"timeout mSeconds", mSeconds},
+					{"exit status", err.Error()},
+				})
+			return stdOut, err
 		default:
 			e.logger.Debug(fmt.Sprintf("waiting for cmd %s", command))
 			time.Sleep(1000*time.Millisecond)
 		}
 	}
-	exceededTimeout := false
-	timeoutMessage := ""
-	if err == context.DeadlineExceeded {
-		exceededTimeout = true
-		timeoutMessage = "The command [%s] reached timeout setting [%s]msec, There for it was automatically killed"
-	}
-	e.logger.Debug(
-		"Command executed with args and error and output.",
-		logs.Args{
-			{"command", command},
-			{"args", args},
-			{"error", string(stdErr[:])},
-			{"output", string(stdOut[:])},
-			{"timeout mSeconds", mSeconds},
-			{"exceeded_timeout", exceededTimeout},
-			{"timeout_message",timeoutMessage},
-			{"exit status", err.Error()},
-		})
-
-	return stdOut, err
+	return stdout.Bytes(), err
 }
 
 func (e *executor) Stat(path string) (os.FileInfo, error) {
