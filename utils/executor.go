@@ -87,13 +87,12 @@ func (e *executor) ExecuteWithTimeout(mSeconds int ,command string, args []strin
 	go func() {
 		done <- cmd.Wait()
 	}()
-	time.Sleep(time.Duration(mSeconds) * time.Millisecond)
 	stdErr := stderr.Bytes()
 	stdOut := stdout.Bytes()
 	select {
 	case err := <-done:
 		e.logger.Debug(fmt.Sprintf("Command %s Done: %s", command, err))
-	case <-time.After(time.Second):
+	case <-time.After(time.Duration(mSeconds) * time.Millisecond):
 		e.logger.Debug(fmt.Sprintf("Command %s reched timeout after: %d", command, mSeconds))
 	}
 	exceededTimeout := false
