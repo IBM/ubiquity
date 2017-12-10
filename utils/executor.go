@@ -24,6 +24,7 @@ import (
 	"path/filepath"
 	"context"
 	"time"
+	"fmt"
 )
 
 //go:generate counterfeiter -o ../fakes/fake_executor.go . Executor
@@ -72,7 +73,7 @@ func (e *executor) Execute(command string, args []string) ([]byte, error) {
 }
 
 func (e *executor) ExecuteWithTimeout(mSeconds int ,command string, args []string) ([]byte, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(mSeconds)*time.Millisecond)
+	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 	var stdout bytes.Buffer
 	var stderr bytes.Buffer
@@ -80,9 +81,21 @@ func (e *executor) ExecuteWithTimeout(mSeconds int ,command string, args []strin
 	cmd := exec.CommandContext(ctx, command, args...)
 	cmd.Stdout = &stdout
 	cmd.Stderr = &stderr
-	err := cmd.Run()
+	err := cmd.Start()
+	e.logger.Debug(fmt.Sprintf("Command %s Started", command))
+	done := make(chan error)
+	go func() {
+		done <- cmd.Wait()
+	}()
+	time.Sleep(time.Duration(mSeconds) * time.Millisecond)
 	stdErr := stderr.Bytes()
 	stdOut := stdout.Bytes()
+	select {
+	case err := <-done:
+		e.logger.Debug(fmt.Sprintf("Command %s Done: %s", command, err))
+	case <-time.After(time.Second):
+		e.logger.Debug(fmt.Sprintf("Command %s reched timeout after: %d", command, mSeconds))
+	}
 	exceededTimeout := false
 	timeoutMessage := ""
 	if err == context.DeadlineExceeded {
