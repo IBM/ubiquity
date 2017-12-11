@@ -73,59 +73,32 @@ func (e *executor) Execute(command string, args []string) ([]byte, error) {
 }
 
 func (e *executor) ExecuteWithTimeout(mSeconds int ,command string, args []string) ([]byte, error) {
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
-	var stdout bytes.Buffer
-	var stderr bytes.Buffer
 
-	cmd := exec.CommandContext(ctx, command, args...)
-	cmd.Stdout = &stdout
-	cmd.Stderr = &stderr
-	err := cmd.Start()
-	e.logger.Debug(fmt.Sprintf("Command %s Started", command))
-	done := make(chan error)
-	go func() {
-		done <- cmd.Wait()
-	}()
-	for i := 0; i < 5; i++ {
-		select {
-		case err := <-done:
-			e.logger.Debug(fmt.Sprintf("Command %s Done: %s", command, err))
-			stdErr := stderr.Bytes()
-			stdOut := stdout.Bytes()
-			e.logger.Debug(
-				"Command executed with args and error and output.",
-				logs.Args{
-					{"command", command},
-					{"args", args},
-					{"error", string(stdErr[:])},
-					{"output", string(stdOut[:])},
-					{"timeout mSeconds", mSeconds},
-					{"exit status", err.Error()},
-				})
+    // Create a new context and add a timeout to it
+    ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+    defer cancel() // The cancel should be deferred so resources are cleaned up
 
-			return stdOut, err
-		case <-time.After(time.Duration(mSeconds) * time.Millisecond):
-			e.logger.Debug(fmt.Sprintf("Command %s reched timeout after: %d", command, mSeconds))
-			stdErr := stderr.Bytes()
-			stdOut := stdout.Bytes()
-			e.logger.Debug(
-				"Command executed with args and error and output.",
-				logs.Args{
-					{"command", command},
-					{"args", args},
-					{"error", string(stdErr[:])},
-					{"output", string(stdOut[:])},
-					{"timeout mSeconds", mSeconds},
-					{"exit status", err.Error()},
-				})
-			return stdOut, err
-		default:
-			e.logger.Debug(fmt.Sprintf("waiting for cmd %s", command))
-			time.Sleep(1000*time.Millisecond)
-		}
-	}
-	return stdout.Bytes(), err
+    // Create the command with our context
+    cmd := exec.CommandContext(ctx, command, args...)
+
+    // This time we can simply use Output() to get the result.
+    out, err := cmd.Output()
+
+    // We want to check the context error to see if the timeout was executed.
+    // The error returned by cmd.Output() will be OS specific based on what
+    // happens when a process is killed.
+    if ctx.Err() == context.DeadlineExceeded {
+        e.logger.Debug(fmt.Sprintf("Command %s timeout reached", command))
+        return ctx.Err()
+    }
+
+    // If there's no context error, we know the command completed (or errored).
+    e.logger.Debug(fmt.Sprintf("Output from command:", string(out)))
+    if err != nil {
+        e.logger.Debug(fmt.Sprintf("Non-zero exit code:", err))
+    }
+
+    return string(out), err
 }
 
 func (e *executor) Stat(path string) (os.FileInfo, error) {
