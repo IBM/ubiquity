@@ -75,7 +75,7 @@ func (e *executor) Execute(command string, args []string) ([]byte, error) {
 func (e *executor) ExecuteWithTimeout(mSeconds int ,command string, args []string) ([]byte, error) {
 
     // Create a new context and add a timeout to it
-    ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+    ctx, cancel := context.WithTimeout(context.Background(), time.Duration(mSeconds)*time.Millisecond)
     defer cancel() // The cancel should be deferred so resources are cleaned up
 
     // Create the command with our context
@@ -89,7 +89,7 @@ func (e *executor) ExecuteWithTimeout(mSeconds int ,command string, args []strin
     // happens when a process is killed.
     if ctx.Err() == context.DeadlineExceeded {
         e.logger.Debug(fmt.Sprintf("Command %s timeout reached", command))
-        return ctx.Err()
+        return nil, ctx.Err()
     }
 
     // If there's no context error, we know the command completed (or errored).
@@ -98,7 +98,7 @@ func (e *executor) ExecuteWithTimeout(mSeconds int ,command string, args []strin
         e.logger.Debug(fmt.Sprintf("Non-zero exit code:", err))
     }
 
-    return string(out), err
+    return out, err
 }
 
 func (e *executor) Stat(path string) (os.FileInfo, error) {
