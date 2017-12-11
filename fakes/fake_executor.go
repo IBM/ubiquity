@@ -14,7 +14,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package fakes
 
 import (
@@ -142,6 +141,21 @@ type FakeExecutor struct {
 	}
 	evalSymlinksReturnsOnCall map[int]struct {
 		result1 string
+		result2 error
+	}
+	ExecuteWithTimeoutStub        func(mSeconds int, command string, args []string) ([]byte, error)
+	executeWithTimeoutMutex       sync.RWMutex
+	executeWithTimeoutArgsForCall []struct {
+		mSeconds int
+		command  string
+		args     []string
+	}
+	executeWithTimeoutReturns struct {
+		result1 []byte
+		result2 error
+	}
+	executeWithTimeoutReturnsOnCall map[int]struct {
+		result1 []byte
 		result2 error
 	}
 	invocations      map[string][][]interface{}
@@ -640,6 +654,64 @@ func (fake *FakeExecutor) EvalSymlinksReturnsOnCall(i int, result1 string, resul
 	}{result1, result2}
 }
 
+func (fake *FakeExecutor) ExecuteWithTimeout(mSeconds int, command string, args []string) ([]byte, error) {
+	var argsCopy []string
+	if args != nil {
+		argsCopy = make([]string, len(args))
+		copy(argsCopy, args)
+	}
+	fake.executeWithTimeoutMutex.Lock()
+	ret, specificReturn := fake.executeWithTimeoutReturnsOnCall[len(fake.executeWithTimeoutArgsForCall)]
+	fake.executeWithTimeoutArgsForCall = append(fake.executeWithTimeoutArgsForCall, struct {
+		mSeconds int
+		command  string
+		args     []string
+	}{mSeconds, command, argsCopy})
+	fake.recordInvocation("ExecuteWithTimeout", []interface{}{mSeconds, command, argsCopy})
+	fake.executeWithTimeoutMutex.Unlock()
+	if fake.ExecuteWithTimeoutStub != nil {
+		return fake.ExecuteWithTimeoutStub(mSeconds, command, args)
+	}
+	if specificReturn {
+		return ret.result1, ret.result2
+	}
+	return fake.executeWithTimeoutReturns.result1, fake.executeWithTimeoutReturns.result2
+}
+
+func (fake *FakeExecutor) ExecuteWithTimeoutCallCount() int {
+	fake.executeWithTimeoutMutex.RLock()
+	defer fake.executeWithTimeoutMutex.RUnlock()
+	return len(fake.executeWithTimeoutArgsForCall)
+}
+
+func (fake *FakeExecutor) ExecuteWithTimeoutArgsForCall(i int) (int, string, []string) {
+	fake.executeWithTimeoutMutex.RLock()
+	defer fake.executeWithTimeoutMutex.RUnlock()
+	return fake.executeWithTimeoutArgsForCall[i].mSeconds, fake.executeWithTimeoutArgsForCall[i].command, fake.executeWithTimeoutArgsForCall[i].args
+}
+
+func (fake *FakeExecutor) ExecuteWithTimeoutReturns(result1 []byte, result2 error) {
+	fake.ExecuteWithTimeoutStub = nil
+	fake.executeWithTimeoutReturns = struct {
+		result1 []byte
+		result2 error
+	}{result1, result2}
+}
+
+func (fake *FakeExecutor) ExecuteWithTimeoutReturnsOnCall(i int, result1 []byte, result2 error) {
+	fake.ExecuteWithTimeoutStub = nil
+	if fake.executeWithTimeoutReturnsOnCall == nil {
+		fake.executeWithTimeoutReturnsOnCall = make(map[int]struct {
+			result1 []byte
+			result2 error
+		})
+	}
+	fake.executeWithTimeoutReturnsOnCall[i] = struct {
+		result1 []byte
+		result2 error
+	}{result1, result2}
+}
+
 func (fake *FakeExecutor) Invocations() map[string][][]interface{} {
 	fake.invocationsMutex.RLock()
 	defer fake.invocationsMutex.RUnlock()
@@ -663,6 +735,8 @@ func (fake *FakeExecutor) Invocations() map[string][][]interface{} {
 	defer fake.isNotExistMutex.RUnlock()
 	fake.evalSymlinksMutex.RLock()
 	defer fake.evalSymlinksMutex.RUnlock()
+	fake.executeWithTimeoutMutex.RLock()
+	defer fake.executeWithTimeoutMutex.RUnlock()
 	copiedInvocations := map[string][][]interface{}{}
 	for key, value := range fake.invocations {
 		copiedInvocations[key] = value

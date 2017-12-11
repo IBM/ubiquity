@@ -164,7 +164,9 @@ func (b *blockDeviceUtils) GetWwnByScsiInq(dev string) (string, error) {
 	}
 
 	args := []string{"-p",  "0x83", dev}
-	outputBytes, err := b.exec.Execute(sgInqCmd, args)
+	// add timeout in case the call never comes back.
+	b.logger.Debug(fmt.Sprintf("Calling [%s] with timeout",sgInqCmd ))
+	outputBytes, err := b.exec.ExecuteWithTimeout(3000, sgInqCmd, args)
 	if err != nil {
 		return "", b.logger.ErrorRet(&commandExecuteError{sgInqCmd, err}, "failed")
 	}
