@@ -187,11 +187,12 @@ func (b *blockDeviceUtils) GetWwnByScsiInq(dev string) (string, error) {
 		line := scanner.Text()
 		if found {
 			matches := wwnRegexCompiled.FindStringSubmatch(line)
-			b.logger.Debug(fmt.Sprintf("%#v", matches))
 			if len(matches) != 2 {
+				b.logger.Debug(fmt.Sprintf("wrong line, too many matches in sg_inq output : %#v", matches))
 				return "", b.logger.ErrorRet(&noRegexWwnMatchInScsiInqError{ dev, line }, "failed")
 			}
 			wwn = matches[1]
+			b.logger.Debug(fmt.Sprintf("Found the expected Wwn [%s] in sg_inq.", wwn))
 			return wwn, nil
 		}
 		if regex.MatchString(line) {
