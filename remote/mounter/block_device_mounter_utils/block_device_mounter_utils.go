@@ -94,7 +94,7 @@ func (b *blockDeviceMounterUtils) UnmountDeviceFlow(devicePath string) error {
 			break
 		}
 		b.logger.Debug("mpathFlock.TryLock failed", logs.Args{{"error", err}})
-		time.Sleep(time.Duration(100*time.Millisecond))
+		time.Sleep(time.Duration(500*time.Millisecond))
 	}
 	b.logger.Debug("Got mpathLock for device", logs.Args{{"device", devicePath}})
 	defer b.mpathFlock.Unlock()
@@ -123,20 +123,24 @@ func (b *blockDeviceMounterUtils) RescanAll(withISCSI bool, wwn string, rescanFo
 		if err == nil {
 			break
 		}
-		b.logger.Debug("mpathFlock.TryLock failed", logs.Args{{"error", err}})
-		time.Sleep(time.Duration(100*time.Millisecond))
+		b.logger.Debug("rescanLock.TryLock failed", logs.Args{{"error", err}})
+		time.Sleep(time.Duration(500*time.Millisecond))
 	}
 	b.logger.Debug("Got rescanLock for volumeWWN", logs.Args{{"volumeWWN", wwn}})
 	defer b.rescanFlock.Unlock()
 	defer b.logger.Debug("Released rescanLock for volumeWWN", logs.Args{{"volumeWWN", wwn}})
 
-	device, _ := b.Discover(wwn)
-	if !rescanForCleanUp && (device != "") {
-		// if need rescan for discover new device but the new device is already exist then skip the rescan
-		b.logger.Debug(
-			"Skip rescan, because there is already multiple device for volumeWWN",
-			logs.Args{{"volumeWWN", wwn}, {"multiple", device}})
-		return nil
+	if !rescanForCleanUp {
+		// Only when run rescan for new device, try to check if its already exist to reduce rescans
+		device, _ := b.Discover(wwn)
+
+		if (device != "") {
+			// if need rescan for discover new device but the new device is already exist then skip the rescan
+			b.logger.Debug(
+				"Skip rescan, because there is already multiple device for volumeWWN",
+				logs.Args{{"volumeWWN", wwn}, {"multiple", device}})
+			return nil
+		}
 	}
 	// TODO : if rescanForCleanUp we need to check if block device is not longer exist and if so skip the rescan!
 
