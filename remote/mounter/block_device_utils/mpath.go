@@ -65,7 +65,7 @@ func (b *blockDeviceUtils) Discover(volumeWwn string) (string, error) {
 	}
 
 	if dev == "" {
-		b.logger.Debug(fmt.Sprintf("using sg_inq to find wwn %s, since we did not find it using multipath -ll ", volumeWwn))
+		b.logger.Error(fmt.Sprintf("using sg_inq to find wwn %s, since we did not find it using multipath -ll ", volumeWwn))
 		dev, err = b.DiscoverBySgInq(string(outputBytes[:]), volumeWwn)
 		if err != nil {
 			b.logger.Error(fmt.Sprintf("wwn %s was not found using sg_inq on all mpath devices", volumeWwn))
