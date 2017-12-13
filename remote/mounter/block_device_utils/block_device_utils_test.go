@@ -216,7 +216,7 @@ var _ = Describe("block_device_utils_test", func() {
 							- 34:0:0:1 sdc 8:32 active ready running`
 			volWwn := "0x6001738cfc9035eb0000000000cea5f6"
 			expectedWwn := strings.TrimPrefix(volWwn, "0x")
-			inq_result := fmt.Sprintf(`VPD INQUIRY: Device Identification page
+			inqResult := fmt.Sprintf(`VPD INQUIRY: Device Identification page
 							Designation descriptor number 1, descriptor length: 20
 							designator_type: NAA,  code_set: Binary
 							associated with the addressed logical unit
@@ -224,12 +224,48 @@ var _ = Describe("block_device_utils_test", func() {
 							Vendor Specific Identifier: 0xcfc9035eb
 							Vendor Specific Identifier Extension: 0xcea5f6
 							[%s]`, volWwn)
-			fakeExec.ExecuteWithTimeoutReturns([]byte(fmt.Sprintf("%s", inq_result)), nil)
+			fakeExec.ExecuteWithTimeoutReturns([]byte(fmt.Sprintf("%s", inqResult)), nil)
 			dev, err := bdUtils.DiscoverBySgInq(mpathOutput, expectedWwn)
 			Expect(dev).To(Equal("mpathhe"))
 			Expect(err).ToNot(HaveOccurred())
 			Expect(fakeExec.ExecuteWithTimeoutCallCount()).To(Equal(1))
 			_, cmd, _ := fakeExec.ExecuteWithTimeoutArgsForCall(0)
+			Expect(cmd).To(Equal("sg_inq"))
+		})
+		It("should return the 3rd mpath device mpathhg", func() {
+			mpathOutput := `mpathhe (36001738cfc9035eb0000000000cerwr) dm-3 IBM     ,2810XIV
+							size=19G features='1 queue_if_no_path' hwhandler='0' wp=rw
+							-+- policy='service-time 0' prio=1 status=active
+							|- 32:0:0:1 sdb 8:16 fault faulty running
+							- 31:0:0:1 sdc 8:32 fault faulty running
+mpathhf (36001738cfc9035eb0000000000crwrfw24) dm-3 IBM     ,2810XIV
+							size=19G features='1 queue_if_no_path' hwhandler='0' wp=rw
+							-+- policy='service-time 0' prio=1 status=active
+							|- 33:0:0:1 sdb 8:16 fault faulty running
+							- 34:0:0:1 sdc 8:32 fault faulty running
+mpathhg (36001738cfc9035eb0000000000cea5f6) dm-3 IBM     ,2810XIV
+							size=19G features='1 queue_if_no_path' hwhandler='0' wp=rw
+							-+- policy='service-time 0' prio=1 status=active
+							|- 33:0:0:1 sdb 8:16 active ready running
+							- 34:0:0:1 sdc 8:32 active ready running`
+			volWwn := "0x6001738cfc9035eb0000000000cea5f6"
+			expectedWwn := strings.TrimPrefix(volWwn, "0x")
+			inqResult := fmt.Sprintf(`VPD INQUIRY: Device Identification page
+							Designation descriptor number 1, descriptor length: 20
+							designator_type: NAA,  code_set: Binary
+							associated with the addressed logical unit
+							NAA 6, IEEE Company_id: 0x1738
+							Vendor Specific Identifier: 0xcfc9035eb
+							Vendor Specific Identifier Extension: 0xcea5f6
+							[%s]`, volWwn)
+			fakeExec.ExecuteWithTimeoutReturnsOnCall(0 ,nil , cmdErr)
+			fakeExec.ExecuteWithTimeoutReturnsOnCall(1 ,nil , cmdErr)
+			fakeExec.ExecuteWithTimeoutReturnsOnCall(2 ,[]byte(fmt.Sprintf("%s", inqResult)) , nil)
+			dev, err := bdUtils.DiscoverBySgInq(mpathOutput, expectedWwn)
+			Expect(dev).To(Equal("mpathhg"))
+			Expect(err).ToNot(HaveOccurred())
+			Expect(fakeExec.ExecuteWithTimeoutCallCount()).To(Equal(3))
+			_, cmd, _ := fakeExec.ExecuteWithTimeoutArgsForCall(2)
 			Expect(cmd).To(Equal("sg_inq"))
 		})
 		It("should return wwn command fails", func() {

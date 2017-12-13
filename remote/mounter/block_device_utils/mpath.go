@@ -113,7 +113,9 @@ func (b *blockDeviceUtils) DiscoverBySgInq(mpathOutput string, volumeWwn string)
 			mpathFullPath := b.mpathDevFullPath(dev)
 			wwn, err := b.GetWwnByScsiInq(mpathFullPath)
 			if err != nil {
-				return "", b.logger.ErrorRet(&volumeNotFoundError{volumeWwn}, "failed")
+				// we ignore errors and keep trying other devices.
+				b.logger.Debug(fmt.Sprintf("sg_inq comand faild on %s" ,err))
+				continue
 			}
 			if strings.ToLower(wwn) == strings.ToLower(volumeWwn){
 				return dev, nil
