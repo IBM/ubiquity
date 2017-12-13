@@ -65,13 +65,13 @@ func (b *blockDeviceUtils) Discover(volumeWwn string) (string, error) {
 	}
 
 	if dev == "" {
-		b.logger.Error(fmt.Sprintf("using sg_inq to find wwn %s, since we did not find it using multipath -ll ", volumeWwn))
+		b.logger.Debug(fmt.Sprintf("mpath device for WWN [%s] was NOT found in multipath -ll. Doing advance search with sg_inq on all mpath devices in multipath -ll", volumeWwn))
 		dev, err = b.DiscoverBySgInq(string(outputBytes[:]), volumeWwn)
 		if err != nil {
-			b.logger.Error(fmt.Sprintf("wwn %s was not found using sg_inq on all mpath devices", volumeWwn))
+			b.logger.Debug(fmt.Sprintf("mpath device was NOT found for WWN [%s] even after sg_inq on all mpath devices.", volumeWwn))
 			return "", b.logger.ErrorRet(&volumeNotFoundError{volumeWwn}, "failed")
 		} else {
-			b.logger.Info(fmt.Sprintf("WWN %s was found using sg_inq, the device is %s.", volumeWwn, dev))
+			b.logger.Info(fmt.Sprintf("Warning: device [%s] found for WWN [%s] after running sg_inq on all mpath devices although it was not found in multipath -ll. (Note: Could indicate multipathing issue).", dev, volumeWwn))
 		}
 	}
 	mpath := b.mpathDevFullPath(dev)
@@ -81,6 +81,7 @@ func (b *blockDeviceUtils) Discover(volumeWwn string) (string, error) {
 		return "", b.logger.ErrorRet(&commandExecuteError{"sg_inq", err}, "failed")
 	}
 	if strings.ToLower(SqInqWwn) != strings.ToLower(volumeWwn){
+		// To make sure we found the right WWN, if not raise error instead of using wrong mpath
 		return "", b.logger.ErrorRet(&wrongDeviceFoundError{mpath, volumeWwn, SqInqWwn}, "failed")
 	}
 	if _, err = b.exec.Stat(mpath); err != nil {
