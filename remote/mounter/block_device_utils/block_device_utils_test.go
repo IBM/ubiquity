@@ -130,7 +130,7 @@ var _ = Describe("block_device_utils_test", func() {
 			fakeExec.ExecuteReturnsOnCall(0, []byte(fmt.Sprintf("%s (%s) dm-1", result, volumeId)),
 				nil)
 			fakeExec.ExecuteWithTimeoutReturns([]byte(fmt.Sprintf("%s", inq_result)), nil) // for getWwnByScsiInq
-			mpath, err := bdUtils.Discover(strings.TrimPrefix(volumeId, "0x"))
+			mpath, err := bdUtils.Discover(strings.TrimPrefix(volumeId, "0x"), true)
 			Expect(err).ToNot(HaveOccurred())
 			Expect(mpath).To(Equal("/dev/mapper/" + result))
 			Expect(fakeExec.ExecuteCallCount()).To(Equal(1))
@@ -145,33 +145,17 @@ var _ = Describe("block_device_utils_test", func() {
 		It("Discover fails if multipath command is missing", func() {
 			volumeId := "volume-id"
 			fakeExec.IsExecutableReturns(cmdErr)
-			_, err := bdUtils.Discover(volumeId)
+			_, err := bdUtils.Discover(volumeId, true)
+			Expect(err).To(HaveOccurred())
+			Expect(err.Error()).To(MatchRegexp(cmdErr.Error()))
+			_, err = bdUtils.Discover(volumeId, false)
 			Expect(err).To(HaveOccurred())
 			Expect(err.Error()).To(MatchRegexp(cmdErr.Error()))
 		})
 		It("Discover fails if multipath -ll command fails", func() {
 			volumeId := "volume-id"
 			fakeExec.ExecuteReturns([]byte{}, cmdErr)
-			_, err := bdUtils.Discover(volumeId)
-			Expect(err).To(HaveOccurred())
-			Expect(err.Error()).To(MatchRegexp(cmdErr.Error()))
-		})
-		It("Discover fails if stat fails", func() {
-			volumeId := "0x6001738cfc9035eb0000000000cea5f6"
-			result := "mpath"
-			inq_result := fmt.Sprintf(`VPD INQUIRY: Device Identification page
-							Designation descriptor number 1, descriptor length: 20
-							designator_type: NAA,  code_set: Binary
-							associated with the addressed logical unit
-							NAA 6, IEEE Company_id: 0x1738
-							Vendor Specific Identifier: 0xcfc9035eb
-							Vendor Specific Identifier Extension: 0xcea5f6
-							[%s]`, volumeId)
-			fakeExec.ExecuteReturnsOnCall(0, []byte(fmt.Sprintf("%s (%s) dm-1", result, volumeId)),
-				nil)
-			fakeExec.ExecuteWithTimeoutReturns([]byte(fmt.Sprintf("%s", inq_result)), nil) // for getWwnByScsiInq
-			fakeExec.StatReturns(nil, cmdErr)
-			_, err := bdUtils.Discover(strings.TrimPrefix(volumeId, "0x"))
+			_, err := bdUtils.Discover(volumeId, true)
 			Expect(err).To(HaveOccurred())
 			Expect(err.Error()).To(MatchRegexp(cmdErr.Error()))
 		})
@@ -190,7 +174,7 @@ var _ = Describe("block_device_utils_test", func() {
 			fakeExec.ExecuteReturnsOnCall(0, []byte(fmt.Sprintf("%s (%s) dm-1", result, volumeId)),
 				nil)
 			fakeExec.ExecuteWithTimeoutReturns([]byte(fmt.Sprintf("%s", inq_result)), nil) // for getWwnByScsiInq
-			_, err := bdUtils.Discover(strings.TrimPrefix(volumeId, "0x"))
+			_, err := bdUtils.Discover(strings.TrimPrefix(volumeId, "0x"), true)
 			Expect(err).To(HaveOccurred())
 			cmd, args := fakeExec.ExecuteArgsForCall(0)
 			Expect(cmd).To(Equal("multipath"))
@@ -203,7 +187,7 @@ var _ = Describe("block_device_utils_test", func() {
 			volumeId := "volume-id"
 			fakeExec.ExecuteReturns([]byte(fmt.Sprintf(
 				"mpath (other-volume-1) dm-1\nmpath (other-volume-2) dm-2")), nil)
-			_, err := bdUtils.Discover(volumeId)
+			_, err := bdUtils.Discover(volumeId, true)
 			Expect(err).To(HaveOccurred())
 		})
 	})
