@@ -106,7 +106,9 @@ func (b *blockDeviceUtils) DiscoverBySgInq(mpathOutput string, volumeWwn string)
 	defer b.logger.Trace(logs.DEBUG)()
 
 	scanner := bufio.NewScanner(strings.NewReader(mpathOutput))
-	pattern := "(?i)" + `\s+dm-[0-9]+\s+`
+	// regex to find all dm-X line from IBM vendor.
+	// Note: searching "IBM" in the line also focus the search on IBM devices only and also eliminate the need to run sg_inq on faulty devices.
+	pattern := "(?i)" + `\s+dm-[0-9]+\s+IBM`
 	regex, err := regexp.Compile(pattern)
 	if err != nil {
 		return "", b.logger.ErrorRet(err, "failed")
@@ -132,7 +134,7 @@ func (b *blockDeviceUtils) DiscoverBySgInq(mpathOutput string, volumeWwn string)
 }
 
 func (b *blockDeviceUtils) GetWwnByScsiInq(dev string) (string, error) {
-	defer b.logger.Trace(logs.DEBUG)()
+	defer b.logger.Trace(logs.DEBUG, logs.Args{{"dev", dev}})()
 	/* scsi inq example
 	$> sg_inq -p 0x83 /dev/mapper/mpathhe
 		VPD INQUIRY: Device Identification page

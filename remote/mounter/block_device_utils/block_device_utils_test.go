@@ -216,6 +216,32 @@ var _ = Describe("block_device_utils_test", func() {
 			_, cmd, _ := fakeExec.ExecuteWithTimeoutArgsForCall(0)
 			Expect(cmd).To(Equal("sg_inq"))
 		})
+		It("should not sg_inq none IBM devices like vendor AAA or faulty device ##", func() {
+			volWwn := "6001738cfc9035eb0000000000cea5f6"
+			deviceName := "mpathhe"
+			mpathOutput := fmt.Sprintf(`
+mpathha (36001738cfc9035eb0000000000ceaaaa) dm-3 AAA,BBB
+mpathhb (36001738cfc9035eb0000000000cea###) dm-3 ##,##
+%s (3%s) dm-3 IBM     ,2810XIV`, deviceName, volWwn)
+
+			volWwnHexa := "0x" + volWwn
+			inq_result := fmt.Sprintf(`VPD INQUIRY: Device Identification page
+							Designation descriptor number 1, descriptor length: 20
+							designator_type: NAA,  code_set: Binary
+							associated with the addressed logical unit
+							NAA 6, IEEE Company_id: 0x1738
+							Vendor Specific Identifier: 0xcfc9035eb
+							Vendor Specific Identifier Extension: 0xcea5f6
+							[%s]`, volWwnHexa)
+			fakeExec.ExecuteWithTimeoutReturns([]byte(fmt.Sprintf("%s", inq_result)), nil)
+			dev, err := bdUtils.DiscoverBySgInq(mpathOutput, volWwn)
+			Expect(dev).To(Equal(deviceName))
+			Expect(err).ToNot(HaveOccurred())
+			Expect(fakeExec.ExecuteWithTimeoutCallCount()).To(Equal(1)) // only 1 sg_inq on the right one, means it skip the AAA and ## devces as expected.
+			_, cmd, _ := fakeExec.ExecuteWithTimeoutArgsForCall(0)
+			Expect(cmd).To(Equal("sg_inq"))
+		})
+
 		It("should return wwn command fails", func() {
 			mpathOutput := `mpathhe (36001738cfc9035eb0000000000cea5f6) dm-3 IBM     ,2810XIV
 							size=19G features='1 queue_if_no_path' hwhandler='0' wp=rw
