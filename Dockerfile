@@ -10,6 +10,8 @@ FROM alpine:latest
 RUN apk --no-cache add ca-certificates=20161130-r2 openssl=1.0.2k-r0
 WORKDIR /root/
 COPY --from=0 /go/src/github.com/IBM/ubiquity/ubiquity .
+COPY --from=0 /go/src/github.com/IBM/ubiquity/LICENSE .
+COPY --from=0 /go/src/github.com/IBM/ubiquity/scripts/notices_file_for_ibm_storage_enabler_for_containers ./NOTICES
 
 COPY docker-entrypoint.sh .
 RUN chmod 755 docker-entrypoint.sh
