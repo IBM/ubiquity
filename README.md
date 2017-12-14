@@ -26,7 +26,11 @@ Ubiquity supports the Kubernetes and Docker frameworks, using the following plug
 
 ![Ubiquity Overview](images/UbiquityOverview.jpg)
 
-*  Kubernetes Dynamic Provisioner runs on a single Kubernetes node
+*  Ubiquity Kubernetes Dynamic Provisioner(ubiquity-k8s-provisioner) runs as a k8s Deployment with replica=1.
+*  Ubiquity Kubernetes FlexVolume(ubiquity-k8s-flex) runs as Daemonset on all the worker and master nodes.
+*  Ubiquity (ubiquity) runs as a k8s Deployment with replica=1.
+*  Ubiquity DB (ubiquity-db) runs as a k8s Deployment with replica=1.
+
 
 ## Contribution
 To contribute, follow the guidelines in [Contribution guide](contribution-guide.md)
