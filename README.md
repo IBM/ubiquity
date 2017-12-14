@@ -24,8 +24,8 @@ Ubiquity supports the Kubernetes and Docker frameworks, using the following plug
 
 2. [IBM Spectrum Scale](ibm-spectrum-scale.md).
 
-## Architecture draft
-![Ubiquity Overview](images/UbiquityOverview.jpg)
+## Overveiw draft
+![Ubiquity Overview](images/ubiquity_architecture_draft_for_github.jpg)
 
 Ubiquity deployment method on Kubernetes:
    *   Ubiquity Kubernetes Dynamic Provisioner(ubiquity-k8s-provisioner) runs as a k8s Deployment with replica=1.
