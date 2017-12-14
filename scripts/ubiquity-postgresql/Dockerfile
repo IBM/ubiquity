@@ -9,6 +9,8 @@ RUN PGSSL_PUBLIC="`dirname $UBIQUITY_DB_CERT_PUBLIC`" && mkdir -p "$PGSSL_PUBLIC
 ADD docker-entrypoint-initdb.d /docker-entrypoint-initdb.d/
 
 COPY ubiquity-docker-entrypoint.sh /usr/local/bin/
+COPY LICENSE .
+COPY notices_file_for_ibm_storage_enabler_for_containers_db ./NOTICES
 RUN ln -s usr/local/bin/ubiquity-docker-entrypoint.sh / # backwards compat
 
 ENTRYPOINT ["ubiquity-docker-entrypoint.sh"]
