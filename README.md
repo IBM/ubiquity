@@ -22,7 +22,8 @@ Ubiquity supports the Kubernetes and Docker frameworks, using the following plug
 
      You can download the installation package and documentation from the [IBM Fix Central](https://www-945.ibm.com/support/fixcentral/swg/selectFixes?parent=Software%2Bdefined%2Bstorage&product=ibm/StorageSoftware/IBM+Spectrum+Control&release=All&platform=Linux&function=all).  In the IBM Spectrum Control Base Edition (SCBE) user guide and release notes, Ubiquity is referred to as IBM Storage Enabler for Containers. See the relevant sections in the SCBE user guide
 
-2. [IBM Spectrum Scale](ibm-spectrum-scale.md).
+2. [IBM Spectrum Scale](ibm-spectrum-scale.md) - But only for testing purposes. Only the IBM block storage is officially supported.
+    
 
 ## Overveiw draft
 ![Ubiquity Overview](images/ubiquity_architecture_draft_for_github.jpg)
