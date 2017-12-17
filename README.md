@@ -17,7 +17,7 @@ Ubiquity supports the Kubernetes and Docker frameworks, using the following plug
 Currently, the following storage systems use Ubiquity:
 * IBM block storage.
 
-   The IBM block storage is supported via IBM Spectrum Control Base Edition (SCBE), version 3.3.0 and later. Ubiquity communicates with the IBM storage systems through SCBE. SCBE creates a storage profile (for example, gold, silver or bronze) and makes it available for Kubernetes. For details about supported storage systems, refer to the latest SCBE release notes.
+   The IBM block storage is supported for Kubernetes via IBM Spectrum Control Base Edition (SCBE) version 3.3.0 and later. Ubiquity communicates with the IBM storage systems through SCBE. SCBE creates a storage profile (for example, gold, silver or bronze) and makes it available for Kubernetes. For details about supported storage systems, refer to the latest SCBE release notes.
    
    The IBM official solution for Kubernetes, based on the Ubiquity project, is referred to as IBM Storage Enabler for Containers. You can download the installation package and its documentation from [IBM Fix Central](https://www-945.ibm.com/support/fixcentral/swg/selectFixes?parent=Software%2Bdefined%2Bstorage&product=ibm/StorageSoftware/IBM+Spectrum+Control&release=All&platform=Linux&function=all). For details on the IBM Storage Enabler for Containers, see the relevant sections in the SCBE user guide.   
 
