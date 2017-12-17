@@ -40,8 +40,9 @@ func (b *blockDeviceUtils) ReloadMultipath() error {
 	return nil
 }
 
-func (b *blockDeviceUtils) Discover(volumeWwn string) (string, error) {
-	defer b.logger.Trace(logs.DEBUG)()
+
+func (b *blockDeviceUtils) Discover(volumeWwn string, deepDiscovery bool) (string, error) {
+	defer b.logger.Trace(logs.DEBUG, logs.Args{{"volumeWwn", volumeWwn}, {"deepDiscovery", deepDiscovery}})()
 	if err := b.exec.IsExecutable(multipathCmd); err != nil {
 		return "", b.logger.ErrorRet(&commandNotFoundError{multipathCmd, err}, "failed")
 	}
@@ -63,8 +64,12 @@ func (b *blockDeviceUtils) Discover(volumeWwn string) (string, error) {
 			break
 		}
 	}
-
+	mpath := ""
 	if dev == "" {
+		if !deepDiscovery{
+			b.logger.Debug(fmt.Sprintf("mpath device was NOT found for WWN [%s] in multipath -ll. (sg_inq deep discovery not requested)", volumeWwn))
+			return "", b.logger.ErrorRet(&volumeNotFoundError{volumeWwn}, "failed")
+		}
 		b.logger.Debug(fmt.Sprintf("mpath device for WWN [%s] was NOT found in multipath -ll. Doing advance search with sg_inq on all mpath devices in multipath -ll", volumeWwn))
 		dev, err = b.DiscoverBySgInq(string(outputBytes[:]), volumeWwn)
 		if err != nil {
@@ -72,21 +77,23 @@ func (b *blockDeviceUtils) Discover(volumeWwn string) (string, error) {
 			return "", b.logger.ErrorRet(&volumeNotFoundError{volumeWwn}, "failed")
 		} else {
 			b.logger.Info(fmt.Sprintf("Warning: device [%s] found for WWN [%s] after running sg_inq on all mpath devices although it was not found in multipath -ll. (Note: Could indicate multipathing issue).", dev, volumeWwn))
+			mpath = b.mpathDevFullPath(dev)
+		}
+	} else {
+		mpath = b.mpathDevFullPath(dev)
+
+		// Validate that we have the correct wwn.
+		SqInqWwn, err := b.GetWwnByScsiInq(mpath)
+		if err != nil {
+			return "", b.logger.ErrorRet(&commandExecuteError{"sg_inq", err}, "failed")
+		}
+
+		if strings.ToLower(SqInqWwn) != strings.ToLower(volumeWwn){
+			// To make sure we found the right WWN, if not raise error instead of using wrong mpath
+			return "", b.logger.ErrorRet(&wrongDeviceFoundError{mpath, volumeWwn, SqInqWwn}, "failed")
 		}
 	}
-	mpath := b.mpathDevFullPath(dev)
-	// Validate that we have the correct wwn.
-	SqInqWwn, err := b.GetWwnByScsiInq(mpath)
-	if err != nil {
-		return "", b.logger.ErrorRet(&commandExecuteError{"sg_inq", err}, "failed")
-	}
-	if strings.ToLower(SqInqWwn) != strings.ToLower(volumeWwn){
-		// To make sure we found the right WWN, if not raise error instead of using wrong mpath
-		return "", b.logger.ErrorRet(&wrongDeviceFoundError{mpath, volumeWwn, SqInqWwn}, "failed")
-	}
-	if _, err = b.exec.Stat(mpath); err != nil {
-		return "", b.logger.ErrorRet(err, "Stat failed")
-	}
+
 	b.logger.Info("discovered", logs.Args{{"volumeWwn", volumeWwn}, {"mpath", mpath}})
 	return mpath, nil
 }
@@ -99,7 +106,9 @@ func (b *blockDeviceUtils) DiscoverBySgInq(mpathOutput string, volumeWwn string)
 	defer b.logger.Trace(logs.DEBUG)()
 
 	scanner := bufio.NewScanner(strings.NewReader(mpathOutput))
-	pattern := "(?i)" + `\s+dm-[0-9]+\s+`
+	// regex to find all dm-X line from IBM vendor.
+	// Note: searching "IBM" in the line also focus the search on IBM devices only and also eliminate the need to run sg_inq on faulty devices.
+	pattern := "(?i)" + `\s+dm-[0-9]+\s+IBM`
 	regex, err := regexp.Compile(pattern)
 	if err != nil {
 		return "", b.logger.ErrorRet(err, "failed")
@@ -125,7 +134,7 @@ func (b *blockDeviceUtils) DiscoverBySgInq(mpathOutput string, volumeWwn string)
 }
 
 func (b *blockDeviceUtils) GetWwnByScsiInq(dev string) (string, error) {
-	defer b.logger.Trace(logs.DEBUG)()
+	defer b.logger.Trace(logs.DEBUG, logs.Args{{"dev", dev}})()
 	/* scsi inq example
 	$> sg_inq -p 0x83 /dev/mapper/mpathhe
 		VPD INQUIRY: Device Identification page

@@ -132,7 +132,7 @@ func (b *blockDeviceMounterUtils) RescanAll(withISCSI bool, wwn string, rescanFo
 
 	if !rescanForCleanUp {
 		// Only when run rescan for new device, try to check if its already exist to reduce rescans
-		device, _ := b.Discover(wwn)
+		device, _ := b.Discover(wwn, false) // no deep discovery
 
 		if (device != "") {
 			// if need rescan for discover new device but the new device is already exist then skip the rescan
@@ -161,6 +161,6 @@ func (b *blockDeviceMounterUtils) RescanAll(withISCSI bool, wwn string, rescanFo
 	return nil
 }
 
-func (b *blockDeviceMounterUtils) Discover(volumeWwn string) (string, error) {
-	return b.blockDeviceUtils.Discover(volumeWwn)
+func (b *blockDeviceMounterUtils) Discover(volumeWwn string, deepDiscovery bool) (string, error) {
+	return b.blockDeviceUtils.Discover(volumeWwn, deepDiscovery)
 }
