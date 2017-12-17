@@ -11,7 +11,7 @@
 * [Volume Creation Options](#supported-volume-creation-options)
 * [Spectrum Scale Accessibility](#ubiquity-service-access-to-ibm-spectrum-scale-cli)
 
-**Note : Ubiquity with IBM Spectrum Scale is currently only for testing purposes. Only Ubiquity with IBM block storage is officially supported as mentioned in the [README](README.md).**
+**Note : Ubiquity with IBM Spectrum Scale is intended for testing purposes only. However, Ubiquity with IBM block storage is currently supported as detailed in the [README](README.md).**
 
 
 
