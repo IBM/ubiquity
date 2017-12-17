@@ -24,7 +24,8 @@ Currently, the following storage systems use Ubiquity:
 * IBM Spectrum Scale, for testing only.
     
 
-Ubiquity diagram
+**Solution overview**
+
 ![Ubiquity Overview](images/ubiquity_architecture_draft_for_github.jpg)
 
 Ubiquity Kubernetes deployment:
