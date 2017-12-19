@@ -51,7 +51,7 @@ func (s *scbeMounter) Mount(mountRequest resources.MountRequest) (string, error)
 	}
 
 	// Discover device
-	devicePath, err := s.blockDeviceMounterUtils.Discover(volumeWWN)
+	devicePath, err := s.blockDeviceMounterUtils.Discover(volumeWWN, true)
 	if err != nil {
 		return "", s.logger.ErrorRet(err, "Discover failed", logs.Args{{"volumeWWN", volumeWWN}})
 	}
@@ -86,7 +86,7 @@ func (s *scbeMounter) Unmount(unmountRequest resources.UnmountRequest) error {
 
 	volumeWWN := unmountRequest.VolumeConfig["Wwn"].(string)
 	mountpoint := fmt.Sprintf(resources.PathToMountUbiquityBlockDevices, volumeWWN)
-	devicePath, err := s.blockDeviceMounterUtils.Discover(volumeWWN)
+	devicePath, err := s.blockDeviceMounterUtils.Discover(volumeWWN, true)
 	if err != nil {
 		return s.logger.ErrorRet(err, "Discover failed", logs.Args{{"volumeWWN", volumeWWN}})
 	}
@@ -113,7 +113,7 @@ func (s *scbeMounter) ActionAfterDetach(request resources.AfterDetachRequest) er
 	volumeWWN := request.VolumeConfig["Wwn"].(string)
 
 	// Rescan OS
-	if err := s.blockDeviceMounterUtils.RescanAll(true, volumeWWN, true); err != nil {
+	if err := s.blockDeviceMounterUtils.RescanAll(!s.config.SkipRescanISCSI, volumeWWN, true); err != nil {
 		return s.logger.ErrorRet(err, "RescanAll failed")
 	}
 	return nil

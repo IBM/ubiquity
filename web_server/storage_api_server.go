@@ -18,22 +18,29 @@ package web_server
 
 import (
 	"fmt"
-	"log"
 	"net/http"
 
 	"github.com/IBM/ubiquity/resources"
 
+	"github.com/IBM/ubiquity/utils"
+	"github.com/IBM/ubiquity/utils/logs"
 	"github.com/gorilla/mux"
-	"github.com/jinzhu/gorm"
+	"os"
+	"strings"
 )
+
+const keyUseSsl = "UBIQUITY_SERVER_USE_SSL"
+const keyCertPublic = "UBIQUITY_SERVER_CERT_PUBLIC"
+const keyCertPrivate = "UBIQUITY_SERVER_CERT_PRIVATE"
 
 type StorageApiServer struct {
 	storageApiHandler *StorageApiHandler
-	logger            *log.Logger
+	logger            logs.Logger
+	config            resources.UbiquityServerConfig
 }
 
-func NewStorageApiServer(logger *log.Logger, backends map[string]resources.StorageClient, config resources.UbiquityServerConfig, database *gorm.DB) (*StorageApiServer, error) {
-	return &StorageApiServer{storageApiHandler: NewStorageApiHandler(logger, backends, database, config), logger: logger}, nil
+func NewStorageApiServer(backends map[string]resources.StorageClient, config resources.UbiquityServerConfig) (*StorageApiServer, error) {
+	return &StorageApiServer{storageApiHandler: NewStorageApiHandler(backends, config), logger: logs.GetLogger(), config: config}, nil
 }
 
 func (s *StorageApiServer) InitializeHandler() http.Handler {
@@ -49,11 +56,67 @@ func (s *StorageApiServer) InitializeHandler() http.Handler {
 	return router
 }
 
-func (s *StorageApiServer) Start(port int) error {
+func (s *StorageApiServer) Start() error {
 	router := s.InitializeHandler()
 	http.Handle("/", router)
 
-	fmt.Println(fmt.Sprintf("Starting Storage API server on port %d ....", port))
+	useSsl := os.Getenv(keyUseSsl)
+	if strings.ToLower(useSsl) == "false" {
+		return s.StartNonSsl()
+	} else {
+		// Ubiquity server uses by default with SSL on
+		return s.StartSsl()
+	}
+}
+
+func (s *StorageApiServer) printStartMsg() {
+	fmt.Println(fmt.Sprintf("Starting Storage API server on port %d ....", s.config.Port))
 	fmt.Println("CTL-C to exit/stop Storage API server service")
-	return http.ListenAndServe(fmt.Sprintf(":%d", port), nil)
+}
+
+func (s *StorageApiServer) StartNonSsl() error {
+	defer s.logger.Trace(logs.DEBUG)()
+
+	s.printStartMsg()
+	return http.ListenAndServe(fmt.Sprintf(":%d", s.config.Port), nil)
+}
+
+func (s *StorageApiServer) StartSsl() error {
+	defer s.logger.Trace(logs.DEBUG)()
+
+	public, private, err := s.getCertFilenames()
+	if err != nil {
+		fmt.Println(err.Error())
+		return err
+	}
+
+	s.printStartMsg()
+	return http.ListenAndServeTLS(fmt.Sprintf(":%d", s.config.Port), public, private, nil)
+}
+
+func (s *StorageApiServer) getCertFilenames() (string, string, error) {
+	defer s.logger.Trace(logs.DEBUG)()
+	exec := utils.NewExecutor()
+
+	publicFilename := os.Getenv(keyCertPublic)
+	if publicFilename == "" {
+		return "", "", s.logger.ErrorRet(fmt.Errorf("env %s not found", keyCertPublic), "failed")
+	}
+
+	privateFilename := os.Getenv(keyCertPrivate)
+	if privateFilename == "" {
+		return "", "", s.logger.ErrorRet(fmt.Errorf("env %s not found", keyCertPrivate), "failed")
+	}
+
+	if _, err := exec.Stat(publicFilename); err != nil {
+		return "", "", s.logger.ErrorRet(err, "failed")
+
+	}
+
+	if _, err := exec.Stat(privateFilename); err != nil {
+		return "", "", s.logger.ErrorRet(err, "failed")
+
+	}
+
+	return publicFilename, privateFilename, nil
 }

@@ -11,6 +11,10 @@
 * [Volume Creation Options](#supported-volume-creation-options)
 * [Spectrum Scale Accessibility](#ubiquity-service-access-to-ibm-spectrum-scale-cli)
 
+**Note : Ubiquity with IBM Spectrum Scale is intended for testing purposes only. However, Ubiquity with IBM block storage is currently supported as detailed in the [README](README.md).**
+
+
+
 ## Introduction
 
 With IBM Spectrum Scale, containers can have shared file system access to any number of containers from small clusters of a few hosts up to very large clusters with thousands of hosts.

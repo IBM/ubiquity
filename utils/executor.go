@@ -22,6 +22,9 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"context"
+	"time"
+	"fmt"
 )
 
 //go:generate counterfeiter -o ../fakes/fake_executor.go . Executor
@@ -34,7 +37,9 @@ type Executor interface { // basic host dependent functions
 	Remove(string) error
 	Hostname() (string, error)
 	IsExecutable(string) error
+	IsNotExist(error) bool
 	EvalSymlinks(path string) (string, error)
+	ExecuteWithTimeout(mSeconds int ,command string, args []string) ([]byte, error)
 }
 
 type executor struct {
@@ -64,13 +69,44 @@ func (e *executor) Execute(command string, args []string) ([]byte, error) {
 			{"output", string(stdOut[:])},
 		})
 
-	if err != nil {
-		return nil, err
-	}
 	return stdOut, err
 }
+
+func (e *executor) ExecuteWithTimeout(mSeconds int ,command string, args []string) ([]byte, error) {
+
+    // Create a new context and add a timeout to it
+    ctx, cancel := context.WithTimeout(context.Background(), time.Duration(mSeconds)*time.Millisecond)
+    defer cancel() // The cancel should be deferred so resources are cleaned up
+
+    // Create the command with our context
+    cmd := exec.CommandContext(ctx, command, args...)
+
+    // This time we can simply use Output() to get the result.
+    out, err := cmd.Output()
+
+    // We want to check the context error to see if the timeout was executed.
+    // The error returned by cmd.Output() will be OS specific based on what
+    // happens when a process is killed.
+    if ctx.Err() == context.DeadlineExceeded {
+        e.logger.Debug(fmt.Sprintf("Command %s timeout reached", command))
+        return nil, ctx.Err()
+    }
+
+    // If there's no context error, we know the command completed (or errored).
+    e.logger.Debug(fmt.Sprintf("Output from command:", string(out)))
+    if err != nil {
+        e.logger.Debug(fmt.Sprintf("Non-zero exit code:", err))
+    }
+
+    return out, err
+}
+
 func (e *executor) Stat(path string) (os.FileInfo, error) {
 	return os.Stat(path)
+}
+
+func (e *executor) IsNotExist(err error) bool{
+	return os.IsNotExist(err)
 }
 
 func (e *executor) Mkdir(path string, mode os.FileMode) error {

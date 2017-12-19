@@ -20,7 +20,7 @@ package block_device_mounter_utils
 type BlockDeviceMounterUtils interface {
 	RescanAll(withISCSI bool, wwn string, rescanForCleanUp bool) error
 	MountDeviceFlow(devicePath string, fsType string, mountPoint string) error
-	Discover(volumeWwn string) (string, error)
+	Discover(volumeWwn string, deepDiscovery bool) (string, error)
 	UnmountDeviceFlow(devicePath string) error
 }
 

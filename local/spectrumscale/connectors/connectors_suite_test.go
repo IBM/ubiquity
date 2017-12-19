@@ -23,10 +23,12 @@ import (
 	"testing"
 
 	"github.com/jarcoal/httpmock"
+	"github.com/IBM/ubiquity/utils/logs"
 )
 
 func TestConnectors(t *testing.T) {
 	RegisterFailHandler(Fail)
+	defer logs.InitStdoutLogger(logs.DEBUG)()
 	RunSpecs(t, "Connectors Suite")
 }
 
