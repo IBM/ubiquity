@@ -7,14 +7,14 @@ If you want to make a change, create your own branch out of `dev` branch, make y
 Verify your changes before submitting a pull request by running the unit, integration and acceptance tests. See the testing section for details. In addition, make sure that your changes are covered by existing or new unit testing.
 
 # Build prerequisites
-  * Install [golang](https://golang.org/) (>=1.6).
+  * Install [golang](https://golang.org/) (>=1.9.1).
   * Install [git](https://git-scm.com/book/en/v2/Getting-Started-Installing-Git).
   * Install gcc.
   * Configure go. GOPATH environment variable must be set correctly before starting the build process. Create a new directory and set it as GOPATH.
 
 ### Download and build source code
-* Configure ssh-keys for github.com. go tools require passwordless ssh access to github. If you have not set up ssh keys for your github profile, follow these [instructions](https://help.github.com/enterprise/2.7/user/articles/generating-an-ssh-key/) before you proceed. 
-* Build Ubiquity service from source. 
+* Configure ssh-keys for github.com. go tools require passwordless ssh access to github. If you have not set up ssh keys for your github profile, follow these [instructions](https://help.github.com/enterprise/2.7/user/articles/generating-an-ssh-key/) before you proceed.
+* Build Ubiquity service from source.
 ```bash
 mkdir -p $HOME/workspace
 export GOPATH=$HOME/workspace
@@ -22,6 +22,7 @@ mkdir -p $GOPATH/src/github.com/IBM
 cd $GOPATH/src/github.com/IBM
 git clone git@github.com:IBM/ubiquity.git
 cd ubiquity
+go get -d ./...
 ./scripts/build
 ```
 
@@ -29,14 +30,12 @@ cd ubiquity
 
 Install these go packages to test Ubiquity:
 ```bash
-# Install ginkgo
-go install github.com/onsi/ginkgo/ginkgo
-# Install gomega
-go install github.com/onsi/gomega
+go install github.com/jarcoal/httpmock
+export PATH=$PATH:$GOPATH/bin
 ```
 Run the tests:
 ```bash
-./scripts/run-unit-tests
+./scripts/run_units.sh
 ```
 
 # Running Ubiquity
@@ -57,7 +56,7 @@ Defaults:%ubiquity !requiretty
 Defaults:%ubiquity secure_path = /sbin:/bin:/usr/sbin:/usr/bin:/usr/lpp/mmfs/bin
 ```
 
-# Integration tests 
+# Integration tests
 If you have Kubernetes and/or Docker environment together with an active storage backend, you can run integration and acceptance tests, detailed in ubiquity-k8s and ubiquity-docker-plugin.
 
 
