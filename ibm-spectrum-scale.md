@@ -30,12 +30,12 @@ Spectrum Scale supports volume management using the native client or CES NFS and
 Note that POSIX volumes are not accessible via NFS, but NFS volumes are accessible via POSIX.  This is because NFS requires the additional step of exporting the dataset on the storage server.  To make a POSIX volume accessible via NFS, simply create the volume using the 'spectrum-scale-nfs' backend using the same path or fileset name. 
 
 ## Deployment Options
-Ubiquity must be deployed on a node that has access(e.g CLI, REST, SSH) to the IBM Spectrum Scale Cluster
+Ubiquity must be deployed on a node that has access (e.g CLI, REST, SSH) to the IBM Spectrum Scale Cluster
 
 #### Single Node (All in One)
 ![Single node](images/singleNode.jpg)
 
-This deployment is intended for development purposes or to evaluate Ubiquity.  Spectrum Scale, Docker or Kubernetes, and Ubiquity are all installed on a single server
+This deployment is intended for development purposes or to evaluate Ubiquity. Spectrum Scale, Docker or Kubernetes, and Ubiquity are all installed on a single server
 
 #### Multi-node using Native GPFS (POSIX)
 ![Multi node](images/multiNode.jpg)
@@ -63,7 +63,7 @@ adduser ubiquity
 
 * Modify the sudoers file so that user and group 'ubiquity' can execute Spectrum Scale commands as root
   
-  Add path to the location of the Spectrum Scale binaries /usr/lpp/mmfs/bin in the sudoers file
+  Add path to the location of the Spectrum Scale binaries `/usr/lpp/mmfs/bin` in the sudoers file
 
 ```bash
 ## Entries for Ubiquity
@@ -86,7 +86,7 @@ defaultBackend = "spectrum-scale" # The "spectrum-scale" backend will be the def
 [SpectrumScaleConfig]             # If this section is specified, the "spectrum-scale" backend will be enabled.
 defaultFilesystemName = "gold"    # Default name of Spectrum Scale file system to use if user does not specify one during creation of a volume.  This file system must already exist.
 nfsServerAddr = "CESClusterHost"  # IP/hostname of Spectrum Scale CES NFS cluster.  This is the hostname that NFS clients will use to mount NFS volumes. (required for creation of NFS accessible volumes)
-forceDelete = false               # Controls the behavior of volume deletion.  If set to true, the data in the the storage system (e.g., fileset, directory) will be deleted upon volume deletion.  If set to false, the volume will be removed from the local database, but the data will not be deleted from the storage system.  Note that volumes created from existing data in the storage system should never have their data deleted upon volume deletion (although this may not be true for Kubernetes volumes with a recycle reclaim policy). 
+forceDelete = false               # Controls the behavior of volume deletion.  If set to true, the data in the storage system (e.g., fileset, directory) will be deleted upon volume deletion.  If set to false, the volume will be removed from the local database, but the data will not be deleted from the storage system.  Note that volumes created from existing data in the storage system should never have their data deleted upon volume deletion (although this may not be true for Kubernetes volumes with a recycle reclaim policy). 
 ```
 
 To support running the Ubiquity service on a host (or VM or container) that doesn't have direct access to the Spectrum Scale CLI, also add the following items to the config file to have Ubiquity use password-less SSH access to the Spectrum Scale Storage system:
