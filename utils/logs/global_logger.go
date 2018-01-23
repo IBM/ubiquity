@@ -21,6 +21,7 @@ import (
 	"io"
 	"os"
 	"strings"
+	"github.com/natefinch/lumberjack"
 )
 
 var logger Logger = nil
@@ -56,7 +57,27 @@ func InitFileLogger(level Level, filePath string) func() {
 	if err != nil {
 		panic(fmt.Sprintf("failed to init logger %v", err))
 	}
-	initLogger(level, io.MultiWriter(logFile))
+
+	fileStat, err := logFile.Stat()
+	if err != nil {
+		panic(fmt.Sprintf("failed to stat logger file %v", err))
+	}
+
+	fileStatSize := fileStat.Size()
+
+	// If log file size bigger than 52428800 (50MB), will use lunberjack to run the logrotate
+	if fileStatSize < 52428800 {
+		initLogger(level, io.MultiWriter(logFile))
+	} else {
+		initLogger(level, &lumberjack.Logger{
+		Filename: filePath,
+		MaxSize: 2,
+		MaxBackups: 5,
+		MaxAge: 50,
+		Compress: true,
+		})
+	}
+
 	return func() { logFile.Close(); logger = nil }
 }
 
