@@ -20,6 +20,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"path"
 	"strings"
 )
 
@@ -52,6 +53,15 @@ func GetLogLevelFromString(level string) Level {
 // It returns a function that clears the global logger.
 // If the global logger is already initialized InitFileLogger panics.
 func InitFileLogger(level Level, filePath string) func() {
+	_, err := os.Stat(filePath)
+	if os.IsNotExist(err) {
+		fileDir, _ := path.Split(filePath)
+		err := os.MkdirAll(fileDir, 0766)
+		if err != nil {
+			panic(fmt.Sprintf("failed to create log folder %v", err))
+		}
+	}
+	
 	logFile, err := os.OpenFile(filePath, os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0640)
 	if err != nil {
 		panic(fmt.Sprintf("failed to init logger %v", err))
