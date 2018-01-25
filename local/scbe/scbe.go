@@ -25,6 +25,8 @@ import (
 	"strconv"
 	"strings"
 	"sync"
+	"time"
+	"math/rand"
 	"github.com/IBM/ubiquity/database"
 )
 
@@ -42,9 +44,11 @@ const (
 	OptionNameForServiceName = "profile"
 	OptionNameForVolumeSize  = "size"
 	volumeNamePrefix         = "u_"
+	volumeNamePrefix_DS8k    = "u"
 	AttachedToNothing        = "" // during provisioning the volume is not attached to any host
 	EmptyHost                = ""
 	ComposeVolumeName        = volumeNamePrefix + "%s_%s" // e.g u_instance1_volName
+	ComposeVolumeName_DS8k   = volumeNamePrefix_DS8k + "%s"
 	MaxVolumeNameLength      = 63                         // IBM block storage max volume name cannot exceed this length
 
 	GetVolumeConfigExtraParams = 2 // number of extra params added to the VolumeConfig beyond the scbe volume struct
@@ -269,7 +273,27 @@ func (s *scbeLocalClient) CreateVolume(createVolumeRequest resources.CreateVolum
 	volInfo := ScbeVolumeInfo{}
 	volInfo, err = scbeRestClient.CreateVolume(volNameToCreate, profile, size)
 	if err != nil {
-		return s.logger.ErrorRet(err, "scbeRestClient.CreateVolume failed")
+		//TODO: Test for DS8k
+		if database.IsDatabaseVolume(volNameToCreate) {
+			volNameToCreate = fmt.Sprintf(ComposeVolumeName_DS8k, volNameToCreate)
+		} else {
+			r := rand.New(rand.NewSource(time.Now().UnixNano()))
+			volNameToCreate = strconv.Itoa(r.Intn(999999999999999))
+			volNameToCreate = fmt.Sprintf(ComposeVolumeName_DS8k, volNameToCreate)
+		}
+		volInfo, err = scbeRestClient.CreateVolume(volNameToCreate, profile, size)
+		if err != nil {
+			return s.logger.ErrorRet(err, "scbeRestClient.CreateVolume failed")
+		}
+
+		createVolumeRequest.Name = volNameToCreate
+		err = s.dataModel.InsertVolume(createVolumeRequest.Name, volInfo.Wwn, fstype)
+		if err != nil {
+			return s.logger.ErrorRet(err, "dataModel.InsertVolume failed")
+		}
+		s.logger.Info("succeeded for DS8k", logs.Args{{"volume", createVolumeRequest.Name}, {"profile", profile}})
+		return nil
+		//return s.logger.ErrorRet(err, "scbeRestClient.CreateVolume failed")
 	}
 
 	err = s.dataModel.InsertVolume(createVolumeRequest.Name, volInfo.Wwn, fstype)
