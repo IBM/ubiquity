@@ -74,6 +74,7 @@ func InitFileLogger(level Level, filePath string, rotateSize int) func() {
 	}
 
 	fileStatSize := int(fileStat.Size())
+	rotateSize = rotateSize * 1024 * 1024
 
 	// If log file size bigger than 52428800 (50MB), will use lunberjack to run the logrotate
 	if fileStatSize < rotateSize {
