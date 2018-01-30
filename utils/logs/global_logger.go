@@ -53,7 +53,7 @@ func GetLogLevelFromString(level string) Level {
 // InitFileLogger initializes the global logger with a file writer to filePath and set at level.
 // It returns a function that clears the global logger.
 // If the global logger is already initialized InitFileLogger panics.
-func InitFileLogger(level Level, filePath string) func() {
+func InitFileLogger(level Level, filePath string, rotateSize int) func() {
 	_, err := os.Stat(filePath)
 	if os.IsNotExist(err) {
 		fileDir,_ := path.Split(filePath)
@@ -73,10 +73,10 @@ func InitFileLogger(level Level, filePath string) func() {
 		panic(fmt.Sprintf("failed to stat logger file %v", err))
 	}
 
-	fileStatSize := fileStat.Size()
+	fileStatSize := int(fileStat.Size())
 
 	// If log file size bigger than 52428800 (50MB), will use lunberjack to run the logrotate
-	if fileStatSize < 52428800 {
+	if fileStatSize < rotateSize {
 		initLogger(level, io.MultiWriter(logFile))
 	} else {
 		initLogger(level, &lumberjack.Logger{

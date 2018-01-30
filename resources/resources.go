@@ -108,6 +108,7 @@ type BrokerConfig struct {
 type UbiquityPluginConfig struct {
 	DockerPlugin            UbiquityDockerPluginConfig
 	LogPath                 string
+	LogRotateMaxSize        int
 	UbiquityServer          UbiquityServerConnectionInfo
 	SpectrumNfsRemoteConfig SpectrumNfsRemoteConfig
 	ScbeRemoteConfig        ScbeRemoteConfig
