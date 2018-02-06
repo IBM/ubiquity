@@ -42,9 +42,11 @@ const (
 	OptionNameForServiceName = "profile"
 	OptionNameForVolumeSize  = "size"
 	volumeNamePrefix         = "u_"
+	volumeNamePrefix_DS8k    = "u"
 	AttachedToNothing        = "" // during provisioning the volume is not attached to any host
 	EmptyHost                = ""
 	ComposeVolumeName        = volumeNamePrefix + "%s_%s" // e.g u_instance1_volName
+	ComposeVolumeName_DS8k   = volumeNamePrefix_DS8k + "%s"
 	MaxVolumeNameLength      = 63                         // IBM block storage max volume name cannot exceed this length
 
 	GetVolumeConfigExtraParams = 2 // number of extra params added to the VolumeConfig beyond the scbe volume struct
@@ -269,6 +271,16 @@ func (s *scbeLocalClient) CreateVolume(createVolumeRequest resources.CreateVolum
 	volInfo := ScbeVolumeInfo{}
 	volInfo, err = scbeRestClient.CreateVolume(volNameToCreate, profile, size)
 	if err != nil {
+		if ds8k_short_volume_name_handling(err) {
+			if database.IsDatabaseVolume(volNameToCreate) {
+				//Only if db volume longer than 16, will recompose the db volume name and recreate, for other volume, will return err
+				volNameToCreate = fmt.Sprintf(ComposeVolumeName_DS8k, database.VolumeNameSuffix)
+				volInfo, err = scbeRestClient.CreateVolume(volNameToCreate, profile, size)
+				if err != nil {
+					return s.logger.ErrorRet(err, "scbeRestClient.CreateDBVolume failed also with name for DS8k")
+				}
+			}
+		}
 		return s.logger.ErrorRet(err, "scbeRestClient.CreateVolume failed")
 	}
 

@@ -22,6 +22,7 @@ import (
 	"github.com/IBM/ubiquity/utils/logs"
 	"github.com/IBM/ubiquity/resources"
 	"strconv"
+	"strings"
 )
 
 //go:generate counterfeiter -o ../fakes/fake_scbe_rest_client.go . ScbeRestClient
@@ -53,6 +54,7 @@ const (
 	UrlScbeResourceMapping = "mappings"
 	UrlScbeResourceHost    = "hosts"
 	DefaultSizeUnit        = "gb"
+	VolumeNameLengthInvalidMessage = "Volume names are limited to 16 characters"
 )
 
 func NewScbeRestClient(conInfo resources.ConnectionInfo) (ScbeRestClient, error) {
@@ -293,4 +295,11 @@ func (s *scbeRestClient) getHostIdByVol(wwn string, host string) (int, error) {
 	}
 
 	return hosts[0].Id, nil
+}
+
+func ds8k_short_volume_name_handling(err error) bool {
+	if strings.Contains(err.Error(), VolumeNameLengthInvalidMessage) {
+		return true
+	}
+	return false
 }

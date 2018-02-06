@@ -168,7 +168,8 @@ func (s *simpleRestClient) genericActionInternal(actionName string, resource_url
 
     s.logger.Debug(actionName + " " + url, logs.Args{{"data", string(data[:])}})
     if response.StatusCode != exitStatus {
-        return s.logger.ErrorRet(errors.New("bad status code " + response.Status), "failed", logs.Args{{actionName, url}})
+        return s.logger.ErrorRet(errors.New("bad status code " + response.Status), "failed", logs.Args{{actionName, url},
+            {"data", string(data[:])}})
     }
 
     if v != nil {
