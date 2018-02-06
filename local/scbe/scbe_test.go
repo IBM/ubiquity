@@ -26,6 +26,7 @@ import (
 	. "github.com/onsi/gomega"
 	"reflect"
 	"strings"
+	"github.com/IBM/ubiquity/database"
 )
 
 const (
@@ -228,6 +229,7 @@ var _ = Describe("scbeLocalClient", func() {
 		fakeScbeRestClient *fakes.FakeScbeRestClient
 		fakeConfig         resources.ScbeConfig
 		fakeErr            error = errors.New("fake error")
+		fakeVolLenErr	   error = errors.New("Volume names are limited to 16 characters")
 		err                error
 	)
 	BeforeEach(func() {
@@ -423,7 +425,22 @@ var _ = Describe("scbeLocalClient", func() {
 			Expect(wwn).To(Equal("wwn1"))
 			Expect(fstype).To(Equal("xfs"))
 		})
+		It("should re-create db volume with new name if the db volume length is too long (DS8k)", func() {
+			fakeScbeDataModel.GetVolumeReturns(scbe.ScbeVolume{}, nil)
+			fakeScbeRestClient.CreateVolumeReturns(scbe.ScbeVolumeInfo{ }, fakeVolLenErr)
+			opts := make(map[string]interface{})
+			opts[scbe.OptionNameForVolumeSize] = "100"
 
+			volFake := "fake_ibm-ubiquity-db"
+			req := resources.CreateVolumeRequest{Name: volFake, Backend: resources.SCBE, Opts: opts}
+			err = client.CreateVolume(req)
+			Expect(err).To(HaveOccurred())
+			Expect(err).To(MatchError(fakeVolLenErr))
+			Expect(fakeScbeRestClient.CreateVolumeCallCount()).To(Equal(2))
+			volname, _, _ := fakeScbeRestClient.CreateVolumeArgsForCall(1)
+			expectedVolName := fmt.Sprintf(scbe.ComposeVolumeName_DS8k, database.VolumeNameSuffix)
+			Expect(volname).To(Equal(expectedVolName))
+		})
 	})
 })
 
