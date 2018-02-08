@@ -22,8 +22,8 @@ import (
     "os"
 )
 
-var VolumeNameSuffix = os.Getenv(keyPsqlDbPVName)
-//const VolumeNameSuffix = "ibm-ubiquity-db"
+const DBVolumeNameSuffix = "ibm-ubiquity-db"
+var VolumeNameSuffix = getDBVolumeName(keyPsqlDbPVName)
 
 
 func IsDatabaseVolume(volName string) bool {
@@ -31,5 +31,13 @@ func IsDatabaseVolume(volName string) bool {
     isDatabaseVolume := strings.HasSuffix(volName, VolumeNameSuffix)
     logs.GetLogger().Debug("", logs.Args{{volName, isDatabaseVolume}})
     return isDatabaseVolume
+}
+
+func getDBVolumeName(dbPVNameENVKey string) string {
+    volumeNameSuffix := os.Getenv(dbPVNameENVKey)
+    if volumeNameSuffix == "" {
+        volumeNameSuffix = DBVolumeNameSuffix
+    }
+    return volumeNameSuffix
 }
 
