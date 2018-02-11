@@ -1,0 +1,10 @@
+schemaVersion: '2.0.0' 
+metadataTest:
+  env:
+    - key: "UBIQUITY_DB_CERT_PRIVATE"
+      value: "/var/lib/postgresql/ssl/private/ubiquity-db.key"
+    - key: "UBIQUITY_DB_CERT_PUBLIC"
+      value: "/var/lib/postgresql/ssl/private/ubiquity-db.crt"
+  exposedPorts: ["5432"]
+  entrypoint: ["ubiquity-docker-entrypoint.sh"]
+  cmd: ["postgres"]
