@@ -1,0 +1,12 @@
+schemaVersion: '2.0.0'
+
+commandTests:
+# check that ca-certificates version 20161130-r2 and openssl version 1.0.2k-r0 packages installed
+  - name: "ca-certificates version 20161130-r2 package"
+    command: "apk"
+    args: ["info", "-vv"]
+    expectedOutput: ["ca-certificates-20161130-r2"]
+  - name: "openssl version 1.0.2k-r0 package"
+    command: "apk"
+    args: ["info", "-vv"]
+    expectedOutput: ["openssl-1.0.2k-r0"]
