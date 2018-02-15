@@ -85,9 +85,10 @@ func (s *scbeMounter) Unmount(unmountRequest resources.UnmountRequest) error {
 	defer s.logger.Trace(logs.DEBUG)()
 
 	volumeWWN := unmountRequest.VolumeConfig["Wwn"].(string)
-	mountpoint := fmt.Sprintf(resources.PathToMountUbiquityBlockDevices, volumeWWN)
+	mountpoint := fmt.Sprintf(resources.PathToMountUbiquityBlockDevices, volumeWWN) // TODO instead of build the mountpoint it should come from unmountRequest.
 	devicePath, err := s.blockDeviceMounterUtils.Discover(volumeWWN, true)
 	if err != nil {
+		// TODO idempotent, if volumeNotFoundError then skip UnmountDeviceFlow
 		return s.logger.ErrorRet(err, "Discover failed", logs.Args{{"volumeWWN", volumeWWN}})
 	}
 
@@ -98,7 +99,6 @@ func (s *scbeMounter) Unmount(unmountRequest resources.UnmountRequest) error {
 	s.logger.Info("Delete mountpoint directory if exist", logs.Args{{"mountpoint", mountpoint}})
 	// TODO move this part to the util
 	if _, err := s.exec.Stat(mountpoint); err == nil {
-		// TODO consider to add the prefix of the wwn in the OS (multipath -ll output)
 		if err := s.exec.RemoveAll(mountpoint); err != nil {
 			return s.logger.ErrorRet(err, "RemoveAll failed", logs.Args{{"mountpoint", mountpoint}})
 		}
