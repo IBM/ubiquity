@@ -99,7 +99,7 @@ func (s *scbeMounter) Unmount(unmountRequest resources.UnmountRequest) error {
 	s.logger.Info("Delete mountpoint directory if exist", logs.Args{{"mountpoint", mountpoint}})
 	// TODO move this part to the util
 	if _, err := s.exec.Stat(mountpoint); err == nil {
-		if err := s.exec.RemoveAll(mountpoint); err != nil {
+		if err := s.exec.RemoveAll(mountpoint); err != nil { // TODO its enough to do Remove without All.
 			return s.logger.ErrorRet(err, "RemoveAll failed", logs.Args{{"mountpoint", mountpoint}})
 		}
 	}

@@ -459,9 +459,11 @@ func (s *scbeLocalClient) Detach(detachRequest resources.DetachRequest) (err err
 
 	// Fail if vol already detach
 	if hostAttach == EmptyHost {
+		// TODO idempotent, if not attach then return nil
 		return s.logger.ErrorRet(&volNotAttachedError{detachRequest.Name}, "failed")
 	}
 
+	// TODO idempotent, if volume attach to different host, then we should also return succeed.
 	s.logger.Debug("Detaching", logs.Args{{"volume", existingVolume}})
 	if err = scbeRestClient.UnmapVolume(existingVolume.WWN, host2detach); err != nil {
 		return s.logger.ErrorRet(err, "scbeRestClient.UnmapVolume failed")
