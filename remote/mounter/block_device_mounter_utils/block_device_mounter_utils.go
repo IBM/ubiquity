@@ -70,6 +70,8 @@ func (b *blockDeviceMounterUtils) MountDeviceFlow(devicePath string, fsType stri
 			return b.logger.ErrorRet(err, "MakeFs failed")
 		}
 	}
+
+	// TODO idempotent, first check if already mounted to the expected device, if so then skip mounting. (if mounted to different device raise error)
 	if err = b.blockDeviceUtils.MountFs(devicePath, mountPoint); err != nil {
 		return b.logger.ErrorRet(err, "MountFs failed")
 	}
