@@ -100,7 +100,7 @@ var _ = Describe("block_device_utils_test", func() {
 			Expect(fakeExec.ExecuteCallCount()).To(Equal(1))
 			cmd, args := fakeExec.ExecuteArgsForCall(0)
 			Expect(cmd).To(Equal("multipath"))
-			Expect(args).To(Equal([]string{"-r"}))
+			Expect(args).To(Equal([]string{}))
 		})
 		It("ReloadMultipath fails if multipath command is missing", func() {
 			fakeExec.IsExecutableReturns(cmdErr)
