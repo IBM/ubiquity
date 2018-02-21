@@ -22,7 +22,10 @@ import (
 	"github.com/IBM/ubiquity/resources"
 	"github.com/IBM/ubiquity/utils"
 	"github.com/IBM/ubiquity/utils/logs"
+	"time"
 )
+
+const lockUmountWindowMessage = " To prevent concurrent rescans during umountFlow until the Detach finished(ActionAfterDetach)."
 
 type scbeMounter struct {
 	logger                  logs.Logger
@@ -91,6 +94,8 @@ func (s *scbeMounter) Unmount(unmountRequest resources.UnmountRequest) error {
 		return s.logger.ErrorRet(err, "Discover failed", logs.Args{{"volumeWWN", volumeWWN}})
 	}
 
+	s.rescanTryLock(volumeWWN)
+
 	if err := s.blockDeviceMounterUtils.UnmountDeviceFlow(devicePath); err != nil {
 		return s.logger.ErrorRet(err, "UnmountDeviceFlow failed", logs.Args{{"devicePath", devicePath}})
 	}
@@ -112,9 +117,37 @@ func (s *scbeMounter) ActionAfterDetach(request resources.AfterDetachRequest) er
 	defer s.logger.Trace(logs.DEBUG)()
 	volumeWWN := request.VolumeConfig["Wwn"].(string)
 
+	s.rescanUnlock(volumeWWN)
 	// Rescan OS
 	if err := s.blockDeviceMounterUtils.RescanAll(!s.config.SkipRescanISCSI, volumeWWN, true); err != nil {
 		return s.logger.ErrorRet(err, "RescanAll failed")
 	}
 	return nil
+}
+
+func (s *scbeMounter) rescanTryLock(volumeWWN string) {
+	/* To prevent concurrent rescans during blockDeviceMounterUtils.UnmountDeviceFlow and just before ActionAfterDetach start.
+	   During this window of time, there is no mpath device but the volume still mapped to the host.
+	   Therefor a parallel rescan or multipath reload could return back the delete mpath device and lead to faulty multipath device.
+
+	   TODO: We should refactor the resources.Mounter and add new interface that will use lock in the same context.
+	         Currently the lock and unlock is not in the same context, the lock done in Unmount() interface and unlock from ActionAfterDetach interface.
+	   */
+	s.logger.Debug("Ask for rescanLock for volumeWWN." + lockUmountWindowMessage, logs.Args{{"volumeWWN", volumeWWN}})
+	rescanFlock := s.blockDeviceMounterUtils.RescanFlock()
+	for {
+		err := rescanFlock.TryLock()
+		if err == nil {
+			s.logger.Debug("Got rescanLock for volumeWWN." + lockUmountWindowMessage, logs.Args{{"volumeWWN", volumeWWN}})
+			break
+		}
+		s.logger.Debug("rescanLock.TryLock failed for volumeWWN." + lockUmountWindowMessage, logs.Args{{"volumeWWN", volumeWWN}, {"error", err}})
+		time.Sleep(time.Duration(500*time.Millisecond))
+	}
+}
+
+func (s *scbeMounter) rescanUnlock(volumeWWN string) {
+	// Just release the rescan lock. More detail in rescanTryLock function.
+	s.blockDeviceMounterUtils.RescanFlock().Unlock()
+	s.logger.Debug("Released rescanLock for volumeWWN." + lockUmountWindowMessage, logs.Args{{"volumeWWN", volumeWWN}})
 }

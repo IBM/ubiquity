@@ -5,6 +5,7 @@ import (
 	"sync"
 
 	"github.com/IBM/ubiquity/remote/mounter/block_device_mounter_utils"
+	"github.com/nightlyone/lockfile"
 )
 
 type FakeBlockDeviceMounterUtils struct {
@@ -58,6 +59,15 @@ type FakeBlockDeviceMounterUtils struct {
 	}
 	unmountDeviceFlowReturnsOnCall map[int]struct {
 		result1 error
+	}
+	RescanFlockStub        func() lockfile.Lockfile
+	rescanFlockMutex       sync.RWMutex
+	rescanFlockArgsForCall []struct{}
+	rescanFlockReturns     struct {
+		result1 lockfile.Lockfile
+	}
+	rescanFlockReturnsOnCall map[int]struct {
+		result1 lockfile.Lockfile
 	}
 	invocations      map[string][][]interface{}
 	invocationsMutex sync.RWMutex
@@ -263,6 +273,46 @@ func (fake *FakeBlockDeviceMounterUtils) UnmountDeviceFlowReturnsOnCall(i int, r
 	}{result1}
 }
 
+func (fake *FakeBlockDeviceMounterUtils) RescanFlock() lockfile.Lockfile {
+	fake.rescanFlockMutex.Lock()
+	ret, specificReturn := fake.rescanFlockReturnsOnCall[len(fake.rescanFlockArgsForCall)]
+	fake.rescanFlockArgsForCall = append(fake.rescanFlockArgsForCall, struct{}{})
+	fake.recordInvocation("RescanFlock", []interface{}{})
+	fake.rescanFlockMutex.Unlock()
+	if fake.RescanFlockStub != nil {
+		return fake.RescanFlockStub()
+	}
+	if specificReturn {
+		return ret.result1
+	}
+	return fake.rescanFlockReturns.result1
+}
+
+func (fake *FakeBlockDeviceMounterUtils) RescanFlockCallCount() int {
+	fake.rescanFlockMutex.RLock()
+	defer fake.rescanFlockMutex.RUnlock()
+	return len(fake.rescanFlockArgsForCall)
+}
+
+func (fake *FakeBlockDeviceMounterUtils) RescanFlockReturns(result1 lockfile.Lockfile) {
+	fake.RescanFlockStub = nil
+	fake.rescanFlockReturns = struct {
+		result1 lockfile.Lockfile
+	}{result1}
+}
+
+func (fake *FakeBlockDeviceMounterUtils) RescanFlockReturnsOnCall(i int, result1 lockfile.Lockfile) {
+	fake.RescanFlockStub = nil
+	if fake.rescanFlockReturnsOnCall == nil {
+		fake.rescanFlockReturnsOnCall = make(map[int]struct {
+			result1 lockfile.Lockfile
+		})
+	}
+	fake.rescanFlockReturnsOnCall[i] = struct {
+		result1 lockfile.Lockfile
+	}{result1}
+}
+
 func (fake *FakeBlockDeviceMounterUtils) Invocations() map[string][][]interface{} {
 	fake.invocationsMutex.RLock()
 	defer fake.invocationsMutex.RUnlock()
@@ -274,6 +324,8 @@ func (fake *FakeBlockDeviceMounterUtils) Invocations() map[string][][]interface{
 	defer fake.discoverMutex.RUnlock()
 	fake.unmountDeviceFlowMutex.RLock()
 	defer fake.unmountDeviceFlowMutex.RUnlock()
+	fake.rescanFlockMutex.RLock()
+	defer fake.rescanFlockMutex.RUnlock()
 	copiedInvocations := map[string][][]interface{}{}
 	for key, value := range fake.invocations {
 		copiedInvocations[key] = value

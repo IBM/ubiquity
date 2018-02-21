@@ -164,3 +164,9 @@ func (b *blockDeviceMounterUtils) RescanAll(withISCSI bool, wwn string, rescanFo
 func (b *blockDeviceMounterUtils) Discover(volumeWwn string, deepDiscovery bool) (string, error) {
 	return b.blockDeviceUtils.Discover(volumeWwn, deepDiscovery)
 }
+
+func (b *blockDeviceMounterUtils) RescanFlock() lockfile.Lockfile{
+	// Getter for rescanFlock to reuse the rescanFlock in other operations
+	// For this example, it uses for SCBE remote umount just before removing the device till the volume actually detach from the storage. To prevent rescan by concurrent attach operation during this window of time.
+	return b.rescanFlock
+}
