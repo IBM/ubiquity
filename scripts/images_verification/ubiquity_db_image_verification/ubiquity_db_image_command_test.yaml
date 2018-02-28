@@ -1,0 +1,8 @@
+schemaVersion: '2.0.0'
+
+commandTests:
+# check that /ubiquity-docker-entrypoint.sh symlink exist
+  - name: "/ubiquity-docker-entrypoint.sh symlink exist"
+    command: "ls"
+    args: ["-l"]
+    expectedOutput: ["lrwxrwxrwx.*ubiquity-docker-entrypoint.sh -> usr/local/bin/ubiquity-docker-entrypoint.sh"]
