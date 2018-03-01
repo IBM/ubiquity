@@ -73,10 +73,9 @@ func InitFileLogger(level Level, filePath string, rotateSize int) func() {
 		panic(fmt.Sprintf("failed to stat logger file %v", err))
 	}
 
-	fileStatSize := int(fileStat.Size())
-	fileStatSize = fileStatSize / 1024 / 1024
+	fileStatSize := int(fileStat.Size()) / 1024 / 1024
 
-	// If log file size bigger than 52428800 (50MB), will use lunberjack to run the logrotate
+	// If log file size bigger than rotateSize, will use lunberjack to run the logrotate
 	if fileStatSize < rotateSize {
 		initLogger(level, io.MultiWriter(logFile))
 	} else {
