@@ -18,10 +18,12 @@ package database
 
 import (
     "github.com/IBM/ubiquity/utils/logs"
+    "github.com/IBM/ubiquity/utils"
     "strings"
 )
 
-const VolumeNameSuffix = "ibm-ubiquity-db"
+const DBVolumeNameSuffix = "ibm-ubiquity-db"
+var VolumeNameSuffix = utils.GetEnv(keyPsqlDbPVName, DBVolumeNameSuffix)
 
 func IsDatabaseVolume(volName string) bool {
     defer logs.GetLogger().Trace(logs.DEBUG)()

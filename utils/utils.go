@@ -274,3 +274,11 @@ func LoadConfig() (resources.UbiquityServerConfig, error) {
 
 	return config, nil
 }
+
+func GetEnv(envName string, defaultValue string) string {
+    envValue := os.Getenv(envName)
+    if envValue == "" {
+        envValue = defaultValue
+    }
+    return envValue
+}
