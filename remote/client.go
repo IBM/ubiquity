@@ -14,6 +14,10 @@
  * limitations under the License.
  */
 
+/*
+   Description
+   This is the APIs that the ubiquity plugins (flex\provisioner or DVP) use to communicate with Ubiquity server
+ */
 package remote
 
 import (
