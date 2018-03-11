@@ -40,6 +40,10 @@ type Executor interface { // basic host dependent functions
 	IsNotExist(error) bool
 	EvalSymlinks(path string) (string, error)
 	ExecuteWithTimeout(mSeconds int ,command string, args []string) ([]byte, error)
+	Lstat(path string) (os.FileInfo, error)
+	IsDir(fInfo os.FileInfo) bool
+	Symlink(target string, slink string) error
+	IsSlink(fInfo os.FileInfo) bool
 }
 
 type executor struct {
@@ -105,8 +109,20 @@ func (e *executor) Stat(path string) (os.FileInfo, error) {
 	return os.Stat(path)
 }
 
+func (e *executor) Lstat(path string) (os.FileInfo, error) {
+	return os.Lstat(path)
+}
+
 func (e *executor) IsNotExist(err error) bool{
 	return os.IsNotExist(err)
+}
+
+func (e *executor) IsDir(fInfo os.FileInfo) bool{
+	return fInfo.IsDir()
+}
+
+func (e *executor) IsSlink(fInfo os.FileInfo) bool{
+	return fInfo.Mode() & os.ModeSymlink != 0
 }
 
 func (e *executor) Mkdir(path string, mode os.FileMode) error {
@@ -139,4 +155,6 @@ func (e *executor) EvalSymlinks(path string) (string, error) {
 	return evalSlink, err
 }
 
-
+func (e *executor) Symlink(target string, slink string) error {
+	return os.Symlink(target, slink)
+}
