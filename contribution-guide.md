@@ -24,7 +24,13 @@ git clone git@github.com:IBM/ubiquity.git
 cd ubiquity
 ./scripts/build
 ```
+# Testing Ubiquity
 
+Run the tests:
+```bash
+./scripts/run_glide_up
+./scripts/run_units.sh
+```
 
 # Squash and merge
 
