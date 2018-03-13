@@ -188,7 +188,7 @@ var _ = Describe("scbeLocalClient", func() {
 				fakeScbeDataModel,
 				fakeScbeRestClient)
 			Expect(err).To(HaveOccurred())
-			Expect(err.Error()).To(MatchRegexp("^SCBE backend activation error. The default service .* does not exist on SCBE"))
+			Expect(err.Error()).To(MatchRegexp("^Spectrum Connect backend activation error. The default service .* does not exist on Spectrum Connect"))
 			Expect(fakeScbeRestClient.LoginCallCount()).To(Equal(1))
 			Expect(fakeScbeRestClient.ServiceExistCallCount()).To(Equal(1))
 
