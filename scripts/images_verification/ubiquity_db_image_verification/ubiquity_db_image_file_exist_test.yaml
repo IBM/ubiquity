@@ -1,0 +1,35 @@
+schemaVersion: '2.0.0' 
+# check that the docker-entrypoint-initdb.d directory and files under this directory exist, also the ubiquity-docker-entrypoint.sh (and symlink), LICENSE and NOTICES files and /var/lib/postgresql/ssl/private directory exist and has the correct permissions
+fileExistenceTests:
+  - name: '/docker-entrypoint-initdb.d directory'
+    path: '/docker-entrypoint-initdb.d'
+    shouldExist: true
+    permissions: 'drwxr-xr-x'
+  - name: '/docker-entrypoint-initdb.d/init-user-db.sh file'
+    path: '/docker-entrypoint-initdb.d/init-user-db.sh'
+    shouldExist: true
+    permissions: '-rw-r--r--'
+  - name: '/docker-entrypoint-initdb.d/init-ssl.sh file'
+    path: '/docker-entrypoint-initdb.d/init-ssl.sh'
+    shouldExist: true
+    permissions: '-rw-r--r--'
+  - name: 'ubiquity-docker-entrypoint.sh file'
+    path: '/usr/local/bin/ubiquity-docker-entrypoint.sh'
+    shouldExist: true
+    permissions: '-rwxr-xr-x'
+  - name: '/ubiquity-docker-entrypoint.sh symlink file'
+    path: '/ubiquity-docker-entrypoint.sh'
+    shouldExist: true
+    permissions: 'Lrwxrwxrwx'
+  - name: 'LICENSE file'
+    path: '/LICENSE'
+    shouldExist: true
+    permissions: '-rw-r--r--'
+  - name: 'NOTICES file'
+    path: '/NOTICES'
+    shouldExist: true
+    permissions: '-rw-r--r--'
+  - name: '/var/lib/postgresql/ssl/private directory'
+    path: '/var/lib/postgresql/ssl/private'
+    shouldExist: true
+    permissions: 'drwxrwxrwx'
