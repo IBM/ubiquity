@@ -465,18 +465,19 @@ mpathhb (36001738cfc9035eb0000000000cea###) dm-3 ##,##
 		It("should fail if mount command missing", func() {
 			mpoint := "mpoint"
 			fakeExec.IsExecutableReturns(cmdErr)
-			isMounted, err := bdUtils.IsDeviceMounted(mpoint)
+			isMounted, mounts, err := bdUtils.IsDeviceMounted(mpoint)
 			Expect(err).To(HaveOccurred())
 			Expect(isMounted).To(Equal(false))
+			Expect(len(mounts)).To(Equal(0))
 		})
-		It("should fail if mount command missing", func() {
+		It("should fail if mount command fail", func() {
 			mpoint := "mpoint"
 			fakeExec.ExecuteReturns([]byte{}, cmdErr)
-			isMounted, err := bdUtils.IsDeviceMounted(mpoint)
+			isMounted, mounts, err := bdUtils.IsDeviceMounted(mpoint)
 			Expect(err).To(HaveOccurred())
 			Expect(err.Error()).To(MatchRegexp(cmdErr.Error()))
 			Expect(isMounted).To(Equal(false))
-
+			Expect(len(mounts)).To(Equal(0))
 		})
 		It("should return false if device not found in mount output", func() {
 			mpoint := "mpoint"
@@ -485,10 +486,24 @@ mpathhb (36001738cfc9035eb0000000000cea###) dm-3 ##,##
 /dev/mapper/mpoint on /ubiquity/mpoint type ext4 (rw,relatime,data=ordered)
 `
 			fakeExec.ExecuteReturns([]byte(mountOutput), nil)
-			isMounted, err := bdUtils.IsDeviceMounted(mpoint)
+			isMounted, mounts, err := bdUtils.IsDeviceMounted(mpoint)
 			Expect(err).ToNot(HaveOccurred())
 			Expect(isMounted).To(Equal(false))
+			Expect(len(mounts)).To(Equal(0))
 		})
+		It("should return false if format of mount output is wrong", func() {
+			mpoint := "mpoint"
+			mountOutput := `
+/mpoint XXX /ubiquity/mpoint type ext4 (rw,relatime,data=ordered)
+/dev/mapper/mpoint on /ubiquity/mpoint type ext4 (rw,relatime,data=ordered)
+`
+			fakeExec.ExecuteReturns([]byte(mountOutput), nil)
+			isMounted, mounts, err := bdUtils.IsDeviceMounted(mpoint)
+			Expect(err).ToNot(HaveOccurred())
+			Expect(isMounted).To(Equal(false))
+			Expect(len(mounts)).To(Equal(0))
+		})
+
 		It("should return true if device found in mount output", func() {
 			mpoint := "mpoint"
 			mountOutput := `
@@ -496,9 +511,26 @@ mpoint on /ubiquity/mpoint type ext4 (rw,relatime,data=ordered)
 /dev/mapper/mpoint on /ubiquity/mpoint type ext4 (rw,relatime,data=ordered)
 `
 			fakeExec.ExecuteReturns([]byte(mountOutput), nil)
-			isMounted, err := bdUtils.IsDeviceMounted(mpoint)
+			isMounted, mounts, err := bdUtils.IsDeviceMounted(mpoint)
 			Expect(err).ToNot(HaveOccurred())
 			Expect(isMounted).To(Equal(true))
+			Expect(len(mounts)).To(Equal(1))
+			Expect(mounts[0]).To(Equal("/ubiquity/mpoint"))
+		})
+		It("should return true if device found in mount output (2 mountpoints)", func() {
+			mpoint := "mpoint"
+			mountOutput := `
+mpoint on /ubiquity/mpoint type ext4 (rw,relatime,data=ordered)
+/dev/mapper/mpoint on /ubiquity/mpoint type ext4 (rw,relatime,data=ordered)
+mpoint on /ubiquity/mpointSecond type ext4 (rw,relatime,data=ordered)
+`
+			fakeExec.ExecuteReturns([]byte(mountOutput), nil)
+			isMounted, mounts, err := bdUtils.IsDeviceMounted(mpoint)
+			Expect(err).ToNot(HaveOccurred())
+			Expect(isMounted).To(Equal(true))
+			Expect(len(mounts)).To(Equal(2))
+			Expect(mounts[0]).To(Equal("/ubiquity/mpoint"))
+			Expect(mounts[1]).To(Equal("/ubiquity/mpointSecond"))
 		})
 	})
 
