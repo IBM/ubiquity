@@ -28,6 +28,8 @@ import (
 
 const (
 	NotMountedErrorMessage = "not mounted" // Error while umount device that is already unmounted
+	TimeoutMilisecondMountCmdIsDeviceMounted = 20 * 1000 // max to wait for mount command
+	TimeoutMilisecondMountCmdMountFs = 120 * 1000 // max to wait for mounting device
 )
 
 func (b *blockDeviceUtils) CheckFs(mpath string) (bool, error) {
@@ -73,7 +75,7 @@ func (b *blockDeviceUtils) MountFs(mpath string, mpoint string) error {
 		return b.logger.ErrorRet(&commandNotFoundError{mountCmd, err}, "failed")
 	}
 	args := []string{mpath, mpoint}
-	if _, err := b.exec.Execute(mountCmd, args); err != nil {
+	if _, err := b.exec.ExecuteWithTimeout(TimeoutMilisecondMountCmdMountFs, mountCmd, args); err != nil {
 		return b.logger.ErrorRet(&commandExecuteError{mountCmd, err}, "failed")
 	}
 	b.logger.Info("mounted", logs.Args{{"mpoint", mpoint}})
@@ -118,8 +120,7 @@ func (b *blockDeviceUtils) IsDeviceMounted(devPath string) (bool, []string, erro
 		return false, nil, b.logger.ErrorRet(&commandNotFoundError{mountCmd, err}, "failed")
 	}
 
-	// TODO outputBytes, err := b.exec.ExecuteWithTimeout(6000, mountCmd, nil)
-	outputBytes, err := b.exec.Execute(mountCmd, nil)
+	outputBytes, err := b.exec.ExecuteWithTimeout(TimeoutMilisecondMountCmdIsDeviceMounted, mountCmd, nil)
 	if err != nil {
 		return false, nil, b.logger.ErrorRet(&commandExecuteError{mountCmd, err}, "failed")
 	}

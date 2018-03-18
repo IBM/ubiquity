@@ -438,8 +438,8 @@ mpathhb (36001738cfc9035eb0000000000cea###) dm-3 ##,##
 			mpoint := "mpoint"
 			err = bdUtils.MountFs(mpath, mpoint)
 			Expect(err).To(Not(HaveOccurred()))
-			Expect(fakeExec.ExecuteCallCount()).To(Equal(1))
-			cmd, args := fakeExec.ExecuteArgsForCall(0)
+			Expect(fakeExec.ExecuteWithTimeoutCallCount()).To(Equal(1))
+			_, cmd, args := fakeExec.ExecuteWithTimeoutArgsForCall(0)
 			Expect(cmd).To(Equal("mount"))
 			Expect(args).To(Equal([]string{mpath, mpoint}))
 		})
@@ -454,12 +454,11 @@ mpathhb (36001738cfc9035eb0000000000cea###) dm-3 ##,##
 		It("MountFs fails if mount command fails", func() {
 			mpath := "mpath"
 			mpoint := "mpoint"
-			fakeExec.ExecuteReturns([]byte{}, cmdErr)
+			fakeExec.ExecuteWithTimeoutReturns([]byte{}, cmdErr)
 			err = bdUtils.MountFs(mpath, mpoint)
 			Expect(err).To(HaveOccurred())
 			Expect(err.Error()).To(MatchRegexp(cmdErr.Error()))
 		})
-
 	})
 	Context(".IsDeviceMounted", func() {
 		It("should fail if mount command missing", func() {
@@ -472,7 +471,7 @@ mpathhb (36001738cfc9035eb0000000000cea###) dm-3 ##,##
 		})
 		It("should fail if mount command fail", func() {
 			mpoint := "mpoint"
-			fakeExec.ExecuteReturns([]byte{}, cmdErr)
+			fakeExec.ExecuteWithTimeoutReturns([]byte{}, cmdErr)
 			isMounted, mounts, err := bdUtils.IsDeviceMounted(mpoint)
 			Expect(err).To(HaveOccurred())
 			Expect(err.Error()).To(MatchRegexp(cmdErr.Error()))
@@ -485,7 +484,7 @@ mpathhb (36001738cfc9035eb0000000000cea###) dm-3 ##,##
 /mpoint on /ubiquity/mpoint type ext4 (rw,relatime,data=ordered)
 /dev/mapper/mpoint on /ubiquity/mpoint type ext4 (rw,relatime,data=ordered)
 `
-			fakeExec.ExecuteReturns([]byte(mountOutput), nil)
+			fakeExec.ExecuteWithTimeoutReturns([]byte(mountOutput), nil)
 			isMounted, mounts, err := bdUtils.IsDeviceMounted(mpoint)
 			Expect(err).ToNot(HaveOccurred())
 			Expect(isMounted).To(Equal(false))
@@ -494,10 +493,10 @@ mpathhb (36001738cfc9035eb0000000000cea###) dm-3 ##,##
 		It("should return false if format of mount output is wrong", func() {
 			mpoint := "mpoint"
 			mountOutput := `
-/mpoint XXX /ubiquity/mpoint type ext4 (rw,relatime,data=ordered)
+/mpoint on /ubiquity/mpoint type ext4 (rw,relatime,data=ordered)
 /dev/mapper/mpoint on /ubiquity/mpoint type ext4 (rw,relatime,data=ordered)
 `
-			fakeExec.ExecuteReturns([]byte(mountOutput), nil)
+			fakeExec.ExecuteWithTimeoutReturns([]byte(mountOutput), nil)
 			isMounted, mounts, err := bdUtils.IsDeviceMounted(mpoint)
 			Expect(err).ToNot(HaveOccurred())
 			Expect(isMounted).To(Equal(false))
@@ -510,7 +509,7 @@ mpathhb (36001738cfc9035eb0000000000cea###) dm-3 ##,##
 mpoint on /ubiquity/mpoint type ext4 (rw,relatime,data=ordered)
 /dev/mapper/mpoint on /ubiquity/mpoint type ext4 (rw,relatime,data=ordered)
 `
-			fakeExec.ExecuteReturns([]byte(mountOutput), nil)
+			fakeExec.ExecuteWithTimeoutReturns([]byte(mountOutput), nil)
 			isMounted, mounts, err := bdUtils.IsDeviceMounted(mpoint)
 			Expect(err).ToNot(HaveOccurred())
 			Expect(isMounted).To(Equal(true))
@@ -524,7 +523,7 @@ mpoint on /ubiquity/mpoint type ext4 (rw,relatime,data=ordered)
 /dev/mapper/mpoint on /ubiquity/mpoint type ext4 (rw,relatime,data=ordered)
 mpoint on /ubiquity/mpointSecond type ext4 (rw,relatime,data=ordered)
 `
-			fakeExec.ExecuteReturns([]byte(mountOutput), nil)
+			fakeExec.ExecuteWithTimeoutReturns([]byte(mountOutput), nil)
 			isMounted, mounts, err := bdUtils.IsDeviceMounted(mpoint)
 			Expect(err).ToNot(HaveOccurred())
 			Expect(isMounted).To(Equal(true))
@@ -553,13 +552,14 @@ mpoint on /ubiquity/mpointSecond type ext4 (rw,relatime,data=ordered)
 /dev/mapper/yyy on /ubiquity/yyy type ext4 (rw,relatime,data=ordered)
 `
 			fakeExec.ExecuteReturnsOnCall(0, nil, cmdErr) // the umount command should fail
-			fakeExec.ExecuteReturnsOnCall(1, []byte(mountOutput), nil) // mount for isMounted
+			fakeExec.ExecuteWithTimeoutReturnsOnCall(0, []byte(mountOutput), nil) // mount for isMounted
 			err = bdUtils.UmountFs(mpoint)
 			Expect(err).To(Not(HaveOccurred()))
-			Expect(fakeExec.ExecuteCallCount()).To(Equal(2))
+			Expect(fakeExec.ExecuteCallCount()).To(Equal(1))
+			Expect(fakeExec.ExecuteWithTimeoutCallCount()).To(Equal(1))
 			cmd, _ := fakeExec.ExecuteArgsForCall(0)
 			Expect(cmd).To(Equal("umount")) // first check is the umount
-			cmd, _ = fakeExec.ExecuteArgsForCall(1)
+			_, cmd, _ = fakeExec.ExecuteWithTimeoutArgsForCall(0)
 			Expect(cmd).To(Equal("mount")) // second check is the umount
 		})
 		It("UmountFs fails if umount command missing", func() {
@@ -573,6 +573,7 @@ mpoint on /ubiquity/mpointSecond type ext4 (rw,relatime,data=ordered)
 		It("UmountFs fails if umount command fails", func() {
 			mpoint := "mpoint"
 			fakeExec.ExecuteReturns([]byte{}, cmdErr)
+			fakeExec.ExecuteWithTimeoutReturns([]byte{}, cmdErr)
 			err = bdUtils.UmountFs(mpoint)
 			Expect(err).To(HaveOccurred())
 			Expect(err.Error()).To(MatchRegexp(cmdErr.Error()))
