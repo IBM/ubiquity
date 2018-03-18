@@ -25,6 +25,8 @@ import (
 	"time"
 )
 
+const WarningMessageIdempotentDeviceAlreadyMounted = "Device is already mounted, so skip mounting (Idempotent)."
+
 type blockDeviceMounterUtils struct {
 	logger            logs.Logger
 	blockDeviceUtils  block_device_utils.BlockDeviceUtils
@@ -72,32 +74,28 @@ func (b *blockDeviceMounterUtils) MountDeviceFlow(devicePath string, fsType stri
 	}
 
 
-	/*
-	validateMountpoint
-	// Check idempotent case when the device is already mounted, if so then skip mounting.
-	isMounted, mountpointRef, err := b.blockDeviceUtils.IsDeviceMounted(devicePath)
+	// Check if need to mount the device, if its already mounted then skip mounting
+	isMounted, mountpointRefs, err := b.blockDeviceUtils.IsDeviceMounted(devicePath)
 	if err != nil{
 		return b.logger.ErrorRet(err, "fail to identify if device is mounted")
 	}
 
 	if isMounted{
-		if mountpointRef == mountPoint{
-
+		for _, mountpointi := range mountpointRefs{
+			if mountpointi == mountPoint{
+				b.logger.Info(WarningMessageIdempotentDeviceAlreadyMounted, logs.Args{{"Device", devicePath}, {"mountpoint", mountPoint}})
+				return nil // Indicate idempotent issue
+			}
 		}
-		b.logger.Info("Device is already mounted, so skip mounting (Idempotent).", logs.Args{{"Device", devicePath}})
-		return nil
-	}
-	*/
-	// TODO idempotent, first check if already mounted to the expected device, if so then skip mounting. (if mounted to different device raise error)
-	if err = b.blockDeviceUtils.MountFs(devicePath, mountPoint); err != nil {
-		return b.logger.ErrorRet(err, "MountFs failed")
+		// In case device mounted but to different mountpoint as expected we fail with error. # TODO we may support it in the future after allow the umount flow to umount by mountpoint and not by device path.
+		return b.logger.ErrorRet(&DeviceAlreadyMountedToWrongMountpoint{devicePath, mountPoint}, "fail")
+	} else{
+		if err = b.blockDeviceUtils.MountFs(devicePath, mountPoint); err != nil {
+			return b.logger.ErrorRet(err, "MountFs failed")
+		}
 	}
 
 	return nil
-}
-
-func (b *blockDeviceMounterUtils) validateMountpoint(devicePath string) error {
-	return nil  // TODO
 }
 
 // UnmountDeviceFlow umount device, clean device and remove mountpoint folder
