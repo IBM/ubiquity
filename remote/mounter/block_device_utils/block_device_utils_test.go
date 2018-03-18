@@ -142,32 +142,6 @@ var _ = Describe("block_device_utils_test", func() {
 			Expect(cmd).To(Equal("sg_inq"))
 			Expect(args).To(Equal([]string{"-p",  "0x83", "/dev/mapper/mpath"}))
 		})
-                It("Discover returns path for volume on z systems", func() {
-                        volumeId := "0x6001738cfc9035eb0000000000cea5f6"
-                        result := "mpath"
-                        inq_result := fmt.Sprintf(`VPD INQUIRY: Device Identification page
-                                                        Designation descriptor number 1, descriptor length: 20
-                                                        designator_type: NAA,  code_set: Binary
-                                                        associated with the addressed logical unit
-                                                        NAA 6, IEEE Company_id: 0x1738
-                                                        Vendor Specific Identifier: 0xcfc9035eb
-                                                        Vendor Specific Extension Identifier: 0x6443003d
-                                                        [%s]`, volumeId)
-                        fakeExec.ExecuteReturnsOnCall(0, []byte(fmt.Sprintf("%s (%s) dm-1", result, volumeId)),
-                                nil)
-                        fakeExec.ExecuteWithTimeoutReturns([]byte(fmt.Sprintf("%s", inq_result)), nil) // for getWwnByScsiInq
-                        mpath, err := bdUtils.Discover(strings.TrimPrefix(volumeId, "0x"), true)
-                        Expect(err).ToNot(HaveOccurred())
-                        Expect(mpath).To(Equal("/dev/mapper/" + result))
-                        Expect(fakeExec.ExecuteCallCount()).To(Equal(1))
-                        Expect(fakeExec.ExecuteWithTimeoutCallCount()).To(Equal(1))
-                        cmd, args := fakeExec.ExecuteArgsForCall(0)
-                        Expect(cmd).To(Equal("multipath"))
-                        Expect(args).To(Equal([]string{"-ll"}))
-                        _, cmd, args = fakeExec.ExecuteWithTimeoutArgsForCall(0)
-                        Expect(cmd).To(Equal("sg_inq"))
-                        Expect(args).To(Equal([]string{"-p",  "0x83", "/dev/mapper/mpath"}))
-                })
 		It("Discover fails if multipath command is missing", func() {
 			volumeId := "volume-id"
 			fakeExec.IsExecutableReturns(cmdErr)
@@ -307,6 +281,26 @@ mpathhb (36001738cfc9035eb0000000000cea###) dm-3 ##,##
 			Expect(cmd).To(Equal("sg_inq"))
 			Expect(args).To(Equal([]string{"-p",  "0x83", dev}))
 		})
+                It("should return wwn for mpath device on zLinux output", func() {
+                        dev := "dev"
+                        expecedWwn := "0x6001738cfc9035eb0000000000AAAAAA"
+                        result := fmt.Sprintf(`VPD INQUIRY: Device Identification page
+                                                        Designation descriptor number 1, descriptor length: 20
+                                                        designator_type: NAA,  code_set: Binary
+                                                        associated with the addressed logical unit
+                                                        NAA 6, IEEE Company_id: 0x1738
+                                                        Vendor Specific Identifier: 0xcfc9035eb
+                                                        Vendor Specific Extension Identifier: 0xcea5f6
+                                                        [%s]`, expecedWwn)
+                        fakeExec.ExecuteWithTimeoutReturns([]byte(fmt.Sprintf("%s", result)), nil)
+                        wwn, err := bdUtils.GetWwnByScsiInq(dev)
+                        Expect(err).ToNot(HaveOccurred())
+                        Expect(wwn).To(Equal(strings.TrimPrefix(expecedWwn, "0x")))
+                        Expect(fakeExec.ExecuteWithTimeoutCallCount()).To(Equal(1))
+                        _, cmd, args := fakeExec.ExecuteWithTimeoutArgsForCall(0)
+                        Expect(cmd).To(Equal("sg_inq"))
+                        Expect(args).To(Equal([]string{"-p",  "0x83", dev}))
+                })
 		It("should not find wwn for device", func() {
 			dev := "dev"
 			expecedWwn := "6001738cfc9035eb0000000000AAAAAA"
