@@ -185,7 +185,7 @@ func (b *blockDeviceUtils) GetWwnByScsiInq(dev string) (string, error) {
 	if err != nil {
 		return "", b.logger.ErrorRet(err, "failed")
 	}
-	pattern := "(?i)" + "Vendor Specific Identifier Extension:"
+	pattern := "(?i)" + "Vendor Specific (Identifier|Extension) (Identifier|Extension):"
 	scanner := bufio.NewScanner(strings.NewReader(string(outputBytes[:])))
 	regex, err := regexp.Compile(pattern)
 	if err != nil {
