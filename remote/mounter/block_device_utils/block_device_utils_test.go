@@ -281,6 +281,26 @@ mpathhb (36001738cfc9035eb0000000000cea###) dm-3 ##,##
 			Expect(cmd).To(Equal("sg_inq"))
 			Expect(args).To(Equal([]string{"-p",  "0x83", dev}))
 		})
+                It("should return wwn for mpath device on zLinux output", func() {
+                        dev := "dev"
+                        expecedWwn := "0x6001738cfc9035eb0000000000AAAAAA"
+                        result := fmt.Sprintf(`VPD INQUIRY: Device Identification page
+                                                        Designation descriptor number 1, descriptor length: 20
+                                                        designator_type: NAA,  code_set: Binary
+                                                        associated with the addressed logical unit
+                                                        NAA 6, IEEE Company_id: 0x1738
+                                                        Vendor Specific Identifier: 0xcfc9035eb
+                                                        Vendor Specific Extension Identifier: 0xcea5f6
+                                                        [%s]`, expecedWwn)
+                        fakeExec.ExecuteWithTimeoutReturns([]byte(fmt.Sprintf("%s", result)), nil)
+                        wwn, err := bdUtils.GetWwnByScsiInq(dev)
+                        Expect(err).ToNot(HaveOccurred())
+                        Expect(wwn).To(Equal(strings.TrimPrefix(expecedWwn, "0x")))
+                        Expect(fakeExec.ExecuteWithTimeoutCallCount()).To(Equal(1))
+                        _, cmd, args := fakeExec.ExecuteWithTimeoutArgsForCall(0)
+                        Expect(cmd).To(Equal("sg_inq"))
+                        Expect(args).To(Equal([]string{"-p",  "0x83", dev}))
+                })
 		It("should not find wwn for device", func() {
 			dev := "dev"
 			expecedWwn := "6001738cfc9035eb0000000000AAAAAA"
