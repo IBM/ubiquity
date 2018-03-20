@@ -187,7 +187,7 @@ func (b *blockDeviceUtils) GetWwnByScsiInq(dev string) (string, error) {
 	}
         /* x86 systems returns 'Vendor Specific Identifier Extension' and zLinux systems
         return Vendor Specific Extension Identifier. */
-	pattern := "(?i)" + "Vendor Specific (Identifier Extension|Extension Identifier):"
+	pattern := "(?i)" + "Vendor Specific (Identifier Extension|Extension Identifier)"
 	scanner := bufio.NewScanner(strings.NewReader(string(outputBytes[:])))
 	regex, err := regexp.Compile(pattern)
 	if err != nil {
@@ -207,6 +207,7 @@ func (b *blockDeviceUtils) GetWwnByScsiInq(dev string) (string, error) {
 			b.logger.Debug(fmt.Sprintf("Found the expected Wwn [%s] in sg_inq.", wwn))
 			return wwn, nil
 		}
+                b.logger.Debug(fmt.Sprintf("line: %s", line))
 		if regex.MatchString(line) {
 			found = true
 			// its one line after "Vendor Specific Identifier Extension:" line which should contain the WWN
