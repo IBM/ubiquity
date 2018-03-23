@@ -19,17 +19,17 @@ package block_device_mounter_utils
 import (
 	"github.com/IBM/ubiquity/remote/mounter/block_device_utils"
 	"github.com/IBM/ubiquity/utils/logs"
-    "github.com/nightlyone/lockfile"
-	"path/filepath"
+	"github.com/nightlyone/lockfile"
 	"os"
+	"path/filepath"
 	"time"
 )
 
 type blockDeviceMounterUtils struct {
-	logger            logs.Logger
-	blockDeviceUtils  block_device_utils.BlockDeviceUtils
-	rescanFlock       lockfile.Lockfile
-	mpathFlock        lockfile.Lockfile
+	logger           logs.Logger
+	blockDeviceUtils block_device_utils.BlockDeviceUtils
+	rescanFlock      lockfile.Lockfile
+	mpathFlock       lockfile.Lockfile
 }
 
 func NewBlockDeviceMounterUtilsWithBlockDeviceUtils(blockDeviceUtils block_device_utils.BlockDeviceUtils) BlockDeviceMounterUtils {
@@ -51,9 +51,9 @@ func newBlockDeviceMounterUtils(blockDeviceUtils block_device_utils.BlockDeviceU
 	}
 
 	return &blockDeviceMounterUtils{logger: logs.GetLogger(),
-		blockDeviceUtils:  blockDeviceUtils,
-		rescanFlock:       rescanLock,
-		mpathFlock:        mpathLock,
+		blockDeviceUtils: blockDeviceUtils,
+		rescanFlock:      rescanLock,
+		mpathFlock:       mpathLock,
 	}
 }
 
@@ -94,7 +94,7 @@ func (b *blockDeviceMounterUtils) UnmountDeviceFlow(devicePath string) error {
 			break
 		}
 		b.logger.Debug("mpathFlock.TryLock failed", logs.Args{{"error", err}})
-		time.Sleep(time.Duration(500*time.Millisecond))
+		time.Sleep(time.Duration(500 * time.Millisecond))
 	}
 	b.logger.Debug("Got mpathLock for device", logs.Args{{"device", devicePath}})
 	defer b.mpathFlock.Unlock()
@@ -124,7 +124,7 @@ func (b *blockDeviceMounterUtils) RescanAll(withISCSI bool, wwn string, rescanFo
 			break
 		}
 		b.logger.Debug("rescanLock.TryLock failed", logs.Args{{"error", err}})
-		time.Sleep(time.Duration(500*time.Millisecond))
+		time.Sleep(time.Duration(500 * time.Millisecond))
 	}
 	b.logger.Debug("Got rescanLock for volumeWWN", logs.Args{{"volumeWWN", wwn}})
 	defer b.rescanFlock.Unlock()
@@ -134,7 +134,7 @@ func (b *blockDeviceMounterUtils) RescanAll(withISCSI bool, wwn string, rescanFo
 		// Only when run rescan for new device, try to check if its already exist to reduce rescans
 		device, _ := b.Discover(wwn, false) // no deep discovery
 
-		if (device != "") {
+		if device != "" {
 			// if need rescan for discover new device but the new device is already exist then skip the rescan
 			b.logger.Debug(
 				"Skip rescan, because there is already multiple device for volumeWWN",
