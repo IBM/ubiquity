@@ -1,0 +1,18 @@
+schemaVersion: '2.0.0' 
+metadataTest:
+  env:
+    - key: "PATH"
+      value: "/root:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
+    - key: "UBIQUITY_SERVER_CERT_PRIVATE"
+      value: "/var/lib/ubiquity/ssl/private/ubiquity.key"
+    - key: "UBIQUITY_SERVER_CERT_PUBLIC"
+      value: "/var/lib/ubiquity/ssl/private/ubiquity.crt"
+    - key: "UBIQUITY_SERVER_VERIFY_SCBE_CERT"
+      value: "/var/lib/ubiquity/ssl/public/scbe-trusted-ca.crt"
+    - key: "UBIQUITY_DB_SSL_ROOT_CERT"
+      value: "/var/lib/ubiquity/ssl/public/ubiquity-db-trusted-ca.crt"
+    - key: "SSL_MODE"
+      value: "verify-full"
+  workdir: ["/root/"]
+  entrypoint: ["docker-entrypoint.sh"]
+  cmd: ["ubiquity"]
