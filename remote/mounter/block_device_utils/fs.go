@@ -28,6 +28,8 @@ import (
 
 const (
 	NotMountedErrorMessage = "not mounted" // Error while umount device that is already unmounted
+	TimeoutMilisecondMountCmdIsDeviceMounted = 20 * 1000 // max to wait for mount command
+	TimeoutMilisecondMountCmdMountFs = 120 * 1000 // max to wait for mounting device
 )
 
 func (b *blockDeviceUtils) CheckFs(mpath string) (bool, error) {
@@ -73,7 +75,7 @@ func (b *blockDeviceUtils) MountFs(mpath string, mpoint string) error {
 		return b.logger.ErrorRet(&commandNotFoundError{mountCmd, err}, "failed")
 	}
 	args := []string{mpath, mpoint}
-	if _, err := b.exec.Execute(mountCmd, args); err != nil {
+	if _, err := b.exec.ExecuteWithTimeout(TimeoutMilisecondMountCmdMountFs, mountCmd, args); err != nil {
 		return b.logger.ErrorRet(&commandExecuteError{mountCmd, err}, "failed")
 	}
 	b.logger.Info("mounted", logs.Args{{"mpoint", mpoint}})
@@ -91,7 +93,7 @@ func (b *blockDeviceUtils) UmountFs(mpoint string) error {
 
 	args := []string{mpoint}
 	if _, err := b.exec.Execute(umountCmd, args); err != nil {
-		isMounted, _err := b.IsDeviceMounted(mpoint)
+		isMounted, _, _err := b.IsDeviceMounted(mpoint)
 		if _err != nil {
 			return _err
 		}
@@ -105,38 +107,49 @@ func (b *blockDeviceUtils) UmountFs(mpoint string) error {
 	return nil
 }
 
-func (b *blockDeviceUtils) IsDeviceMounted(devPath string) (bool, error) {
+func (b *blockDeviceUtils) IsDeviceMounted(devPath string) (bool, []string, error) {
 	/*
-	   true, nil  : If device is mounted (check via pars the mount output)
-	   false, nil : if device is not mounted
-	   false, err : if failed to discover if device is mounted
+	   true, mountpoints, nil  : If device is mounted (check via pars the mount output)
+	   false, nil, nil : if device is not mounted
+	   false, nil, err : if failed to discover
 	*/
 
 	defer b.logger.Trace(logs.DEBUG)()
 	mountCmd := "mount"
 	if err := b.exec.IsExecutable(mountCmd); err != nil {
-		return false, b.logger.ErrorRet(&commandNotFoundError{mountCmd, err}, "failed")
+		return false, nil, b.logger.ErrorRet(&commandNotFoundError{mountCmd, err}, "failed")
 	}
 
-	outputBytes, err := b.exec.Execute(mountCmd, nil)
+	outputBytes, err := b.exec.ExecuteWithTimeout(TimeoutMilisecondMountCmdIsDeviceMounted, mountCmd, nil)
 	if err != nil {
-		return false, b.logger.ErrorRet(&commandExecuteError{mountCmd, err}, "failed")
+		return false, nil, b.logger.ErrorRet(&commandExecuteError{mountCmd, err}, "failed")
 	}
 	scanner := bufio.NewScanner(strings.NewReader(string(outputBytes[:])))
-	pattern := fmt.Sprint("^" + devPath + `\s+`)
+	pattern := fmt.Sprint("^" + devPath + `\son\s(.*?)\s`)
 	regex, err := regexp.Compile(pattern)
 	if err != nil {
-		return false, b.logger.ErrorRet(err, "failed")
+		return false, nil, b.logger.ErrorRet(err, "failed")
 	}
+	var mounts []string
 	for scanner.Scan() {
 		line := scanner.Text()
-		if regex.MatchString(line) {
-			b.logger.Debug("Found mpath device as mounted device", logs.Args{{"mpath", devPath}, {"mountLine", line}})
-			return true, nil
+		matches := regex.FindStringSubmatch(line)
+		if len(matches) != 2 {
+			// not found regex in this line, so continue to next line.
+			continue
 		}
+
+		b.logger.Debug("Found mpath device as mounted device", logs.Args{{"mpath", devPath}, {"mountpoint", matches[1]}, {"mountLine", line}})
+		mounts = append(mounts, matches[1])
 	}
-	b.logger.Debug("Not found mpath device as mounted device", logs.Args{{"mpath", devPath}})
-	return false, nil
+
+	if len(mounts) == 0 {
+		b.logger.Debug("Not found mpath device as mounted device", logs.Args{{"mpath", devPath}})
+		return false, nil, nil
+	} else{
+		b.logger.Debug("Found mpath device as mounted device on mountpoints", logs.Args{{"mpath", devPath}, {"num_mountpoint", len(mounts)}, {"mountpoints", mounts}})
+		return true, mounts, nil
+	}
 }
 
 

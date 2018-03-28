@@ -128,18 +128,20 @@ type FakeBlockDeviceUtils struct {
 	umountFsReturnsOnCall map[int]struct {
 		result1 error
 	}
-	IsDeviceMountedStub        func(devPath string) (bool, error)
+	IsDeviceMountedStub        func(devPath string) (bool, []string, error)
 	isDeviceMountedMutex       sync.RWMutex
 	isDeviceMountedArgsForCall []struct {
 		devPath string
 	}
 	isDeviceMountedReturns struct {
 		result1 bool
-		result2 error
+		result2 []string
+		result3 error
 	}
 	isDeviceMountedReturnsOnCall map[int]struct {
 		result1 bool
-		result2 error
+		result2 []string
+		result3 error
 	}
 	invocations      map[string][][]interface{}
 	invocationsMutex sync.RWMutex
@@ -633,7 +635,7 @@ func (fake *FakeBlockDeviceUtils) UmountFsReturnsOnCall(i int, result1 error) {
 	}{result1}
 }
 
-func (fake *FakeBlockDeviceUtils) IsDeviceMounted(devPath string) (bool, error) {
+func (fake *FakeBlockDeviceUtils) IsDeviceMounted(devPath string) (bool, []string, error) {
 	fake.isDeviceMountedMutex.Lock()
 	ret, specificReturn := fake.isDeviceMountedReturnsOnCall[len(fake.isDeviceMountedArgsForCall)]
 	fake.isDeviceMountedArgsForCall = append(fake.isDeviceMountedArgsForCall, struct {
@@ -645,9 +647,9 @@ func (fake *FakeBlockDeviceUtils) IsDeviceMounted(devPath string) (bool, error) 
 		return fake.IsDeviceMountedStub(devPath)
 	}
 	if specificReturn {
-		return ret.result1, ret.result2
+		return ret.result1, ret.result2, ret.result3
 	}
-	return fake.isDeviceMountedReturns.result1, fake.isDeviceMountedReturns.result2
+	return fake.isDeviceMountedReturns.result1, fake.isDeviceMountedReturns.result2, fake.isDeviceMountedReturns.result3
 }
 
 func (fake *FakeBlockDeviceUtils) IsDeviceMountedCallCount() int {
@@ -662,26 +664,29 @@ func (fake *FakeBlockDeviceUtils) IsDeviceMountedArgsForCall(i int) string {
 	return fake.isDeviceMountedArgsForCall[i].devPath
 }
 
-func (fake *FakeBlockDeviceUtils) IsDeviceMountedReturns(result1 bool, result2 error) {
+func (fake *FakeBlockDeviceUtils) IsDeviceMountedReturns(result1 bool, result2 []string, result3 error) {
 	fake.IsDeviceMountedStub = nil
 	fake.isDeviceMountedReturns = struct {
 		result1 bool
-		result2 error
-	}{result1, result2}
+		result2 []string
+		result3 error
+	}{result1, result2, result3}
 }
 
-func (fake *FakeBlockDeviceUtils) IsDeviceMountedReturnsOnCall(i int, result1 bool, result2 error) {
+func (fake *FakeBlockDeviceUtils) IsDeviceMountedReturnsOnCall(i int, result1 bool, result2 []string, result3 error) {
 	fake.IsDeviceMountedStub = nil
 	if fake.isDeviceMountedReturnsOnCall == nil {
 		fake.isDeviceMountedReturnsOnCall = make(map[int]struct {
 			result1 bool
-			result2 error
+			result2 []string
+			result3 error
 		})
 	}
 	fake.isDeviceMountedReturnsOnCall[i] = struct {
 		result1 bool
-		result2 error
-	}{result1, result2}
+		result2 []string
+		result3 error
+	}{result1, result2, result3}
 }
 
 func (fake *FakeBlockDeviceUtils) Invocations() map[string][][]interface{} {

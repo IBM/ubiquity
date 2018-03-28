@@ -25,6 +25,8 @@ import (
 	"time"
 )
 
+const WarningMessageIdempotentDeviceAlreadyMounted = "Device is already mounted, so skip mounting (Idempotent)."
+
 type blockDeviceMounterUtils struct {
 	logger            logs.Logger
 	blockDeviceUtils  block_device_utils.BlockDeviceUtils
@@ -70,8 +72,27 @@ func (b *blockDeviceMounterUtils) MountDeviceFlow(devicePath string, fsType stri
 			return b.logger.ErrorRet(err, "MakeFs failed")
 		}
 	}
-	if err = b.blockDeviceUtils.MountFs(devicePath, mountPoint); err != nil {
-		return b.logger.ErrorRet(err, "MountFs failed")
+
+
+	// Check if need to mount the device, if its already mounted then skip mounting
+	isMounted, mountpointRefs, err := b.blockDeviceUtils.IsDeviceMounted(devicePath)
+	if err != nil{
+		return b.logger.ErrorRet(err, "fail to identify if device is mounted")
+	}
+
+	if isMounted{
+		for _, mountpointi := range mountpointRefs{
+			if mountpointi == mountPoint{
+				b.logger.Info(WarningMessageIdempotentDeviceAlreadyMounted, logs.Args{{"Device", devicePath}, {"mountpoint", mountPoint}})
+				return nil // Indicate idempotent issue
+			}
+		}
+		// In case device mounted but to different mountpoint as expected we fail with error. # TODO we may support it in the future after allow the umount flow to umount by mountpoint and not by device path.
+		return b.logger.ErrorRet(&DeviceAlreadyMountedToWrongMountpoint{devicePath, mountPoint}, "fail")
+	} else{
+		if err = b.blockDeviceUtils.MountFs(devicePath, mountPoint); err != nil {
+			return b.logger.ErrorRet(err, "MountFs failed")
+		}
 	}
 
 	return nil
@@ -79,6 +100,7 @@ func (b *blockDeviceMounterUtils) MountDeviceFlow(devicePath string, fsType stri
 
 // UnmountDeviceFlow umount device, clean device and remove mountpoint folder
 func (b *blockDeviceMounterUtils) UnmountDeviceFlow(devicePath string) error {
+	// TODO consider also to receive the mountpoint(not only the devicepath), so the umount will use the mountpoint instead of the devicepath for future support double mounting of the same device.
 	defer b.logger.Trace(logs.INFO, logs.Args{{"devicePath", devicePath}})
 
 	err := b.blockDeviceUtils.UmountFs(devicePath)
@@ -104,7 +126,6 @@ func (b *blockDeviceMounterUtils) UnmountDeviceFlow(devicePath string) error {
 		return b.logger.ErrorRet(err, "Cleanup failed")
 	}
 
-	// TODO delete the directory here
 	return nil
 }
 
