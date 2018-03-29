@@ -68,6 +68,7 @@ func main() {
 	heartbeat := utils.NewHeartbeat(ubiquityConfigPath)
 
 	logger.Info("Checking for heartbeat....")
+	logger.Info("test olga....")
 	probeHeartbeatUntilFree(heartbeat)
 
 	err = heartbeat.Create()
