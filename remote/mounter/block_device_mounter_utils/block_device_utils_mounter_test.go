@@ -279,6 +279,51 @@ var _ = Describe("block_device_mounter_utils_test", func() {
 			Expect(fakeBlockDeviceUtils.CleanupCallCount()).To(Equal(1))
 		})
 	})
+
+	Context(".RescanAllTargets", func() {
+		It("should fail if FC rescan all targets fail", func() {
+			fakeBlockDeviceUtils.RescanReturnsOnCall(0, callErr)
+			fakeBlockDeviceUtils.DiscoverReturns("", fmt.Errorf("device not exist yet"))
+			err = blockDeviceMounterUtils.RescanAllTargets(false, "wwn")
+			Expect(err).To(HaveOccurred())
+			Expect(err).To(MatchError(callErr))
+			Expect(fakeBlockDeviceUtils.RescanCallCount()).To(Equal(1))
+			protocol := fakeBlockDeviceUtils.RescanArgsForCall(0)
+			Expect(protocol).To(Equal(block_device_utils.FC))
+		})
+		It("should fail if ReloadMultipath fail", func() {
+			fakeBlockDeviceUtils.RescanReturnsOnCall(0, nil)
+			fakeBlockDeviceUtils.ReloadMultipathReturns(callErr)
+			fakeBlockDeviceUtils.DiscoverReturns("", fmt.Errorf("device not exist yet"))
+			err = blockDeviceMounterUtils.RescanAllTargets(false, "wwn")
+			Expect(err).To(HaveOccurred())
+			Expect(err).To(MatchError(callErr))
+			Expect(fakeBlockDeviceUtils.RescanCallCount()).To(Equal(1))
+			protocol := fakeBlockDeviceUtils.RescanArgsForCall(0)
+			Expect(protocol).To(Equal(block_device_utils.FC))
+			Expect(fakeBlockDeviceUtils.ReloadMultipathCallCount()).To(Equal(1))
+
+		})
+		It("should succeed if rescall all successfully", func() {
+			fakeBlockDeviceUtils.RescanReturnsOnCall(0, nil)
+			fakeBlockDeviceUtils.ReloadMultipathReturns(nil)
+			fakeBlockDeviceUtils.DiscoverReturns("", fmt.Errorf("device not exist yet"))
+			err = blockDeviceMounterUtils.RescanAllTargets(false, "wwn")
+			Expect(err).NotTo(HaveOccurred())
+			Expect(fakeBlockDeviceUtils.RescanCallCount()).To(Equal(1))
+			protocol := fakeBlockDeviceUtils.RescanArgsForCall(0)
+			Expect(protocol).To(Equal(block_device_utils.FC))
+			Expect(fakeBlockDeviceUtils.ReloadMultipathCallCount()).To(Equal(1))
+		})
+		It("should succeed if ReloadMultipath successfully(For iscsi)", func() {
+			fakeBlockDeviceUtils.ReloadMultipathReturns(nil)
+			fakeBlockDeviceUtils.DiscoverReturns("", fmt.Errorf("device not exist yet"))
+			err = blockDeviceMounterUtils.RescanAllTargets(true, "wwn")
+			Expect(err).NotTo(HaveOccurred())
+			Expect(fakeBlockDeviceUtils.RescanCallCount()).To(Equal(0))
+			Expect(fakeBlockDeviceUtils.ReloadMultipathCallCount()).To(Equal(1))
+		})
+	})
 })
 
 func TestGetBlockDeviceUtils(t *testing.T) {

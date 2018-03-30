@@ -21,6 +21,18 @@ type FakeBlockDeviceMounterUtils struct {
 	rescanAllReturnsOnCall map[int]struct {
 		result1 error
 	}
+	RescanAllTargetsStub        func(withISCSI bool, wwn string) error
+	rescanAllTargetsMutex       sync.RWMutex
+	rescanAllTargetsArgsForCall []struct {
+		withISCSI bool
+		wwn       string
+	}
+	rescanAllTargetsReturns struct {
+		result1 error
+	}
+	rescanAllTargetsReturnsOnCall map[int]struct {
+		result1 error
+	}
 	MountDeviceFlowStub        func(devicePath string, fsType string, mountPoint string) error
 	mountDeviceFlowMutex       sync.RWMutex
 	mountDeviceFlowArgsForCall []struct {
@@ -109,6 +121,55 @@ func (fake *FakeBlockDeviceMounterUtils) RescanAllReturnsOnCall(i int, result1 e
 		})
 	}
 	fake.rescanAllReturnsOnCall[i] = struct {
+		result1 error
+	}{result1}
+}
+
+func (fake *FakeBlockDeviceMounterUtils) RescanAllTargets(withISCSI bool, wwn string) error {
+	fake.rescanAllTargetsMutex.Lock()
+	ret, specificReturn := fake.rescanAllTargetsReturnsOnCall[len(fake.rescanAllTargetsArgsForCall)]
+	fake.rescanAllTargetsArgsForCall = append(fake.rescanAllTargetsArgsForCall, struct {
+		withISCSI bool
+		wwn       string
+	}{withISCSI, wwn})
+	fake.recordInvocation("RescanAllTargets", []interface{}{withISCSI, wwn})
+	fake.rescanAllTargetsMutex.Unlock()
+	if fake.RescanAllTargetsStub != nil {
+		return fake.RescanAllTargetsStub(withISCSI, wwn)
+	}
+	if specificReturn {
+		return ret.result1
+	}
+	return fake.rescanAllTargetsReturns.result1
+}
+
+func (fake *FakeBlockDeviceMounterUtils) RescanAllTargetsCallCount() int {
+	fake.rescanAllTargetsMutex.RLock()
+	defer fake.rescanAllTargetsMutex.RUnlock()
+	return len(fake.rescanAllTargetsArgsForCall)
+}
+
+func (fake *FakeBlockDeviceMounterUtils) RescanAllTargetsArgsForCall(i int) (bool, string) {
+	fake.rescanAllTargetsMutex.RLock()
+	defer fake.rescanAllTargetsMutex.RUnlock()
+	return fake.rescanAllTargetsArgsForCall[i].withISCSI, fake.rescanAllTargetsArgsForCall[i].wwn
+}
+
+func (fake *FakeBlockDeviceMounterUtils) RescanAllTargetsReturns(result1 error) {
+	fake.RescanAllTargetsStub = nil
+	fake.rescanAllTargetsReturns = struct {
+		result1 error
+	}{result1}
+}
+
+func (fake *FakeBlockDeviceMounterUtils) RescanAllTargetsReturnsOnCall(i int, result1 error) {
+	fake.RescanAllTargetsStub = nil
+	if fake.rescanAllTargetsReturnsOnCall == nil {
+		fake.rescanAllTargetsReturnsOnCall = make(map[int]struct {
+			result1 error
+		})
+	}
+	fake.rescanAllTargetsReturnsOnCall[i] = struct {
 		result1 error
 	}{result1}
 }
@@ -268,6 +329,8 @@ func (fake *FakeBlockDeviceMounterUtils) Invocations() map[string][][]interface{
 	defer fake.invocationsMutex.RUnlock()
 	fake.rescanAllMutex.RLock()
 	defer fake.rescanAllMutex.RUnlock()
+	fake.rescanAllTargetsMutex.RLock()
+	defer fake.rescanAllTargetsMutex.RUnlock()
 	fake.mountDeviceFlowMutex.RLock()
 	defer fake.mountDeviceFlowMutex.RUnlock()
 	fake.discoverMutex.RLock()

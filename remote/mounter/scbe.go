@@ -53,7 +53,19 @@ func (s *scbeMounter) Mount(mountRequest resources.MountRequest) (string, error)
 	// Discover device
 	devicePath, err := s.blockDeviceMounterUtils.Discover(volumeWWN, true)
 	if err != nil {
-		return "", s.logger.ErrorRet(err, "Discover failed", logs.Args{{"volumeWWN", volumeWWN}})
+		// Known issue with rescan-scsi-bus.sh, LUN0 must be the first mapped logical unit, otherwise it will not be able to scan any other logical unit
+		// For DS8k, it only support FC and without LUN0 mapped default, so we need to do "rescan-scsi-bus.sh -a" to discover the LUN0
+		if s.config.SkipRescanISCSI {
+			if err := s.blockDeviceMounterUtils.RescanAllTargets(!s.config.SkipRescanISCSI, volumeWWN); err != nil {
+				return "", s.logger.ErrorRet(err, "RescanAll failed again")
+			}
+			devicePath, err = s.blockDeviceMounterUtils.Discover(volumeWWN, true)
+			if err != nil {
+				return "", s.logger.ErrorRet(err, "Discover failed after rescan all target", logs.Args{{"volumeWWN", volumeWWN}})
+			}
+		} else {
+			return "", s.logger.ErrorRet(err, "Discover failed", logs.Args{{"volumeWWN", volumeWWN}})
+		}
 	}
 
 	// Create mount point if needed   // TODO consider to move it inside the util

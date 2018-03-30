@@ -182,6 +182,40 @@ func (b *blockDeviceMounterUtils) RescanAll(withISCSI bool, wwn string, rescanFo
 	return nil
 }
 
+// RescanAllTargets(For DS8k/Rescan-scsi-bus.sh Lun0 issue)  triggers the following OS rescanning :
+// 1. SCSI rescan with "rescan-scsi-bus.sh -r"
+// 2. multipathing rescan
+// return error if one of the steps fail
+func (b *blockDeviceMounterUtils) RescanAllTargets(withISCSI bool, wwn string) error {
+	defer b.logger.Trace(logs.INFO, logs.Args{{"withISCSI", withISCSI}})
+
+	// locking for concurrent rescans and reduce rescans if no need
+	b.logger.Debug("Ask for rescanLock for volumeWWN", logs.Args{{"volumeWWN", wwn}})
+	for {
+		err := b.rescanFlock.TryLock()
+		if err == nil {
+			break
+		}
+		b.logger.Debug("rescanLock.TryLock failed", logs.Args{{"error", err}})
+		time.Sleep(time.Duration(500*time.Millisecond))
+	}
+	b.logger.Debug("Got rescanLock for volumeWWN", logs.Args{{"volumeWWN", wwn}})
+	defer b.rescanFlock.Unlock()
+	defer b.logger.Debug("Released rescanLock for volumeWWN", logs.Args{{"volumeWWN", wwn}})
+
+	// Do the rescans operations
+	if !withISCSI {
+		if err := b.blockDeviceUtils.Rescan(block_device_utils.FC); err != nil {
+			return b.logger.ErrorRet(err, "Rescan all target failed", logs.Args{{"protocol", block_device_utils.FC}})
+		}
+	}
+	if err := b.blockDeviceUtils.ReloadMultipath(); err != nil {
+		return b.logger.ErrorRet(err, "ReloadMultipath failed")
+	}
+
+	return nil
+}
+
 func (b *blockDeviceMounterUtils) Discover(volumeWwn string, deepDiscovery bool) (string, error) {
 	return b.blockDeviceUtils.Discover(volumeWwn, deepDiscovery)
 }

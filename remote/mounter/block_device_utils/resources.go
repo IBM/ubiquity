@@ -21,6 +21,7 @@ type Protocol int
 const (
 	SCSI Protocol = iota
 	ISCSI
+	FC
 )
 
 //go:generate counterfeiter -o ../fakes/fake_block_device_utils.go . BlockDeviceUtils
