@@ -1,7 +1,7 @@
 schemaVersion: '2.0.0'
 
 commandTests:
-  # check that alpine version is 3.7.0 and ca-certificates version 20171114-r0 and openssl version 1.0.2n-r0 packages installed
+  # check that alpine version is 3.7.0 and ca-certificates version 20171114-r0 and openssl version 1.0.2o-r0 packages installed
   - name: "alpine version 3.7.0"
     command: "cat"
     args: ["/etc/alpine-release"]
@@ -10,7 +10,7 @@ commandTests:
     command: "apk"
     args: ["info", "-vv"]
     expectedOutput: ["ca-certificates-20171114-r0"]
-  - name: "openssl version 1.0.2n-r0 package"
+  - name: "openssl version 1.0.2o-r0 package"
     command: "apk"
     args: ["info", "-vv"]
-    expectedOutput: ["openssl-1.0.2n-r0"]
+    expectedOutput: ["openssl-1.0.2o-r0"]
