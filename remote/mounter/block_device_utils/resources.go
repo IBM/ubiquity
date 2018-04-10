@@ -19,7 +19,7 @@ package block_device_utils
 type Protocol int
 
 const (
-	SCSI Protocol = iota
+	BOTH Protocol = iota
 	ISCSI
 	FC
 )

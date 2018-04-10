@@ -171,8 +171,8 @@ func (b *blockDeviceMounterUtils) RescanAll(withISCSI bool, wwn string, rescanFo
 			return b.logger.ErrorRet(err, "Rescan failed", logs.Args{{"protocol", block_device_utils.ISCSI}})
 		}
 	}
-	if err := b.blockDeviceUtils.Rescan(block_device_utils.SCSI); err != nil {
-		return b.logger.ErrorRet(err, "Rescan failed", logs.Args{{"protocol", block_device_utils.SCSI}})
+	if err := b.blockDeviceUtils.Rescan(block_device_utils.BOTH); err != nil {
+		return b.logger.ErrorRet(err, "Rescan failed", logs.Args{{"protocol", block_device_utils.BOTH}})
 	}
 	if !rescanForCleanUp {
 		if err := b.blockDeviceUtils.ReloadMultipath(); err != nil {

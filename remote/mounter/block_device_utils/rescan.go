@@ -25,7 +25,7 @@ func (b *blockDeviceUtils) Rescan(protocol Protocol) error {
 	defer b.logger.Trace(logs.DEBUG)()
 
 	switch protocol {
-	case SCSI:
+	case BOTH:
 		return b.RescanSCSI("-r")
 	case ISCSI:
 		return b.RescanISCSI()

@@ -199,7 +199,7 @@ var _ = Describe("block_device_mounter_utils_test", func() {
 			protocol := fakeBlockDeviceUtils.RescanArgsForCall(0)
 			Expect(protocol).To(Equal(block_device_utils.ISCSI))
 			protocol = fakeBlockDeviceUtils.RescanArgsForCall(1)
-			Expect(protocol).To(Equal(block_device_utils.SCSI))
+			Expect(protocol).To(Equal(block_device_utils.BOTH))
 		})
 		It("should fail if scsi rescan fail even if for clean up", func() {
 			fakeBlockDeviceUtils.RescanReturnsOnCall(0, nil)
@@ -212,7 +212,7 @@ var _ = Describe("block_device_mounter_utils_test", func() {
 			protocol := fakeBlockDeviceUtils.RescanArgsForCall(0)
 			Expect(protocol).To(Equal(block_device_utils.ISCSI))
 			protocol = fakeBlockDeviceUtils.RescanArgsForCall(1)
-			Expect(protocol).To(Equal(block_device_utils.SCSI))
+			Expect(protocol).To(Equal(block_device_utils.BOTH))
 		})
 		It("should fail if ReloadMultipath fail", func() {
 			fakeBlockDeviceUtils.RescanReturnsOnCall(0, nil)
@@ -226,7 +226,7 @@ var _ = Describe("block_device_mounter_utils_test", func() {
 			protocol := fakeBlockDeviceUtils.RescanArgsForCall(0)
 			Expect(protocol).To(Equal(block_device_utils.ISCSI))
 			protocol = fakeBlockDeviceUtils.RescanArgsForCall(1)
-			Expect(protocol).To(Equal(block_device_utils.SCSI))
+			Expect(protocol).To(Equal(block_device_utils.BOTH))
 			Expect(fakeBlockDeviceUtils.ReloadMultipathCallCount()).To(Equal(1))
 
 		})
@@ -241,7 +241,7 @@ var _ = Describe("block_device_mounter_utils_test", func() {
 			protocol := fakeBlockDeviceUtils.RescanArgsForCall(0)
 			Expect(protocol).To(Equal(block_device_utils.ISCSI))
 			protocol = fakeBlockDeviceUtils.RescanArgsForCall(1)
-			Expect(protocol).To(Equal(block_device_utils.SCSI))
+			Expect(protocol).To(Equal(block_device_utils.BOTH))
 			Expect(fakeBlockDeviceUtils.ReloadMultipathCallCount()).To(Equal(1))
 		})
 		It("should succeed to rescall all (no iscsi call)", func() {
@@ -252,7 +252,7 @@ var _ = Describe("block_device_mounter_utils_test", func() {
 			Expect(err).NotTo(HaveOccurred())
 			Expect(fakeBlockDeviceUtils.RescanCallCount()).To(Equal(1))
 			protocol := fakeBlockDeviceUtils.RescanArgsForCall(0)
-			Expect(protocol).To(Equal(block_device_utils.SCSI))
+			Expect(protocol).To(Equal(block_device_utils.BOTH))
 			Expect(fakeBlockDeviceUtils.ReloadMultipathCallCount()).To(Equal(1))
 		})
 	})
