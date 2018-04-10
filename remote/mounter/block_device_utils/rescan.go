@@ -26,11 +26,11 @@ func (b *blockDeviceUtils) Rescan(protocol Protocol) error {
 
 	switch protocol {
 	case SCSI:
-		return b.RescanSCSI()
+		return b.RescanSCSI("-r")
 	case ISCSI:
 		return b.RescanISCSI()
 	case FC:
-		return b.RescanSCSIWithAllTarget()
+		return b.RescanSCSI("-a")
 	default:
 		return b.logger.ErrorRet(&unsupportedProtocolError{protocol}, "failed")
 	}
@@ -49,7 +49,7 @@ func (b *blockDeviceUtils) RescanISCSI() error {
 	return nil
 }
 
-func (b *blockDeviceUtils) RescanSCSI() error {
+func (b *blockDeviceUtils) RescanSCSI(str string) error {
 	defer b.logger.Trace(logs.DEBUG)()
 	commands := []string{"rescan-scsi-bus", "rescan-scsi-bus.sh"}
 	rescanCmd := ""
@@ -62,29 +62,12 @@ func (b *blockDeviceUtils) RescanSCSI() error {
 	if rescanCmd == "" {
 		return b.logger.ErrorRet(&commandNotFoundError{commands[0], errors.New("")}, "failed")
 	}
-	args := []string{"-r"} // TODO should use -r only in clean up
+	// TODO should use -r only in clean up
+	// Use "-a" to rescan all targets if lun was not find in order to find a lun0 on a new target
+	args := []string{str}
 	if _, err := b.exec.Execute(rescanCmd, args); err != nil {
 		return b.logger.ErrorRet(&commandExecuteError{rescanCmd, err}, "failed")
 	}
 	return nil
 }
 
-func (b *blockDeviceUtils) RescanSCSIWithAllTarget() error {
-	defer b.logger.Trace(logs.DEBUG)()
-	commands := []string{"rescan-scsi-bus", "rescan-scsi-bus.sh"}
-	rescanCmd := ""
-	for _, cmd := range commands {
-		if err := b.exec.IsExecutable(cmd); err == nil {
-			rescanCmd = cmd
-			break
-		}
-	}
-	if rescanCmd == "" {
-		return b.logger.ErrorRet(&commandNotFoundError{commands[0], errors.New("")}, "failed")
-	}
-	args := []string{"-a"} // Only for the Lun0 rescan on DS8k
-	if _, err := b.exec.Execute(rescanCmd, args); err != nil {
-		return b.logger.ErrorRet(&commandExecuteError{rescanCmd, err}, "failed")
-	}
-	return nil
-}

@@ -89,7 +89,7 @@ var _ = Describe("block_device_utils_test", func() {
 			Expect(err.Error()).To(MatchRegexp(cmdErr.Error()))
 		})
 		It("Rescan fails if unknown protocol", func() {
-			err = bdUtils.Rescan(2)
+			err = bdUtils.Rescan(3)
 			Expect(err).To(HaveOccurred())
 		})
 	})

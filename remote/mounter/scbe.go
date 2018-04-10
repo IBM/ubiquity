@@ -57,7 +57,7 @@ func (s *scbeMounter) Mount(mountRequest resources.MountRequest) (string, error)
 		// For DS8k, it only support FC and without LUN0 mapped default, so we need to do "rescan-scsi-bus.sh -a" to discover the LUN0
 		if s.config.SkipRescanISCSI {
 			if err := s.blockDeviceMounterUtils.RescanAllTargets(!s.config.SkipRescanISCSI, volumeWWN); err != nil {
-				return "", s.logger.ErrorRet(err, "RescanAll failed again")
+				return "", s.logger.ErrorRet(err, "RescanAll Targets failed", logs.Args{{"volumeWWN", volumeWWN}})
 			}
 			devicePath, err = s.blockDeviceMounterUtils.Discover(volumeWWN, true)
 			if err != nil {
