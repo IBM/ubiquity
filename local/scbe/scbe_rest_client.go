@@ -29,6 +29,7 @@ type ScbeRestClient interface {
 	Login() error
 	CreateVolume(volName string, serviceName string, size int) (ScbeVolumeInfo, error)
 	GetVolumes(wwn string) ([]ScbeVolumeInfo, error)
+	GetVolumesByVolName(volName string)([]ScbeVolumeInfo, error)
 	DeleteVolume(wwn string) error
 	MapVolume(wwn string, host string) (ScbeResponseMapping, error)
 	UnmapVolume(wwn string, host string) error
@@ -129,6 +130,20 @@ func (s *scbeRestClient) GetVolumes(wwn string) ([]ScbeVolumeInfo, error) {
 	vols, err := s.volumeList(wwn)
 	if err != nil {
 		return nil, s.logger.ErrorRet(err, "volumeList failed", logs.Args{{"wwn", wwn}})
+	}
+	scbeVolumes := []ScbeVolumeInfo{}
+	for _, volume := range vols {
+		scbeVolumes = append(scbeVolumes, NewScbeVolumeInfo(&volume))
+	}
+
+	return scbeVolumes, nil
+}
+
+func (s *scbeRestClient) GetVolumesByVolName(volName string) ([]ScbeVolumeInfo, error) {
+	defer s.logger.Trace(logs.DEBUG)()
+	vols, err := s.volumeListByVolName(volName)
+	if err != nil {
+		return nil, s.logger.ErrorRet(err, "volumeListByVolName failed", logs.Args{{"volName", volName}})
 	}
 	scbeVolumes := []ScbeVolumeInfo{}
 	for _, volume := range vols {
@@ -245,11 +260,26 @@ func (s *scbeRestClient) serviceList(serviceName string) ([]ScbeStorageService, 
 
 	return services, nil
 }
+
 func (s *scbeRestClient) volumeList(wwn string) ([]ScbeResponseVolume, error) {
 	defer s.logger.Trace(logs.DEBUG)()
 	payload := map[string]string{}
 	if wwn != "" {
 		payload["scsi_identifier"] = wwn
+	}
+	var volumes []ScbeResponseVolume
+	if err := s.client.Get(UrlScbeResourceVolume, payload, -1, &volumes); err != nil {
+		return nil, s.logger.ErrorRet(err, "client.Get failed")
+	}
+
+	return volumes, nil
+}
+
+func (s *scbeRestClient) volumeListByVolName(volName string) ([]ScbeResponseVolume, error) {
+	defer s.logger.Trace(logs.DEBUG)()
+	payload := map[string]string{}
+	if volName != "" {
+		payload["name"] = volName
 	}
 	var volumes []ScbeResponseVolume
 	if err := s.client.Get(UrlScbeResourceVolume, payload, -1, &volumes); err != nil {

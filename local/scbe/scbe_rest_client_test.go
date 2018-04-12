@@ -180,6 +180,50 @@ var _ = Describe("ScbeRestClient", func() {
             Expect(err).To(MatchError(restErr))
         })
     })
+
+    Context(".GetVolumesByVolName", func() {
+        It("succeed and return a few ScbeVolumeInfo", func() {
+            volumes := []scbe.ScbeResponseVolume{
+                {Name: volName + "0", ScsiIdentifier: volIdentifier + "0", ServiceName: profileName + "0"},
+                {Name: volName + "1", ScsiIdentifier: volIdentifier + "1", ServiceName: profileName + "1"},
+                {Name: volName + "2", ScsiIdentifier: volIdentifier + "2", ServiceName: profileName + "2"},
+            }
+            fakeSimpleRestClient.GetStub = OverrideGetStub(volumes)
+            volumesInfo, err := scbeRestClient.GetVolumesByVolName("")
+            Expect(err).NotTo(HaveOccurred())
+            for index, volInfo := range volumesInfo {
+                indexStr := strconv.Itoa(index)
+                Expect(volInfo.Name).To(Equal(volName + indexStr))
+                Expect(volInfo.Wwn).To(Equal(volIdentifier + indexStr))
+                Expect(volInfo.Profile).To(Equal(profileName + indexStr))
+            }
+        })
+        It("succeed and return a single ScbeVolumeInfo", func() {
+            volumes := []scbe.ScbeResponseVolume{
+                {Name: volName, ScsiIdentifier: volIdentifier, ServiceName: profileName},
+            }
+            fakeSimpleRestClient.GetStub = OverrideGetStub(volumes)
+            volumesInfo, err := scbeRestClient.GetVolumesByVolName(volName)
+            Expect(err).NotTo(HaveOccurred())
+            Expect(len(volumesInfo)).To(Equal(1))
+            volInfo := volumesInfo[0]
+            Expect(volInfo.Name).To(Equal(volName))
+            Expect(volInfo.Wwn).To(Equal(volIdentifier))
+            Expect(volInfo.Profile).To(Equal(profileName))
+        })
+        It("succeed and return no ScbeVolumeInfo", func() {
+            volumesInfo, err := scbeRestClient.GetVolumesByVolName(volName)
+            Expect(err).NotTo(HaveOccurred())
+            Expect(len(volumesInfo)).To(Equal(0))
+        })
+        It("fail upon SimpleRestClient error", func() {
+            fakeSimpleRestClient.GetReturns(restErr)
+            _, err := scbeRestClient.GetVolumesByVolName(volName)
+            Expect(err).To(HaveOccurred())
+            Expect(err).To(MatchError(restErr))
+        })
+    })
+
     Context(".GetVolMapping", func() {
         It("succeed with 1 mapping found", func() {
             fakeSimpleRestClient.GetStub = GetVolMappingStubSuccess()

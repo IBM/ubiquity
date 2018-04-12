@@ -22,6 +22,7 @@ import (
     _ "github.com/jinzhu/gorm/dialects/sqlite"
     "github.com/IBM/ubiquity/utils/logs"
     "errors"
+    "time"
 )
 
 var globalConnectionFactory ConnectionFactory = nil
@@ -83,9 +84,16 @@ func (c *Connection) Open() (error) {
         return c.logger.ErrorRet(errors.New("Connection already open"), "failed")
     }
 
-    // open db connection
-    if c.db, err = c.factory.newConnection(); err != nil {
-        return c.logger.ErrorRet(err, "failed")
+    // open db connection, retry 3 time with 5s sleep interval
+    for i := 0; i < 4; i ++ {
+        if c.db, err = c.factory.newConnection(); err != nil {
+            if i == 3 {
+                return c.logger.ErrorRet(err, "Retry failed")
+            }
+            time.Sleep(5 * time.Second)
+        } else {
+            break
+        }
     }
 
     // do migrations

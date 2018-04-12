@@ -265,6 +265,26 @@ func (s *scbeLocalClient) CreateVolume(createVolumeRequest resources.CreateVolum
 		return s.logger.ErrorRet(&VolumeNameExceededMaxLengthError{createVolumeRequest.Name, maxVolLength}, "failed")
 	}
 
+	// verify if volume exist on the storage
+	volumeInfo, err := scbeRestClient.GetVolumesByVolName(volNameToCreate)
+	if err != nil {
+		s.logger.ErrorRet(err, "scbeRestClient.GetVolumesByVolName failed")
+	}
+
+	if len(volumeInfo) == 0{
+		s.logger.Debug("Volume not exist on the storage, need to provision")
+	} else {
+		s.logger.Debug("Volume exists on the storage, no need to provision")
+		// TODO idempotent, if volume attached to host, we should handle when attach this volume to another host.
+		err = s.dataModel.InsertVolume(createVolumeRequest.Name, volumeInfo[0].Wwn, fstype)
+		if err != nil {
+			//Since volume already exist on the storage, so don't delete it from the array if fail to insert volume to DB
+			return s.logger.ErrorRet(err, "dataModel.InsertVolume failed")
+		}
+		s.logger.Info("succeeded", logs.Args{{"volume", createVolumeRequest.Name}, {"profile", profile}})
+		return nil
+	}
+
 	// Provision the volume on SCBE service
 	volInfo := ScbeVolumeInfo{}
 	volInfo, err = scbeRestClient.CreateVolume(volNameToCreate, profile, size)
@@ -274,6 +294,10 @@ func (s *scbeLocalClient) CreateVolume(createVolumeRequest resources.CreateVolum
 
 	err = s.dataModel.InsertVolume(createVolumeRequest.Name, volInfo.Wwn, fstype)
 	if err != nil {
+		// Failed to add volume to DB, start to delete volume from the array
+		if errDeleteVolume := scbeRestClient.DeleteVolume(volInfo.Wwn); errDeleteVolume != nil {
+			return s.logger.ErrorRet(errDeleteVolume, "scbeRestClient.DeleteVolume failed")
+		}
 		return s.logger.ErrorRet(err, "dataModel.InsertVolume failed")
 	}
 
