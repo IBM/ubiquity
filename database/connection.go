@@ -21,6 +21,7 @@ import (
     _ "github.com/jinzhu/gorm/dialects/postgres"
     _ "github.com/jinzhu/gorm/dialects/sqlite"
     "github.com/IBM/ubiquity/utils/logs"
+    "github.com/IBM/ubiquity/utils"
     "errors"
     "time"
 )
@@ -77,29 +78,8 @@ func NewConnection() Connection {
 
 func (c *Connection) Open() (error) {
     defer c.logger.Trace(logs.DEBUG)()
-    var err error
-
-    // sanity
-    if c.db != nil {
-        return c.logger.ErrorRet(errors.New("Connection already open"), "failed")
-    }
-
-    // open db connection, retry 3 time with 5s sleep interval
-    for i := 0; i < 4; i ++ {
-        if c.db, err = c.factory.newConnection(); err != nil {
-            if i == 3 {
-                return c.logger.ErrorRet(err, "Retry failed")
-            }
-            time.Sleep(5 * time.Second)
-        } else {
-            break
-        }
-    }
-
-    // do migrations
-    if err = doMigrations(*c); err != nil {
-        defer c.Close()
-        return c.logger.ErrorRet(err, "doMigrations failed")
+    if err := utils.Retry(5, 5*time.Second, c.retryOpening); err != nil{
+        return c.logger.ErrorRet(err, "failed")
     }
 
     return nil
@@ -128,4 +108,26 @@ func (c *Connection) GetDb() (*gorm.DB) {
     defer c.logger.Trace(logs.DEBUG)()
 
     return c.db
+}
+
+func (c *Connection) retryOpening() (error) {
+    defer c.logger.Trace(logs.DEBUG)()
+    var err error
+
+    // sanity
+    if c.db != nil {
+        return c.logger.ErrorRet(errors.New("Connection already open"), "failed")
+    }
+
+    if c.db, err = c.factory.newConnection(); err != nil {
+        return c.logger.ErrorRet(err, "failed")
+    }
+
+    // do migrations
+    if err = doMigrations(*c); err != nil {
+        defer c.Close()
+        return c.logger.ErrorRet(err, "doMigrations failed")
+    }
+
+    return nil
 }

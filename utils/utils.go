@@ -30,6 +30,7 @@ import (
 	"strconv"
 	"strings"
 	"github.com/IBM/ubiquity/utils/logs"
+	"time"
 )
 
 func ReadAndUnmarshal(object interface{}, dir string, fileName string) error {
@@ -281,4 +282,18 @@ func GetEnv(envName string, defaultValue string) string {
         envValue = defaultValue
     }
     return envValue
+}
+
+func Retry(attempts int, sleep time.Duration, f func()(err error)) (err error) {
+    for i := 0; ; i++ {
+        err = f()
+        if err == nil {
+            return
+        }
+        if i >= (attempts - 1) {
+            break
+        }
+        time.Sleep(sleep)
+    }
+    return err
 }
