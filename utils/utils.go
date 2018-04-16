@@ -294,6 +294,8 @@ func Retry(attempts int, sleep time.Duration, f func()(err error)) (err error) {
             break
         }
         time.Sleep(sleep)
+		logs.GetLogger().Debug("retrying", logs.Args{{"attempt", i}, {"error", err}})
     }
+
     return err
 }
