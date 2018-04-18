@@ -296,7 +296,8 @@ func (s *scbeLocalClient) CreateVolume(createVolumeRequest resources.CreateVolum
 	if err != nil {
 		// Failed to add volume to DB, start to delete volume from the array
 		if errDeleteVolume := scbeRestClient.DeleteVolume(volInfo.Wwn); errDeleteVolume != nil {
-			return s.logger.ErrorRet(errDeleteVolume, "failed to clean vol from storage after dataModel.InsertVolume failed")
+			return s.logger.ErrorRet(errDeleteVolume, "failed to clean vol from storage after dataModel.InsertVolume failed", logs.Args{
+				{"volume", createVolumeRequest.Name}, {"wwn", volInfo.Wwn}})
 		}
 		return s.logger.ErrorRet(err, "dataModel.InsertVolume failed")
 	}

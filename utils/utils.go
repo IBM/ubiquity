@@ -31,6 +31,8 @@ import (
 	"strings"
 	"github.com/IBM/ubiquity/utils/logs"
 	"time"
+	"reflect"
+    "runtime"
 )
 
 func ReadAndUnmarshal(object interface{}, dir string, fileName string) error {
@@ -294,8 +296,13 @@ func Retry(attempts int, sleep time.Duration, f func()(err error)) (err error) {
             break
         }
         time.Sleep(sleep)
-		logs.GetLogger().Debug("retrying", logs.Args{{"attempt", i}, {"error", err}})
+		logs.GetLogger().Debug("retrying", logs.Args{{"attempt", i},{"error", err},
+			{"func", GetFuncName(f)} })
     }
 
     return err
+}
+
+func GetFuncName(i interface{}) string{
+    return runtime.FuncForPC(reflect.ValueOf(i).Pointer()).Name()
 }
