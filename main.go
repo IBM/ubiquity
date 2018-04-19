@@ -20,18 +20,18 @@ import (
 	"fmt"
 	"log"
 	"os"
-	"path"
+	//"path"
 
 	"time"
 
 	"github.com/IBM/ubiquity/database"
 	"github.com/IBM/ubiquity/local"
-	"github.com/IBM/ubiquity/resources"
+	//"github.com/IBM/ubiquity/resources"
 	"github.com/IBM/ubiquity/utils"
 	"github.com/IBM/ubiquity/utils/logs"
 	"github.com/IBM/ubiquity/web_server"
-	"github.com/jinzhu/gorm"
-	_ "github.com/jinzhu/gorm/dialects/sqlite"
+	//"github.com/jinzhu/gorm"
+	//_ "github.com/jinzhu/gorm/dialects/sqlite"
 )
 
 const (
@@ -77,22 +77,23 @@ func main() {
 	logger.Info("Heartbeat acquired")
 	go keepAlive(heartbeat)
 
-	logger.Info("Obtaining handle to DB")
-	db, err := gorm.Open("sqlite3", path.Join(ubiquityConfigPath, "ubiquity.db"))
-	if err != nil {
-		panic("failed to connect database")
-	}
-	defer db.Close()
+	//logger.Info("Obtaining handle to DB")
+	//db, err := gorm.Open("sqlite3", path.Join(ubiquityConfigPath, "ubiquity.db"))
+	//if err != nil {
+	//	panic("failed to connect database")
+	//}
+	//defer db.Close()
 
-	if err := db.AutoMigrate(&resources.Volume{}).Error; err != nil {
-		panic(err)
-	}
+	//if err := db.AutoMigrate(&resources.Volume{}).Error; err != nil {
+	//	panic(err)
+	//}
 
 	// init database
-	os.Setenv(database.KeySqlitePath, path.Join(ubiquityConfigPath, "ubiquity.db"))
+	//os.Setenv(database.KeySqlitePath, path.Join(ubiquityConfigPath, "ubiquity.db"))
 	defer database.Initialize()()
 
-	clients, err := local.GetLocalClients(oldLogger, config, db)
+	//clients, err := local.GetLocalClients(oldLogger, config, db)
+	clients, err := local.GetLocalClients(oldLogger, config)
 	if err != nil {
 		panic(err)
 	}

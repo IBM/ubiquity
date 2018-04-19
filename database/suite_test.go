@@ -23,18 +23,18 @@ import (
 	"testing"
 
 	"github.com/IBM/ubiquity/utils/logs"
-	"github.com/IBM/ubiquity/database"
-	"os"
+	//"github.com/IBM/ubiquity/database"
+	//"os"
 )
-
+/*
 const (
 	dbPath = "/tmp/database_test"
-)
+)*/
 
 func TestDb(t *testing.T) {
 	RegisterFailHandler(Fail)
 	defer logs.InitStdoutLogger(logs.DEBUG)()
-	os.Remove(dbPath)
-	defer database.InitSqlite(dbPath)()
+	//os.Remove(dbPath)
+	//defer database.InitSqlite(dbPath)()
 	RunSpecs(t, "database Test Suite")
 }

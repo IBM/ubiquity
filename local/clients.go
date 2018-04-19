@@ -19,15 +19,17 @@ package local
 import (
 	"fmt"
 	"github.com/IBM/ubiquity/local/scbe"
-	"github.com/IBM/ubiquity/local/spectrumscale"
+	//"github.com/IBM/ubiquity/local/spectrumscale"
 	"github.com/IBM/ubiquity/resources"
-	"github.com/jinzhu/gorm"
+	//"github.com/jinzhu/gorm"
 	"log"
 )
 
-func GetLocalClients(logger *log.Logger, config resources.UbiquityServerConfig, database *gorm.DB) (map[string]resources.StorageClient, error) {
+//func GetLocalClients(logger *log.Logger, config resources.UbiquityServerConfig, database *gorm.DB) (map[string]resources.StorageClient, error) {
+func GetLocalClients(logger *log.Logger, config resources.UbiquityServerConfig) (map[string]resources.StorageClient, error) {
 	// TODO need to refactor and load all the existing clients automatically (instead of hardcore each one here)
 	clients := make(map[string]resources.StorageClient)
+	/*
 	spectrumClient, err := spectrumscale.NewSpectrumLocalClient(logger, config, database)
 	if err != nil {
 		logger.Printf("Not enough params to initialize '%s' client", resources.SpectrumScale)
@@ -41,6 +43,7 @@ func GetLocalClients(logger *log.Logger, config resources.UbiquityServerConfig, 
 	} else {
 		clients[resources.SpectrumScaleNFS] = spectrumNfsClient
 	}
+	*/
 
 	ScbeClient, err := scbe.NewScbeLocalClient(config.ScbeConfig)
 	if err != nil {
