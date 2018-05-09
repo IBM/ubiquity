@@ -270,7 +270,7 @@ var _ = Describe("block_device_mounter_utils_test", func() {
 			Expect(err).To(MatchError(callErr))
 			Expect(fakeBlockDeviceUtils.CleanupCallCount()).To(Equal(1))
 		})
-		It("should succees if all is cool", func() {
+		It("should succeed if all is cool", func() {
 			fakeBlockDeviceUtils.UmountFsReturns(nil)
 			fakeBlockDeviceUtils.CleanupReturns(nil)
 			err = blockDeviceMounterUtils.UnmountDeviceFlow("fake_device")
