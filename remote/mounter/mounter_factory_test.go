@@ -17,12 +17,12 @@
 package mounter_test
 
 import (
+	"github.com/IBM/ubiquity/remote/mounter"
+	"github.com/IBM/ubiquity/resources"
 	"github.com/IBM/ubiquity/utils/logs"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"testing"
-	"github.com/IBM/ubiquity/remote/mounter"
-	"github.com/IBM/ubiquity/resources"
 )
 
 var _ = Describe("mounter_factory_test", func() {

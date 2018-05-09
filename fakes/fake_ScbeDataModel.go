@@ -323,7 +323,6 @@ func (fake *FakeScbeDataModel) ListVolumesReturnsOnCall(i int, result1 []scbe.Sc
 	}{result1, result2}
 }
 
-
 func (fake *FakeScbeDataModel) Invocations() map[string][][]interface{} {
 	fake.invocationsMutex.RLock()
 	defer fake.invocationsMutex.RUnlock()

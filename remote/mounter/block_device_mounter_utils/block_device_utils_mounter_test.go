@@ -17,6 +17,7 @@
 package block_device_mounter_utils_test
 
 import (
+	"errors"
 	"fmt"
 	"github.com/IBM/ubiquity/fakes"
 	"github.com/IBM/ubiquity/remote/mounter/block_device_mounter_utils"
@@ -25,7 +26,6 @@ import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"testing"
-	"errors"
 )
 
 var _ = Describe("block_device_mounter_utils_test", func() {
@@ -68,7 +68,7 @@ var _ = Describe("block_device_mounter_utils_test", func() {
 		It("should fail if IsDeviceMounted failed", func() {
 			fakeBlockDeviceUtils.CheckFsReturns(true, nil)
 			fakeBlockDeviceUtils.MakeFsReturns(nil)
-			fakeBlockDeviceUtils.IsDeviceMountedReturns(false, nil,callErr)
+			fakeBlockDeviceUtils.IsDeviceMountedReturns(false, nil, callErr)
 
 			err = blockDeviceMounterUtils.MountDeviceFlow("fake_device", "fake_fstype", "fake_mountp")
 
@@ -104,7 +104,7 @@ var _ = Describe("block_device_mounter_utils_test", func() {
 
 			Expect(err).To(HaveOccurred())
 			_, ok := err.(*block_device_mounter_utils.DeviceAlreadyMountedToWrongMountpoint)
-                        Expect(ok).To(Equal(true))
+			Expect(ok).To(Equal(true))
 			Expect(fakeBlockDeviceUtils.CheckFsCallCount()).To(Equal(1))
 			Expect(fakeBlockDeviceUtils.MakeFsCallCount()).To(Equal(1))
 			Expect(fakeBlockDeviceUtils.IsDeviceMountedCallCount()).To(Equal(1))
@@ -142,7 +142,6 @@ var _ = Describe("block_device_mounter_utils_test", func() {
 			Expect(fakeBlockDeviceUtils.MountFsCallCount()).To(Equal(1)) // skip due to idempotent
 
 		})
-
 
 		It("should fail if mountfs failed", func() {
 			fakeBlockDeviceUtils.CheckFsReturns(true, nil)

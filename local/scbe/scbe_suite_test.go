@@ -21,8 +21,8 @@ import (
 	. "github.com/onsi/gomega"
 	"testing"
 
-	"github.com/jarcoal/httpmock"
 	"github.com/IBM/ubiquity/utils/logs"
+	"github.com/jarcoal/httpmock"
 )
 
 func TestScbe(t *testing.T) {

@@ -259,7 +259,6 @@ func (fake *FakeScbeDataModelWrapper) ListVolumesReturnsOnCall(i int, result1 []
 	}{result1, result2}
 }
 
-
 func (fake *FakeScbeDataModelWrapper) UpdateDatabaseVolume(newVolume *scbe.ScbeVolume) {
 	fake.updateDatabaseVolumeMutex.Lock()
 	fake.updateDatabaseVolumeArgsForCall = append(fake.updateDatabaseVolumeArgsForCall, struct {
