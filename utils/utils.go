@@ -236,8 +236,7 @@ func LoadConfig() (resources.UbiquityServerConfig, error) {
 	restConfig.Endpoint = os.Getenv("SSC_REST_ENDPOINT")
 	restConfig.User = os.Getenv("SSC_REST_USER")
 	restConfig.Password = os.Getenv("SSC_REST_PASSWORD")
-	restConfig.Hostname = os.Getenv("SSC_REST_HOSTNAME")
-	if restConfig.User != "" && restConfig.Hostname != "" && restConfig.Password != "" {
+	if restConfig.User != "" && restConfig.Endpoint != "" && restConfig.Password != "" {
 		sscConfig.RestConfig = restConfig
 	}
 	sscConfig.DefaultFilesystemName = os.Getenv("DEFAULT_FILESYSTEM_NAME")

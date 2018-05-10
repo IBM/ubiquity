@@ -93,7 +93,6 @@ type RestConfig struct {
 	Endpoint string
 	User     string
 	Password string
-	Hostname string
 }
 
 type SpectrumNfsRemoteConfig struct {
