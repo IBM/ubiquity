@@ -16,14 +16,13 @@
 
 package database_test
 
-
 import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"testing"
 
-	"github.com/IBM/ubiquity/utils/logs"
 	"github.com/IBM/ubiquity/database"
+	"github.com/IBM/ubiquity/utils/logs"
 	"os"
 )
 

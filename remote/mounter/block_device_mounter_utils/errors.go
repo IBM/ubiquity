@@ -19,7 +19,7 @@ package block_device_mounter_utils
 import "fmt"
 
 type DeviceAlreadyMountedToWrongMountpoint struct {
-	device string
+	device     string
 	mountpoint string
 }
 

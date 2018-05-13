@@ -17,35 +17,34 @@
 package database
 
 import (
-    "fmt"
-    "github.com/IBM/ubiquity/utils/logs"
+	"fmt"
+	"github.com/IBM/ubiquity/utils/logs"
 )
-
 
 var migrations = make(map[string]interface{})
 
 func RegisterMigration(obj interface{}) {
-    defer logs.GetLogger().Trace(logs.DEBUG)()
+	defer logs.GetLogger().Trace(logs.DEBUG)()
 
-    migrations[fmt.Sprintf("%v", obj)] = obj
+	migrations[fmt.Sprintf("%v", obj)] = obj
 }
 
 func UnregisterAllMigrations() {
-    defer logs.GetLogger().Trace(logs.DEBUG)()
+	defer logs.GetLogger().Trace(logs.DEBUG)()
 
-    migrations = make(map[string]interface{})
+	migrations = make(map[string]interface{})
 }
 
 func doMigrations(connection Connection) error {
-    defer logs.GetLogger().Trace(logs.DEBUG)()
+	defer logs.GetLogger().Trace(logs.DEBUG)()
 
-    logger := logs.GetLogger()
-    for k, v := range migrations {
-        logger.Info("migrating", logs.Args{{"migration", k}})
-        if err := connection.GetDb().AutoMigrate(v).Error; err != nil {
-            logger.ErrorRet(err, "failed")
-        }
-        delete(migrations, k)
-    }
-    return nil
+	logger := logs.GetLogger()
+	for k, v := range migrations {
+		logger.Info("migrating", logs.Args{{"migration", k}})
+		if err := connection.GetDb().AutoMigrate(v).Error; err != nil {
+			logger.ErrorRet(err, "failed")
+		}
+		delete(migrations, k)
+	}
+	return nil
 }

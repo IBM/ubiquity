@@ -17,19 +17,19 @@
 package block_device_utils
 
 import (
+	"bufio"
+	"fmt"
 	"github.com/IBM/ubiquity/utils/logs"
 	"os/exec"
-	"syscall"
-	"bufio"
-	"strings"
 	"regexp"
-	"fmt"
+	"strings"
+	"syscall"
 )
 
 const (
-	NotMountedErrorMessage = "not mounted" // Error while umount device that is already unmounted
-	TimeoutMilisecondMountCmdIsDeviceMounted = 20 * 1000 // max to wait for mount command
-	TimeoutMilisecondMountCmdMountFs = 120 * 1000 // max to wait for mounting device
+	NotMountedErrorMessage                   = "not mounted" // Error while umount device that is already unmounted
+	TimeoutMilisecondMountCmdIsDeviceMounted = 20 * 1000     // max to wait for mount command
+	TimeoutMilisecondMountCmdMountFs         = 120 * 1000    // max to wait for mounting device
 )
 
 func (b *blockDeviceUtils) CheckFs(mpath string) (bool, error) {
@@ -97,7 +97,7 @@ func (b *blockDeviceUtils) UmountFs(mpoint string) error {
 		if _err != nil {
 			return _err
 		}
-		if ! isMounted{
+		if !isMounted {
 			b.logger.Info("Device already unmounted.", logs.Args{{"mpoint", mpoint}})
 			return nil
 		}
@@ -146,12 +146,11 @@ func (b *blockDeviceUtils) IsDeviceMounted(devPath string) (bool, []string, erro
 	if len(mounts) == 0 {
 		b.logger.Debug("Not found mpath device as mounted device", logs.Args{{"mpath", devPath}})
 		return false, nil, nil
-	} else{
+	} else {
 		b.logger.Debug("Found mpath device as mounted device on mountpoints", logs.Args{{"mpath", devPath}, {"num_mountpoint", len(mounts)}, {"mountpoints", mounts}})
 		return true, mounts, nil
 	}
 }
-
 
 func (b *blockDeviceUtils) IsExitStatusCode(err error, code int) bool {
 	defer b.logger.Trace(logs.DEBUG)()

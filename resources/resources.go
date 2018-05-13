@@ -19,10 +19,10 @@ package resources
 import "github.com/jinzhu/gorm"
 
 const (
-	SpectrumScale    string = "spectrum-scale"
-	SpectrumScaleNFS string = "spectrum-scale-nfs"
-	SoftlayerNFS     string = "softlayer-nfs"
-	SCBE             string = "scbe"
+	SpectrumScale     string = "spectrum-scale"
+	SpectrumScaleNFS  string = "spectrum-scale-nfs"
+	SoftlayerNFS      string = "softlayer-nfs"
+	SCBE              string = "scbe"
 	ScbeInterfaceName string = "Enabler for Containers"
 )
 

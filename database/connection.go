@@ -17,107 +17,107 @@
 package database
 
 import (
-    "github.com/jinzhu/gorm"
-    _ "github.com/jinzhu/gorm/dialects/postgres"
-    _ "github.com/jinzhu/gorm/dialects/sqlite"
-    "github.com/IBM/ubiquity/utils/logs"
-    "errors"
+	"errors"
+	"github.com/IBM/ubiquity/utils/logs"
+	"github.com/jinzhu/gorm"
+	_ "github.com/jinzhu/gorm/dialects/postgres"
+	_ "github.com/jinzhu/gorm/dialects/sqlite"
 )
 
 var globalConnectionFactory ConnectionFactory = nil
 
 func initConnectionFactory(connectionFactory ConnectionFactory) func() {
-    if globalConnectionFactory != nil {
-        panic("globalConnectionFactory already initialized")
-    }
-    globalConnectionFactory = connectionFactory
-    return func() { globalConnectionFactory = nil }
+	if globalConnectionFactory != nil {
+		panic("globalConnectionFactory already initialized")
+	}
+	globalConnectionFactory = connectionFactory
+	return func() { globalConnectionFactory = nil }
 }
 
 type ConnectionFactory interface {
-    newConnection() (*gorm.DB, error)
+	newConnection() (*gorm.DB, error)
 }
 
 type postgresFactory struct {
-    psql     string
-    psqlLog  string
+	psql    string
+	psqlLog string
 }
 
 type sqliteFactory struct {
-    path     string
+	path string
 }
 
 type testErrorFactory struct {
 }
 
 func (f *postgresFactory) newConnection() (*gorm.DB, error) {
-    logger := logs.GetLogger()
-    logger.Debug("", logs.Args{{"psql", f.psqlLog}})
-    return gorm.Open("postgres", f.psql)
+	logger := logs.GetLogger()
+	logger.Debug("", logs.Args{{"psql", f.psqlLog}})
+	return gorm.Open("postgres", f.psql)
 }
 
 func (f *sqliteFactory) newConnection() (*gorm.DB, error) {
-    return gorm.Open("sqlite3", f.path)
+	return gorm.Open("sqlite3", f.path)
 }
 
 func (f *testErrorFactory) newConnection() (*gorm.DB, error) {
-    return nil, errors.New("testErrorFactory")
+	return nil, errors.New("testErrorFactory")
 }
 
 type Connection struct {
-    factory  ConnectionFactory
-    logger   logs.Logger
-    db       *gorm.DB
+	factory ConnectionFactory
+	logger  logs.Logger
+	db      *gorm.DB
 }
 
 func NewConnection() Connection {
-    return Connection{logger: logs.GetLogger(), factory: globalConnectionFactory}
+	return Connection{logger: logs.GetLogger(), factory: globalConnectionFactory}
 }
 
-func (c *Connection) Open() (error) {
-    defer c.logger.Trace(logs.DEBUG)()
-    var err error
+func (c *Connection) Open() error {
+	defer c.logger.Trace(logs.DEBUG)()
+	var err error
 
-    // sanity
-    if c.db != nil {
-        return c.logger.ErrorRet(errors.New("Connection already open"), "failed")
-    }
+	// sanity
+	if c.db != nil {
+		return c.logger.ErrorRet(errors.New("Connection already open"), "failed")
+	}
 
-    // open db connection
-    if c.db, err = c.factory.newConnection(); err != nil {
-        return c.logger.ErrorRet(err, "failed")
-    }
+	// open db connection
+	if c.db, err = c.factory.newConnection(); err != nil {
+		return c.logger.ErrorRet(err, "failed")
+	}
 
-    // do migrations
-    if err = doMigrations(*c); err != nil {
-        defer c.Close()
-        return c.logger.ErrorRet(err, "doMigrations failed")
-    }
+	// do migrations
+	if err = doMigrations(*c); err != nil {
+		defer c.Close()
+		return c.logger.ErrorRet(err, "doMigrations failed")
+	}
 
-    return nil
+	return nil
 }
 
-func (c *Connection) Close() (error) {
-    defer c.logger.Trace(logs.DEBUG)()
-    var err error
+func (c *Connection) Close() error {
+	defer c.logger.Trace(logs.DEBUG)()
+	var err error
 
-    // sanity
-    if c.db == nil {
-        return c.logger.ErrorRet(errors.New("Connection already closed"), "failed")
-    }
+	// sanity
+	if c.db == nil {
+		return c.logger.ErrorRet(errors.New("Connection already closed"), "failed")
+	}
 
-    // close db connection
-    err = c.db.Close()
-    c.db = nil
-    if err != nil {
-        return c.logger.ErrorRet(err, "failed")
-    }
+	// close db connection
+	err = c.db.Close()
+	c.db = nil
+	if err != nil {
+		return c.logger.ErrorRet(err, "failed")
+	}
 
-    return nil
+	return nil
 }
 
-func (c *Connection) GetDb() (*gorm.DB) {
-    defer c.logger.Trace(logs.DEBUG)()
+func (c *Connection) GetDb() *gorm.DB {
+	defer c.logger.Trace(logs.DEBUG)()
 
-    return c.db
+	return c.db
 }

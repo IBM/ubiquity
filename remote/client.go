@@ -17,23 +17,23 @@
 /*
    Description
    This is the APIs that the ubiquity plugins (flex\provisioner or DVP) use to communicate with Ubiquity server
- */
+*/
 package remote
 
 import (
-	"net/http"
 	"github.com/IBM/ubiquity/resources"
-	"reflect"
 	"github.com/IBM/ubiquity/utils"
 	"github.com/IBM/ubiquity/utils/logs"
+	"net/http"
+	"reflect"
 )
 
 type remoteClient struct {
-	logger            logs.Logger
-	isActivated       bool
-	httpClient        *http.Client
-	storageApiURL     string
-	config            resources.UbiquityPluginConfig
+	logger        logs.Logger
+	isActivated   bool
+	httpClient    *http.Client
+	storageApiURL string
+	config        resources.UbiquityPluginConfig
 }
 
 func (s *remoteClient) Activate(activateRequest resources.ActivateRequest) error {
@@ -46,7 +46,7 @@ func (s *remoteClient) Activate(activateRequest resources.ActivateRequest) error
 	// call remote activate
 	activateURL := utils.FormatURL(s.storageApiURL, "activate")
 	activateRequest.CredentialInfo = s.config.CredentialInfo
-	response, err := utils.HttpExecute(s.httpClient,"POST", activateURL, activateRequest)
+	response, err := utils.HttpExecute(s.httpClient, "POST", activateURL, activateRequest)
 	if err != nil {
 		return s.logger.ErrorRet(err, "utils.HttpExecute failed")
 	}
@@ -203,7 +203,6 @@ func (s *remoteClient) ListVolumes(listVolumesRequest resources.ListVolumesReque
 	}
 
 	defer response.Body.Close()
-
 
 	if response.StatusCode != http.StatusOK {
 		return nil, s.logger.ErrorRet(utils.ExtractErrorResponse(response), "failed", logs.Args{{"response", response}})
