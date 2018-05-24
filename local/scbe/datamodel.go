@@ -81,8 +81,8 @@ func (d *scbeDataModel) InsertVolume(volumeName string, wwn string, fstype strin
 	volume := ScbeVolume{
 		Volume: resources.Volume{Name: volumeName,
 			Backend: fmt.Sprintf("%s", d.backend)},
-		WWN:      wwn,
-		FSType:   fstype,
+		WWN:    wwn,
+		FSType: fstype,
 	}
 
 	if err := d.database.Create(&volume).Error; err != nil {

@@ -17,13 +17,13 @@
 package web_server
 
 import (
-	"net/http"
+	"fmt"
+	"github.com/IBM/ubiquity/database"
+	"github.com/IBM/ubiquity/model"
 	"github.com/IBM/ubiquity/resources"
 	"github.com/IBM/ubiquity/utils"
-	"fmt"
-	"github.com/IBM/ubiquity/model"
-	"github.com/IBM/ubiquity/database"
 	"github.com/IBM/ubiquity/utils/logs"
+	"net/http"
 )
 
 type StorageApiHandler struct {

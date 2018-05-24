@@ -7,7 +7,6 @@
 
 
 The Ubiquity project enables persistent storage for the Kubernetes and Docker container frameworks. It is a pluggable framework available for different storage systems. The framework interfaces with the storage systems, using their plugins. Different container frameworks can use Ubiquity concurrently, allowing access to different storage systems.
-Ubiquity supports the Kubernetes and Docker frameworks, using the following plugins:
 
 Ubiquity supports the Kubernetes and Docker frameworks, using the following plugins:
 
@@ -17,7 +16,7 @@ Ubiquity supports the Kubernetes and Docker frameworks, using the following plug
 Currently, the following storage systems use Ubiquity:
 * IBM block storage.
 
-   The IBM block storage is supported for Kubernetes via IBM Spectrum Connect (3.4.0), previously known as IBM Spectrum Control Base Edition (3.3.0). Ubiquity communicates with the IBM storage systems through Spectrum Connect. Spectrum Connect creates a storage profile (for example, gold, silver or bronze) and makes it available for Kubernetes. For details about supported storage systems, refer to the latest Spectrum Connect release notes.
+   The IBM block storage is supported for Kubernetes via IBM Spectrum Connect (3.4.0), previously known as IBM Spectrum Control Base Edition. Ubiquity communicates with the IBM storage systems through Spectrum Connect. Spectrum Connect creates a storage profile (for example, gold, silver or bronze) and makes it available for Kubernetes. For details about supported storage systems, refer to the latest Spectrum Connect release notes.
    
    The IBM official solution for Kubernetes, based on the Ubiquity project, is referred to as IBM Storage Enabler for Containers. You can download the installation package and its documentation from [IBM Fix Central](https://www.ibm.com/support/fixcentral/swg/selectFixes?parent=Software%2Bdefined%2Bstorage&product=ibm/StorageSoftware/IBM+Spectrum+Connect&release=All&platform=Linux&function=all). For details on the IBM Storage Enabler for Containers, see the relevant sections in the Spectrum Connect user guide.
 
@@ -42,7 +41,7 @@ To contribute, follow the guidelines in [Contribution guide](contribution-guide.
 
 
 ## Support
-For any questions, suggestions, or issues, use github.
+For any questions, suggestions, or issues, use Github.
 
 ## Licensing
 

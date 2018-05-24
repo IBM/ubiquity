@@ -45,15 +45,15 @@ func (e *volumeNotFoundError) Error() string {
 }
 
 type wrongDeviceFoundError struct {
-	devPath string
+	devPath    string
 	reqVolName string
-	volName string
+	volName    string
 }
 
 func (e *wrongDeviceFoundError) Error() string {
-	return fmt.Sprintf("Multipath device [%s] was found as WWN [%s] via multipath -ll command, " +
+	return fmt.Sprintf("Multipath device [%s] was found as WWN [%s] via multipath -ll command, "+
 		"BUT sg_inq identify this device as a different WWN: [%s]. Check your multipathd.", e.devPath,
-			e.reqVolName, e.volName)
+		e.reqVolName, e.volName)
 }
 
 type unsupportedProtocolError struct {
@@ -65,11 +65,11 @@ func (e *unsupportedProtocolError) Error() string {
 }
 
 type noRegexWwnMatchInScsiInqError struct {
-	dev string
+	dev  string
 	line string
 }
 
 func (e *noRegexWwnMatchInScsiInqError) Error() string {
-	return fmt.Sprintf("Could not find wwn pattern in sg_inq of mpath devive: [%s] in line Vendor Specific " +
+	return fmt.Sprintf("Could not find wwn pattern in sg_inq of mpath devive: [%s] in line Vendor Specific "+
 		"Identifier Extension: [%s]", e.dev, e.line)
 }

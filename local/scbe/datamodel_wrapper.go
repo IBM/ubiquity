@@ -17,9 +17,9 @@
 package scbe
 
 import (
+	"github.com/IBM/ubiquity/database"
 	"github.com/IBM/ubiquity/resources"
 	"github.com/IBM/ubiquity/utils/logs"
-	"github.com/IBM/ubiquity/database"
 )
 
 //go:generate counterfeiter -o ../../fakes/fake_ScbeDataModelWrapper.go . ScbeDataModelWrapper

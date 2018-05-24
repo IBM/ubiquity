@@ -28,7 +28,7 @@ type serviceDoesntExistError struct {
 }
 
 func (e *serviceDoesntExistError) Error() string {
-	return fmt.Sprintf("Cannot create volume [%s] on SCBE service [%s]. The service does not exist or it is not delegated to the %s interface in [%s]",
+	return fmt.Sprintf("Cannot create volume [%s] on Spectrum Connect service [%s]. The service does not exist or it is not delegated to the %s interface in [%s]",
 		e.volName, e.serviceName, resources.ScbeInterfaceName, e.scbeName)
 }
 
@@ -55,7 +55,7 @@ type hostNotFoundvolumeNotFoundError struct {
 }
 
 func (e *hostNotFoundvolumeNotFoundError) Error() string {
-	return fmt.Sprintf("Host name [%s], related to the volume with WWN [%s] was not found on the storage system [%s], according to SCBE caching data",
+	return fmt.Sprintf("Host name [%s], related to the volume with WWN [%s] was not found on the storage system [%s], according to Spectrum Connect caching data",
 		e.hostName, e.volName, e.arrayName)
 }
 
@@ -65,7 +65,7 @@ type activateDefaultServiceError struct {
 }
 
 func (e *activateDefaultServiceError) Error() string {
-	return fmt.Sprintf("SCBE backend activation error. The default service [%s] does not exist on SCBE [%s]",
+	return fmt.Sprintf("Spectrum Connect backend activation error. The default service [%s] does not exist on Spectrum Connect [%s]",
 		e.serviceName, e.scbeName)
 }
 
@@ -206,7 +206,7 @@ func (e *SslModeFullVerifyWithoutCAfile) Error() string {
 }
 
 type InvalidMappingsForVolume struct {
-	volWwn     string
+	volWwn string
 }
 
 func (e *InvalidMappingsForVolume) Error() string {

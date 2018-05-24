@@ -26,8 +26,8 @@ import (
 	"strings"
 
 	"github.com/IBM/ubiquity/resources"
-	"github.com/gorilla/mux"
 	"github.com/IBM/ubiquity/utils/logs"
+	"github.com/gorilla/mux"
 )
 
 func ExtractErrorResponse(response *http.Response) error {
@@ -132,7 +132,6 @@ func Unmarshal(r *http.Request, object interface{}) error {
 
 	return nil
 }
-
 
 func UnmarshalDataFromRequest(r *http.Request, object interface{}) error {
 	body, err := ioutil.ReadAll(r.Body)

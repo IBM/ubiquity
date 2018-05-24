@@ -333,7 +333,6 @@ var _ = Describe("spectrumRestV2", func() {
 			Expect(err).ToNot(HaveOccurred())
 		})
 
-
 		It("Should fail with http error", func() {
 			createFilesetResp.Status.Code = 500
 			createFilesetResp.Jobs[0].Status = "COMPLETED"
@@ -1347,11 +1346,11 @@ var _ = Describe("spectrumRestV2", func() {
 				joburl,
 				httpmock.NewStringResponder(200, string("fake")),
 			)
-	               restConfig.User = ""
-	               restConfig.Password = "fakepassword"
-	               restConfig.Hostname = "fakehostname"
-                       spectrumRestV2, err = connectors.NewSpectrumRestV2(logger, restConfig)
-                       spectrumRestV2, client, err = connectors.NewspectrumRestV2WithClient(logger, restConfig)
+			restConfig.User = ""
+			restConfig.Password = "fakepassword"
+			restConfig.Hostname = "fakehostname"
+			spectrumRestV2, err = connectors.NewSpectrumRestV2(logger, restConfig)
+			spectrumRestV2, client, err = connectors.NewspectrumRestV2WithClient(logger, restConfig)
 			err = spectrumRestV2.UnexportNfs(fileset)
 			Expect(err).To(HaveOccurred())
 

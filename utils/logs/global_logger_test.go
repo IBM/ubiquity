@@ -48,5 +48,3 @@ func ExampleInitFileLogger2() {
 func ExampleInitStdoutLogger() {
     defer logs.InitStdoutLogger(logs.DEBUG)()
 }
-
-

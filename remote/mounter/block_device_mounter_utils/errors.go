@@ -14,16 +14,15 @@
  * limitations under the License.
  */
 
-package utils
+package block_device_mounter_utils
 
-import (
-	"fmt"
-	"io"
-	"log"
-	"os"
-)
+import "fmt"
 
-func SetupOldLogger(loggerName string) *log.Logger {
-	logger := log.New(io.MultiWriter(os.Stdout), fmt.Sprintf("%s: ", loggerName), log.Lshortfile|log.LstdFlags)
-	return logger
+type DeviceAlreadyMountedToWrongMountpoint struct {
+	device     string
+	mountpoint string
+}
+
+func (e *DeviceAlreadyMountedToWrongMountpoint) Error() string {
+	return fmt.Sprintf("Device is already mounted but to unexpected mountpoint. device=[%s], mountpoint=[%s]", e.device, e.mountpoint)
 }

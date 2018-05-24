@@ -22,8 +22,8 @@ import (
 
 	"testing"
 
-	"github.com/jarcoal/httpmock"
 	"github.com/IBM/ubiquity/utils/logs"
+	"github.com/jarcoal/httpmock"
 )
 
 func TestConnectors(t *testing.T) {
