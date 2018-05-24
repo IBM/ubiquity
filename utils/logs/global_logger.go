@@ -20,7 +20,9 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"path"
 	"strings"
+	"github.com/natefinch/lumberjack"
 )
 
 var logger Logger = nil
@@ -51,12 +53,41 @@ func GetLogLevelFromString(level string) Level {
 // InitFileLogger initializes the global logger with a file writer to filePath and set at level.
 // It returns a function that clears the global logger.
 // If the global logger is already initialized InitFileLogger panics.
-func InitFileLogger(level Level, filePath string) func() {
+func InitFileLogger(level Level, filePath string, rotateSize int) func() {
+	_, err := os.Stat(filePath)
+	if os.IsNotExist(err) {
+		fileDir,_ := path.Split(filePath)
+		err := os.MkdirAll(fileDir, 0766)
+		if err != nil {
+			panic(fmt.Sprintf("failed to create log folder %v", err))
+		}
+	}
+
 	logFile, err := os.OpenFile(filePath, os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0640)
 	if err != nil {
 		panic(fmt.Sprintf("failed to init logger %v", err))
 	}
-	initLogger(level, io.MultiWriter(logFile))
+
+	fileStat, err := logFile.Stat()
+	if err != nil {
+		panic(fmt.Sprintf("failed to stat logger file %v", err))
+	}
+
+	fileStatSize := int(fileStat.Size()) / 1024 / 1024
+
+	// If log file size bigger than rotateSize, will use lunberjack to run the logrotate
+	if fileStatSize < rotateSize {
+		initLogger(level, io.MultiWriter(logFile))
+	} else {
+		initLogger(level, &lumberjack.Logger{
+		Filename: filePath,
+		MaxSize: rotateSize,
+		MaxBackups: 5,
+		MaxAge: 50,
+		Compress: true,
+		})
+	}
+
 	return func() { logFile.Close(); logger = nil }
 }
 
