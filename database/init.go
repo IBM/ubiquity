@@ -26,7 +26,6 @@ import (
 
 const (
     KeyPsqlHost = "UBIQUITY_DB_PSQL_HOST"
-    //KeySqlitePath = "UBIQUITY_DB_SQLITE_PATH"
     KeyPsqlUser = "UBIQUITY_DB_USERNAME"
     KeyPsqlPassword = "UBIQUITY_DB_PASSWORD"
     KeyPsqlDbName = "UBIQUITY_DB_NAME"
@@ -107,12 +106,6 @@ func InitPostgres(hostname string) func() {
     return initConnectionFactory(&postgresFactory{psql: psqlStr, psqlLog: GetPsqlWithPassowrdStarred(psqlStr)})
 }
 
-/*
-func InitSqlite(filepath string) func() {
-    defer logs.GetLogger().Trace(logs.DEBUG)()
-    return initConnectionFactory(&sqliteFactory{path: filepath})
-}*/
-
 func InitTestError() func() {
     defer logs.GetLogger().Trace(logs.DEBUG)()
     return initConnectionFactory(&testErrorFactory{})
@@ -128,5 +121,4 @@ func Initialize() func() {
     return func() {
         logs.GetLogger().ErrorRet(&utils.NoENVKeyError{KeyPsqlHost}, "failed")
     }
-    //return InitSqlite(os.Getenv(KeySqlitePath))
 }
