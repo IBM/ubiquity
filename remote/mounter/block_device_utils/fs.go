@@ -168,7 +168,7 @@ func (b *blockDeviceUtils) IsDeviceMounted(devPath string) (bool, []string, erro
 	}
 }
 
-func (b *blockDeviceUtils) IsDirIsAMountPoint(dirPath string) (bool, []string, error) {
+func (b *blockDeviceUtils) IsDirAMountPoint(dirPath string) (bool, []string, error) {
 	/*
 		   This function check if a given directory is not an active mountpoint (by pars the mount output).
 		   Return Values:

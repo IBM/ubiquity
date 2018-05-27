@@ -90,7 +90,7 @@ func (b *blockDeviceMounterUtils) MountDeviceFlow(devicePath string, fsType stri
 		return b.logger.ErrorRet(&DeviceAlreadyMountedToWrongMountpoint{devicePath, mountPoint}, "fail")
 	} else {
 		// Check if mountpoint directory is not already mounted to un expected device. If so raise error to prevent double mounting.
-		isMounted, devicesRefs, err := b.blockDeviceUtils.IsDirIsAMountPoint(mountPoint)
+		isMounted, devicesRefs, err := b.blockDeviceUtils.IsDirAMountPoint(mountPoint)
 		if err != nil {
 			return b.logger.ErrorRet(err, "fail to identify if mountpoint dir is actually mounted")
 		}
