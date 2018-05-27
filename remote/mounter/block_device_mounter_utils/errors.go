@@ -34,6 +34,6 @@ type DirPathAlreadyMountedToWrongDevice struct {
 }
 
 func (e *DirPathAlreadyMountedToWrongDevice) Error() string {
-	return fmt.Sprintf("Directory=[%s] is already a mountpoint but on the unexpected devices=%#v (expected only on device=[%s])",
+	return fmt.Sprintf("[%s] directory is already a mountpoint but to unexpected devices=%#v (expected mountpoint only on device=[%s])",
 		e.mountPoint, e.unexpectedDevicesRefs, e.expectedDevice)
 }
