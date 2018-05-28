@@ -89,6 +89,17 @@ func (b *blockDeviceMounterUtils) MountDeviceFlow(devicePath string, fsType stri
 		// In case device mounted but to different mountpoint as expected we fail with error. # TODO we may support it in the future after allow the umount flow to umount by mountpoint and not by device path.
 		return b.logger.ErrorRet(&DeviceAlreadyMountedToWrongMountpoint{devicePath, mountPoint}, "fail")
 	} else {
+		// Check if mountpoint directory is not already mounted to un expected device. If so raise error to prevent double mounting.
+		isMounted, devicesRefs, err := b.blockDeviceUtils.IsDirAMountPoint(mountPoint)
+		if err != nil {
+			return b.logger.ErrorRet(err, "fail to identify if mountpoint dir is actually mounted")
+		}
+
+		if isMounted {
+			return b.logger.ErrorRet(&DirPathAlreadyMountedToWrongDevice{
+				mountPoint: mountPoint, expectedDevice: devicePath, unexpectedDevicesRefs: devicesRefs},
+				"fail")
+		}
 		if err = b.blockDeviceUtils.MountFs(devicePath, mountPoint); err != nil {
 			return b.logger.ErrorRet(err, "MountFs failed")
 		}

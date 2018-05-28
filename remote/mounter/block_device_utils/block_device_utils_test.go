@@ -552,6 +552,61 @@ mpoint on /ubiquity/mpointSecond type ext4 (rw,relatime,data=ordered)
 			Expect(mounts[1]).To(Equal("/ubiquity/mpointSecond"))
 		})
 	})
+	Context(".IsDirIsAMountPoint", func() {
+		It("should return false if DIR not found in mount output", func() {
+			mpoint := "/wrong/wwn" // DIR
+			mountOutput := `
+/mpoint on /ubiquity/wwn1 type ext4 (rw,relatime,data=ordered)
+/dev/mapper/mpoint on /ubiquity/mpoint type ext4 (rw,relatime,data=ordered)
+`
+			fakeExec.ExecuteWithTimeoutReturns([]byte(mountOutput), nil)
+			isMounted, mounts, err := bdUtils.IsDirAMountPoint(mpoint)
+			Expect(err).ToNot(HaveOccurred())
+			Expect(isMounted).To(Equal(false))
+			Expect(len(mounts)).To(Equal(0))
+		})
+		It("should return false if format of mount output is wrong", func() {
+			mpoint := "/ubiquity/wwn1"
+			mountOutput := `
+wrong format on /ubiquity/mpoint type ext4 (rw,relatime,data=ordered)
+/dev/mapper/mpoint on /ubiquity/mpoint type ext4 (rw,relatime,data=ordered)
+`
+			fakeExec.ExecuteWithTimeoutReturns([]byte(mountOutput), nil)
+			isMounted, mounts, err := bdUtils.IsDirAMountPoint(mpoint)
+			Expect(err).ToNot(HaveOccurred())
+			Expect(isMounted).To(Equal(false))
+			Expect(len(mounts)).To(Equal(0))
+		})
+
+		It("should return true if DIR found in mount output", func() {
+			mpoint := "/ubiquity/wwn1"
+			mountOutput := `
+/fakedevice1 on /ubiquity/wwn1 type ext4 (rw,relatime,data=ordered)
+/dev/mapper/mpoint on /ubiquity/mpoint type ext4 (rw,relatime,data=ordered)
+`
+			fakeExec.ExecuteWithTimeoutReturns([]byte(mountOutput), nil)
+			isMounted, mounts, err := bdUtils.IsDirAMountPoint(mpoint)
+			Expect(err).ToNot(HaveOccurred())
+			Expect(isMounted).To(Equal(true))
+			Expect(len(mounts)).To(Equal(1))
+			Expect(mounts[0]).To(Equal("/fakedevice1"))
+		})
+		It("should return true if DIR found in mount output (2 devices to the same mountpoint)", func() {
+			mpoint := "/ubiquity/wwn1"
+			mountOutput := `
+/fakedevice1 on /ubiquity/wwn1 type ext4 (rw,relatime,data=ordered)
+/dev/mapper/mpoint on /ubiquity/mpoint type ext4 (rw,relatime,data=ordered)
+/fakedevice2 on /ubiquity/wwn1 type ext4 (rw,relatime,data=ordered)
+`
+			fakeExec.ExecuteWithTimeoutReturns([]byte(mountOutput), nil)
+			isMounted, mounts, err := bdUtils.IsDirAMountPoint(mpoint)
+			Expect(err).ToNot(HaveOccurred())
+			Expect(isMounted).To(Equal(true))
+			Expect(len(mounts)).To(Equal(2))
+			Expect(mounts[0]).To(Equal("/fakedevice1"))
+			Expect(mounts[1]).To(Equal("/fakedevice2"))
+		})
+	})
 
 	Context(".UmountFs", func() {
 		It("UmountFs succeeds", func() {

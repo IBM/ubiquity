@@ -143,6 +143,21 @@ type FakeBlockDeviceUtils struct {
 		result2 []string
 		result3 error
 	}
+	IsDirAMountPointStub        func(dirPath string) (bool, []string, error)
+	isDirAMountPointMutex       sync.RWMutex
+	isDirAMountPointArgsForCall []struct {
+		dirPath string
+	}
+	isDirAMountPointReturns struct {
+		result1 bool
+		result2 []string
+		result3 error
+	}
+	isDirAMountPointReturnsOnCall map[int]struct {
+		result1 bool
+		result2 []string
+		result3 error
+	}
 	invocations      map[string][][]interface{}
 	invocationsMutex sync.RWMutex
 }
@@ -689,6 +704,60 @@ func (fake *FakeBlockDeviceUtils) IsDeviceMountedReturnsOnCall(i int, result1 bo
 	}{result1, result2, result3}
 }
 
+func (fake *FakeBlockDeviceUtils) IsDirAMountPoint(dirPath string) (bool, []string, error) {
+	fake.isDirAMountPointMutex.Lock()
+	ret, specificReturn := fake.isDirAMountPointReturnsOnCall[len(fake.isDirAMountPointArgsForCall)]
+	fake.isDirAMountPointArgsForCall = append(fake.isDirAMountPointArgsForCall, struct {
+		dirPath string
+	}{dirPath})
+	fake.recordInvocation("IsDirAMountPoint", []interface{}{dirPath})
+	fake.isDirAMountPointMutex.Unlock()
+	if fake.IsDirAMountPointStub != nil {
+		return fake.IsDirAMountPointStub(dirPath)
+	}
+	if specificReturn {
+		return ret.result1, ret.result2, ret.result3
+	}
+	return fake.isDirAMountPointReturns.result1, fake.isDirAMountPointReturns.result2, fake.isDirAMountPointReturns.result3
+}
+
+func (fake *FakeBlockDeviceUtils) IsDirAMountPointCallCount() int {
+	fake.isDirAMountPointMutex.RLock()
+	defer fake.isDirAMountPointMutex.RUnlock()
+	return len(fake.isDirAMountPointArgsForCall)
+}
+
+func (fake *FakeBlockDeviceUtils) IsDirAMountPointArgsForCall(i int) string {
+	fake.isDirAMountPointMutex.RLock()
+	defer fake.isDirAMountPointMutex.RUnlock()
+	return fake.isDirAMountPointArgsForCall[i].dirPath
+}
+
+func (fake *FakeBlockDeviceUtils) IsDirAMountPointReturns(result1 bool, result2 []string, result3 error) {
+	fake.IsDirAMountPointStub = nil
+	fake.isDirAMountPointReturns = struct {
+		result1 bool
+		result2 []string
+		result3 error
+	}{result1, result2, result3}
+}
+
+func (fake *FakeBlockDeviceUtils) IsDirAMountPointReturnsOnCall(i int, result1 bool, result2 []string, result3 error) {
+	fake.IsDirAMountPointStub = nil
+	if fake.isDirAMountPointReturnsOnCall == nil {
+		fake.isDirAMountPointReturnsOnCall = make(map[int]struct {
+			result1 bool
+			result2 []string
+			result3 error
+		})
+	}
+	fake.isDirAMountPointReturnsOnCall[i] = struct {
+		result1 bool
+		result2 []string
+		result3 error
+	}{result1, result2, result3}
+}
+
 func (fake *FakeBlockDeviceUtils) Invocations() map[string][][]interface{} {
 	fake.invocationsMutex.RLock()
 	defer fake.invocationsMutex.RUnlock()
@@ -714,6 +783,8 @@ func (fake *FakeBlockDeviceUtils) Invocations() map[string][][]interface{} {
 	defer fake.umountFsMutex.RUnlock()
 	fake.isDeviceMountedMutex.RLock()
 	defer fake.isDeviceMountedMutex.RUnlock()
+	fake.isDirAMountPointMutex.RLock()
+	defer fake.isDirAMountPointMutex.RUnlock()
 	copiedInvocations := map[string][][]interface{}{}
 	for key, value := range fake.invocations {
 		copiedInvocations[key] = value
