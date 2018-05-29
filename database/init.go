@@ -111,6 +111,11 @@ func InitTestError() func() {
     return initConnectionFactory(&testErrorFactory{})
 }
 
+func InitTestCorrect() func() {
+    defer logs.GetLogger().Trace(logs.DEBUG)()
+    return initConnectionFactory(&testCorrectFactory{})
+}
+
 func Initialize() func() {
     defer logs.GetLogger().Trace(logs.DEBUG)()
 

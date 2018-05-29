@@ -45,15 +45,22 @@ type postgresFactory struct {
 type testErrorFactory struct {
 }
 
+type testCorrectFactory struct {
+}
+
 func (f *postgresFactory) newConnection() (*gorm.DB, error) {
     logger := logs.GetLogger()
     logger.Debug("", logs.Args{{"psql", f.psqlLog}})
     return gorm.Open("postgres", f.psql)
 }
 
-
 func (f *testErrorFactory) newConnection() (*gorm.DB, error) {
     return nil, errors.New("testErrorFactory")
+}
+
+func (f *testCorrectFactory) newConnection() (*gorm.DB, error) {
+    db := new(*gorm.DB)
+    return *db, nil
 }
 
 type Connection struct {
