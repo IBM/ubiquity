@@ -135,25 +135,25 @@ var _ = Describe("block_device_mounter_utils_test", func() {
 
 		})
 
-		It("should fail if IsDirIsAMountPoint failed", func() {
+		It("should fail if IsDirAMountPoint failed", func() {
 			fakeBlockDeviceUtils.CheckFsReturns(true, nil)
 			fakeBlockDeviceUtils.IsDeviceMountedReturns(false, nil, nil)
-			fakeBlockDeviceUtils.IsDirIsAMountPointReturns(false, nil, callErr)
+			fakeBlockDeviceUtils.IsDirAMountPointReturns(false, nil, callErr)
 			err = blockDeviceMounterUtils.MountDeviceFlow("fake_device", "fake_fstype", "fake_mountp")
 			Expect(err).To(HaveOccurred())
 			Expect(err).To(MatchError(callErr))
-			Expect(fakeBlockDeviceUtils.IsDirIsAMountPointCallCount()).To(Equal(1))
+			Expect(fakeBlockDeviceUtils.IsDirAMountPointCallCount()).To(Equal(1))
 		})
 
 		It("should fail to mount if mountpoint is already mounted to wrong device", func() {
 			fakeBlockDeviceUtils.CheckFsReturns(true, nil)
 			fakeBlockDeviceUtils.IsDeviceMountedReturns(false, nil, nil)
-			fakeBlockDeviceUtils.IsDirIsAMountPointReturns(true, nil, nil)
+			fakeBlockDeviceUtils.IsDirAMountPointReturns(true, []string{"/dev/mapper/mpathvfake1", "/dev/mapper/mpathvfake2"}, nil)
 			err = blockDeviceMounterUtils.MountDeviceFlow("fake_device", "fake_fstype", "fake_mountp")
 			Expect(err).To(HaveOccurred())
 			_, ok := err.(*block_device_mounter_utils.DirPathAlreadyMountedToWrongDevice)
 			Expect(ok).To(Equal(true))
-			Expect(fakeBlockDeviceUtils.IsDirIsAMountPointCallCount()).To(Equal(1))
+			Expect(fakeBlockDeviceUtils.IsDirAMountPointCallCount()).To(Equal(1))
 			Expect(fakeBlockDeviceUtils.MountFsCallCount()).To(Equal(0))
 
 		})
@@ -162,7 +162,7 @@ var _ = Describe("block_device_mounter_utils_test", func() {
 			fakeBlockDeviceUtils.CheckFsReturns(true, nil)
 			fakeBlockDeviceUtils.MakeFsReturns(nil)
 			fakeBlockDeviceUtils.MountFsReturns(callErr)
-			fakeBlockDeviceUtils.IsDirIsAMountPointReturns(false, nil, nil)
+			fakeBlockDeviceUtils.IsDirAMountPointReturns(false, nil, nil)
 
 			err = blockDeviceMounterUtils.MountDeviceFlow("fake_device", "fake_fstype", "fake_mountp")
 			Expect(err).To(HaveOccurred())
@@ -173,7 +173,7 @@ var _ = Describe("block_device_mounter_utils_test", func() {
 			fakeBlockDeviceUtils.CheckFsReturns(true, nil)
 			fakeBlockDeviceUtils.MakeFsReturns(nil)
 			fakeBlockDeviceUtils.MountFsReturns(nil)
-			fakeBlockDeviceUtils.IsDirIsAMountPointReturns(false, nil, nil)
+			fakeBlockDeviceUtils.IsDirAMountPointReturns(false, nil, nil)
 
 			err = blockDeviceMounterUtils.MountDeviceFlow("fake_device", "fake_fstype", "fake_mountp")
 			Expect(err).NotTo(HaveOccurred())
