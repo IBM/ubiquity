@@ -29,34 +29,20 @@ var _ = Describe("Connection", func() {
 	BeforeEach(func() {
 	})
 
-	Context(".Open and Close", func() {
-		It("open and close success", func() {
-			dbConnection := database.NewConnection()
-			Expect(dbConnection.GetDb()).To(BeNil())
-			err = dbConnection.Open()
-			Expect(err).To(Not(HaveOccurred()))
-			Expect(dbConnection.GetDb()).To(Not(BeNil()))
-			err = dbConnection.Close()
-			Expect(err).To(Not(HaveOccurred()))
-			Expect(dbConnection.GetDb()).To(BeNil())
-		})
-		It("open fail", func() {
-			dbConnection := database.NewConnection()
-			Expect(dbConnection.GetDb()).To(BeNil())
-			err = dbConnection.Open()
-			Expect(err).To(Not(HaveOccurred()))
-			Expect(dbConnection.GetDb()).To(Not(BeNil()))
-			err = dbConnection.Open()
-			Expect(err).To(HaveOccurred())
-			err = dbConnection.Close()
-			Expect(err).To(Not(HaveOccurred()))
-			Expect(dbConnection.GetDb()).To(BeNil())
-		})
-		It("close fail", func() {
-			dbConnection := database.NewConnection()
-			Expect(dbConnection.GetDb()).To(BeNil())
-			err = dbConnection.Close()
-			Expect(err).To(HaveOccurred())
-		})
-	})
+    Context(".Open", func() {
+        It("open success", func() {
+			defer database.InitTestCorrect()()
+            dbConnection := database.NewConnection()
+            Expect(dbConnection.GetDb()).To(BeNil())
+            err = dbConnection.Open()
+            Expect(err).To(Not(HaveOccurred()))
+        })
+        It("close fail", func() {
+			defer database.InitTestCorrect()()
+            dbConnection := database.NewConnection()
+            Expect(dbConnection.GetDb()).To(BeNil())
+            err = dbConnection.Close()
+            Expect(err).To(HaveOccurred())
+        })
+    })
 })

@@ -17,11 +17,10 @@
 package database
 
 import (
-	"errors"
-	"github.com/IBM/ubiquity/utils/logs"
-	"github.com/jinzhu/gorm"
-	_ "github.com/jinzhu/gorm/dialects/postgres"
-	_ "github.com/jinzhu/gorm/dialects/sqlite"
+    "github.com/jinzhu/gorm"
+    _ "github.com/jinzhu/gorm/dialects/postgres"
+    "github.com/IBM/ubiquity/utils/logs"
+    "errors"
 )
 
 var globalConnectionFactory ConnectionFactory = nil
@@ -43,11 +42,10 @@ type postgresFactory struct {
 	psqlLog string
 }
 
-type sqliteFactory struct {
-	path string
+type testErrorFactory struct {
 }
 
-type testErrorFactory struct {
+type testCorrectFactory struct {
 }
 
 func (f *postgresFactory) newConnection() (*gorm.DB, error) {
@@ -56,12 +54,13 @@ func (f *postgresFactory) newConnection() (*gorm.DB, error) {
 	return gorm.Open("postgres", f.psql)
 }
 
-func (f *sqliteFactory) newConnection() (*gorm.DB, error) {
-	return gorm.Open("sqlite3", f.path)
-}
-
 func (f *testErrorFactory) newConnection() (*gorm.DB, error) {
 	return nil, errors.New("testErrorFactory")
+}
+
+func (f *testCorrectFactory) newConnection() (*gorm.DB, error) {
+    db := new(*gorm.DB)
+    return *db, nil
 }
 
 type Connection struct {

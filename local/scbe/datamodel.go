@@ -22,7 +22,6 @@ import (
 	"github.com/IBM/ubiquity/resources"
 	"github.com/IBM/ubiquity/utils/logs"
 	"github.com/jinzhu/gorm"
-	_ "github.com/mattn/go-sqlite3"
 )
 
 //go:generate counterfeiter -o ../../fakes/fake_ScbeDataModel.go . ScbeDataModel

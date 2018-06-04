@@ -11,10 +11,7 @@ import:
 - package: github.com/jinzhu/gorm
   version: v1.0
   subpackages:
-  - dialects/sqlite
   - dialects/postgres
-- package: github.com/mattn/go-sqlite3
-  version: v1.3.0
 - package: github.com/op/go-logging
   version: 970db520ece77730c7e4724c61121037378659d9
 - package: github.com/nightlyone/lockfile

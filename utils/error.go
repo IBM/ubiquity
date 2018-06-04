@@ -1,5 +1,5 @@
 /**
- * Copyright 2017 IBM Corp.
+ * Copyright 2016, 2017 IBM Corp.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,17 +14,17 @@
  * limitations under the License.
  */
 
-package database_test
+
+package utils
 
 import (
-	. "github.com/onsi/ginkgo"
-	. "github.com/onsi/gomega"
-	"testing"
-	"github.com/IBM/ubiquity/utils/logs"
+	"fmt"
 )
 
-func TestDb(t *testing.T) {
-	RegisterFailHandler(Fail)
-	defer logs.InitStdoutLogger(logs.DEBUG)()
-	RunSpecs(t, "database Test Suite")
+type NoENVKeyError struct {
+	EnvKeyName string
+}
+
+func (e *NoENVKeyError) Error() string {
+	return fmt.Sprintf("ENV Key [%s] not exist.", e.EnvKeyName)
 }

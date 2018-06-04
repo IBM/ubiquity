@@ -22,7 +22,6 @@ import (
 
 	"github.com/IBM/ubiquity/local/spectrumscale"
 	"github.com/IBM/ubiquity/resources"
-	_ "github.com/mattn/go-sqlite3"
 )
 
 type FakeSpectrumDataModel struct {

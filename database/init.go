@@ -17,23 +17,23 @@
 package database
 
 import (
-	"github.com/IBM/ubiquity/resources"
-	"github.com/IBM/ubiquity/utils/logs"
-	"os"
-	"strings"
+    "os"
+    "github.com/IBM/ubiquity/utils"
+    "github.com/IBM/ubiquity/utils/logs"
+    "github.com/IBM/ubiquity/resources"
+    "strings"
 )
 
 const (
-	KeyPsqlHost        = "UBIQUITY_DB_PSQL_HOST"
-	KeySqlitePath      = "UBIQUITY_DB_SQLITE_PATH"
-	KeyPsqlUser        = "UBIQUITY_DB_USERNAME"
-	KeyPsqlPassword    = "UBIQUITY_DB_PASSWORD"
-	KeyPsqlDbName      = "UBIQUITY_DB_NAME"
-	KeyPsqlPort        = "UBIQUITY_DB_PSQL_PORT"
-	KeyPsqlTimeout     = "UBIQUITY_DB_CONNECT_TIMEOUT"
-	KeyPsqlSslMode     = "UBIQUITY_DB_SSL_MODE"
-	KeyPsqlSslRootCert = "UBIQUITY_DB_SSL_ROOT_CERT"
-	keyPsqlDbPVName    = "IBM_UBIQUITY_DB_PV_NAME"
+    KeyPsqlHost = "UBIQUITY_DB_PSQL_HOST"
+    KeyPsqlUser = "UBIQUITY_DB_USERNAME"
+    KeyPsqlPassword = "UBIQUITY_DB_PASSWORD"
+    KeyPsqlDbName = "UBIQUITY_DB_NAME"
+    KeyPsqlPort = "UBIQUITY_DB_PSQL_PORT"
+    KeyPsqlTimeout = "UBIQUITY_DB_CONNECT_TIMEOUT"
+    KeyPsqlSslMode = "UBIQUITY_DB_SSL_MODE"
+    KeyPsqlSslRootCert = "UBIQUITY_DB_SSL_ROOT_CERT"
+    keyPsqlDbPVName = "IBM_UBIQUITY_DB_PV_NAME"
 )
 
 func GetPsqlConnectionParams(hostname string) string {
@@ -106,22 +106,24 @@ func InitPostgres(hostname string) func() {
 	return initConnectionFactory(&postgresFactory{psql: psqlStr, psqlLog: GetPsqlWithPassowrdStarred(psqlStr)})
 }
 
-func InitSqlite(filepath string) func() {
-	defer logs.GetLogger().Trace(logs.DEBUG)()
-	return initConnectionFactory(&sqliteFactory{path: filepath})
+func InitTestError() func() {
+    defer logs.GetLogger().Trace(logs.DEBUG)()
+    return initConnectionFactory(&testErrorFactory{})
 }
 
-func InitTestError() func() {
-	defer logs.GetLogger().Trace(logs.DEBUG)()
-	return initConnectionFactory(&testErrorFactory{})
+func InitTestCorrect() func() {
+    defer logs.GetLogger().Trace(logs.DEBUG)()
+    return initConnectionFactory(&testCorrectFactory{})
 }
 
 func Initialize() func() {
 	defer logs.GetLogger().Trace(logs.DEBUG)()
 
-	psqlHost := os.Getenv(KeyPsqlHost)
-	if psqlHost != "" {
-		return InitPostgres(psqlHost)
-	}
-	return InitSqlite(os.Getenv(KeySqlitePath))
+    psqlHost := os.Getenv(KeyPsqlHost)
+    if psqlHost != "" {
+        return InitPostgres(psqlHost)
+    }
+    return func() {
+        logs.GetLogger().ErrorRet(&utils.NoENVKeyError{KeyPsqlHost}, "failed")
+    }
 }

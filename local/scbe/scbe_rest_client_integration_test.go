@@ -26,7 +26,6 @@ import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega" // including the whole package inside the file
 	"os"
-	"path"
 	"strconv"
 )
 
@@ -185,7 +184,6 @@ var _ = Describe("datamodel integration testing with live DB", func() {
 		// create DB
 		logs.GetLogger().Debug("Obtaining handle to DB")
 		var err error
-		database.InitSqlite(path.Join(DBPath, "integration-ubiquity.db"))
 		database.RegisterMigration(&resources.Volume{})
 		database.RegisterMigration(&scbe.ScbeVolume{})
 		dbConnection = database.NewConnection()
