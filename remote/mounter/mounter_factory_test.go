@@ -17,12 +17,13 @@
 package mounter_test
 
 import (
+	"testing"
+
+	"github.com/IBM/ubiquity/remote/mounter"
+	"github.com/IBM/ubiquity/resources"
 	"github.com/IBM/ubiquity/utils/logs"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
-	"testing"
-	"github.com/IBM/ubiquity/remote/mounter"
-	"github.com/IBM/ubiquity/resources"
 )
 
 var _ = Describe("mounter_factory_test", func() {
@@ -40,6 +41,7 @@ var _ = Describe("mounter_factory_test", func() {
 				"fakebackend type",
 				nil,
 				resources.UbiquityPluginConfig{},
+				resources.RequestContext{},
 			)
 			Expect(err).To(HaveOccurred())
 			_, ok := err.(*mounter.NoMounterForVolumeError)
@@ -50,6 +52,7 @@ var _ = Describe("mounter_factory_test", func() {
 				resources.SCBE,
 				nil,
 				resources.UbiquityPluginConfig{},
+				resources.RequestContext{},
 			)
 			Expect(err).NotTo(HaveOccurred())
 			Expect(backendMounter).NotTo(Equal(nil))

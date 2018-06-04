@@ -17,23 +17,24 @@
 /*
    Description
    This is the APIs that the ubiquity plugins (flex\provisioner or DVP) use to communicate with Ubiquity server
- */
+*/
 package remote
 
 import (
 	"net/http"
-	"github.com/IBM/ubiquity/resources"
 	"reflect"
+
+	"github.com/IBM/ubiquity/resources"
 	"github.com/IBM/ubiquity/utils"
 	"github.com/IBM/ubiquity/utils/logs"
 )
 
 type remoteClient struct {
-	logger            logs.Logger
-	isActivated       bool
-	httpClient        *http.Client
-	storageApiURL     string
-	config            resources.UbiquityPluginConfig
+	logger        logs.Logger
+	isActivated   bool
+	httpClient    *http.Client
+	storageApiURL string
+	config        resources.UbiquityPluginConfig
 }
 
 func (s *remoteClient) Activate(activateRequest resources.ActivateRequest) error {
@@ -46,7 +47,7 @@ func (s *remoteClient) Activate(activateRequest resources.ActivateRequest) error
 	// call remote activate
 	activateURL := utils.FormatURL(s.storageApiURL, "activate")
 	activateRequest.CredentialInfo = s.config.CredentialInfo
-	response, err := utils.HttpExecute(s.httpClient,"POST", activateURL, activateRequest)
+	response, err := utils.HttpExecute(s.httpClient, "POST", activateURL, activateRequest, activateRequest.Context)
 	if err != nil {
 		return s.logger.ErrorRet(err, "utils.HttpExecute failed")
 	}
@@ -70,7 +71,7 @@ func (s *remoteClient) CreateVolume(createVolumeRequest resources.CreateVolumeRe
 	}
 
 	createVolumeRequest.CredentialInfo = s.config.CredentialInfo
-	response, err := utils.HttpExecute(s.httpClient, "POST", createRemoteURL, createVolumeRequest)
+	response, err := utils.HttpExecute(s.httpClient, "POST", createRemoteURL, createVolumeRequest, createVolumeRequest.Context)
 	if err != nil {
 		return s.logger.ErrorRet(err, "utils.HttpExecute failed")
 	}
@@ -90,7 +91,7 @@ func (s *remoteClient) RemoveVolume(removeVolumeRequest resources.RemoveVolumeRe
 	removeRemoteURL := utils.FormatURL(s.storageApiURL, "volumes", removeVolumeRequest.Name)
 
 	removeVolumeRequest.CredentialInfo = s.config.CredentialInfo
-	response, err := utils.HttpExecute(s.httpClient, "DELETE", removeRemoteURL, removeVolumeRequest)
+	response, err := utils.HttpExecute(s.httpClient, "DELETE", removeRemoteURL, removeVolumeRequest, removeVolumeRequest.Context)
 	if err != nil {
 		return s.logger.ErrorRet(err, "utils.HttpExecute failed")
 	}
@@ -109,7 +110,7 @@ func (s *remoteClient) GetVolume(getVolumeRequest resources.GetVolumeRequest) (r
 
 	getRemoteURL := utils.FormatURL(s.storageApiURL, "volumes", getVolumeRequest.Name)
 	getVolumeRequest.CredentialInfo = s.config.CredentialInfo
-	response, err := utils.HttpExecute(s.httpClient, "GET", getRemoteURL, getVolumeRequest)
+	response, err := utils.HttpExecute(s.httpClient, "GET", getRemoteURL, getVolumeRequest, getVolumeRequest.Context)
 	if err != nil {
 		return resources.Volume{}, s.logger.ErrorRet(err, "failed")
 	}
@@ -134,7 +135,7 @@ func (s *remoteClient) GetVolumeConfig(getVolumeConfigRequest resources.GetVolum
 
 	getRemoteURL := utils.FormatURL(s.storageApiURL, "volumes", getVolumeConfigRequest.Name, "config")
 	getVolumeConfigRequest.CredentialInfo = s.config.CredentialInfo
-	response, err := utils.HttpExecute(s.httpClient, "GET", getRemoteURL, getVolumeConfigRequest)
+	response, err := utils.HttpExecute(s.httpClient, "GET", getRemoteURL, getVolumeConfigRequest, getVolumeConfigRequest.Context)
 	if err != nil {
 		return nil, s.logger.ErrorRet(err, "failed")
 	}
@@ -159,7 +160,7 @@ func (s *remoteClient) Attach(attachRequest resources.AttachRequest) (string, er
 
 	attachRemoteURL := utils.FormatURL(s.storageApiURL, "volumes", attachRequest.Name, "attach")
 	attachRequest.CredentialInfo = s.config.CredentialInfo
-	response, err := utils.HttpExecute(s.httpClient, "PUT", attachRemoteURL, attachRequest)
+	response, err := utils.HttpExecute(s.httpClient, "PUT", attachRemoteURL, attachRequest, attachRequest.Context)
 	if err != nil {
 		return "", s.logger.ErrorRet(err, "utils.HttpExecute failed")
 	}
@@ -178,7 +179,7 @@ func (s *remoteClient) Detach(detachRequest resources.DetachRequest) error {
 
 	detachRemoteURL := utils.FormatURL(s.storageApiURL, "volumes", detachRequest.Name, "detach")
 	detachRequest.CredentialInfo = s.config.CredentialInfo
-	response, err := utils.HttpExecute(s.httpClient, "PUT", detachRemoteURL, detachRequest)
+	response, err := utils.HttpExecute(s.httpClient, "PUT", detachRemoteURL, detachRequest, detachRequest.Context)
 	if err != nil {
 		return s.logger.ErrorRet(err, "utils.HttpExecute failed")
 	}
@@ -197,13 +198,12 @@ func (s *remoteClient) ListVolumes(listVolumesRequest resources.ListVolumesReque
 
 	listRemoteURL := utils.FormatURL(s.storageApiURL, "volumes")
 	listVolumesRequest.CredentialInfo = s.config.CredentialInfo
-	response, err := utils.HttpExecute(s.httpClient, "GET", listRemoteURL, listVolumesRequest)
+	response, err := utils.HttpExecute(s.httpClient, "GET", listRemoteURL, listVolumesRequest, listVolumesRequest.Context)
 	if err != nil {
 		return nil, s.logger.ErrorRet(err, "failed")
 	}
 
 	defer response.Body.Close()
-
 
 	if response.StatusCode != http.StatusOK {
 		return nil, s.logger.ErrorRet(utils.ExtractErrorResponse(response), "failed", logs.Args{{"response", response}})

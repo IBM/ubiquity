@@ -26,8 +26,8 @@ import (
 	"strings"
 
 	"github.com/IBM/ubiquity/resources"
-	"github.com/gorilla/mux"
 	"github.com/IBM/ubiquity/utils/logs"
+	"github.com/gorilla/mux"
 )
 
 func ExtractErrorResponse(response *http.Response) error {
@@ -91,15 +91,22 @@ func HttpExecuteUserAuth(httpClient *http.Client, requestType string, requestURL
 
 }
 
-func HttpExecute(httpClient *http.Client, requestType string, requestURL string, rawPayload interface{}) (*http.Response, error) {
+func HttpExecute(httpClient *http.Client, requestType string, requestURL string, rawPayload interface{}, request_context resources.RequestContext) (*http.Response, error) {
 	logger := logs.GetLogger()
 	payload, err := json.MarshalIndent(rawPayload, "", " ")
+
+	logger.Info("Sending HTTPExecute request")
+
 	if err != nil {
 		err = fmt.Errorf("Internal error marshalling params %#v", err)
 		return nil, logger.ErrorRet(err, "failed")
 	}
 
 	request, err := http.NewRequest(requestType, requestURL, bytes.NewBuffer(payload))
+
+	//setting the headers for the request
+	request.Header.Set("request-id", request_context.Id)
+
 	if err != nil {
 		err = fmt.Errorf("Error in creating request %#v", err)
 		return nil, logger.ErrorRet(err, "failed")
@@ -132,7 +139,6 @@ func Unmarshal(r *http.Request, object interface{}) error {
 
 	return nil
 }
-
 
 func UnmarshalDataFromRequest(r *http.Request, object interface{}) error {
 	body, err := ioutil.ReadAll(r.Body)

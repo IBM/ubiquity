@@ -2,27 +2,27 @@ package mounter
 
 import (
 	"log"
+
 	"github.com/IBM/ubiquity/resources"
 	"github.com/IBM/ubiquity/utils/logs"
 )
 
 //go:generate counterfeiter -o ../fakes/fake_mounter_factory.go . MounterFactory
 type MounterFactory interface {
-	GetMounterPerBackend(backend string, legacyLogger *log.Logger, pluginConfig resources.UbiquityPluginConfig) (resources.Mounter, error)
+	GetMounterPerBackend(backend string, legacyLogger *log.Logger, pluginConfig resources.UbiquityPluginConfig, requestContext resources.RequestContext) (resources.Mounter, error)
 }
 
-
-type mounterFactory struct{
-	logger  logs.Logger
+type mounterFactory struct {
+	logger logs.Logger
 }
 
-func NewMounterFactory() (MounterFactory){
+func NewMounterFactory() MounterFactory {
 	return &mounterFactory{
 		logger: logs.GetLogger(),
 	}
 }
 
-func (m *mounterFactory) GetMounterPerBackend(backend string, legacyLogger *log.Logger, pluginConfig resources.UbiquityPluginConfig) (resources.Mounter, error){
+func (m *mounterFactory) GetMounterPerBackend(backend string, legacyLogger *log.Logger, pluginConfig resources.UbiquityPluginConfig, requestContext resources.RequestContext) (resources.Mounter, error) {
 	m.logger = logs.GetLogger()
 	defer m.logger.Trace(logs.DEBUG)()
 
