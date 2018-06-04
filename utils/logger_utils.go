@@ -23,7 +23,7 @@ import (
 	"os"
 )
 
-func SetupOldLogger(loggerName string) (*log.Logger) {
+func SetupOldLogger(loggerName string) *log.Logger {
 	logger := log.New(io.MultiWriter(os.Stdout), fmt.Sprintf("%s: ", loggerName), log.Lshortfile|log.LstdFlags)
 	return logger
 }

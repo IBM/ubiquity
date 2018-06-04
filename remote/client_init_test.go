@@ -27,7 +27,7 @@ import (
 	"io/ioutil"
 )
 
-const fakeCert            = "/tmp/fake_cert.crt"
+const fakeCert = "/tmp/fake_cert.crt"
 
 var _ = Describe("initialize", func() {
 	var (

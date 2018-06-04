@@ -26,10 +26,10 @@ import (
 
 	"path"
 
+	"github.com/IBM/ubiquity/utils/logs"
 	"log"
 	"strconv"
 	"strings"
-	"github.com/IBM/ubiquity/utils/logs"
 )
 
 func ReadAndUnmarshal(object interface{}, dir string, fileName string) error {
@@ -135,7 +135,7 @@ func SetupConfigDirectory(executor Executor, configPath string) (string, error) 
 
 	ubiquityConfigPath := path.Join(configPath, ".config")
 	if _, err := executor.Stat(ubiquityConfigPath); os.IsNotExist(err) {
-		err = os.MkdirAll(ubiquityConfigPath,0640)
+		err = os.MkdirAll(ubiquityConfigPath, 0640)
 		if err != nil {
 			return "", logs.GetLogger().ErrorRet(err, "error creating directory")
 		}
@@ -276,9 +276,9 @@ func LoadConfig() (resources.UbiquityServerConfig, error) {
 }
 
 func GetEnv(envName string, defaultValue string) string {
-    envValue := os.Getenv(envName)
-    if envValue == "" {
-        envValue = defaultValue
-    }
-    return envValue
+	envValue := os.Getenv(envName)
+	if envValue == "" {
+		envValue = defaultValue
+	}
+	return envValue
 }

@@ -16,19 +16,18 @@
 
 package database_test
 
-
 import (
-    . "github.com/onsi/ginkgo"
-    . "github.com/onsi/gomega"
-    "github.com/IBM/ubiquity/database"
+	"github.com/IBM/ubiquity/database"
+	. "github.com/onsi/ginkgo"
+	. "github.com/onsi/gomega"
 )
 
 var _ = Describe("Connection", func() {
-    var (
-        err error
-    )
-    BeforeEach(func() {
-    })
+	var (
+		err error
+	)
+	BeforeEach(func() {
+	})
 
     Context(".Open", func() {
         It("open success", func() {

@@ -37,73 +37,73 @@ const (
 )
 
 func GetPsqlConnectionParams(hostname string) string {
-    str := ""
-    // add host
-    str += "host=" + hostname
-    // add user
-    psqlUser := os.Getenv(KeyPsqlUser)
-    if psqlUser == "" {
-        psqlUser = "postgres"
-    }
-    str += " user=" + psqlUser
-    // add dbname
-    psqlDbName := os.Getenv(KeyPsqlDbName)
-    if psqlDbName == "" {
-        psqlDbName = "postgres"
-    }
-    str += " dbname=" + psqlDbName
-    // add password
-    psqlPassword := os.Getenv(KeyPsqlPassword)
-    if psqlPassword != "" {
-        str += " password=" + psqlPassword
-    }
-    // add port
-    psqlPort := os.Getenv(KeyPsqlPort)
-    if psqlPort != "" {
-        str += " port=" + psqlPort
-    }
-    // add connect_timeout
-    psqlTimeout := os.Getenv(KeyPsqlTimeout)
-    if psqlTimeout != "" {
-        str += " connect_timeout=" + psqlTimeout
-    }
-    return str
+	str := ""
+	// add host
+	str += "host=" + hostname
+	// add user
+	psqlUser := os.Getenv(KeyPsqlUser)
+	if psqlUser == "" {
+		psqlUser = "postgres"
+	}
+	str += " user=" + psqlUser
+	// add dbname
+	psqlDbName := os.Getenv(KeyPsqlDbName)
+	if psqlDbName == "" {
+		psqlDbName = "postgres"
+	}
+	str += " dbname=" + psqlDbName
+	// add password
+	psqlPassword := os.Getenv(KeyPsqlPassword)
+	if psqlPassword != "" {
+		str += " password=" + psqlPassword
+	}
+	// add port
+	psqlPort := os.Getenv(KeyPsqlPort)
+	if psqlPort != "" {
+		str += " port=" + psqlPort
+	}
+	// add connect_timeout
+	psqlTimeout := os.Getenv(KeyPsqlTimeout)
+	if psqlTimeout != "" {
+		str += " connect_timeout=" + psqlTimeout
+	}
+	return str
 }
 
 func GetPsqlSslParams() string {
-    str := ""
-    // add sslmode
-    psqlSslMode := os.Getenv(KeyPsqlSslMode)
-        if psqlSslMode == "" {
-        psqlSslMode = resources.DefaultDbSslMode
-    }
-    str += "sslmode=" + psqlSslMode
-    // add sslrootcert
-    psqlSslRootCert := os.Getenv(KeyPsqlSslRootCert)
-    if psqlSslRootCert != "" {
-        // if sslmode is verify-full then postgres will verify the certificate, if its require then it will automatically skip verify
-        str += " sslrootcert=" + psqlSslRootCert
-    }
-    return str
+	str := ""
+	// add sslmode
+	psqlSslMode := os.Getenv(KeyPsqlSslMode)
+	if psqlSslMode == "" {
+		psqlSslMode = resources.DefaultDbSslMode
+	}
+	str += "sslmode=" + psqlSslMode
+	// add sslrootcert
+	psqlSslRootCert := os.Getenv(KeyPsqlSslRootCert)
+	if psqlSslRootCert != "" {
+		// if sslmode is verify-full then postgres will verify the certificate, if its require then it will automatically skip verify
+		str += " sslrootcert=" + psqlSslRootCert
+	}
+	return str
 }
 
 func GetPsqlWithPassowrdStarred(psql string) string {
-    slc := strings.Split(psql, " ")
-    newslc := slc[:0]
-    for _, x := range slc {
-        if !strings.HasPrefix(x, "password") {
-            newslc = append(newslc, x)
-        } else {
-            newslc = append(newslc, "password=****")
-        }
-    }
-    return strings.Join(newslc, " ")
+	slc := strings.Split(psql, " ")
+	newslc := slc[:0]
+	for _, x := range slc {
+		if !strings.HasPrefix(x, "password") {
+			newslc = append(newslc, x)
+		} else {
+			newslc = append(newslc, "password=****")
+		}
+	}
+	return strings.Join(newslc, " ")
 }
 
 func InitPostgres(hostname string) func() {
-    defer logs.GetLogger().Trace(logs.DEBUG)()
-    psqlStr := GetPsqlConnectionParams(hostname) + " " + GetPsqlSslParams()
-    return initConnectionFactory(&postgresFactory{psql: psqlStr, psqlLog: GetPsqlWithPassowrdStarred(psqlStr)})
+	defer logs.GetLogger().Trace(logs.DEBUG)()
+	psqlStr := GetPsqlConnectionParams(hostname) + " " + GetPsqlSslParams()
+	return initConnectionFactory(&postgresFactory{psql: psqlStr, psqlLog: GetPsqlWithPassowrdStarred(psqlStr)})
 }
 
 func InitTestError() func() {
@@ -117,7 +117,7 @@ func InitTestCorrect() func() {
 }
 
 func Initialize() func() {
-    defer logs.GetLogger().Trace(logs.DEBUG)()
+	defer logs.GetLogger().Trace(logs.DEBUG)()
 
     psqlHost := os.Getenv(KeyPsqlHost)
     if psqlHost != "" {

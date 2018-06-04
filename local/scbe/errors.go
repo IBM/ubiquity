@@ -206,7 +206,7 @@ func (e *SslModeFullVerifyWithoutCAfile) Error() string {
 }
 
 type InvalidMappingsForVolume struct {
-	volWwn     string
+	volWwn string
 }
 
 func (e *InvalidMappingsForVolume) Error() string {

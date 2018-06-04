@@ -34,7 +34,6 @@ const KeyUseSsl = "UBIQUITY_PLUGIN_USE_SSL"
 const KeyVerifyCA = "UBIQUITY_PLUGIN_VERIFY_CA"
 const storageAPIURL = "%s://%s:%d/ubiquity_storage"
 
-
 type SslModeValueInvalid struct {
 	sslModeInValid string
 } // TODO try to reuse SslModeValueInvalid and SslModeFullVerifyWithoutCAfile from scbe.error, for some reason it cannot be used here

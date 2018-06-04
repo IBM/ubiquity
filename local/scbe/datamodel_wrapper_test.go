@@ -17,11 +17,10 @@
 package scbe_test
 
 import (
-	. "github.com/onsi/ginkgo"
-	. "github.com/onsi/gomega"
+  . "github.com/onsi/ginkgo"
+  . "github.com/onsi/gomega"
 	"github.com/IBM/ubiquity/database"
 	"github.com/IBM/ubiquity/local/scbe"
-	//"os"
 )
 
 var _ = Describe("ScbeDataModelWrapper test", func() {
@@ -41,9 +40,9 @@ var _ = Describe("ScbeDataModelWrapper test", func() {
 	BeforeEach(func() {
 		dataModelWrapper = scbe.NewScbeDataModelWrapper()
 	})
-    AfterEach(func() {
-        database.UnregisterAllMigrations()
-    })
+	AfterEach(func() {
+		database.UnregisterAllMigrations()
+	})
 
 	Context("Database cannot be accessed yet", func() {
         Context("InsertVolume", func() {
@@ -95,21 +94,20 @@ var _ = Describe("ScbeDataModelWrapper test", func() {
     })
 })
 
-
 func isEqualScbeVolumes(list1 []scbe.ScbeVolume, list2 []scbe.ScbeVolume) bool {
-    if len(list1) != len(list2) {
-        return false
-    }
+	if len(list1) != len(list2) {
+		return false
+	}
 
-    for i, v := range list1 {
-        if !isEqualScbeVolume(v, list2[i]) {
-            return false
-        }
-    }
+	for i, v := range list1 {
+		if !isEqualScbeVolume(v, list2[i]) {
+			return false
+		}
+	}
 
-    return true
+	return true
 }
 
 func isEqualScbeVolume(vol1 scbe.ScbeVolume, vol2 scbe.ScbeVolume) bool {
-    return vol1.Volume.Name == vol2.Volume.Name && vol1.WWN == vol2.WWN
+	return vol1.Volume.Name == vol2.Volume.Name && vol1.WWN == vol2.WWN
 }
