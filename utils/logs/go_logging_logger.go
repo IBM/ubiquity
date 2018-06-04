@@ -25,6 +25,7 @@ import (
 	"sync"
 
 	"github.com/IBM/ubiquity/resources"
+	"github.com/op/go-logging"
 )
 
 const (
