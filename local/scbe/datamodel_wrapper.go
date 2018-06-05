@@ -81,9 +81,10 @@ func (d *scbeDataModelWrapper) GetVolume(name string, mustExist bool) (ScbeVolum
 	// verify existence
 	if mustExist != exists {
 		if exists {
-			err = &volAlreadyExistsError{name}
+			err = &resources.VolAlreadyExistsError{VolName: name}
 		} else {
-			err = &volumeNotFoundError{name}
+			err = &resources.VolumeNotFoundError{VolName: name}
+
 		}
 		return ScbeVolume{}, d.logger.ErrorRet(err, "failed", logs.Args{{"mustExist", mustExist}, {"exists", exists}})
 	}
@@ -99,7 +100,7 @@ func (d *scbeDataModelWrapper) DeleteVolume(name string) error {
 
 		// sanity
 		if d.dbVolume == nil {
-			return d.logger.ErrorRet(&volumeNotFoundError{name}, "failed")
+			return d.logger.ErrorRet(&resources.VolumeNotFoundError{VolName: name}, "failed")
 		}
 
 		// work with memory object
@@ -132,7 +133,7 @@ func (d *scbeDataModelWrapper) InsertVolume(volumeName string, wwn string, fstyp
 
 		// sanity
 		if d.dbVolume != nil {
-			return d.logger.ErrorRet(&volAlreadyExistsError{volumeName}, "failed")
+			return d.logger.ErrorRet(&resources.VolAlreadyExistsError{VolName: volumeName}, "failed")
 		}
 
 		// work with memory object

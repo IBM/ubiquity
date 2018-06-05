@@ -358,7 +358,7 @@ func (s *scbeLocalClient) GetVolumeConfig(getVolumeConfigRequest resources.GetVo
 
 	// verify volume is found
 	if len(volumeInfo) != 1 {
-		return nil, s.logger.ErrorRet(&volumeNotFoundError{getVolumeConfigRequest.Name}, "failed", logs.Args{{"volumeInfo", volumeInfo}})
+		return nil, s.logger.ErrorRet(&VolumeNotFoundOnArrayError{VolName: getVolumeConfigRequest.Name}, "failed", logs.Args{{"volumeInfo", volumeInfo}})
 	}
 
 	// serialize scbeVolumeInfo to json
