@@ -20,6 +20,7 @@ import (
 	"bytes"
 	"fmt"
 	"io"
+	"runtime"
 	"strconv"
 	"sync"
 
@@ -50,9 +51,7 @@ func newGoLoggingLogger(level Level, writer io.Writer) *goLoggingLogger {
 
 func GetGoID() uint64 {
 	b := make([]byte, 64)
-	b = b[:
-        
-        .Stack(b, false)]
+	b = b[:runtime.Stack(b, false)]
 	b = bytes.TrimPrefix(b, []byte("goroutine "))
 	b = b[:bytes.IndexByte(b, ' ')]
 	n, _ := strconv.ParseUint(string(b), 10, 64)
