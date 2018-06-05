@@ -1,5 +1,5 @@
 /**
- * Copyright 2017 IBM Corp.
+ * Copyright 2016, 2017 IBM Corp.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,16 +14,17 @@
  * limitations under the License.
  */
 
+
 package utils
 
 import (
 	"fmt"
-	"io"
-	"log"
-	"os"
 )
 
-func SetupOldLogger(loggerName string) *log.Logger {
-	logger := log.New(io.MultiWriter(os.Stdout), fmt.Sprintf("%s: ", loggerName), log.Lshortfile|log.LstdFlags)
-	return logger
+type NoENVKeyError struct {
+	EnvKeyName string
+}
+
+func (e *NoENVKeyError) Error() string {
+	return fmt.Sprintf("ENV Key [%s] not exist.", e.EnvKeyName)
 }

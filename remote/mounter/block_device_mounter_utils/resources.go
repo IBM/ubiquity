@@ -23,4 +23,3 @@ type BlockDeviceMounterUtils interface {
 	Discover(volumeWwn string, deepDiscovery bool) (string, error)
 	UnmountDeviceFlow(devicePath string) error
 }
-

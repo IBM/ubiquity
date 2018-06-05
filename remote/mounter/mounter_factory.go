@@ -1,10 +1,9 @@
 package mounter
 
 import (
-	"log"
-
 	"github.com/IBM/ubiquity/resources"
 	"github.com/IBM/ubiquity/utils/logs"
+	"log"
 )
 
 //go:generate counterfeiter -o ../fakes/fake_mounter_factory.go . MounterFactory

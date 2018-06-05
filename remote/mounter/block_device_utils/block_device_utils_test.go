@@ -26,8 +26,8 @@ import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"io/ioutil"
-	"testing"
 	"strings"
+	"testing"
 )
 
 var _ = Describe("block_device_utils_test", func() {
@@ -140,7 +140,7 @@ var _ = Describe("block_device_utils_test", func() {
 			Expect(args).To(Equal([]string{"-ll"}))
 			_, cmd, args = fakeExec.ExecuteWithTimeoutArgsForCall(0)
 			Expect(cmd).To(Equal("sg_inq"))
-			Expect(args).To(Equal([]string{"-p",  "0x83", "/dev/mapper/mpath"}))
+			Expect(args).To(Equal([]string{"-p", "0x83", "/dev/mapper/mpath"}))
 		})
 		It("Discover fails if multipath command is missing", func() {
 			volumeId := "volume-id"
@@ -181,7 +181,7 @@ var _ = Describe("block_device_utils_test", func() {
 			Expect(args).To(Equal([]string{"-ll"}))
 			_, cmd, args = fakeExec.ExecuteWithTimeoutArgsForCall(0)
 			Expect(cmd).To(Equal("sg_inq"))
-			Expect(args).To(Equal([]string{"-p",  "0x83", "/dev/mapper/mpath"}))
+			Expect(args).To(Equal([]string{"-p", "0x83", "/dev/mapper/mpath"}))
 		})
 		It("Discover fails if volume not found", func() {
 			volumeId := "volume-id"
@@ -191,7 +191,7 @@ var _ = Describe("block_device_utils_test", func() {
 			Expect(err).To(HaveOccurred())
 		})
 	})
-	Context( ".DiscoverBySgInq", func(){
+	Context(".DiscoverBySgInq", func() {
 		It("should return mpathhe", func() {
 			mpathOutput := `mpathhe (36001738cfc9035eb0000000000cea5f6) dm-3 IBM     ,2810XIV
 							size=19G features='1 queue_if_no_path' hwhandler='0' wp=rw
@@ -254,7 +254,7 @@ mpathhb (36001738cfc9035eb0000000000cea###) dm-3 ##,##
 			Expect(err).To(HaveOccurred())
 		})
 	})
-	Context( ".GetWwnByScsiInq", func(){
+	Context(".GetWwnByScsiInq", func() {
 		It("GetWwnByScsiInq fails if sg_inq command fails", func() {
 			dev := "dev"
 			fakeExec.ExecuteWithTimeoutReturns([]byte{}, cmdErr)
@@ -279,12 +279,12 @@ mpathhb (36001738cfc9035eb0000000000cea###) dm-3 ##,##
 			Expect(fakeExec.ExecuteWithTimeoutCallCount()).To(Equal(1))
 			_, cmd, args := fakeExec.ExecuteWithTimeoutArgsForCall(0)
 			Expect(cmd).To(Equal("sg_inq"))
-			Expect(args).To(Equal([]string{"-p",  "0x83", dev}))
+			Expect(args).To(Equal([]string{"-p", "0x83", dev}))
 		})
-                It("should return wwn for mpath device on zLinux output", func() {
-                        dev := "dev"
-                        expecedWwn := "0x6001738cfc9035eb0000000000AAAAAA"
-                        result := fmt.Sprintf(`VPD INQUIRY: Device Identification page
+		It("should return wwn for mpath device on zLinux output", func() {
+			dev := "dev"
+			expecedWwn := "0x6001738cfc9035eb0000000000AAAAAA"
+			result := fmt.Sprintf(`VPD INQUIRY: Device Identification page
                                                         Designation descriptor number 1, descriptor length: 20
                                                         designator_type: NAA,  code_set: Binary
                                                         associated with the addressed logical unit
@@ -292,15 +292,15 @@ mpathhb (36001738cfc9035eb0000000000cea###) dm-3 ##,##
                                                         Vendor Specific Identifier: 0xcfc9035eb
                                                         Vendor Specific Extension Identifier: 0xcea5f6
                                                         [%s]`, expecedWwn)
-                        fakeExec.ExecuteWithTimeoutReturns([]byte(fmt.Sprintf("%s", result)), nil)
-                        wwn, err := bdUtils.GetWwnByScsiInq(dev)
-                        Expect(err).ToNot(HaveOccurred())
-                        Expect(wwn).To(Equal(strings.TrimPrefix(expecedWwn, "0x")))
-                        Expect(fakeExec.ExecuteWithTimeoutCallCount()).To(Equal(1))
-                        _, cmd, args := fakeExec.ExecuteWithTimeoutArgsForCall(0)
-                        Expect(cmd).To(Equal("sg_inq"))
-                        Expect(args).To(Equal([]string{"-p",  "0x83", dev}))
-                })
+			fakeExec.ExecuteWithTimeoutReturns([]byte(fmt.Sprintf("%s", result)), nil)
+			wwn, err := bdUtils.GetWwnByScsiInq(dev)
+			Expect(err).ToNot(HaveOccurred())
+			Expect(wwn).To(Equal(strings.TrimPrefix(expecedWwn, "0x")))
+			Expect(fakeExec.ExecuteWithTimeoutCallCount()).To(Equal(1))
+			_, cmd, args := fakeExec.ExecuteWithTimeoutArgsForCall(0)
+			Expect(cmd).To(Equal("sg_inq"))
+			Expect(args).To(Equal([]string{"-p", "0x83", dev}))
+		})
 		It("should not find wwn for device", func() {
 			dev := "dev"
 			expecedWwn := "6001738cfc9035eb0000000000AAAAAA"
@@ -318,7 +318,7 @@ mpathhb (36001738cfc9035eb0000000000cea###) dm-3 ##,##
 			Expect(fakeExec.ExecuteWithTimeoutCallCount()).To(Equal(1))
 			_, cmd, args := fakeExec.ExecuteWithTimeoutArgsForCall(0)
 			Expect(cmd).To(Equal("sg_inq"))
-			Expect(args).To(Equal([]string{"-p",  "0x83", dev}))
+			Expect(args).To(Equal([]string{"-p", "0x83", dev}))
 		})
 	})
 
@@ -552,6 +552,61 @@ mpoint on /ubiquity/mpointSecond type ext4 (rw,relatime,data=ordered)
 			Expect(mounts[1]).To(Equal("/ubiquity/mpointSecond"))
 		})
 	})
+	Context(".IsDirIsAMountPoint", func() {
+		It("should return false if DIR not found in mount output", func() {
+			mpoint := "/wrong/wwn" // DIR
+			mountOutput := `
+/mpoint on /ubiquity/wwn1 type ext4 (rw,relatime,data=ordered)
+/dev/mapper/mpoint on /ubiquity/mpoint type ext4 (rw,relatime,data=ordered)
+`
+			fakeExec.ExecuteWithTimeoutReturns([]byte(mountOutput), nil)
+			isMounted, mounts, err := bdUtils.IsDirAMountPoint(mpoint)
+			Expect(err).ToNot(HaveOccurred())
+			Expect(isMounted).To(Equal(false))
+			Expect(len(mounts)).To(Equal(0))
+		})
+		It("should return false if format of mount output is wrong", func() {
+			mpoint := "/ubiquity/wwn1"
+			mountOutput := `
+wrong format on /ubiquity/mpoint type ext4 (rw,relatime,data=ordered)
+/dev/mapper/mpoint on /ubiquity/mpoint type ext4 (rw,relatime,data=ordered)
+`
+			fakeExec.ExecuteWithTimeoutReturns([]byte(mountOutput), nil)
+			isMounted, mounts, err := bdUtils.IsDirAMountPoint(mpoint)
+			Expect(err).ToNot(HaveOccurred())
+			Expect(isMounted).To(Equal(false))
+			Expect(len(mounts)).To(Equal(0))
+		})
+
+		It("should return true if DIR found in mount output", func() {
+			mpoint := "/ubiquity/wwn1"
+			mountOutput := `
+/fakedevice1 on /ubiquity/wwn1 type ext4 (rw,relatime,data=ordered)
+/dev/mapper/mpoint on /ubiquity/mpoint type ext4 (rw,relatime,data=ordered)
+`
+			fakeExec.ExecuteWithTimeoutReturns([]byte(mountOutput), nil)
+			isMounted, mounts, err := bdUtils.IsDirAMountPoint(mpoint)
+			Expect(err).ToNot(HaveOccurred())
+			Expect(isMounted).To(Equal(true))
+			Expect(len(mounts)).To(Equal(1))
+			Expect(mounts[0]).To(Equal("/fakedevice1"))
+		})
+		It("should return true if DIR found in mount output (2 devices to the same mountpoint)", func() {
+			mpoint := "/ubiquity/wwn1"
+			mountOutput := `
+/fakedevice1 on /ubiquity/wwn1 type ext4 (rw,relatime,data=ordered)
+/dev/mapper/mpoint on /ubiquity/mpoint type ext4 (rw,relatime,data=ordered)
+/fakedevice2 on /ubiquity/wwn1 type ext4 (rw,relatime,data=ordered)
+`
+			fakeExec.ExecuteWithTimeoutReturns([]byte(mountOutput), nil)
+			isMounted, mounts, err := bdUtils.IsDirAMountPoint(mpoint)
+			Expect(err).ToNot(HaveOccurred())
+			Expect(isMounted).To(Equal(true))
+			Expect(len(mounts)).To(Equal(2))
+			Expect(mounts[0]).To(Equal("/fakedevice1"))
+			Expect(mounts[1]).To(Equal("/fakedevice2"))
+		})
+	})
 
 	Context(".UmountFs", func() {
 		It("UmountFs succeeds", func() {
@@ -571,7 +626,7 @@ mpoint on /ubiquity/mpointSecond type ext4 (rw,relatime,data=ordered)
 /XXX/mpoint on /ubiquity/mpoint type ext4 (rw,relatime,data=ordered)
 /dev/mapper/yyy on /ubiquity/yyy type ext4 (rw,relatime,data=ordered)
 `
-			fakeExec.ExecuteReturnsOnCall(0, nil, cmdErr) // the umount command should fail
+			fakeExec.ExecuteReturnsOnCall(0, nil, cmdErr)                         // the umount command should fail
 			fakeExec.ExecuteWithTimeoutReturnsOnCall(0, []byte(mountOutput), nil) // mount for isMounted
 			err = bdUtils.UmountFs(mpoint)
 			Expect(err).To(Not(HaveOccurred()))

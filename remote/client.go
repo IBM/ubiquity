@@ -21,12 +21,11 @@
 package remote
 
 import (
-	"net/http"
-	"reflect"
-
 	"github.com/IBM/ubiquity/resources"
 	"github.com/IBM/ubiquity/utils"
 	"github.com/IBM/ubiquity/utils/logs"
+	"net/http"
+	"reflect"
 )
 
 type remoteClient struct {

@@ -19,19 +19,19 @@ package block_device_mounter_utils
 import (
 	"github.com/IBM/ubiquity/remote/mounter/block_device_utils"
 	"github.com/IBM/ubiquity/utils/logs"
-    "github.com/nightlyone/lockfile"
-	"path/filepath"
+	"github.com/nightlyone/lockfile"
 	"os"
+	"path/filepath"
 	"time"
 )
 
 const WarningMessageIdempotentDeviceAlreadyMounted = "Device is already mounted, so skip mounting (Idempotent)."
 
 type blockDeviceMounterUtils struct {
-	logger            logs.Logger
-	blockDeviceUtils  block_device_utils.BlockDeviceUtils
-	rescanFlock       lockfile.Lockfile
-	mpathFlock        lockfile.Lockfile
+	logger           logs.Logger
+	blockDeviceUtils block_device_utils.BlockDeviceUtils
+	rescanFlock      lockfile.Lockfile
+	mpathFlock       lockfile.Lockfile
 }
 
 func NewBlockDeviceMounterUtilsWithBlockDeviceUtils(blockDeviceUtils block_device_utils.BlockDeviceUtils) BlockDeviceMounterUtils {
@@ -53,9 +53,9 @@ func newBlockDeviceMounterUtils(blockDeviceUtils block_device_utils.BlockDeviceU
 	}
 
 	return &blockDeviceMounterUtils{logger: logs.GetLogger(),
-		blockDeviceUtils:  blockDeviceUtils,
-		rescanFlock:       rescanLock,
-		mpathFlock:        mpathLock,
+		blockDeviceUtils: blockDeviceUtils,
+		rescanFlock:      rescanLock,
+		mpathFlock:       mpathLock,
 	}
 }
 
@@ -73,23 +73,33 @@ func (b *blockDeviceMounterUtils) MountDeviceFlow(devicePath string, fsType stri
 		}
 	}
 
-
 	// Check if need to mount the device, if its already mounted then skip mounting
 	isMounted, mountpointRefs, err := b.blockDeviceUtils.IsDeviceMounted(devicePath)
-	if err != nil{
+	if err != nil {
 		return b.logger.ErrorRet(err, "fail to identify if device is mounted")
 	}
 
-	if isMounted{
-		for _, mountpointi := range mountpointRefs{
-			if mountpointi == mountPoint{
+	if isMounted {
+		for _, mountpointi := range mountpointRefs {
+			if mountpointi == mountPoint {
 				b.logger.Info(WarningMessageIdempotentDeviceAlreadyMounted, logs.Args{{"Device", devicePath}, {"mountpoint", mountPoint}})
 				return nil // Indicate idempotent issue
 			}
 		}
 		// In case device mounted but to different mountpoint as expected we fail with error. # TODO we may support it in the future after allow the umount flow to umount by mountpoint and not by device path.
 		return b.logger.ErrorRet(&DeviceAlreadyMountedToWrongMountpoint{devicePath, mountPoint}, "fail")
-	} else{
+	} else {
+		// Check if mountpoint directory is not already mounted to un expected device. If so raise error to prevent double mounting.
+		isMounted, devicesRefs, err := b.blockDeviceUtils.IsDirAMountPoint(mountPoint)
+		if err != nil {
+			return b.logger.ErrorRet(err, "fail to identify if mountpoint dir is actually mounted")
+		}
+
+		if isMounted {
+			return b.logger.ErrorRet(&DirPathAlreadyMountedToWrongDevice{
+				mountPoint: mountPoint, expectedDevice: devicePath, unexpectedDevicesRefs: devicesRefs},
+				"fail")
+		}
 		if err = b.blockDeviceUtils.MountFs(devicePath, mountPoint); err != nil {
 			return b.logger.ErrorRet(err, "MountFs failed")
 		}
@@ -116,7 +126,7 @@ func (b *blockDeviceMounterUtils) UnmountDeviceFlow(devicePath string) error {
 			break
 		}
 		b.logger.Debug("mpathFlock.TryLock failed", logs.Args{{"error", err}})
-		time.Sleep(time.Duration(500*time.Millisecond))
+		time.Sleep(time.Duration(500 * time.Millisecond))
 	}
 	b.logger.Debug("Got mpathLock for device", logs.Args{{"device", devicePath}})
 	defer b.mpathFlock.Unlock()
@@ -145,7 +155,7 @@ func (b *blockDeviceMounterUtils) RescanAll(withISCSI bool, wwn string, rescanFo
 			break
 		}
 		b.logger.Debug("rescanLock.TryLock failed", logs.Args{{"error", err}})
-		time.Sleep(time.Duration(500*time.Millisecond))
+		time.Sleep(time.Duration(500 * time.Millisecond))
 	}
 	b.logger.Debug("Got rescanLock for volumeWWN", logs.Args{{"volumeWWN", wwn}})
 	defer b.rescanFlock.Unlock()
@@ -155,7 +165,7 @@ func (b *blockDeviceMounterUtils) RescanAll(withISCSI bool, wwn string, rescanFo
 		// Only when run rescan for new device, try to check if its already exist to reduce rescans
 		device, _ := b.Discover(wwn, false) // no deep discovery
 
-		if (device != "") {
+		if device != "" {
 			// if need rescan for discover new device but the new device is already exist then skip the rescan
 			b.logger.Debug(
 				"Skip rescan, because there is already multiple device for volumeWWN",
