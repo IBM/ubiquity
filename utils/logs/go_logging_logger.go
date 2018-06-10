@@ -26,6 +26,8 @@ import (
 
 	"github.com/IBM/ubiquity/resources"
 	"github.com/op/go-logging"
+	"k8s.io/apimachinery/pkg/util/uuid"
+
 )
 
 const (
@@ -144,3 +146,9 @@ func getLevel(level Level) logging.Level {
 		panic("unknown level")
 	}
 }
+
+func GetNewRequestContext() resources.RequestContext{
+	request_uuid := fmt.Sprintf("%s", uuid.NewUUID())
+    return resources.RequestContext{Id: request_uuid}
+}
+
