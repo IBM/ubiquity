@@ -25,6 +25,6 @@ import (
 
 func TestDb(t *testing.T) {
 	RegisterFailHandler(Fail)
-	defer logs.InitStdoutLogger(logs.DEBUG)()
+	defer logs.InitStdoutLogger(logs.DEBUG, logs.LoggerParams{})()
 	RunSpecs(t, "database Test Suite")
 }

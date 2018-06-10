@@ -26,8 +26,8 @@ import (
 )
 
 func TestScbe(t *testing.T) {
-	RegisterFailHandler(Fail)
-	defer logs.InitStdoutLogger(logs.DEBUG)()
+	RegisterFailHandler(Fail) 
+	defer logs.InitStdoutLogger(logs.DEBUG, logs.LoggerParams{})()
 	RunSpecs(t, "SCBE Test Suite")
 }
 

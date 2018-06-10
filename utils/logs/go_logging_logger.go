@@ -33,20 +33,33 @@ const (
 	traceExit  = "EXIT"
 )
 
-type goLoggingLogger struct {
-	logger *logging.Logger
+type LoggerParams struct{
+	 ShowGoid	bool 
+	 ShowPid	bool
 }
 
-func newGoLoggingLogger(level Level, writer io.Writer) *goLoggingLogger {
+type goLoggingLogger struct {
+	logger *logging.Logger
+	params	LoggerParams
+}
+
+func newGoLoggingLogger(level Level, writer io.Writer, params LoggerParams) *goLoggingLogger {
 	newLogger := logging.MustGetLogger("")
 	newLogger.ExtraCalldepth = 1
-	format := logging.MustStringFormatter("%{time:2006-01-02 15:04:05.999} %{level:.5s} %{pid} %{shortfile} %{shortpkg}::%{shortfunc} %{message}")
+	
+	format_string := "%{time:2006-01-02 15:04:05.999} %{level:.5s}"
+	if params.ShowPid{
+		format_string = fmt.Sprintf("%s %s", format_string, "%{pid}")
+	} 
+	format_string = fmt.Sprintf("%s %s", format_string, "%{shortfile} %{shortpkg}::%{shortfunc} %{message}")
+	
+	format := logging.MustStringFormatter(format_string)
 	backend := logging.NewLogBackend(writer, "", 0)
 	backendFormatter := logging.NewBackendFormatter(backend, format)
 	backendLeveled := logging.AddModuleLevel(backendFormatter)
 	backendLeveled.SetLevel(getLevel(level), "")
 	newLogger.SetBackend(backendLeveled)
-	return &goLoggingLogger{newLogger}
+	return &goLoggingLogger{newLogger, params}
 }
 
 func GetGoID() uint64 {
@@ -68,8 +81,11 @@ func (l *goLoggingLogger) getContextStringFromGoid() string {
 	} else {
 		context = context.(resources.RequestContext)
 	}
-	return fmt.Sprintf("%s:%d", context.(resources.RequestContext).Id, go_id)
-
+	if l.params.ShowGoid{
+		return fmt.Sprintf("%s:%d", context.(resources.RequestContext).Id, go_id)
+	} else {
+		return fmt.Sprintf("%s", context.(resources.RequestContext).Id)
+	}
 }
 
 func GetDeleteFromMapFunc(key interface{}) func() {

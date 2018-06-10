@@ -61,6 +61,6 @@ var _ = Describe("mounter_factory_test", func() {
 
 func TestMounterFactory(t *testing.T) {
 	RegisterFailHandler(Fail)
-	defer logs.InitStdoutLogger(logs.DEBUG)()
+	defer logs.InitStdoutLogger(logs.DEBUG, logs.LoggerParams{})()
 	RunSpecs(t, "MountFactory Test Suite")
 }

@@ -301,6 +301,6 @@ var _ = Describe("block_device_mounter_utils_test", func() {
 
 func TestGetBlockDeviceUtils(t *testing.T) {
 	RegisterFailHandler(Fail)
-	defer logs.InitStdoutLogger(logs.DEBUG)()
+	defer logs.InitStdoutLogger(logs.DEBUG, logs.LoggerParams{})()
 	RunSpecs(t, "BlockDeviceUtils Test Suite")
 }

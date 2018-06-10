@@ -658,6 +658,6 @@ wrong format on /ubiquity/mpoint type ext4 (rw,relatime,data=ordered)
 
 func TestGetBlockDeviceUtils(t *testing.T) {
 	RegisterFailHandler(Fail)
-	defer logs.InitStdoutLogger(logs.DEBUG)()
+	defer logs.InitStdoutLogger(logs.DEBUG, logs.LoggerParams{})()
 	RunSpecs(t, "BlockDeviceUtils Test Suite")
 }
