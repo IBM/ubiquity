@@ -26,6 +26,8 @@ import (
 
 	"github.com/IBM/ubiquity/resources"
 	"github.com/op/go-logging"
+	"k8s.io/apimachinery/pkg/util/uuid"
+
 )
 
 const (
