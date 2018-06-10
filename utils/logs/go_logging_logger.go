@@ -60,15 +60,15 @@ func GetGoID() uint64 {
 
 var GoIdToRequestIdMap = new(sync.Map)
 
-func (l *goLoggingLogger) getGoIdAndContextString() string {
+func (l *goLoggingLogger) getContextStringFromGoid() string {
 	go_id := GetGoID()
 	context, exists := GoIdToRequestIdMap.Load(go_id)
 	if !exists {
-		context = resources.RequestContext{Id: "XXXXX"}
+		context = resources.RequestContext{Id: "NA"}
 	} else {
 		context = context.(resources.RequestContext)
 	}
-	return fmt.Sprintf("%d:%s", go_id, context.(resources.RequestContext).Id)
+	return fmt.Sprintf("%s:%d", context.(resources.RequestContext).Id, go_id)
 
 }
 
@@ -77,38 +77,40 @@ func GetDeleteFromMapFunc(key interface{}) func() {
 }
 
 func (l *goLoggingLogger) Debug(str string, args ...Args) {
-	goid_context_string := l.getGoIdAndContextString()
+	goid_context_string := l.getContextStringFromGoid()
 	l.logger.Debugf(fmt.Sprintf("[%s] %s %v", goid_context_string, str, args))
 }
 
 func (l *goLoggingLogger) Info(str string, args ...Args) {
-	goid_context_string := l.getGoIdAndContextString()
+	goid_context_string := l.getContextStringFromGoid()
 	l.logger.Infof(fmt.Sprintf("[%s] %s %v", goid_context_string, str, args))
 }
 
 func (l *goLoggingLogger) Error(str string, args ...Args) {
-	goid_context_string := l.getGoIdAndContextString()
+	goid_context_string := l.getContextStringFromGoid()
 	l.logger.Errorf(fmt.Sprintf("[%s] %s %v", goid_context_string, str, args))
 }
 
 func (l *goLoggingLogger) ErrorRet(err error, str string, args ...Args) error {
-	goid_context_string := l.getGoIdAndContextString()
+	goid_context_string := l.getContextStringFromGoid()
 	l.logger.Errorf(fmt.Sprintf("[%s] %s %v", goid_context_string, str, append(args, Args{{"error", err}})))
 	return err
 }
 
 func (l *goLoggingLogger) Trace(level Level, args ...Args) func() {
-	goid_context_string := l.getGoIdAndContextString()
+	goid_context_string := l.getContextStringFromGoid()
+	log_string_enter := fmt.Sprintf("[%s] %s", goid_context_string, traceEnter)
+	log_string_exit := fmt.Sprintf("[%s] %s", goid_context_string, traceExit)
 	switch level {
 	case DEBUG:
-		l.logger.Debug(fmt.Sprintf("[%s] %s", goid_context_string, traceEnter), args)
-		return func() { l.logger.Debug(fmt.Sprintf("[%s] %s", goid_context_string, traceExit), args) }
+		l.logger.Debug(log_string_enter, args)
+		return func() { l.logger.Debug(log_string_exit, args) }
 	case INFO:
-		l.logger.Info(fmt.Sprintf("[%s] %s", goid_context_string, traceEnter), args)
-		return func() { l.logger.Info(fmt.Sprintf("[%s] %s", goid_context_string, traceExit), args) }
+		l.logger.Info(log_string_enter, args)
+		return func() { l.logger.Info(log_string_exit, args) }
 	case ERROR:
-		l.logger.Error(fmt.Sprintf("[%s] %s", goid_context_string, traceEnter), args)
-		return func() { l.logger.Error(fmt.Sprintf("[%s] %s", goid_context_string, traceExit), args) }
+		l.logger.Error(log_string_enter, args)
+		return func() { l.logger.Error(log_string_exit, args) }
 	default:
 		panic("unknown level")
 	}

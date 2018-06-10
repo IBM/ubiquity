@@ -104,9 +104,6 @@ func HttpExecute(httpClient *http.Client, requestType string, requestURL string,
 
 	request, err := http.NewRequest(requestType, requestURL, bytes.NewBuffer(payload))
 
-	//setting the headers for the request
-	request.Header.Set("request-id", request_context.Id)
-
 	if err != nil {
 		err = fmt.Errorf("Error in creating request %#v", err)
 		return nil, logger.ErrorRet(err, "failed")
