@@ -95,8 +95,6 @@ func HttpExecute(httpClient *http.Client, requestType string, requestURL string,
 	logger := logs.GetLogger()
 	payload, err := json.MarshalIndent(rawPayload, "", " ")
 
-	logger.Info("Sending HTTPExecute request")
-
 	if err != nil {
 		err = fmt.Errorf("Internal error marshalling params %#v", err)
 		return nil, logger.ErrorRet(err, "failed")
