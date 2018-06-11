@@ -46,7 +46,7 @@ func (s *remoteClient) Activate(activateRequest resources.ActivateRequest) error
 	// call remote activate
 	activateURL := utils.FormatURL(s.storageApiURL, "activate")
 	activateRequest.CredentialInfo = s.config.CredentialInfo
-	response, err := utils.HttpExecute(s.httpClient, "POST", activateURL, activateRequest, activateRequest.Context)
+	response, err := utils.HttpExecute(s.httpClient, "POST", activateURL, activateRequest)
 	if err != nil {
 		return s.logger.ErrorRet(err, "utils.HttpExecute failed")
 	}
@@ -70,7 +70,7 @@ func (s *remoteClient) CreateVolume(createVolumeRequest resources.CreateVolumeRe
 	}
 
 	createVolumeRequest.CredentialInfo = s.config.CredentialInfo
-	response, err := utils.HttpExecute(s.httpClient, "POST", createRemoteURL, createVolumeRequest, createVolumeRequest.Context)
+	response, err := utils.HttpExecute(s.httpClient, "POST", createRemoteURL, createVolumeRequest)
 	if err != nil {
 		return s.logger.ErrorRet(err, "utils.HttpExecute failed")
 	}
@@ -90,7 +90,7 @@ func (s *remoteClient) RemoveVolume(removeVolumeRequest resources.RemoveVolumeRe
 	removeRemoteURL := utils.FormatURL(s.storageApiURL, "volumes", removeVolumeRequest.Name)
 
 	removeVolumeRequest.CredentialInfo = s.config.CredentialInfo
-	response, err := utils.HttpExecute(s.httpClient, "DELETE", removeRemoteURL, removeVolumeRequest, removeVolumeRequest.Context)
+	response, err := utils.HttpExecute(s.httpClient, "DELETE", removeRemoteURL, removeVolumeRequest)
 	if err != nil {
 		return s.logger.ErrorRet(err, "utils.HttpExecute failed")
 	}
@@ -109,7 +109,7 @@ func (s *remoteClient) GetVolume(getVolumeRequest resources.GetVolumeRequest) (r
 
 	getRemoteURL := utils.FormatURL(s.storageApiURL, "volumes", getVolumeRequest.Name)
 	getVolumeRequest.CredentialInfo = s.config.CredentialInfo
-	response, err := utils.HttpExecute(s.httpClient, "GET", getRemoteURL, getVolumeRequest, getVolumeRequest.Context)
+	response, err := utils.HttpExecute(s.httpClient, "GET", getRemoteURL, getVolumeRequest)
 	if err != nil {
 		return resources.Volume{}, s.logger.ErrorRet(err, "failed")
 	}
@@ -134,7 +134,7 @@ func (s *remoteClient) GetVolumeConfig(getVolumeConfigRequest resources.GetVolum
 
 	getRemoteURL := utils.FormatURL(s.storageApiURL, "volumes", getVolumeConfigRequest.Name, "config")
 	getVolumeConfigRequest.CredentialInfo = s.config.CredentialInfo
-	response, err := utils.HttpExecute(s.httpClient, "GET", getRemoteURL, getVolumeConfigRequest, getVolumeConfigRequest.Context)
+	response, err := utils.HttpExecute(s.httpClient, "GET", getRemoteURL, getVolumeConfigRequest)
 	if err != nil {
 		return nil, s.logger.ErrorRet(err, "failed")
 	}
@@ -159,7 +159,7 @@ func (s *remoteClient) Attach(attachRequest resources.AttachRequest) (string, er
 
 	attachRemoteURL := utils.FormatURL(s.storageApiURL, "volumes", attachRequest.Name, "attach")
 	attachRequest.CredentialInfo = s.config.CredentialInfo
-	response, err := utils.HttpExecute(s.httpClient, "PUT", attachRemoteURL, attachRequest, attachRequest.Context)
+	response, err := utils.HttpExecute(s.httpClient, "PUT", attachRemoteURL, attachRequest)
 	if err != nil {
 		return "", s.logger.ErrorRet(err, "utils.HttpExecute failed")
 	}
@@ -178,7 +178,7 @@ func (s *remoteClient) Detach(detachRequest resources.DetachRequest) error {
 
 	detachRemoteURL := utils.FormatURL(s.storageApiURL, "volumes", detachRequest.Name, "detach")
 	detachRequest.CredentialInfo = s.config.CredentialInfo
-	response, err := utils.HttpExecute(s.httpClient, "PUT", detachRemoteURL, detachRequest, detachRequest.Context)
+	response, err := utils.HttpExecute(s.httpClient, "PUT", detachRemoteURL, detachRequest)
 	if err != nil {
 		return s.logger.ErrorRet(err, "utils.HttpExecute failed")
 	}
@@ -197,7 +197,7 @@ func (s *remoteClient) ListVolumes(listVolumesRequest resources.ListVolumesReque
 
 	listRemoteURL := utils.FormatURL(s.storageApiURL, "volumes")
 	listVolumesRequest.CredentialInfo = s.config.CredentialInfo
-	response, err := utils.HttpExecute(s.httpClient, "GET", listRemoteURL, listVolumesRequest, listVolumesRequest.Context)
+	response, err := utils.HttpExecute(s.httpClient, "GET", listRemoteURL, listVolumesRequest)
 	if err != nil {
 		return nil, s.logger.ErrorRet(err, "failed")
 	}
