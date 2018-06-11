@@ -53,6 +53,8 @@ type Logger interface {
 	// It writes the ENTER message when called, and returns a function that writes the EXIT message,
 	// so it can be used with defer in 1 line
 	Trace(level Level, args ...Args) func()
+	// Warning writes the string and args at WARNING level
+	Warning(str string, args ...Args)
 }
 
 func (param nameValue) String() string {
