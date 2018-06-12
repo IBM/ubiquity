@@ -79,14 +79,15 @@ func (l *goLoggingLogger) getContextStringFromGoid() string {
 	go_id := GetGoID()
 	context, exists := GoIdToRequestIdMap.Load(go_id)
 	if !exists {
-		context = resources.RequestContext{Id: "NA"}
-	} else {
-		context = context.(resources.RequestContext)
+		context = resources.RequestContext{Id: "NA", ActionName: "NA"}
 	}
+	
+	new_context := context.(resources.RequestContext)
+
 	if l.params.ShowGoid{
-		return fmt.Sprintf("%s:%d", context.(resources.RequestContext).Id, go_id)
+		return fmt.Sprintf("%s:%d-%s", new_context.Id, go_id, new_context.ActionName)
 	} else {
-		return fmt.Sprintf("%s", context.(resources.RequestContext).Id)
+		return fmt.Sprintf("%s-%s", new_context.Id, new_context.ActionName)
 	}
 }
 
@@ -147,8 +148,8 @@ func getLevel(level Level) logging.Level {
 	}
 }
 
-func GetNewRequestContext() resources.RequestContext{
+func GetNewRequestContext(actionName string) resources.RequestContext{
 	request_uuid := fmt.Sprintf("%s", uuid.NewUUID())
-    return resources.RequestContext{Id: request_uuid}
+    return resources.RequestContext{Id: request_uuid, actionName : actionName}
 }
 
