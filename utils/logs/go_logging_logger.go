@@ -150,6 +150,6 @@ func getLevel(level Level) logging.Level {
 
 func GetNewRequestContext(actionName string) resources.RequestContext{
 	request_uuid := fmt.Sprintf("%s", uuid.NewUUID())
-    return resources.RequestContext{Id: request_uuid, actionName : actionName}
+    return resources.RequestContext{Id: request_uuid, ActionName : actionName}
 }
 
