@@ -18,6 +18,7 @@ package web_server
 
 import (
 	"fmt"
+
 	"github.com/IBM/ubiquity/database"
 	"github.com/IBM/ubiquity/model"
 	"github.com/IBM/ubiquity/resources"
@@ -39,9 +40,13 @@ func NewStorageApiHandler(backends map[string]resources.StorageClient, config re
 
 func (h *StorageApiHandler) Activate() http.HandlerFunc {
 	return func(w http.ResponseWriter, req *http.Request) {
-		defer h.logger.Trace(logs.DEBUG)()
 		activateRequest := resources.ActivateRequest{}
 		err := utils.UnmarshalDataFromRequest(req, &activateRequest)
+		go_id := logs.GetGoID()
+		logs.GoIdToRequestIdMap.Store(go_id, activateRequest.Context)
+		defer logs.GetDeleteFromMapFunc(go_id)
+
+		defer h.logger.Trace(logs.DEBUG)()
 		if err != nil {
 			utils.WriteResponse(w, 409, &resources.GenericResponse{Err: err.Error()})
 			return
@@ -85,13 +90,19 @@ func (h *StorageApiHandler) Activate() http.HandlerFunc {
 
 func (h *StorageApiHandler) CreateVolume() http.HandlerFunc {
 	return func(w http.ResponseWriter, req *http.Request) {
-		defer h.logger.Trace(logs.DEBUG)()
 		createVolumeRequest := resources.CreateVolumeRequest{}
 		err := utils.UnmarshalDataFromRequest(req, &createVolumeRequest)
+		go_id := logs.GetGoID()
+		logs.GoIdToRequestIdMap.Store(go_id, createVolumeRequest.Context)
+		defer logs.GetDeleteFromMapFunc(go_id)
+
+		defer h.logger.Trace(logs.DEBUG)()
+
 		if err != nil {
 			utils.WriteResponse(w, 409, &resources.GenericResponse{Err: err.Error()})
 			return
 		}
+
 		if len(createVolumeRequest.Backend) == 0 {
 			createVolumeRequest.Backend = h.config.DefaultBackend
 		}
@@ -123,9 +134,13 @@ func (h *StorageApiHandler) CreateVolume() http.HandlerFunc {
 
 func (h *StorageApiHandler) RemoveVolume() http.HandlerFunc {
 	return func(w http.ResponseWriter, req *http.Request) {
-		defer h.logger.Trace(logs.DEBUG)()
 		removeVolumeRequest := resources.RemoveVolumeRequest{}
 		err := utils.UnmarshalDataFromRequest(req, &removeVolumeRequest)
+		go_id := logs.GetGoID()
+		logs.GoIdToRequestIdMap.Store(go_id, removeVolumeRequest.Context)
+		defer logs.GetDeleteFromMapFunc(go_id)
+		defer h.logger.Trace(logs.DEBUG)()
+
 		if err != nil {
 			utils.WriteResponse(w, 409, &resources.GenericResponse{Err: err.Error()})
 			return
@@ -151,9 +166,13 @@ func (h *StorageApiHandler) RemoveVolume() http.HandlerFunc {
 
 func (h *StorageApiHandler) AttachVolume() http.HandlerFunc {
 	return func(w http.ResponseWriter, req *http.Request) {
-		defer h.logger.Trace(logs.DEBUG)()
 		attachRequest := resources.AttachRequest{}
 		err := utils.UnmarshalDataFromRequest(req, &attachRequest)
+		go_id := logs.GetGoID()
+		logs.GoIdToRequestIdMap.Store(go_id, attachRequest.Context)
+		defer logs.GetDeleteFromMapFunc(go_id)
+		defer h.logger.Trace(logs.DEBUG)()
+
 		if err != nil {
 			utils.WriteResponse(w, 409, &resources.GenericResponse{Err: err.Error()})
 			return
@@ -181,9 +200,12 @@ func (h *StorageApiHandler) AttachVolume() http.HandlerFunc {
 
 func (h *StorageApiHandler) DetachVolume() http.HandlerFunc {
 	return func(w http.ResponseWriter, req *http.Request) {
-		defer h.logger.Trace(logs.DEBUG)()
 		detachRequest := resources.DetachRequest{}
 		err := utils.UnmarshalDataFromRequest(req, &detachRequest)
+		go_id := logs.GetGoID()
+		logs.GoIdToRequestIdMap.Store(go_id, detachRequest.Context)
+		defer logs.GetDeleteFromMapFunc(go_id)
+		defer h.logger.Trace(logs.DEBUG)()
 		if err != nil {
 			utils.WriteResponse(w, 409, &resources.GenericResponse{Err: err.Error()})
 			return
@@ -211,6 +233,11 @@ func (h *StorageApiHandler) GetVolumeConfig() http.HandlerFunc {
 	return func(w http.ResponseWriter, req *http.Request) {
 		getVolumeConfigRequest := resources.GetVolumeConfigRequest{}
 		err := utils.UnmarshalDataFromRequest(req, &getVolumeConfigRequest)
+		go_id := logs.GetGoID()
+		logs.GoIdToRequestIdMap.Store(go_id, getVolumeConfigRequest.Context)
+		defer logs.GetDeleteFromMapFunc(go_id)
+		defer h.logger.Trace(logs.DEBUG)()
+
 		if err != nil {
 			utils.WriteResponse(w, 409, &resources.GenericResponse{Err: err.Error()})
 			return
@@ -240,9 +267,13 @@ func (h *StorageApiHandler) GetVolumeConfig() http.HandlerFunc {
 
 func (h *StorageApiHandler) GetVolume() http.HandlerFunc {
 	return func(w http.ResponseWriter, req *http.Request) {
-
 		getVolumeRequest := resources.GetVolumeRequest{}
 		err := utils.UnmarshalDataFromRequest(req, &getVolumeRequest)
+		go_id := logs.GetGoID()
+		logs.GoIdToRequestIdMap.Store(go_id, getVolumeRequest.Context)
+		defer logs.GetDeleteFromMapFunc(go_id)
+		defer h.logger.Trace(logs.DEBUG)()
+
 		if err != nil {
 			utils.WriteResponse(w, 409, &resources.GenericResponse{Err: err.Error()})
 			return
@@ -272,9 +303,13 @@ func (h *StorageApiHandler) GetVolume() http.HandlerFunc {
 
 func (h *StorageApiHandler) ListVolumes() http.HandlerFunc {
 	return func(w http.ResponseWriter, req *http.Request) {
-		defer h.logger.Trace(logs.DEBUG)()
 		listVolumesRequest := resources.ListVolumesRequest{}
 		err := utils.UnmarshalDataFromRequest(req, &listVolumesRequest)
+		go_id := logs.GetGoID()
+		logs.GoIdToRequestIdMap.Store(go_id, listVolumesRequest.Context)
+		defer logs.GetDeleteFromMapFunc(go_id)
+		defer h.logger.Trace(logs.DEBUG)()
+
 		if err != nil {
 			utils.WriteResponse(w, 409, &resources.GenericResponse{Err: err.Error()})
 			return

@@ -40,6 +40,7 @@ var _ = Describe("mounter_factory_test", func() {
 				"fakebackend type",
 				nil,
 				resources.UbiquityPluginConfig{},
+				resources.RequestContext{},
 			)
 			Expect(err).To(HaveOccurred())
 			_, ok := err.(*mounter.NoMounterForVolumeError)
@@ -50,6 +51,7 @@ var _ = Describe("mounter_factory_test", func() {
 				resources.SCBE,
 				nil,
 				resources.UbiquityPluginConfig{},
+				resources.RequestContext{},
 			)
 			Expect(err).NotTo(HaveOccurred())
 			Expect(backendMounter).NotTo(Equal(nil))

@@ -94,12 +94,14 @@ func HttpExecuteUserAuth(httpClient *http.Client, requestType string, requestURL
 func HttpExecute(httpClient *http.Client, requestType string, requestURL string, rawPayload interface{}) (*http.Response, error) {
 	logger := logs.GetLogger()
 	payload, err := json.MarshalIndent(rawPayload, "", " ")
+
 	if err != nil {
 		err = fmt.Errorf("Internal error marshalling params %#v", err)
 		return nil, logger.ErrorRet(err, "failed")
 	}
 
 	request, err := http.NewRequest(requestType, requestURL, bytes.NewBuffer(payload))
+
 	if err != nil {
 		err = fmt.Errorf("Error in creating request %#v", err)
 		return nil, logger.ErrorRet(err, "failed")

@@ -164,6 +164,7 @@ type ActivateRequest struct {
 	CredentialInfo CredentialInfo
 	Backends       []string
 	Opts           map[string]string
+	Context        RequestContext
 }
 
 type CreateVolumeRequest struct {
@@ -171,37 +172,44 @@ type CreateVolumeRequest struct {
 	Name           string
 	Backend        string
 	Opts           map[string]interface{}
+	Context        RequestContext
 }
 
 type RemoveVolumeRequest struct {
 	CredentialInfo CredentialInfo
 	Name           string
+	Context        RequestContext
 }
 
 type ListVolumesRequest struct {
 	CredentialInfo CredentialInfo
 	//TODO add filter
 	Backends []string
+	Context  RequestContext
 }
 
 type AttachRequest struct {
 	CredentialInfo CredentialInfo
 	Name           string
 	Host           string
+	Context        RequestContext
 }
 
 type DetachRequest struct {
 	CredentialInfo CredentialInfo
 	Name           string
 	Host           string
+	Context        RequestContext
 }
 type GetVolumeRequest struct {
 	CredentialInfo CredentialInfo
 	Name           string
+	Context        RequestContext
 }
 type GetVolumeConfigRequest struct {
 	CredentialInfo CredentialInfo
 	Name           string
+	Context        RequestContext
 }
 type ActivateResponse struct {
 	Implements []string
@@ -215,13 +223,16 @@ type GenericResponse struct {
 type MountRequest struct {
 	Mountpoint   string
 	VolumeConfig map[string]interface{}
+	Context      RequestContext
 }
 type UnmountRequest struct {
 	// TODO missing Mountpoint string
 	VolumeConfig map[string]interface{}
+	Context      RequestContext
 }
 type AfterDetachRequest struct {
 	VolumeConfig map[string]interface{}
+	Context      RequestContext
 }
 type AttachResponse struct {
 	Mountpoint string
@@ -285,4 +296,8 @@ type FlexVolumeAttachRequest struct {
 type FlexVolumeDetachRequest struct {
 	Name string `json:"name"`
 	Host string `json:"host"`
+}
+
+type RequestContext struct {
+	Id string
 }
