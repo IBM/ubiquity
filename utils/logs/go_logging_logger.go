@@ -94,6 +94,33 @@ func GetDeleteFromMapFunc(key interface{}) func() {
 	return func() { GoIdToRequestIdMap.Delete(key) }
 }
 
+func GetGoID() uint64 {
+	b := make([]byte, 64)
+	b = b[:runtime.Stack(b, false)]
+	b = bytes.TrimPrefix(b, []byte("goroutine "))
+	b = b[:bytes.IndexByte(b, ' ')]
+	n, _ := strconv.ParseUint(string(b), 10, 64)
+	return n
+}
+
+var GoIdToRequestIdMap = new(sync.Map)
+
+func (l *goLoggingLogger) getContextStringFromGoid() string {
+	go_id := GetGoID()
+	context, exists := GoIdToRequestIdMap.Load(go_id)
+	if !exists {
+		context = resources.RequestContext{Id: "NA"}
+	} else {
+		context = context.(resources.RequestContext)
+	}
+	return fmt.Sprintf("%s:%d", context.(resources.RequestContext).Id, go_id)
+
+}
+
+func GetDeleteFromMapFunc(key interface{}) func() {
+	return func() { GoIdToRequestIdMap.Delete(key) }
+}
+
 func (l *goLoggingLogger) Debug(str string, args ...Args) {
 	goid_context_string := l.getContextStringFromGoid()
 	l.logger.Debugf(fmt.Sprintf("[%s] %s %v", goid_context_string, str, args))
