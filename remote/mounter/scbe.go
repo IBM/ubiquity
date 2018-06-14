@@ -55,7 +55,16 @@ func (s *scbeMounter) Mount(mountRequest resources.MountRequest) (string, error)
 	if err != nil {
 		// Known issue with rescan-scsi-bus.sh, LUN0 must be the first mapped logical unit, otherwise it will not be able to scan any other logical unit
 		// For DS8k, it only support FC and without LUN0 mapped default, so we need to do "rescan-scsi-bus.sh -a" to discover the LUN0
-		if s.config.SkipRescanISCSI {
+		storageType, ok := mountRequest.VolumeConfig[resources.StorageType]
+		if !ok {
+			storageType = ""
+		}
+		lunNumber, ok := mountRequest.VolumeConfig[resources.LunNumber]
+		if !ok {
+			lunNumber = -1
+		}
+
+		if storageType == resources.DS8kStorageType && lunNumber == 0  {
 			if err := s.blockDeviceMounterUtils.RescanAllTargets(!s.config.SkipRescanISCSI, volumeWWN); err != nil {
 				return "", s.logger.ErrorRet(err, "RescanAll Targets failed", logs.Args{{"volumeWWN", volumeWWN}})
 			}

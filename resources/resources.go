@@ -82,6 +82,9 @@ const KeyScbeSslMode = "SCBE_SSL_MODE"
 const DefaultDbSslMode = SslModeVerifyFull
 const DefaultScbeSslMode = SslModeVerifyFull
 const DefaultPluginsSslMode = SslModeVerifyFull
+const LunNumber = "LunNumber"
+const StorageType = "StorageType"
+const DS8kStorageType = "2107"
 
 type SshConfig struct {
 	User string
