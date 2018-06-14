@@ -64,7 +64,7 @@ func (s *scbeMounter) Mount(mountRequest resources.MountRequest) (string, error)
 			lunNumber = -1
 		}
 
-		if storageType == resources.DS8kStorageType && int(lunNumber) == 0  {
+		if storageType == resources.DS8kStorageType && lunNumber.(int) == 0  {
 			s.logger.Debug("testing")
 			if err := s.blockDeviceMounterUtils.RescanAllTargets(!s.config.SkipRescanISCSI, volumeWWN); err != nil {
 				return "", s.logger.ErrorRet(err, "RescanAll Targets failed", logs.Args{{"volumeWWN", volumeWWN}})
