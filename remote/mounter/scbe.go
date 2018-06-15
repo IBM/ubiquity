@@ -41,6 +41,15 @@ func NewScbeMounter(scbeRemoteConfig resources.ScbeRemoteConfig) resources.Mount
 	}
 }
 
+func NewTestScbeMounter(scbeRemoteConfig resources.ScbeRemoteConfig, blockDeviceMounterUtils block_device_mounter_utils.BlockDeviceMounterUtils) resources.Mounter {
+	return &scbeMounter{
+		logger:                  logs.GetLogger(),
+		blockDeviceMounterUtils: blockDeviceMounterUtils,
+		exec: utils.NewExecutor(),
+		config: scbeRemoteConfig,
+	}
+}
+
 func (s *scbeMounter) Mount(mountRequest resources.MountRequest) (string, error) {
 	defer s.logger.Trace(logs.DEBUG)()
 	volumeWWN := mountRequest.VolumeConfig["Wwn"].(string)
