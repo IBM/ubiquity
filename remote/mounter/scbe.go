@@ -74,25 +74,7 @@ func (s *scbeMounter) Mount(mountRequest resources.MountRequest) (string, error)
 			lunNumber = -1
 		}
 
-		s.logger.Debug("storageType: ", logs.Args{{"sgtorageType is: ", storageType}})
-		s.logger.Debug("lunNumber: ", logs.Args{{"lunNumber is: ", lunNumber}})
-		s.logger.Debug(fmt.Sprintf("stroageType: %T", storageType))
-		s.logger.Debug(fmt.Sprintf("lunNumber: %T", lunNumber))
-		s.logger.Debug(fmt.Sprintf("resouces.DS8kStorageType: %T", resources.DS8kStorageType))
-		s.logger.Debug("resouces.DS8kStorageType is: ", logs.Args{{"DS8kStroageType is: ", resources.DS8kStorageType}})
-		s.logger.Debug(fmt.Sprintf("int(lunNumber.(float64)): %T", int(lunNumber.(float64))))
-		s.logger.Debug(fmt.Sprintf("0: %T", 0))
-		if storageType == resources.DS8kStorageType {
-			s.logger.Debug("equal 1")
-		}
-
-		if int(lunNumber.(float64)) ==  0 {
-			s.logger.Debug("equal 2")
-		}
-
-
 		if storageType == resources.DS8kStorageType && int(lunNumber.(float64)) == 0  {
-			s.logger.Debug("testing")
 			if err := s.blockDeviceMounterUtils.RescanAllTargets(!s.config.SkipRescanISCSI, volumeWWN); err != nil {
 				return "", s.logger.ErrorRet(err, "RescanAll Targets failed", logs.Args{{"volumeWWN", volumeWWN}})
 			}

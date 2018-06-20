@@ -22,19 +22,19 @@ var _ = Describe("Scbe", func() {
 
 		mountRequestForDS8kLun0 = MountRequest{Mountpoint:"test_mountpointDS8k", VolumeConfig:map[string]interface{}{"Name":"u_vol","PhysicalCapacity":2040,
 		"Profile":"gold", "StorageType":"2107", "UsedCapacity":2040, "Wwn":"wwn", "attach-to":"xnode1",
-		"LogicalCapacity":2040, "LunNumber":0, "PoolName":"pool", "StorageName":"IBM.2107", "fstype":"ext4"}}
+		"LogicalCapacity":2040, "LunNumber":float64(0), "PoolName":"pool", "StorageName":"IBM.2107", "fstype":"ext4"}}
 
 		mountRequestForSVCLun0 = MountRequest{Mountpoint:"test_mountpointSVC", VolumeConfig:map[string]interface{}{"Name":"u_vol", "PhysicalCapacity":2040,
 		"Profile":"gold", "StorageType":"2706", "UsedCapacity":2040, "Wwn":"wwn", "attach-to":"node1",
-		"LogicalCapacity":2040, "LunNumber":0, "PoolName":"pool", "StorageName":"IBM.2706", "fstype":"ext4"}}
+		"LogicalCapacity":2040, "LunNumber":float64(0), "PoolName":"pool", "StorageName":"IBM.2706", "fstype":"ext4"}}
 
 		mountRequestForDS8kLun1 = MountRequest{Mountpoint:"test_mountpointDS8k", VolumeConfig:map[string]interface{}{"Name":"u_vol","PhysicalCapacity":2040,
 		"Profile":"gold", "StorageType":"2107", "UsedCapacity":2040, "Wwn":"wwn", "attach-to":"node1",
-		"LogicalCapacity":2040, "LunNumber":1, "PoolName":"pool", "StorageName":"IBM.2107", "fstype":"ext4"}}
+		"LogicalCapacity":2040, "LunNumber":float64(1), "PoolName":"pool", "StorageName":"IBM.2107", "fstype":"ext4"}}
 
 		mountRequestForSVCLun1 = MountRequest{Mountpoint:"test_mountpointSVC", VolumeConfig:map[string]interface{}{"Name":"u_vol", "PhysicalCapacity":2040,
 		"Profile":"gold", "StorageType":"2706", "UsedCapacity":2040, "Wwn":"wwn", "attach-to":"node1",
-		"LogicalCapacity":2040, "LunNumber":1, "PoolName":"pool", "StorageName":"IBM.2706", "fstype":"ext4"}}
+		"LogicalCapacity":2040, "LunNumber":float64(1), "PoolName":"pool", "StorageName":"IBM.2706", "fstype":"ext4"}}
 	)
 
 	Context("Mount", func() {
