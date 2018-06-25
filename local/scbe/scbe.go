@@ -443,6 +443,9 @@ func (s *scbeLocalClient) Attach(attachRequest resources.AttachRequest) (string,
 	}
 
 	//Save the lun number in the map, if get the same wwn, then update the lunNumber with latest
+	if currentLunNumber, ok := lunNumberDict[existingVolume.WWN]; ok {
+		s.logger.Debug("The lun number of volume", logs.Args{{"existing lun number",currentLunNumber}, {"new lun number", scbeResponseMap.LunNumber}} )
+	}
 	lunNumberDict[existingVolume.WWN] = scbeResponseMap.LunNumber
 
 	s.locker.WriteUnlock(attachRequest.Host)
