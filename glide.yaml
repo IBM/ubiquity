@@ -26,3 +26,4 @@ testImport:
   version: c463cd2a8578290d4be7a25cba69de81cf35785e
 - package: github.com/jarcoal/httpmock
   version: 4442edb3db31196622da56482fd8d0fa375fba4d
+
