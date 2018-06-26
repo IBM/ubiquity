@@ -278,7 +278,7 @@ func (s *scbeRestClient) getHostIdByVol(wwn string, host string) (int, error) {
 	}
 
 	if len(vols) == 0 {
-		return 0, s.logger.ErrorRet(&volumeNotFoundError{wwn}, "failed")
+		return 0, s.logger.ErrorRet(&VolumeNotFoundOnArrayError{VolName: wwn}, "failed")
 	}
 	vol := vols[0]
 	payload := make(map[string]string)

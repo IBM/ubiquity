@@ -573,7 +573,11 @@ var _ = Describe("scbeLocalClient", func() {
 			fakeScbeRestClient.GetVolumesReturns(volumes, nil)
 			_, err := client.GetVolumeConfig(resources.GetVolumeConfigRequest{Name: "name"})
 			Expect(err).To(HaveOccurred())
+			_, ok := err.(*scbe.VolumeNotFoundOnArrayError)
+			Expect(ok).To(Equal(true))
+
 		})
+		// TODO add missing unit testing for GetVolumeConfig
 	})
 	Context(".Remove", func() {
 		It("should fail to remove the volume if GetVolume failed", func() {
