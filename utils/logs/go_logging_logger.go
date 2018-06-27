@@ -47,8 +47,7 @@ type goLoggingLogger struct {
 func newGoLoggingLogger(level Level, writer io.Writer, params LoggerParams) *goLoggingLogger {
 	newLogger := logging.MustGetLogger("")
 	newLogger.ExtraCalldepth = 1
-
-	format_string := "%{time:2006-01-02 15:04:05.999} %{level:.5s}"
+	format_string := "%{time:2006-01-02 15:04:05.999} %{level:.7s}"
 	if params.ShowPid {
 		format_string = fmt.Sprintf("%s %s", format_string, "%{pid}")
 	}
@@ -112,6 +111,10 @@ func (l *goLoggingLogger) ErrorRet(err error, str string, args ...Args) error {
 	goid_context_string := l.getContextStringFromGoid()
 	l.logger.Errorf(fmt.Sprintf("[%s] %s %v", goid_context_string, str, append(args, Args{{"error", err}})))
 	return err
+}
+
+func (l *goLoggingLogger) Warning(str string, args ...Args) {
+	l.logger.Warning(str+" %v", args)
 }
 
 func (l *goLoggingLogger) Trace(level Level, args ...Args) func() {

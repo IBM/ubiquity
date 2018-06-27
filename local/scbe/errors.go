@@ -40,14 +40,6 @@ func (e *mappingResponseError) Error() string {
 	return fmt.Sprintf("Mapping operation succeeded, but the mapping details are missing from the response. %#v", e.mapping)
 }
 
-type volumeNotFoundError struct {
-	volName string
-}
-
-func (e *volumeNotFoundError) Error() string {
-	return fmt.Sprintf("Volume [%s] was not found", e.volName)
-}
-
 type hostNotFoundvolumeNotFoundError struct {
 	volName   string
 	arrayName string
@@ -67,14 +59,6 @@ type activateDefaultServiceError struct {
 func (e *activateDefaultServiceError) Error() string {
 	return fmt.Sprintf("Spectrum Connect backend activation error. The default service [%s] does not exist on Spectrum Connect [%s]",
 		e.serviceName, e.scbeName)
-}
-
-type volAlreadyExistsError struct {
-	volName string
-}
-
-func (e *volAlreadyExistsError) Error() string {
-	return fmt.Sprintf("Volume [%s] already exists.", e.volName)
 }
 
 type provisionParamMissingError struct {
@@ -211,4 +195,14 @@ type InvalidMappingsForVolume struct {
 
 func (e *InvalidMappingsForVolume) Error() string {
 	return fmt.Sprintf("Invalid mappings for volume [%s]", e.volWwn)
+}
+
+const VolumeNotFoundOnArrayErrorMsg = "volume was not found on the Spectrum Connect interface."
+
+type VolumeNotFoundOnArrayError struct {
+	VolName string
+}
+
+func (e *VolumeNotFoundOnArrayError) Error() string {
+	return fmt.Sprintf("[%s] "+VolumeNotFoundOnArrayErrorMsg, e.VolName)
 }
