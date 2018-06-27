@@ -62,6 +62,15 @@ func newGoLoggingLogger(level Level, writer io.Writer, params LoggerParams) *goL
 	return &goLoggingLogger{newLogger, params}
 }
 
+func GetGoID() uint64 {
+	b := make([]byte, 64)
+	b = b[:runtime.Stack(b, false)]
+	b = bytes.TrimPrefix(b, []byte("goroutine "))
+	b = b[:bytes.IndexByte(b, ' ')]
+	n, _ := strconv.ParseUint(string(b), 10, 64)
+	return n
+}
+
 var GoIdToRequestIdMap = new(sync.Map)
 
 func (l *goLoggingLogger) getContextStringFromGoid() string {
@@ -82,16 +91,6 @@ func (l *goLoggingLogger) getContextStringFromGoid() string {
 
 func GetDeleteFromMapFunc(key interface{}) func() {
 	return func() { GoIdToRequestIdMap.Delete(key) }
-}
-
-
-func GetGoID() uint64 {
-	b := make([]byte, 64)
-	b = b[:runtime.Stack(b, false)] 
-	b = bytes.TrimPrefix(b, []byte("goroutine "))
-	b = b[:bytes.IndexByte(b, ' ')]
-	n, _ := strconv.ParseUint(string(b), 10, 64)
-	return n
 }
 
 func (l *goLoggingLogger) Debug(str string, args ...Args) {
