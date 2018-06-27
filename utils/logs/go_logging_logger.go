@@ -27,7 +27,6 @@ import (
 	"github.com/IBM/ubiquity/resources"
 	"github.com/op/go-logging"
 	"k8s.io/apimachinery/pkg/util/uuid"
-
 )
 
 const (
@@ -35,25 +34,25 @@ const (
 	traceExit  = "EXIT"
 )
 
-type LoggerParams struct{
-	 ShowGoid	bool 
-	 ShowPid	bool
+type LoggerParams struct {
+	ShowGoid bool
+	ShowPid  bool
 }
 
 type goLoggingLogger struct {
 	logger *logging.Logger
-	params	LoggerParams
+	params LoggerParams
 }
 
 func newGoLoggingLogger(level Level, writer io.Writer, params LoggerParams) *goLoggingLogger {
 	newLogger := logging.MustGetLogger("")
 	newLogger.ExtraCalldepth = 1
 	format_string := "%{time:2006-01-02 15:04:05.999} %{level:.7s}"
-	if params.ShowPid{
+	if params.ShowPid {
 		format_string = fmt.Sprintf("%s %s", format_string, "%{pid}")
-	} 
+	}
 	format_string = fmt.Sprintf("%s %s", format_string, "%{shortfile} %{shortpkg}::%{shortfunc} %{message}")
-	
+
 	format := logging.MustStringFormatter(format_string)
 	backend := logging.NewLogBackend(writer, "", 0)
 	backendFormatter := logging.NewBackendFormatter(backend, format)
@@ -61,15 +60,6 @@ func newGoLoggingLogger(level Level, writer io.Writer, params LoggerParams) *goL
 	backendLeveled.SetLevel(getLevel(level), "")
 	newLogger.SetBackend(backendLeveled)
 	return &goLoggingLogger{newLogger, params}
-}
-
-func GetGoID() uint64 {
-	b := make([]byte, 64)
-	b = b[:runtime.Stack(b, false)]
-	b = bytes.TrimPrefix(b, []byte("goroutine "))
-	b = b[:bytes.IndexByte(b, ' ')]
-	n, _ := strconv.ParseUint(string(b), 10, 64)
-	return n
 }
 
 var GoIdToRequestIdMap = new(sync.Map)
@@ -94,31 +84,14 @@ func GetDeleteFromMapFunc(key interface{}) func() {
 	return func() { GoIdToRequestIdMap.Delete(key) }
 }
 
+
 func GetGoID() uint64 {
 	b := make([]byte, 64)
-	b = b[:runtime.Stack(b, false)]
+	b = b[:runtime.Stack(b, false)] 
 	b = bytes.TrimPrefix(b, []byte("goroutine "))
 	b = b[:bytes.IndexByte(b, ' ')]
 	n, _ := strconv.ParseUint(string(b), 10, 64)
 	return n
-}
-
-var GoIdToRequestIdMap = new(sync.Map)
-
-func (l *goLoggingLogger) getContextStringFromGoid() string {
-	go_id := GetGoID()
-	context, exists := GoIdToRequestIdMap.Load(go_id)
-	if !exists {
-		context = resources.RequestContext{Id: "NA"}
-	} else {
-		context = context.(resources.RequestContext)
-	}
-	return fmt.Sprintf("%s:%d", context.(resources.RequestContext).Id, go_id)
-
-}
-
-func GetDeleteFromMapFunc(key interface{}) func() {
-	return func() { GoIdToRequestIdMap.Delete(key) }
 }
 
 func (l *goLoggingLogger) Debug(str string, args ...Args) {
@@ -178,14 +151,7 @@ func getLevel(level Level) logging.Level {
 	}
 }
 
-<<<<<<< HEAD
 func GetNewRequestContext(actionName string) resources.RequestContext{
 	request_uuid := fmt.Sprintf("%s", uuid.NewUUID())
     return resources.RequestContext{Id: request_uuid, ActionName : actionName}
-=======
-func GetNewRequestContext() resources.RequestContext{
-	request_uuid := fmt.Sprintf("%s", uuid.NewUUID())
-    return resources.RequestContext{Id: request_uuid}
->>>>>>> dev
 }
-

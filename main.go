@@ -50,7 +50,9 @@ func main() {
 			panic(fmt.Errorf("Failed to setup log dir"))
 		}
 	}
-	defer logs.InitStdoutLogger(logs.GetLogLevelFromString(os.Getenv("LOG_LEVEL")), logs.LoggerParams{ShowGoid: true, ShowPid : false})()
+	
+	defer utils.InitUbiquityServerLogger()()
+	
 	logger := logs.GetLogger()
 	oldLogger := utils.SetupOldLogger("ubiquity")
 
