@@ -60,7 +60,7 @@ func (d *scbeDataModel) DeleteVolume(name string) error {
 		return err
 	}
 	if exists == false {
-		return d.logger.ErrorRet(&volumeNotFoundError{name}, "failed")
+		return d.logger.ErrorRet(&resources.VolumeNotFoundError{VolName: name}, "failed")
 	}
 
 	if err := d.database.Delete(&volume).Error; err != nil {
@@ -90,7 +90,8 @@ func (d *scbeDataModel) InsertVolume(volumeName string, wwn string, fstype strin
 	return nil
 }
 
-// GetVolume return ScbeVolume if exist in DB, else return false and err
+// GetVolume return ScbeVolume if exist in DB,
+// if vol not found then return false\nil, but if failed to find it due to error return false\error.
 func (d *scbeDataModel) GetVolume(name string) (ScbeVolume, bool, error) {
 	defer d.logger.Trace(logs.DEBUG)()
 

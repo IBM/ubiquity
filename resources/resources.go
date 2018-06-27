@@ -16,7 +16,10 @@
 
 package resources
 
-import "github.com/jinzhu/gorm"
+import (
+	"fmt"
+	"github.com/jinzhu/gorm"
+)
 
 const (
 	SpectrumScale     string = "spectrum-scale"
@@ -150,6 +153,26 @@ type StorageClient interface {
 	GetVolumeConfig(getVolumeConfigRequest GetVolumeConfigRequest) (map[string]interface{}, error)
 	Attach(attachRequest AttachRequest) (string, error)
 	Detach(detachRequest DetachRequest) error
+}
+
+// volumeNotFoundError error for Attach, Detach, GetVolume, GetVolumeConfig, RemoveVolume interfaces if volume not found in Ubiquity DB
+const VolumeNotFoundErrorMsg = "volume was not found in Ubiqutiy database."
+
+type VolumeNotFoundError struct {
+	VolName string
+}
+
+func (e *VolumeNotFoundError) Error() string {
+	return fmt.Sprintf("[%s] "+VolumeNotFoundErrorMsg, e.VolName)
+}
+
+// volAlreadyExistsError error for Create interface if volume is already exist in the Ubiquity DB
+type VolAlreadyExistsError struct {
+	VolName string
+}
+
+func (e *VolAlreadyExistsError) Error() string {
+	return fmt.Sprintf("Volume [%s] already exists.", e.VolName)
 }
 
 //go:generate counterfeiter -o ../fakes/fake_mounter.go . Mounter

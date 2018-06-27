@@ -48,8 +48,7 @@ type goLoggingLogger struct {
 func newGoLoggingLogger(level Level, writer io.Writer, params LoggerParams) *goLoggingLogger {
 	newLogger := logging.MustGetLogger("")
 	newLogger.ExtraCalldepth = 1
-	
-	format_string := "%{time:2006-01-02 15:04:05.999} %{level:.5s}"
+	format_string := "%{time:2006-01-02 15:04:05.999} %{level:.7s}"
 	if params.ShowPid{
 		format_string = fmt.Sprintf("%s %s", format_string, "%{pid}")
 	} 
@@ -95,6 +94,33 @@ func GetDeleteFromMapFunc(key interface{}) func() {
 	return func() { GoIdToRequestIdMap.Delete(key) }
 }
 
+func GetGoID() uint64 {
+	b := make([]byte, 64)
+	b = b[:runtime.Stack(b, false)]
+	b = bytes.TrimPrefix(b, []byte("goroutine "))
+	b = b[:bytes.IndexByte(b, ' ')]
+	n, _ := strconv.ParseUint(string(b), 10, 64)
+	return n
+}
+
+var GoIdToRequestIdMap = new(sync.Map)
+
+func (l *goLoggingLogger) getContextStringFromGoid() string {
+	go_id := GetGoID()
+	context, exists := GoIdToRequestIdMap.Load(go_id)
+	if !exists {
+		context = resources.RequestContext{Id: "NA"}
+	} else {
+		context = context.(resources.RequestContext)
+	}
+	return fmt.Sprintf("%s:%d", context.(resources.RequestContext).Id, go_id)
+
+}
+
+func GetDeleteFromMapFunc(key interface{}) func() {
+	return func() { GoIdToRequestIdMap.Delete(key) }
+}
+
 func (l *goLoggingLogger) Debug(str string, args ...Args) {
 	goid_context_string := l.getContextStringFromGoid()
 	l.logger.Debugf(fmt.Sprintf("[%s] %s %v", goid_context_string, str, args))
@@ -114,6 +140,10 @@ func (l *goLoggingLogger) ErrorRet(err error, str string, args ...Args) error {
 	goid_context_string := l.getContextStringFromGoid()
 	l.logger.Errorf(fmt.Sprintf("[%s] %s %v", goid_context_string, str, append(args, Args{{"error", err}})))
 	return err
+}
+
+func (l *goLoggingLogger) Warning(str string, args ...Args) {
+	l.logger.Warning(str+" %v", args)
 }
 
 func (l *goLoggingLogger) Trace(level Level, args ...Args) func() {
@@ -148,8 +178,14 @@ func getLevel(level Level) logging.Level {
 	}
 }
 
+<<<<<<< HEAD
 func GetNewRequestContext(actionName string) resources.RequestContext{
 	request_uuid := fmt.Sprintf("%s", uuid.NewUUID())
     return resources.RequestContext{Id: request_uuid, ActionName : actionName}
+=======
+func GetNewRequestContext() resources.RequestContext{
+	request_uuid := fmt.Sprintf("%s", uuid.NewUUID())
+    return resources.RequestContext{Id: request_uuid}
+>>>>>>> dev
 }
 
