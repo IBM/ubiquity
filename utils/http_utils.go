@@ -91,7 +91,7 @@ func HttpExecuteUserAuth(httpClient *http.Client, requestType string, requestURL
 
 }
 
-func HttpExecute(httpClient *http.Client, requestType string, requestURL string, rawPayload interface{}) (*http.Response, error) {
+func HttpExecute(httpClient *http.Client, requestType string, requestURL string, rawPayload interface{}, request_context resources.RequestContext) (*http.Response, error) {
 	logger := logs.GetLogger()
 	payload, err := json.MarshalIndent(rawPayload, "", " ")
 

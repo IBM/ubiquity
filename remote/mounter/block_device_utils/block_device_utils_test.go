@@ -22,7 +22,6 @@ import (
 	"github.com/IBM/ubiquity/fakes"
 	"github.com/IBM/ubiquity/remote/mounter/block_device_utils"
 	"github.com/IBM/ubiquity/utils"
-	"github.com/IBM/ubiquity/utils/logs"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"io/ioutil"
@@ -658,6 +657,6 @@ wrong format on /ubiquity/mpoint type ext4 (rw,relatime,data=ordered)
 
 func TestGetBlockDeviceUtils(t *testing.T) {
 	RegisterFailHandler(Fail)
-	defer logs.InitStdoutLogger(logs.DEBUG)()
+	defer utils.InitUbiquityServerTestLogger()()
 	RunSpecs(t, "BlockDeviceUtils Test Suite")
 }

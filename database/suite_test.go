@@ -20,11 +20,11 @@ import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"testing"
-	"github.com/IBM/ubiquity/utils/logs"
+	"github.com/IBM/ubiquity/utils"
 )
 
 func TestDb(t *testing.T) {
 	RegisterFailHandler(Fail)
-	defer logs.InitStdoutLogger(logs.DEBUG)()
+	defer utils.InitUbiquityServerTestLogger()()
 	RunSpecs(t, "database Test Suite")
 }
