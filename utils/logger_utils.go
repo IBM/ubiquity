@@ -33,3 +33,9 @@ func InitUbiquityServerLogger() func(){
 	deferFunction :=  logs.InitStdoutLogger(logs.GetLogLevelFromString(os.Getenv("LOG_LEVEL")), logs.LoggerParams{ShowGoid: true, ShowPid : false})
 	return deferFunction
 }
+
+func InitUbiquityServerTestLogger() func(){
+	deferFunction :=  logs.InitStdoutLogger(logs.DEBUG, logs.LoggerParams{})
+	return deferFunction
+}
+

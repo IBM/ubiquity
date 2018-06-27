@@ -19,7 +19,7 @@ package mounter_test
 import (
 	"github.com/IBM/ubiquity/remote/mounter"
 	"github.com/IBM/ubiquity/resources"
-	"github.com/IBM/ubiquity/utils/logs"
+	"github.com/IBM/ubiquity/utils"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"testing"
@@ -61,6 +61,6 @@ var _ = Describe("mounter_factory_test", func() {
 
 func TestMounterFactory(t *testing.T) {
 	RegisterFailHandler(Fail)
-	defer logs.InitStdoutLogger(logs.DEBUG, logs.LoggerParams{})()
+	defer utils.InitUbiquityServerTestLogger()()
 	RunSpecs(t, "MountFactory Test Suite")
 }
