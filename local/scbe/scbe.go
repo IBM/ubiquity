@@ -52,7 +52,6 @@ const (
 
 var (
 	SupportedFSTypes = []string{"ext4", "xfs"}
-	lunNumberDict = make(map[string]int)
 )
 
 func NewScbeLocalClient(config resources.ScbeConfig) (resources.StorageClient, error) {
@@ -296,11 +295,11 @@ func (s *scbeLocalClient) RemoveVolume(removeVolumeRequest resources.RemoveVolum
 		return s.logger.ErrorRet(err, "dataModel.GetVolume failed")
 	}
 
-	hostAttach, err := scbeRestClient.GetVolMapping(existingVolume.WWN)
+	volMapInfo, err := scbeRestClient.GetVolMapping(existingVolume.WWN)
 	if err != nil {
 		return s.logger.ErrorRet(err, "scbeRestClient.GetVolMapping failed")
 	}
-
+	hostAttach := volMapInfo.Host
 	if hostAttach != EmptyHost {
 		return s.logger.ErrorRet(&CannotDeleteVolWhichAttachedToHostError{removeVolumeRequest.Name, hostAttach}, "failed")
 	}
@@ -378,20 +377,13 @@ func (s *scbeLocalClient) GetVolumeConfig(getVolumeConfigRequest resources.GetVo
 	volConfig[resources.OptionNameForVolumeFsType] = scbeVolume.FSType
 
 	// The ubiquity remote will use this extra info to determine is-attached
-	hostAttach, err := scbeRestClient.GetVolMapping(scbeVolume.WWN)
+	volMapInfo, err := scbeRestClient.GetVolMapping(scbeVolume.WWN)
 	if err != nil {
 		return nil, s.logger.ErrorRet(err, "scbeRestClient.GetVolMapping failed")
 	}
 
-	volConfig[resources.ScbeKeyVolAttachToHost] = hostAttach
-
-	// Mounter mount will use this extra info to determine is DS8k lun0
-	lunNumber, ok := lunNumberDict[scbeVolume.WWN]
-	if !ok {
-		lunNumberDict[scbeVolume.WWN] = -1
-	}
-
-	volConfig[resources.LunNumber] = lunNumber
+	volConfig[resources.ScbeKeyVolAttachToHost] = volMapInfo.Host
+	volConfig[resources.LunNumber] = volMapInfo.LunNumber
 
 	return volConfig, nil
 }
@@ -419,10 +411,11 @@ func (s *scbeLocalClient) Attach(attachRequest resources.AttachRequest) (string,
 		return "", s.logger.ErrorRet(err, "dataModel.GetVolume failed")
 	}
 
-	hostAttach, err := scbeRestClient.GetVolMapping(existingVolume.WWN)
+	volMapInfo, err := scbeRestClient.GetVolMapping(existingVolume.WWN)
 	if err != nil {
 		return "", s.logger.ErrorRet(err, "scbeRestClient.GetVolMapping failed")
 	}
+	hostAttach := volMapInfo.Host
 
 	if hostAttach == attachRequest.Host {
 		// if already map to the given host then just ignore and succeed to attach
@@ -436,17 +429,10 @@ func (s *scbeLocalClient) Attach(attachRequest resources.AttachRequest) (string,
 	// Lock will ensure no other caller attach a volume from the same host concurrently, Prevent SCBE race condition on get next available lun ID
 	s.locker.WriteLock(attachRequest.Host)
 	s.logger.Debug("Attaching", logs.Args{{"volume", existingVolume}})
-	scbeResponseMap, err := scbeRestClient.MapVolume(existingVolume.WWN, attachRequest.Host);
-	if err != nil {
+	if _, err := scbeRestClient.MapVolume(existingVolume.WWN, attachRequest.Host); err != nil {
 		s.locker.WriteUnlock(attachRequest.Host)
 		return "", s.logger.ErrorRet(err, "scbeRestClient.MapVolume failed")
 	}
-
-	//Save the lun number in the map, if get the same wwn, then update the lunNumber with latest
-	if currentLunNumber, ok := lunNumberDict[existingVolume.WWN]; ok {
-		s.logger.Debug("The lun number of volume", logs.Args{{"existing lun number",currentLunNumber}, {"new lun number", scbeResponseMap.LunNumber}} )
-	}
-	lunNumberDict[existingVolume.WWN] = scbeResponseMap.LunNumber
 
 	s.locker.WriteUnlock(attachRequest.Host)
 
@@ -469,11 +455,12 @@ func (s *scbeLocalClient) Detach(detachRequest resources.DetachRequest) (err err
 		return s.logger.ErrorRet(err, "dataModel.GetVolume failed")
 	}
 
-	hostAttach, err := scbeRestClient.GetVolMapping(existingVolume.WWN)
+	volMapInfo, err := scbeRestClient.GetVolMapping(existingVolume.WWN)
 	if err != nil {
 		return s.logger.ErrorRet(err, "scbeRestClient.GetVolMapping failed")
 	}
 
+	hostAttach := volMapInfo.Host
 	// Fail if vol already detach
 	if hostAttach == EmptyHost {
 		// TODO idempotent, if not attach then return nil
@@ -485,9 +472,6 @@ func (s *scbeLocalClient) Detach(detachRequest resources.DetachRequest) (err err
 	if err = scbeRestClient.UnmapVolume(existingVolume.WWN, host2detach); err != nil {
 		return s.logger.ErrorRet(err, "scbeRestClient.UnmapVolume failed")
 	}
-
-	//Delete the lun number message in the map, will do nothing if wwn not exist in the map
-	delete(lunNumberDict, existingVolume.WWN)
 
 	return nil
 }

@@ -25,7 +25,7 @@ func (b *blockDeviceUtils) Rescan(protocol Protocol) error {
 	defer b.logger.Trace(logs.DEBUG)()
 
 	switch protocol {
-	case BOTH:
+	case SCSI:
 		return b.RescanSCSI("-r")
 	case ISCSI:
 		return b.RescanISCSI()
@@ -49,7 +49,7 @@ func (b *blockDeviceUtils) RescanISCSI() error {
 	return nil
 }
 
-func (b *blockDeviceUtils) RescanSCSI(str string) error {
+func (b *blockDeviceUtils) RescanSCSI(rescanArgs string) error {
 	defer b.logger.Trace(logs.DEBUG)()
 	commands := []string{"rescan-scsi-bus", "rescan-scsi-bus.sh"}
 	rescanCmd := ""

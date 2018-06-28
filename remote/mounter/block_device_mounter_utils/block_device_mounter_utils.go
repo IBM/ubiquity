@@ -26,6 +26,7 @@ import (
 )
 
 const WarningMessageIdempotentDeviceAlreadyMounted = "Device is already mounted, so skip mounting (Idempotent)."
+const sleepDuration = 500
 
 type blockDeviceMounterUtils struct {
 	logger            logs.Logger
@@ -116,7 +117,7 @@ func (b *blockDeviceMounterUtils) UnmountDeviceFlow(devicePath string) error {
 			break
 		}
 		b.logger.Debug("mpathFlock.TryLock failed", logs.Args{{"error", err}})
-		time.Sleep(time.Duration(500*time.Millisecond))
+		time.Sleep(time.Duration(sleepDuration*time.Millisecond))
 	}
 	b.logger.Debug("Got mpathLock for device", logs.Args{{"device", devicePath}})
 	defer b.mpathFlock.Unlock()
@@ -145,7 +146,7 @@ func (b *blockDeviceMounterUtils) RescanAll(withISCSI bool, wwn string, rescanFo
 			break
 		}
 		b.logger.Debug("rescanLock.TryLock failed", logs.Args{{"error", err}})
-		time.Sleep(time.Duration(500*time.Millisecond))
+		time.Sleep(time.Duration(sleepDuration*time.Millisecond))
 	}
 	b.logger.Debug("Got rescanLock for volumeWWN", logs.Args{{"volumeWWN", wwn}})
 	defer b.rescanFlock.Unlock()
@@ -170,49 +171,21 @@ func (b *blockDeviceMounterUtils) RescanAll(withISCSI bool, wwn string, rescanFo
 		if err := b.blockDeviceUtils.Rescan(block_device_utils.ISCSI); err != nil {
 			return b.logger.ErrorRet(err, "Rescan failed", logs.Args{{"protocol", block_device_utils.ISCSI}})
 		}
+
+		if err := b.blockDeviceUtils.Rescan(block_device_utils.SCSI); err != nil {
+			return b.logger.ErrorRet(err, "Rescan failed", logs.Args{{"protocol", block_device_utils.SCSI}})
+		}
+	} else {
+		if err := b.blockDeviceUtils.Rescan(block_device_utils.FC); err != nil {
+			return b.logger.ErrorRet(err, "Rescan failed", logs.Args{{"protocol", block_device_utils.FC}})
+		}
 	}
-	if err := b.blockDeviceUtils.Rescan(block_device_utils.BOTH); err != nil {
-		return b.logger.ErrorRet(err, "Rescan failed", logs.Args{{"protocol", block_device_utils.BOTH}})
-	}
+
 	if !rescanForCleanUp {
 		if err := b.blockDeviceUtils.ReloadMultipath(); err != nil {
 			return b.logger.ErrorRet(err, "ReloadMultipath failed")
 		}
 	}
-	return nil
-}
-
-// RescanAllTargets(For DS8k/Rescan-scsi-bus.sh Lun0 issue)  triggers the following OS rescanning :
-// 1. SCSI rescan with "rescan-scsi-bus.sh -r"
-// 2. multipathing rescan
-// return error if one of the steps fail
-func (b *blockDeviceMounterUtils) RescanAllTargets(withISCSI bool, wwn string) error {
-	defer b.logger.Trace(logs.INFO, logs.Args{{"withISCSI", withISCSI}})
-
-	// locking for concurrent rescans and reduce rescans if no need
-	b.logger.Debug("Ask for rescanLock for volumeWWN", logs.Args{{"volumeWWN", wwn}})
-	for {
-		err := b.rescanFlock.TryLock()
-		if err == nil {
-			break
-		}
-		b.logger.Debug("rescanLock.TryLock failed", logs.Args{{"error", err}})
-		time.Sleep(time.Duration(500*time.Millisecond))
-	}
-	b.logger.Debug("Got rescanLock for volumeWWN", logs.Args{{"volumeWWN", wwn}})
-	defer b.rescanFlock.Unlock()
-	defer b.logger.Debug("Released rescanLock for volumeWWN", logs.Args{{"volumeWWN", wwn}})
-
-	// Do the rescans operations
-	if !withISCSI {
-		if err := b.blockDeviceUtils.Rescan(block_device_utils.FC); err != nil {
-			return b.logger.ErrorRet(err, "Rescan all target failed", logs.Args{{"protocol", block_device_utils.FC}})
-		}
-	}
-	if err := b.blockDeviceUtils.ReloadMultipath(); err != nil {
-		return b.logger.ErrorRet(err, "ReloadMultipath failed")
-	}
-
 	return nil
 }
 

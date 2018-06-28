@@ -225,3 +225,8 @@ type ScbeResponseHost struct {
 	StorageCluster string `json:"storage_cluster"`
 	PhysicalHost   int    `json:"physical_host"`
 }
+
+type ScbeVolumeMapInfo struct {
+	Host        string
+	LunNumber   int
+}

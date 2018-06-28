@@ -183,15 +183,16 @@ var _ = Describe("ScbeRestClient", func() {
     Context(".GetVolMapping", func() {
         It("succeed with 1 mapping found", func() {
             fakeSimpleRestClient.GetStub = GetVolMappingStubSuccess()
-            host, err := scbeRestClient.GetVolMapping("fakeWwn1")
+            volMapInfo, err := scbeRestClient.GetVolMapping("fakeWwn1")
             Expect(err).NotTo(HaveOccurred())
-            Expect(host).To(Equal(fakeHost))
+            Expect(volMapInfo.Host).To(Equal(fakeHost))
+            Expect(volMapInfo.LunNumber).To(Equal(fakeLunNumber))
         })
         It("succeed with 0 mapping found", func() {
             fakeSimpleRestClient.GetStub = GetVolMappingStubSuccess()
-            host, err := scbeRestClient.GetVolMapping("fakeWwn0")
+            volMapInfo, err := scbeRestClient.GetVolMapping("fakeWwn0")
             Expect(err).NotTo(HaveOccurred())
-            Expect(host).To(Equal(""))
+            Expect(volMapInfo.Host).To(Equal(""))
         })
         It("fail with 2 mapping found", func() {
             fakeSimpleRestClient.GetStub = GetVolMappingStubSuccess()

@@ -27,7 +27,7 @@ var _ = Describe("Scbe", func() {
 		callErr                     error   = errors.New("error")
 		scbeRemoteConfig                    = ScbeRemoteConfig{true}
 		fakeBlockDeviceUtilsMounter         = new(fakes.FakeBlockDeviceMounterUtils)
-		sMounter                    Mounter = NewTestScbeMounter(scbeRemoteConfig, fakeBlockDeviceUtilsMounter)
+		sMounter                    Mounter = NewScbeMounterWithMounterUtil(scbeRemoteConfig, fakeBlockDeviceUtilsMounter)
 
 		mountRequestForDS8kLun0 = MountRequest{Mountpoint: "test_mountpointDS8k", VolumeConfig: map[string]interface{}{"Name": "u_vol", "PhysicalCapacity": fakePhysicalCapacity,
 			"Profile": fakeProfile, "StorageType": fakeDS8kStoragetType, "UsedCapacity": fakeUsedCapacity, "Wwn": "wwn", "attach-to": "xnode1",

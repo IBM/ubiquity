@@ -34,12 +34,14 @@ const (
 	fakeHost2          = "fakehost2"
 	fakeError          = "error"
 	fakeVol            = "fakevol"
+	fakeLunNumber      = 0
 )
 
 var (
 	fakeAttachRequest = resources.AttachRequest{Name: fakeVol, Host: fakeHost}
 	fakeDetachRequest = resources.DetachRequest{Name: fakeVol, Host: fakeHost}
 	fakeRemoveRequest = resources.RemoveVolumeRequest{Name: fakeVol}
+	fakeVolMapInfo     = scbe.ScbeVolumeMapInfo{fakeHost, fakeLunNumber}
 )
 
 var _ = Describe("scbeLocalClient init", func() {
@@ -510,7 +512,7 @@ var _ = Describe("scbeLocalClient", func() {
 		})
 		It("should fail to detach the volume if MapVolume failed", func() {
 			fakeScbeDataModel.GetVolumeReturns(scbe.ScbeVolume{}, nil)
-			fakeScbeRestClient.GetVolMappingReturns(fakeHost, nil)
+			fakeScbeRestClient.GetVolMappingReturns(fakeVolMapInfo, nil)
 			fakeScbeRestClient.UnmapVolumeReturns(fakeErr)
 			err := client.Detach(fakeDetachRequest)
 			Expect(err).To(HaveOccurred())
@@ -530,7 +532,7 @@ var _ = Describe("scbeLocalClient", func() {
 			}
 			fakeScbeDataModel.GetVolumeReturns(scbe.ScbeVolume{WWN: "wwn", FSType: "ext4"}, nil)
 			fakeScbeRestClient.GetVolumesReturns(volumes, nil)
-			fakeScbeRestClient.GetVolMappingReturns(fakeHost, nil)
+			fakeScbeRestClient.GetVolMappingReturns(fakeVolMapInfo, nil)
 			volConfig, err := client.GetVolumeConfig(resources.GetVolumeConfigRequest{Name:"name"})
 			Expect(err).To(Not(HaveOccurred()))
 			Expect(len(volConfig)).To(Equal(val.Type().NumField() + scbe.GetVolumeConfigExtraParams))
@@ -540,6 +542,11 @@ var _ = Describe("scbeLocalClient", func() {
 			attachTo, ok := volConfig[resources.ScbeKeyVolAttachToHost]
 			Expect(ok).To(Equal(true))
 			Expect(attachTo).To(Equal(fakeHost))
+			volNumber, ok := volConfig[resources.LunNumber]
+			Expect(ok).To(Equal(true))
+			Expect(volNumber).To(Equal(0))
+
+
 
 			for k, v := range volConfig {
 				if k == resources.OptionNameForVolumeFsType || k == resources.ScbeKeyVolAttachToHost || k == resources.LunNumber {

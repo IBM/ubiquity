@@ -33,15 +33,10 @@ type scbeMounter struct {
 
 func NewScbeMounter(scbeRemoteConfig resources.ScbeRemoteConfig) resources.Mounter {
 	blockDeviceMounterUtils := block_device_mounter_utils.NewBlockDeviceMounterUtils()
-	return &scbeMounter{
-		logger:                  logs.GetLogger(),
-		blockDeviceMounterUtils: blockDeviceMounterUtils,
-		exec:   utils.NewExecutor(),
-		config: scbeRemoteConfig,
-	}
+	return NewScbeMounterWithMounterUtil(scbeRemoteConfig, blockDeviceMounterUtils)
 }
 
-func NewTestScbeMounter(scbeRemoteConfig resources.ScbeRemoteConfig, blockDeviceMounterUtils block_device_mounter_utils.BlockDeviceMounterUtils) resources.Mounter {
+func NewScbeMounterWithMounterUtil(scbeRemoteConfig resources.ScbeRemoteConfig, blockDeviceMounterUtils block_device_mounter_utils.BlockDeviceMounterUtils) resources.Mounter {
 	return &scbeMounter{
 		logger:                  logs.GetLogger(),
 		blockDeviceMounterUtils: blockDeviceMounterUtils,
@@ -62,21 +57,12 @@ func (s *scbeMounter) Mount(mountRequest resources.MountRequest) (string, error)
 	// Discover device
 	devicePath, err := s.blockDeviceMounterUtils.Discover(volumeWWN, true)
 	if err != nil {
-		// Known issue with rescan-scsi-bus.sh, LUN0 must be the first mapped logical unit, otherwise it will not be able to scan any other logical unit
-		// For DS8k, it only support FC and without LUN0 mapped default, so we need to do "rescan-scsi-bus.sh -a" to discover the LUN0
-		// Url: UB-1103 in https://www.ibm.com/support/knowledgecenter/SS6JWS_3.4.0/RN/sc_rn_knownissues.html
+		// Known issue: UB-1103 in https://www.ibm.com/support/knowledgecenter/SS6JWS_3.4.0/RN/sc_rn_knownissues.html
+		// For DS8k, "rescan-scsi-bus.sh -r" cannot discover the LUN0, need to use "rescan-scsi-bus.sh -a" instead
 		s.logger.Debug("volumeConfig: ", logs.Args{{"volumeConfig: ", mountRequest.VolumeConfig}})
-		storageType, ok := mountRequest.VolumeConfig[resources.StorageType]
-		if !ok {
-			storageType = ""
-		}
-		lunNumber, ok := mountRequest.VolumeConfig[resources.LunNumber]
-		if !ok {
-			lunNumber = -1
-		}
-
-		if storageType == resources.DS8kStorageType && int(lunNumber.(float64)) == 0 {
-			if err := s.blockDeviceMounterUtils.RescanAllTargets(!s.config.SkipRescanISCSI, volumeWWN); err != nil {
+		isDs8kLun0 := isDS8kLun0(mountRequest)
+		if isDs8kLun0 {
+			if err := s.blockDeviceMounterUtils.RescanAll(!s.config.SkipRescanISCSI, volumeWWN, false); err != nil {
 				return "", s.logger.ErrorRet(err, "RescanAll Targets failed", logs.Args{{"volumeWWN", volumeWWN}})
 			}
 			devicePath, err = s.blockDeviceMounterUtils.Discover(volumeWWN, true)
@@ -149,4 +135,20 @@ func (s *scbeMounter) ActionAfterDetach(request resources.AfterDetachRequest) er
 		return s.logger.ErrorRet(err, "RescanAll failed")
 	}
 	return nil
+}
+
+func isDS8kLun0(mountRequest resources.MountRequest) bool {
+	storageType, ok := mountRequest.VolumeConfig[resources.StorageType]
+	if !ok {
+		storageType = ""
+	}
+	lunNumber, ok := mountRequest.VolumeConfig[resources.LunNumber]
+	if !ok {
+		lunNumber = -1
+	}
+
+	if storageType == resources.DS8kStorageType && int(lunNumber.(float64)) == 0 {
+		return true
+	}
+	return false
 }
