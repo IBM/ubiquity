@@ -64,7 +64,7 @@ func (b *blockDeviceUtils) RescanSCSI(rescanArgs string) error {
 	}
 	// TODO should use -r only in clean up
 	// Use "-a" to rescan all targets if lun was not find in order to find a lun0 on a new target
-	args := []string{str}
+	args := []string{rescanArgs}
 	if _, err := b.exec.Execute(rescanCmd, args); err != nil {
 		return b.logger.ErrorRet(&commandExecuteError{rescanCmd, err}, "failed")
 	}
