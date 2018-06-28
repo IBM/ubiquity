@@ -207,7 +207,6 @@ func (s *scbeRestClient) GetVolMapping(wwn string) (ScbeVolumeMapInfo, error) {
 	}
 
 	if len(mappings) == 1 {
-		s.logger.Debug(fmt.Sprintf("lunNumber type is: %T", mappings[0].LunNumber))
 		lunNumber = mappings[0].LunNumber
 		var hostResponse ScbeResponseHost
 		hostUrl := fmt.Sprintf("%s/%s", UrlScbeResourceHost, strconv.Itoa(mappings[0].Host))
