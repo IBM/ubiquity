@@ -60,8 +60,7 @@ func (s *scbeMounter) Mount(mountRequest resources.MountRequest) (string, error)
 		// Known issue: UB-1103 in https://www.ibm.com/support/knowledgecenter/SS6JWS_3.4.0/RN/sc_rn_knownissues.html
 		// For DS8k, "rescan-scsi-bus.sh -r" cannot discover the LUN0, need to use "rescan-scsi-bus.sh -a" instead
 		s.logger.Debug("volumeConfig: ", logs.Args{{"volumeConfig: ", mountRequest.VolumeConfig}})
-		isDs8kLun0 := isDS8kLun0(mountRequest)
-		if isDs8kLun0 {
+		if isDS8kLun0(mountRequest) {
 			if err := s.blockDeviceMounterUtils.RescanAll(!s.config.SkipRescanISCSI, volumeWWN, false); err != nil {
 				return "", s.logger.ErrorRet(err, "RescanAll Targets failed", logs.Args{{"volumeWWN", volumeWWN}})
 			}
@@ -142,7 +141,7 @@ func isDS8kLun0(mountRequest resources.MountRequest) bool {
 	if !ok {
 		storageType = ""
 	}
-	lunNumber, ok := mountRequest.VolumeConfig[resources.LunNumber]
+	lunNumber, ok := mountRequest.VolumeConfig[resources.ScbeKeyVolAttachLunNumToHost]
 	if !ok {
 		lunNumber = -1
 	}

@@ -542,14 +542,14 @@ var _ = Describe("scbeLocalClient", func() {
 			attachTo, ok := volConfig[resources.ScbeKeyVolAttachToHost]
 			Expect(ok).To(Equal(true))
 			Expect(attachTo).To(Equal(fakeHost))
-			volNumber, ok := volConfig[resources.LunNumber]
+			volNumber, ok := volConfig[resources.ScbeKeyVolAttachLunNumToHost]
 			Expect(ok).To(Equal(true))
 			Expect(volNumber).To(Equal(0))
 
 
 
 			for k, v := range volConfig {
-				if k == resources.OptionNameForVolumeFsType || k == resources.ScbeKeyVolAttachToHost || k == resources.LunNumber {
+				if k == resources.OptionNameForVolumeFsType || k == resources.ScbeKeyVolAttachToHost || k == resources.ScbeKeyVolAttachLunNumToHost {
 					continue
 				}
 				Expect(k).To(Not(Equal("")))

@@ -383,7 +383,7 @@ func (s *scbeLocalClient) GetVolumeConfig(getVolumeConfigRequest resources.GetVo
 	}
 
 	volConfig[resources.ScbeKeyVolAttachToHost] = volMapInfo.Host
-	volConfig[resources.LunNumber] = volMapInfo.LunNumber
+	volConfig[resources.ScbeKeyVolAttachLunNumToHost] = volMapInfo.LunNumber
 
 	return volConfig, nil
 }
