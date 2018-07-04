@@ -139,7 +139,7 @@ func (s *scbeMounter) ActionAfterDetach(request resources.AfterDetachRequest) er
 func isDS8kLun0(mountRequest resources.MountRequest) bool {
 	storageType, ok := mountRequest.VolumeConfig[resources.StorageType]
 	if !ok {
-		storageType = ""
+		return false
 	}
 	lunNumber, ok := mountRequest.VolumeConfig[resources.ScbeKeyVolAttachLunNumToHost]
 	if !ok {
