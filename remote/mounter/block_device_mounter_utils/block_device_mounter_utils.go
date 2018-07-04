@@ -82,7 +82,7 @@ func (b *blockDeviceMounterUtils) MountDeviceFlow(devicePath string, fsType stri
 	if isMounted {
 		for _, mountpointi := range mountpointRefs {
 			if mountpointi == mountPoint {
-				b.logger.Info(WarningMessageIdempotentDeviceAlreadyMounted, logs.Args{{"Device", devicePath}, {"mountpoint", mountPoint}})
+				b.logger.Warning(WarningMessageIdempotentDeviceAlreadyMounted, logs.Args{{"Device", devicePath}, {"mountpoint", mountPoint}})
 				return nil // Indicate idempotent issue
 			}
 		}
