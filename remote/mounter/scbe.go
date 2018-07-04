@@ -143,7 +143,7 @@ func isDS8kLun0(mountRequest resources.MountRequest) bool {
 	}
 	lunNumber, ok := mountRequest.VolumeConfig[resources.ScbeKeyVolAttachLunNumToHost]
 	if !ok {
-		lunNumber = -1
+		return false
 	}
 
 	if storageType == resources.DS8kStorageType && int(lunNumber.(float64)) == 0 {

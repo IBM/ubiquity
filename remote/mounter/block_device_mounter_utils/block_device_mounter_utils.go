@@ -27,6 +27,9 @@ import (
 
 const WarningMessageIdempotentDeviceAlreadyMounted = "Device is already mounted, so skip mounting (Idempotent)."
 const sleepDuration = 500
+const rescanSCSIWithPARAM_a = block_device_utils.FC
+const rescanSCSIWithPARAM_r = block_device_utils.SCSI
+const rescanISCSI = block_device_utils.ISCSI
 
 type blockDeviceMounterUtils struct {
 	logger            logs.Logger
@@ -168,15 +171,15 @@ func (b *blockDeviceMounterUtils) RescanAll(withISCSI bool, wwn string, rescanFo
 
 	// Do the rescans operations
 	if withISCSI {
-		if err := b.blockDeviceUtils.Rescan(block_device_utils.ISCSI); err != nil {
+		if err := b.blockDeviceUtils.Rescan(rescanISCSI); err != nil {
 			return b.logger.ErrorRet(err, "Rescan failed", logs.Args{{"protocol", block_device_utils.ISCSI}})
 		}
 
-		if err := b.blockDeviceUtils.Rescan(block_device_utils.SCSI); err != nil {
+		if err := b.blockDeviceUtils.Rescan(rescanSCSIWithPARAM_r);err != nil {
 			return b.logger.ErrorRet(err, "Rescan failed", logs.Args{{"protocol", block_device_utils.SCSI}})
 		}
 	} else {
-		if err := b.blockDeviceUtils.Rescan(block_device_utils.FC); err != nil {
+		if err := b.blockDeviceUtils.Rescan(rescanSCSIWithPARAM_a); err != nil {
 			return b.logger.ErrorRet(err, "Rescan failed", logs.Args{{"protocol", block_device_utils.FC}})
 		}
 	}

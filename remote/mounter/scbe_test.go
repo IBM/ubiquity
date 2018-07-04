@@ -44,6 +44,15 @@ var _ = Describe("Scbe", func() {
 		mountRequestForSVCLun1 = MountRequest{Mountpoint: "test_mountpointSVC", VolumeConfig: map[string]interface{}{"Name": "u_vol", "PhysicalCapacity": fakePhysicalCapacity,
 			"Profile": fakeProfile, "StorageType": fakeV7kStorageType, "UsedCapacity": fakeUsedCapacity, "Wwn": "wwn", "attach-to": "node1",
 			"LogicalCapacity": fakeLogicalCapacity, "LunNumber": float64(1), "PoolName": "pool", "StorageName": "IBM.2706", "fstype": "ext4"}}
+
+		mountRequestForDS8kLun2 = MountRequest{Mountpoint: "test_mountpointDS8k", VolumeConfig: map[string]interface{}{"Name": "u_vol", "PhysicalCapacity": fakePhysicalCapacity,
+			"Profile": fakeProfile, "UsedCapacity": fakeUsedCapacity, "Wwn": "wwn", "attach-to": "node1",
+			"LogicalCapacity": fakeLogicalCapacity, "LunNumber": float64(1), "PoolName": "pool", "StorageName": "IBM.2107", "fstype": "ext4"}}
+
+		mountRequestForDS8kLun3 = MountRequest{Mountpoint: "test_mountpointDS8k", VolumeConfig: map[string]interface{}{"Name": "u_vol", "PhysicalCapacity": fakePhysicalCapacity,
+			"Profile": fakeProfile, "StorageType": fakeDS8kStoragetType, "UsedCapacity": fakeUsedCapacity, "Wwn": "wwn", "attach-to": "node1",
+			"LogicalCapacity": fakeLogicalCapacity, "PoolName": "pool", "StorageName": "IBM.2107", "fstype": "ext4"}}
+
 	)
 
 	Context("Mount", func() {
@@ -51,7 +60,7 @@ var _ = Describe("Scbe", func() {
 			fakeBlockDeviceUtilsMounter.DiscoverReturnsOnCall(0, "", callErr)
 			fakeBlockDeviceUtilsMounter.DiscoverReturnsOnCall(1, "wwn", nil)
 			fakeBlockDeviceUtilsMounter.RescanAllReturnsOnCall(0, nil)
-			fakeBlockDeviceUtilsMounter.RescanAllTargetsReturnsOnCall(0, nil)
+			fakeBlockDeviceUtilsMounter.RescanAllReturnsOnCall(1, nil)
 			_, err := sMounter.Mount(mountRequestForDS8kLun0)
 			Expect(err).ToNot(HaveOccurred())
 		})
@@ -74,6 +83,20 @@ var _ = Describe("Scbe", func() {
 			fakeBlockDeviceUtilsMounter.DiscoverReturns("", callErr)
 			fakeBlockDeviceUtilsMounter.RescanAllReturns(callErr)
 			_, err := sMounter.Mount(mountRequestForSVCLun1)
+			Expect(err).To(HaveOccurred())
+		})
+
+		It("should fail to discover ds8k with lun2 if no storageType", func() {
+			fakeBlockDeviceUtilsMounter.DiscoverReturns("", callErr)
+			fakeBlockDeviceUtilsMounter.RescanAllReturnsOnCall(0, nil)
+			_, err := sMounter.Mount(mountRequestForDS8kLun2)
+			Expect(err).To(HaveOccurred())
+		})
+
+		It("should fail to discover ds8k with lun3 if no lunNumber", func() {
+			fakeBlockDeviceUtilsMounter.DiscoverReturns("", callErr)
+			fakeBlockDeviceUtilsMounter.RescanAllReturnsOnCall(0, nil)
+			_, err := sMounter.Mount(mountRequestForDS8kLun3)
 			Expect(err).To(HaveOccurred())
 		})
 	})
