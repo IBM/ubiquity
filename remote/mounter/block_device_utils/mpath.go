@@ -24,19 +24,44 @@ import (
 	"path/filepath"
 	"regexp"
 	"strings"
+	"context"
 )
 
 const multipathCmd = "multipath"
 
 func (b *blockDeviceUtils) ReloadMultipath() error {
 	defer b.logger.Trace(logs.DEBUG)()
+	// we will also try to run multipathd status!
+	b.logger.Info("Trying to run multipathd status")
+	args := []string{"status"}
+	if _, err := b.exec.Execute("multipathd", args); err != nil {
+		return b.logger.ErrorRet(&commandExecuteError{multipathCmd, err}, "failed")
+	}
+	
+	b.logger.Info("Trying to run multipath -ll -v3")
+	
+	// first we will try to run multipath -ll and then multipath -r 
+	args = []string{"-l", " -v3"}
+	if _, err := b.exec.ExecuteWithTimeout(20, multipathCmd, args); err != nil {
+		return b.logger.ErrorRet(&commandExecuteError{multipathCmd, err}, "failed")
+	}
+	
 	if err := b.exec.IsExecutable(multipathCmd); err != nil {
 		return b.logger.ErrorRet(&commandNotFoundError{multipathCmd, err}, "failed")
 	}
-	args := []string{"-r"}
-	if _, err := b.exec.Execute(multipathCmd, args); err != nil {
-		return b.logger.ErrorRet(&commandExecuteError{multipathCmd, err}, "failed")
+	b.logger.Info("Trying to run multipath -r -v3")
+	args = []string{"-r", " -v3"}
+	for i := 0; i < 3; i++ {
+		_, err := b.exec.Execute(multipathCmd, args)
+		if err == context.DeadlineExceeded && i < 2{
+			continue
+		}
+		
+		if err != nil  {
+			return b.logger.ErrorRet(&commandExecuteError{multipathCmd, err}, "failed")
+		}
 	}
+	
 	return nil
 }
 
