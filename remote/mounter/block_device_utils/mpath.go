@@ -57,7 +57,7 @@ func (b *blockDeviceUtils) ReloadMultipath() error {
 			b.logger.Info("TIMEOUTTT")
 			continue
 		}
-		b.logger.Info(fmt.Sprint("i : %s , err : %s ", i, err)
+		b.logger.Info(fmt.Sprint("i : %s , err : %s ", i, err))
 		
 		if err != nil  {
 			b.logger.Info("returning ERR")
