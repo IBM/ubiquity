@@ -61,7 +61,7 @@ func (b *blockDeviceUtils) ReloadMultipath() error {
 		
 		b.logger.Info("Trying to run multipath -r -v3")
 		args = []string{"-r", " -v3"}
-		out, err := b.exec.Execute(multipathCmd, args)
+		out, err := b.exec.ExecuteWithTimeout(20, multipathCmd, args)
 		if err == nil{
 			b.logger.Info(fmt.Sprintf("NO ERRROR. out : %s", out))
 			break
