@@ -40,24 +40,38 @@ func (b *blockDeviceUtils) ReloadMultipath() error {
 	
 	b.logger.Info("Trying to run multipath -ll -v3")
 	
-	// first we will try to run multipath -ll and then multipath -r 
-	args = []string{"-l", " -v3"}
-	if _, err := b.exec.ExecuteWithTimeout(20, multipathCmd, args); err != nil {
-		return b.logger.ErrorRet(&commandExecuteError{multipathCmd, err}, "failed")
-	}
-	
 	if err := b.exec.IsExecutable(multipathCmd); err != nil {
 		return b.logger.ErrorRet(&commandNotFoundError{multipathCmd, err}, "failed")
 	}
+	
 	b.logger.Info("Trying to run multipath -r -v3")
 	args = []string{"-r", " -v3"}
 	for i := 0; i < 3; i++ {
-		_, err := b.exec.Execute(multipathCmd, args)
-		if err == context.DeadlineExceeded && i < 2{
-			b.logger.Info("TIMEOUTTT")
+		// first we will try to run multipath -ll and then multipath -r 
+		args = []string{"-l", " -v3"}
+		outLL, errLL := b.exec.ExecuteWithTimeout(20, multipathCmd, args)
+		if errLL == context.DeadlineExceeded && i < 2{
+			b.logger.Info("TIMEOUTTT in multipath -ll!.")
+			b.logger.Info(fmt.Sprintf("output : %s", outLL))
 			continue
 		}
-		b.logger.Info(fmt.Sprint("i : %s , err : %s ", i, err))
+		
+		if errLL != nil {
+			return b.logger.ErrorRet(&commandExecuteError{multipathCmd, errLL}, "failed")
+		}
+		
+		out, err := b.exec.Execute(multipathCmd, args)
+		if err == nil{
+			b.logger.Info(fmt.Sprintf("NO ERRROR. out : %s", out))
+			break
+		}
+		
+		if err == context.DeadlineExceeded && i < 2{
+			b.logger.Info("TIMEOUTTT")
+			b.logger.Info(fmt.Sprintf("output : %s", out))
+			continue
+		}
+		b.logger.Info(fmt.Sprint("i : %s , err : %s . out : %s ", i, err, out))
 		
 		if err != nil  {
 			b.logger.Info("returning ERR")
