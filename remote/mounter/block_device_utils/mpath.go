@@ -54,12 +54,16 @@ func (b *blockDeviceUtils) ReloadMultipath() error {
 	for i := 0; i < 3; i++ {
 		_, err := b.exec.Execute(multipathCmd, args)
 		if err == context.DeadlineExceeded && i < 2{
+			b.logger.Info("TIMEOUTTT")
 			continue
 		}
+		b.logger.Info(fmt.Sprint("i : %s , err : %s ", i, err)
 		
 		if err != nil  {
+			b.logger.Info("returning ERR")
 			return b.logger.ErrorRet(&commandExecuteError{multipathCmd, err}, "failed")
 		}
+		b.logger.Info("FUNISH")
 	}
 	
 	return nil
