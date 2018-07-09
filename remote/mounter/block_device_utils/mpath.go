@@ -46,9 +46,19 @@ func (b *blockDeviceUtils) ReloadMultipath() error {
 	
 	for i := 0; i < 3; i++ {
 		// first we will try to run multipath -ll and then multipath -r 
-		b.logger.Info("Trying to run multipath -ll -v3")
-		args = []string{"-l", " -v3"}
+		b.logger.Info("Trying to run multipath")
+		//args = []string{"-l", " -v3"}
+		args = []string{}
 		outLL, errLL := b.exec.ExecuteWithTimeout(20, multipathCmd, args)
+		if errLL == context.DeadlineExceeded && i < 2{
+			b.logger.Info("TIMEOUTTT in multipath!.")
+			b.logger.Info(fmt.Sprintf("output : %s", outLL))
+			continue
+		}
+		
+		b.logger.Info("Running multipath -ll ")
+		args = []string{"-ll"}
+		outLL, errLL := b.exec.Execute(multipathCmd, args)
 		if errLL == context.DeadlineExceeded && i < 2{
 			b.logger.Info("TIMEOUTTT in multipath -ll!.")
 			b.logger.Info(fmt.Sprintf("output : %s", outLL))

@@ -97,15 +97,7 @@ func (e *executor) ExecuteWithTimeout(mSeconds int, command string, args []strin
 	}
 
 	// If there's no context error, we know the command completed (or errored).
-	e.logger.Debug(fmt.Sprintf("Output from command:", string(out)))
-	e.logger.Debug(
-		"Command executed with args and error and output.",
-		logs.Args{
-			{"command", command},
-			{"args", args},
-			{"error", string(stdErr[:])},
-			{"output", string(stdOut[:])},
-		})
+	e.logger.Debug(fmt.Sprintf("Output from command: %s", string(out)))
 	if err != nil {
 		e.logger.Debug(fmt.Sprintf("Non-zero exit code:", err))
 	}
