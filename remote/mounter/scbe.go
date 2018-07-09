@@ -63,7 +63,7 @@ func (s *scbeMounter) Mount(mountRequest resources.MountRequest) (string, error)
 			return "", s.logger.ErrorRet(err, "MkdirAll failed", logs.Args{{"mountpoint", mountRequest.Mountpoint}})
 		}
 	} else {
-		s.logger.Watning("Idempotent issue : mount point directory already exists", logs.Args{{"mountpoint", mountRequest.Mountpoint}})
+		s.logger.Warning("Idempotent issue : mount point directory already exists", logs.Args{{"mountpoint", mountRequest.Mountpoint}})
 	}
 
 	// Mount device and mkfs if needed
