@@ -75,7 +75,7 @@ func (b *blockDeviceUtils) Discover(volumeWwn string, deepDiscovery bool) (strin
 			b.logger.Debug(fmt.Sprintf("mpath device was NOT found for WWN [%s] even after sg_inq on all mpath devices.", volumeWwn))
 			return "", b.logger.ErrorRet(&volumeNotFoundError{volumeWwn}, "failed")
 		} else {
-			b.logger.Warning(fmt.Sprintf("Warning: device [%s] found for WWN [%s] after running sg_inq on all mpath devices although it was not found in multipath -ll. (Note: Could indicate multipathing issue).", dev, volumeWwn))
+			b.logger.Warning(fmt.Sprintf("device [%s] found for WWN [%s] after running sg_inq on all mpath devices although it was not found in multipath -ll. (Note: Could indicate multipathing issue).", dev, volumeWwn))
 			mpath = b.mpathDevFullPath(dev)
 		}
 	} else {
