@@ -81,6 +81,12 @@ func (l *goLoggingLogger) getContextStringFromGoid() string {
 	}
 	
 	new_context := context.(resources.RequestContext)
+	if new_context.ActionName == "" {
+		new_context.ActionName = "NA"
+	}
+	if new_context.Id == "" {
+		new_context.Id = "NA"
+	}
 
 	if l.params.ShowGoid{
 		return fmt.Sprintf("%s:%d-%s", new_context.Id, go_id, new_context.ActionName)
