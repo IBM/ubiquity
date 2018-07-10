@@ -70,8 +70,8 @@ func (s *StorageApiServer) Start() error {
 }
 
 func (s *StorageApiServer) printStartMsg() {
-	fmt.Println(fmt.Sprintf("Starting Storage API server on port %d ....", s.config.Port))
-	fmt.Println("CTL-C to exit/stop Storage API server service")
+	s.logger.Info(fmt.Sprintf("Starting Storage API server on port %d ....", s.config.Port))
+	s.logger.Info("CTL-C to exit/stop Storage API server service")
 }
 
 func (s *StorageApiServer) StartNonSsl() error {
