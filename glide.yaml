@@ -18,7 +18,7 @@ import:
   version: 6a197d5ea61168f2ac821de2b7f011b250904900
 testImport:
 - package: github.com/onsi/ginkgo
-  version: bb93381d543b0e5725244abe752214a110791d01
+  version: v1.5.0
 - package: github.com/onsi/gomega
   version: c463cd2a8578290d4be7a25cba69de81cf35785e
 - package: github.com/jarcoal/httpmock
