@@ -42,7 +42,7 @@ func (b *blockDeviceUtils) ReloadMultipath() error {
 	}
 
 	args = []string{"-r"}
-	out, err := b.exec.ExecuteWithTimeout(10*1000, multipathCmd, args)
+	_, err := b.exec.ExecuteWithTimeout(10*1000, multipathCmd, args)
 	if err != nil  {
 		return b.logger.ErrorRet(&commandExecuteError{multipathCmd, err}, "failed")
 	}
