@@ -24,7 +24,6 @@ import (
 	"path/filepath"
 	"regexp"
 	"strings"
-	"context"
 )
 
 const multipathCmd = "multipath"
@@ -32,13 +31,17 @@ const multipathCmd = "multipath"
 func (b *blockDeviceUtils) ReloadMultipath() error {
 	defer b.logger.Trace(logs.DEBUG)()
 
-	args = []string{}
-	_, errLL := b.exec.ExecuteWithTimeout(10*1000, multipathCmd, args)
+	if err := b.exec.IsExecutable(multipathCmd); err != nil {
+		return b.logger.ErrorRet(&commandNotFoundError{multipathCmd, err}, "failed")
+	}
+
+	args := []string{}
+	_, err := b.exec.ExecuteWithTimeout(10*1000, multipathCmd, args)
 	if err != nil  {
 		return b.logger.ErrorRet(&commandExecuteError{multipathCmd, err}, "failed")
 	}
 
-	args = []string{"-r", " -v3"}
+	args = []string{"-r"}
 	out, err := b.exec.ExecuteWithTimeout(10*1000, multipathCmd, args)
 	if err != nil  {
 		return b.logger.ErrorRet(&commandExecuteError{multipathCmd, err}, "failed")
