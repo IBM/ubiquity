@@ -31,64 +31,23 @@ const multipathCmd = "multipath"
 
 func (b *blockDeviceUtils) ReloadMultipath() error {
 	defer b.logger.Trace(logs.DEBUG)()
-	// we will also try to run multipathd status!
-	b.logger.Info("Trying to run multipathd status")
-	args := []string{"status"}
-	if _, err := b.exec.Execute("multipathd", args); err != nil {
+
+	args = []string{}
+	_, errLL := b.exec.ExecuteWithTimeout(10*1000, multipathCmd, args)
+	if err != nil  {
 		return b.logger.ErrorRet(&commandExecuteError{multipathCmd, err}, "failed")
 	}
-	
-	
-	
-	if err := b.exec.IsExecutable(multipathCmd); err != nil {
-		return b.logger.ErrorRet(&commandNotFoundError{multipathCmd, err}, "failed")
+
+	args = []string{"-r", " -v3"}
+	out, err := b.exec.ExecuteWithTimeout(10*1000, multipathCmd, args)
+	if err == nil{
+		b.logger.Info(fmt.Sprintf("NO ERRROR. out : %s", out))
+		break
 	}
 	
-	for i := 0; i < 3; i++ {
-		// first we will try to run multipath -ll and then multipath -r 
-		b.logger.Info("Trying to run multipath")
-		//args = []string{"-l", " -v3"}
-		args = []string{}
-		outLL, errLL := b.exec.ExecuteWithTimeout(10*1000, multipathCmd, args)
-		if errLL == context.DeadlineExceeded && i < 2{
-			b.logger.Info("TIMEOUTTT in multipath!.")
-			b.logger.Info(fmt.Sprintf("output : %s", outLL))
-			continue
-		}
-		
-		b.logger.Info("Running multipath -ll ")
-		args = []string{"-ll"}
-		outLL, errLL = b.exec.Execute(multipathCmd, args)
-		if errLL == context.DeadlineExceeded && i < 2{
-			b.logger.Info("TIMEOUTTT in multipath -ll!.")
-			b.logger.Info(fmt.Sprintf("output : %s", outLL))
-			continue
-		}
-		
-		if errLL != nil {
-			return b.logger.ErrorRet(&commandExecuteError{multipathCmd, errLL}, "failed")
-		}
-		
-		b.logger.Info("Trying to run multipath -r -v3")
-		args = []string{"-r", " -v3"}
-		out, err := b.exec.ExecuteWithTimeout(20*1000, multipathCmd, args)
-		if err == nil{
-			b.logger.Info(fmt.Sprintf("NO ERRROR. out : %s", out))
-			break
-		}
-		
-		if err == context.DeadlineExceeded && i < 2{
-			b.logger.Info("TIMEOUTTT")
-			b.logger.Info(fmt.Sprintf("output : %s", out))
-			continue
-		}
-		b.logger.Info(fmt.Sprint("i : %s , err : %s . out : %s ", i, err, out))
-		
-		if err != nil  {
-			b.logger.Info("returning ERR")
-			return b.logger.ErrorRet(&commandExecuteError{multipathCmd, err}, "failed")
-		}
-		b.logger.Info("FUNISH")
+	if err != nil  {
+		b.logger.Info("returning ERR")
+		return b.logger.ErrorRet(&commandExecuteError{multipathCmd, err}, "failed")
 	}
 	
 	return nil
