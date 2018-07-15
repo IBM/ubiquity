@@ -50,7 +50,9 @@ func main() {
 			panic(fmt.Errorf("Failed to setup log dir"))
 		}
 	}
+	
 	defer utils.InitUbiquityServerLogger()()
+	
 	logger := logs.GetLogger()
 	oldLogger := utils.SetupOldLogger("ubiquity")
 
