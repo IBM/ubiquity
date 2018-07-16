@@ -30,13 +30,23 @@ const multipathCmd = "multipath"
 
 func (b *blockDeviceUtils) ReloadMultipath() error {
 	defer b.logger.Trace(logs.DEBUG)()
+
 	if err := b.exec.IsExecutable(multipathCmd); err != nil {
 		return b.logger.ErrorRet(&commandNotFoundError{multipathCmd, err}, "failed")
 	}
-	args := []string{"-r"}
-	if _, err := b.exec.Execute(multipathCmd, args); err != nil {
+
+	args := []string{}
+	_, err := b.exec.ExecuteWithTimeout(10*1000, multipathCmd, args)
+	if err != nil  {
 		return b.logger.ErrorRet(&commandExecuteError{multipathCmd, err}, "failed")
 	}
+
+	args = []string{"-r"}
+	_, err = b.exec.ExecuteWithTimeout(10*1000, multipathCmd, args)
+	if err != nil  {
+		return b.logger.ErrorRet(&commandExecuteError{multipathCmd, err}, "failed")
+	}
+	
 	return nil
 }
 
