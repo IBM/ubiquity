@@ -21,12 +21,13 @@ type FakeBlockDeviceMounterUtils struct {
 	rescanAllReturnsOnCall map[int]struct {
 		result1 error
 	}
-	MountDeviceFlowStub        func(devicePath string, fsType string, mountPoint string) error
+	MountDeviceFlowStub        func(devicePath string, fsType string, mountPoint string, k8sMountPoint string) error
 	mountDeviceFlowMutex       sync.RWMutex
 	mountDeviceFlowArgsForCall []struct {
-		devicePath string
-		fsType     string
-		mountPoint string
+		devicePath    string
+		fsType        string
+		mountPoint    string
+		k8sMountPoint string
 	}
 	mountDeviceFlowReturns struct {
 		result1 error
@@ -113,18 +114,19 @@ func (fake *FakeBlockDeviceMounterUtils) RescanAllReturnsOnCall(i int, result1 e
 	}{result1}
 }
 
-func (fake *FakeBlockDeviceMounterUtils) MountDeviceFlow(devicePath string, fsType string, mountPoint string) error {
+func (fake *FakeBlockDeviceMounterUtils) MountDeviceFlow(devicePath string, fsType string, mountPoint string, k8sMountPoint string) error {
 	fake.mountDeviceFlowMutex.Lock()
 	ret, specificReturn := fake.mountDeviceFlowReturnsOnCall[len(fake.mountDeviceFlowArgsForCall)]
 	fake.mountDeviceFlowArgsForCall = append(fake.mountDeviceFlowArgsForCall, struct {
-		devicePath string
-		fsType     string
-		mountPoint string
-	}{devicePath, fsType, mountPoint})
-	fake.recordInvocation("MountDeviceFlow", []interface{}{devicePath, fsType, mountPoint})
+		devicePath    string
+		fsType        string
+		mountPoint    string
+		k8sMountPoint string
+	}{devicePath, fsType, mountPoint, k8sMountPoint})
+	fake.recordInvocation("MountDeviceFlow", []interface{}{devicePath, fsType, mountPoint, k8sMountPoint})
 	fake.mountDeviceFlowMutex.Unlock()
 	if fake.MountDeviceFlowStub != nil {
-		return fake.MountDeviceFlowStub(devicePath, fsType, mountPoint)
+		return fake.MountDeviceFlowStub(devicePath, fsType, mountPoint, k8sMountPoint)
 	}
 	if specificReturn {
 		return ret.result1
@@ -138,10 +140,10 @@ func (fake *FakeBlockDeviceMounterUtils) MountDeviceFlowCallCount() int {
 	return len(fake.mountDeviceFlowArgsForCall)
 }
 
-func (fake *FakeBlockDeviceMounterUtils) MountDeviceFlowArgsForCall(i int) (string, string, string) {
+func (fake *FakeBlockDeviceMounterUtils) MountDeviceFlowArgsForCall(i int) (string, string, string, string) {
 	fake.mountDeviceFlowMutex.RLock()
 	defer fake.mountDeviceFlowMutex.RUnlock()
-	return fake.mountDeviceFlowArgsForCall[i].devicePath, fake.mountDeviceFlowArgsForCall[i].fsType, fake.mountDeviceFlowArgsForCall[i].mountPoint
+	return fake.mountDeviceFlowArgsForCall[i].devicePath, fake.mountDeviceFlowArgsForCall[i].fsType, fake.mountDeviceFlowArgsForCall[i].mountPoint, fake.mountDeviceFlowArgsForCall[i].k8sMountPoint
 }
 
 func (fake *FakeBlockDeviceMounterUtils) MountDeviceFlowReturns(result1 error) {
