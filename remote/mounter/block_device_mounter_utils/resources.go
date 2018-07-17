@@ -19,7 +19,7 @@ package block_device_mounter_utils
 //go:generate counterfeiter -o ../fakes/fake_block_device_mounter_utils.go . BlockDeviceMounterUtils
 type BlockDeviceMounterUtils interface {
 	RescanAll(withISCSI bool, wwn string, rescanForCleanUp bool) error
-	MountDeviceFlow(devicePath string, fsType string, mountPoint string) error
+	MountDeviceFlow(devicePath string, fsType string, mountPoint string, k8sMountPoint string) error
 	Discover(volumeWwn string, deepDiscovery bool) (string, error)
 	UnmountDeviceFlow(devicePath string) error
 }

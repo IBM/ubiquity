@@ -60,7 +60,7 @@ func newBlockDeviceMounterUtils(blockDeviceUtils block_device_utils.BlockDeviceU
 }
 
 // MountDeviceFlow create filesystem on the device (if needed) and then mount it on a given mountpoint
-func (b *blockDeviceMounterUtils) MountDeviceFlow(devicePath string, fsType string, mountPoint string) error {
+func (b *blockDeviceMounterUtils) MountDeviceFlow(devicePath string, fsType string, mountPoint string, k8sMountPoint string) error {
 	defer b.logger.Trace(logs.INFO, logs.Args{{"devicePath", devicePath}, {"fsType", fsType}, {"mountPoint", mountPoint}})()
 
 	needToCreateFS, err := b.blockDeviceUtils.CheckFs(devicePath)
@@ -82,6 +82,9 @@ func (b *blockDeviceMounterUtils) MountDeviceFlow(devicePath string, fsType stri
 	if isMounted {
 		for _, mountpointi := range mountpointRefs {
 			if mountpointi == mountPoint {
+				// we need to check that there is no one else that is already mounted to this device before we continue.
+				//if checkSlinkOnMountPoint(mountPoint, k8sMountPoint)
+				
 				b.logger.Warning(WarningMessageIdempotentDeviceAlreadyMounted, logs.Args{{"Device", devicePath}, {"mountpoint", mountPoint}})
 				return nil // Indicate idempotent issue
 			}
