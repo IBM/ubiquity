@@ -71,7 +71,7 @@ func getK8sBaseDir(k8sMountPoint string) (string, error ){
 	 if len(out) ==1 {
 	 	return "", &WrongK8sDirectoryPathError{k8sMountPoint}
 	 }
-	 return fmt.Sprint("%s%spods",out[0], os.PathSeparator), nil
+	 return fmt.Sprintf("%s%spods",out[0], os.PathSeparator), nil
 }
 
 func (b *blockDeviceMounterUtils) checkSlinkAlreadyExistsOnMountPoint (mountPoint string, k8sMountPoint string) (bool, error, []string){
