@@ -23,9 +23,16 @@ import (
 	"os"
 	"path/filepath"
 	"time"
+	"fmt"
+	"github.com/IBM/ubiquity/utils"
+	"strings"
 )
 
-const WarningMessageIdempotentDeviceAlreadyMounted = "Device is already mounted, so skip mounting (Idempotent)."
+
+const (
+	WarningMessageIdempotentDeviceAlreadyMounted = "Device is already mounted, so skip mounting (Idempotent)."
+	TimeoutMilisecondFindCommand = 30 * 1000     // max to wait for mount command
+)
 
 type blockDeviceMounterUtils struct {
 	logger           logs.Logger
@@ -59,6 +66,53 @@ func newBlockDeviceMounterUtils(blockDeviceUtils block_device_utils.BlockDeviceU
 	}
 }
 
+func getK8sBaseDir(k8sMountPoint string) (string, error ){
+	 out := strings.Split(k8sMountPoint, "pods")
+	 if len(out) ==1 {
+	 	return "", &WrongK8sDirectoryPathError{k8sMountPoint}
+	 }
+	 return fmt.Sprint("%s%spods",out[0], os.PathSeparator), nil
+}
+
+func (b *blockDeviceMounterUtils) checkSlinkAlreadyExistsOnMountPoint (mountPoint string, k8sMountPoint string) (bool, error, []string){
+	// get all the simlinks pointing to the mountpoint from the k8smountpoint base dir:
+	// find -L /var/lib/kubelet/pods/ -samefile /ubiquity/6001738CFC9035EB0000000000D0AA16c
+	b.logger.Debug(fmt.Sprintf("mountPoint : %s k8sMountPoint : %s", mountPoint, k8sMountPoint))
+	exec := utils.NewExecutor()
+	k8sBaseDir, err := getK8sBaseDir(k8sMountPoint)
+	if err != nil{
+		return false, err, nil
+	}
+	b.logger.Debug(fmt.Sprintf("k8sBaseDir : %s", k8sBaseDir))
+	
+	args := []string{"-L", k8sBaseDir, "-samefile", mountPoint}
+	FindCmd := "find"
+	out, err := exec.ExecuteWithTimeout(TimeoutMilisecondFindCommand, FindCmd, args)
+	b.logger.Debug(fmt.Sprintf("outpuit from execute with command . out : %s err : %s", out, err))
+	if err != nil {
+		return false, err, nil
+	}
+	slinkList := strings.Fields(string(out[:]))
+	
+	b.logger.Debug(fmt.Sprintf("Slinks : %s", slinkList))
+	if len(slinkList) == 0 {
+		return false, nil, nil
+	}
+	
+	// now we want to check if there is some other slink other then ours pointing to this moutnpoint
+	if len(slinkList) > 1 {
+		return true, nil, slinkList
+	}
+	
+	slink := slinkList[0]
+	b.logger.Debug(fmt.Sprintf("is Slink : %s == k8smount poin : %s . res : ", slink,k8sMountPoint, slink == k8sMountPoint ))
+	if slink != k8sMountPoint{
+		return true, nil, slinkList
+	}
+	
+	return false, nil, nil
+}
+
 // MountDeviceFlow create filesystem on the device (if needed) and then mount it on a given mountpoint
 func (b *blockDeviceMounterUtils) MountDeviceFlow(devicePath string, fsType string, mountPoint string, k8sMountPoint string) error {
 	defer b.logger.Trace(logs.INFO, logs.Args{{"devicePath", devicePath}, {"fsType", fsType}, {"mountPoint", mountPoint}})()
@@ -83,7 +137,15 @@ func (b *blockDeviceMounterUtils) MountDeviceFlow(devicePath string, fsType stri
 		for _, mountpointi := range mountpointRefs {
 			if mountpointi == mountPoint {
 				// we need to check that there is no one else that is already mounted to this device before we continue.
-				//if checkSlinkOnMountPoint(mountPoint, k8sMountPoint)
+				b.logger.Debug(fmt.Sprintf("k8s mount point : %s", k8sMountPoint))
+				doesSlinkExists, err, slinkList := b.checkSlinkAlreadyExistsOnMountPoint(mountPoint, k8sMountPoint)
+				if err!= nil {
+					b.logger.ErrorRet(err, "fail")
+				}
+				if doesSlinkExists{
+					// there is someone else that is mounted to this mount point
+					return b.logger.ErrorRet(&PVCIsAlreadyUsedByAnotherPod{mountPoint, slinkList}, "fail")
+				}
 				
 				b.logger.Warning(WarningMessageIdempotentDeviceAlreadyMounted, logs.Args{{"Device", devicePath}, {"mountpoint", mountPoint}})
 				return nil // Indicate idempotent issue
