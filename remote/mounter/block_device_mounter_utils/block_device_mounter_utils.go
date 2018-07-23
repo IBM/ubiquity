@@ -78,7 +78,6 @@ func (b *blockDeviceMounterUtils) checkSlinkAlreadyExistsOnMountPoint (mountPoin
 	// get all the simlinks pointing to the mountpoint from the k8smountpoint base dir:
 	// find -L /var/lib/kubelet/pods/ -samefile /ubiquity/6001738CFC9035EB0000000000D0AA16c
 	b.logger.Debug(fmt.Sprintf("mountPoint : %s k8sMountPoint : %s", mountPoint, k8sMountPoint))
-	exec := utils.NewExecutor()
 	k8sBaseDir, err := getK8sBaseDir(k8sMountPoint)	
 	if err != nil{
 		return false, err, nil
