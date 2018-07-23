@@ -90,40 +90,33 @@ func (b *blockDeviceMounterUtils) checkSlinkAlreadyExistsOnMountPoint (mountPoin
 	files, _ := filepath.Glob(file_pattern)
 	b.logger.Debug(fmt.Sprintf("files: %s", files))
 	
+	slinks := []string{}
+	
 	// trying to use samefile
 	for _, file := range files {
 		fileStat, _ := os.Stat(file)
 		mountStat, _ := os.Stat(mountPoint)
 		res := os.SameFile(fileStat, mountStat)
-		b.logger.Debug(fmt.Sprintf("is sae file file 1: %s, file2: %s res: %s", files[0],mountPoint, res))
-		lstat_out, _ := os.Lstat(file)
-		b.logger.Debug(fmt.Sprintf("lstat_out: %s",lstat_out))
-	
+		b.logger.Debug(fmt.Sprintf("is same file file 1: %s, file2: %s res: %s", file,mountPoint, res))
+		if res == true{
+			slinks = append(slinks, file)
+		}
 	}
-	
-	args := []string{"-L", k8sBaseDir, "-samefile", mountPoint}
-	FindCmd := "find"
-	out, err := exec.ExecuteWithTimeout(TimeoutMilisecondFindCommand, FindCmd, args)
-	b.logger.Debug(fmt.Sprintf("outpuit from execute with command . out : %s err : %s", out, err))
-	if err != nil {
-		return false, err, nil
-	}
-	slinkList := strings.Fields(string(out[:]))
-	
-	b.logger.Debug(fmt.Sprintf("Slinks : %s", slinkList))
-	if len(slinkList) == 0 {
+		
+	b.logger.Debug(fmt.Sprintf("Slinks : %s", slinks))
+	if len(slinks) == 0 {
 		return false, nil, nil
 	}
 	
 	// now we want to check if there is some other slink other then ours pointing to this moutnpoint
-	if len(slinkList) > 1 {
-		return true, nil, slinkList
+	if len(slinks) > 1 {
+		return true, nil, slinks
 	}
 	
-	slink := slinkList[0]
+	slink := slinks[0]
 	b.logger.Debug(fmt.Sprintf("is Slink : %s == k8smount poin : %s . res : ", slink,k8sMountPoint, slink == k8sMountPoint ))
 	if slink != k8sMountPoint{
-		return true, nil, slinkList
+		return true, nil, slinks
 	}
 	
 	return false, nil, nil
