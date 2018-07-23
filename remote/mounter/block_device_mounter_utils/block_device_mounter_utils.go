@@ -24,7 +24,6 @@ import (
 	"path/filepath"
 	"time"
 	"fmt"
-	"github.com/IBM/ubiquity/utils"
 	"strings"
 )
 
