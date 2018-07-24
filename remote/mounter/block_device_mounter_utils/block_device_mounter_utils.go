@@ -27,10 +27,11 @@ import (
 	"strings"
 )
 
-
 const (
 	WarningMessageIdempotentDeviceAlreadyMounted = "Device is already mounted, so skip mounting (Idempotent)."
 	TimeoutMilisecondFindCommand = 30 * 1000     // max to wait for mount command
+	K8sPodsDirecotryName = "pods"
+	
 )
 
 type blockDeviceMounterUtils struct {
@@ -65,55 +66,63 @@ func newBlockDeviceMounterUtils(blockDeviceUtils block_device_utils.BlockDeviceU
 	}
 }
 
-func getK8sBaseDir(k8sMountPoint string) (string, error ){
-	 out := strings.Split(k8sMountPoint, "pods")
+func (b *blockDeviceMounterUtils) getK8sBaseDir(k8sMountPoint string) (string, error ){
+	/*
+		we want to get from this kind of dir:
+			/var/lib/kubelet/pods/1f94f1d9-8f36-11e8-b227-005056a4d4cb/volumes/ibm~ubiquity-k8s-flex/...
+		to /var/lib/kubelet/pods/
+		note: /var/lib can be changed in configuration so we need to get the base dir at runtime
+	*/ 
+	 out := strings.Split(k8sMountPoint, K8sPodsDirecotryName)
 	 if len(out) ==1 {
 	 	return "", &WrongK8sDirectoryPathError{k8sMountPoint}
 	 }
-	 return filepath.Join(out[0], "pods") , nil
+	 return filepath.Join(out[0], K8sPodsDirecotryName) , nil
 }
 
-func (b *blockDeviceMounterUtils) checkSlinkAlreadyExistsOnMountPoint (mountPoint string, k8sMountPoint string) (bool, error, []string){
-	// get all the simlinks pointing to the mountpoint from the k8smountpoint base dir:
-	// find -L /var/lib/kubelet/pods/ -samefile /ubiquity/6001738CFC9035EB0000000000D0AA16c
-	b.logger.Debug(fmt.Sprintf("mountPoint : %s k8sMountPoint : %s", mountPoint, k8sMountPoint))
-	k8sBaseDir, err := getK8sBaseDir(k8sMountPoint)	
+func (b *blockDeviceMounterUtils) checkSlinkAlreadyExistsOnMountPoint(mountPoint string, k8sMountPoint string) (bool, error, []string){
+	/*
+		returned params:
+			1. bool: is this pvc already used,
+			2. error : did an error occure in the check process
+			3. slinks : the list of slinks found so that an appropriate error could be returned,
+	*/
+	
+	defer b.logger.Trace(logs.INFO, logs.Args{{"mountPoint", mountPoint}, {"k8sMountPoint", k8sMountPoint}})()
+	
+	k8sBaseDir, err := b.getK8sBaseDir(k8sMountPoint)	
 	if err != nil{
 		return false, err, nil
 	}
-	b.logger.Debug(fmt.Sprintf("base dir : %s", k8sBaseDir))
-	
+		
 	file_pattern := filepath.Join(k8sBaseDir, "*","volumes", "ibm~ubiquity-k8s-flex","*")
-	b.logger.Debug(fmt.Sprintf("file_pattern: %s", file_pattern))
 	files, _ := filepath.Glob(file_pattern)
-	b.logger.Debug(fmt.Sprintf("files: %s", files))
 	
 	slinks := []string{}
 	
-	// trying to use samefile
+	// we will go over the files and check if any of them is the same as our destinated mountpoint
 	for _, file := range files {
 		fileStat, _ := os.Stat(file)
 		mountStat, _ := os.Stat(mountPoint)
-		res := os.SameFile(fileStat, mountStat)
-		b.logger.Debug(fmt.Sprintf("is same file file 1: %s, file2: %s res: %s", file,mountPoint, res))
-		if res == true{
+		isSameFile := os.SameFile(fileStat, mountStat)
+		if isSameFile{
 			slinks = append(slinks, file)
 		}
 	}
 		
-	b.logger.Debug(fmt.Sprintf("Slinks : %s", slinks))
 	if len(slinks) == 0 {
+		// no slinks pointing to the mountpoint so we can continue mount process
 		return false, nil, nil
 	}
 	
-	// now we want to check if there is some other slink other then ours pointing to this moutnpoint
 	if len(slinks) > 1 {
+		// if there are more then 1 link already pointing to the mountpoint it is obviously used.
 		return true, nil, slinks
 	}
 	
 	slink := slinks[0]
-	b.logger.Debug(fmt.Sprintf("is Slink : %s == k8smount poin : %s . res : ", slink,k8sMountPoint, slink == k8sMountPoint ))
 	if slink != k8sMountPoint{
+		// if the current link is not our volume then this pvc is in use
 		return true, nil, slinks
 	}
 	
