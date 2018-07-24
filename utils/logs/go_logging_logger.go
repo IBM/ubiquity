@@ -121,7 +121,8 @@ func (l *goLoggingLogger) ErrorRet(err error, str string, args ...Args) error {
 }
 
 func (l *goLoggingLogger) Warning(str string, args ...Args) {
-	l.logger.Warning(str+" %v", args)
+	goid_context_string := l.getContextStringFromGoid()
+	l.logger.Warning(fmt.Sprintf("[%s] %s %v", goid_context_string, str, args))
 }
 
 func (l *goLoggingLogger) Trace(level Level, args ...Args) func() {
