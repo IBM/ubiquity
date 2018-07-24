@@ -542,9 +542,9 @@ var _ = Describe("scbeLocalClient", func() {
 			attachTo, ok := volConfig[resources.ScbeKeyVolAttachToHost]
 			Expect(ok).To(Equal(true))
 			Expect(attachTo).To(Equal(fakeHost))
-			volNumber, ok := volConfig[resources.ScbeKeyVolAttachLunNumToHost]
+			lunNumber, ok := volConfig[resources.ScbeKeyVolAttachLunNumToHost]
 			Expect(ok).To(Equal(true))
-			Expect(volNumber).To(Equal(0))
+			Expect(lunNumber).To(Equal(0))
 
 
 

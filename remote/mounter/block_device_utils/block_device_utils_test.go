@@ -45,7 +45,7 @@ var _ = Describe("block_device_utils_test", func() {
 
 	Context(".Rescan", func() {
 		It("Rescan ISCSI calls 'sudo iscsiadm -m session --rescan'", func() {
-			err = bdUtils.Rescan(block_device_utils.ISCSI)
+			err = bdUtils.Rescan(block_device_utils.ISCSI, "")
 			Expect(err).ToNot(HaveOccurred())
 			Expect(fakeExec.ExecuteCallCount()).To(Equal(1))
 			cmd, args := fakeExec.ExecuteArgsForCall(0)
@@ -53,7 +53,7 @@ var _ = Describe("block_device_utils_test", func() {
 			Expect(args).To(Equal([]string{"-m", "session", "--rescan"}))
 		})
 		It("Rescan SCSI calls 'sudo rescan-scsi-bus -r'", func() {
-			err = bdUtils.Rescan(block_device_utils.SCSI)
+			err = bdUtils.Rescan(block_device_utils.SCSI, "-r")
 			Expect(err).ToNot(HaveOccurred())
 			Expect(fakeExec.ExecuteCallCount()).To(Equal(1))
 			cmd, args := fakeExec.ExecuteArgsForCall(0)
@@ -61,7 +61,7 @@ var _ = Describe("block_device_utils_test", func() {
 			Expect(args).To(Equal([]string{"-r"}))
 		})
 		It("Rescan FC calls 'sudo rescan-scsi-bus -a'", func() {
-			err = bdUtils.Rescan(block_device_utils.FC)
+			err = bdUtils.Rescan(block_device_utils.SCSI, "-a")
 			Expect(err).ToNot(HaveOccurred())
 			Expect(fakeExec.ExecuteCallCount()).To(Equal(1))
 			cmd, args := fakeExec.ExecuteArgsForCall(0)
@@ -70,7 +70,7 @@ var _ = Describe("block_device_utils_test", func() {
 		})
 		It("Rescan ISCSI fails if iscsiadm command missing", func() {
 			fakeExec.IsExecutableReturns(cmdErr)
-			err = bdUtils.Rescan(block_device_utils.ISCSI)
+			err = bdUtils.Rescan(block_device_utils.ISCSI, "")
 			Expect(err).To(HaveOccurred())
 			Expect(err.Error()).To(MatchRegexp(cmdErr.Error()))
 			Expect(fakeExec.ExecuteCallCount()).To(Equal(0))
@@ -79,7 +79,7 @@ var _ = Describe("block_device_utils_test", func() {
 		})
 		It("Rescan SCSI fails if rescan-scsi-bus command missing", func() {
 			fakeExec.IsExecutableReturns(cmdErr)
-			err = bdUtils.Rescan(block_device_utils.SCSI)
+			err = bdUtils.Rescan(block_device_utils.SCSI, "-r")
 			Expect(err).To(HaveOccurred())
 			Expect(fakeExec.ExecuteCallCount()).To(Equal(0))
 			Expect(fakeExec.IsExecutableCallCount()).To(Equal(2))
@@ -88,16 +88,20 @@ var _ = Describe("block_device_utils_test", func() {
 		})
 		It("Rescan ISCSI fails if iscsiadm execution fails", func() {
 			fakeExec.ExecuteReturns([]byte{}, cmdErr)
-			err = bdUtils.Rescan(block_device_utils.ISCSI)
+			err = bdUtils.Rescan(block_device_utils.ISCSI, "")
 			Expect(err.Error()).To(MatchRegexp(cmdErr.Error()))
 		})
 		It("Rescan SCSI fails if rescan-scsi-bus execution fails", func() {
 			fakeExec.ExecuteReturns([]byte{}, cmdErr)
-			err = bdUtils.Rescan(block_device_utils.SCSI)
+			err = bdUtils.Rescan(block_device_utils.SCSI, "-r")
 			Expect(err.Error()).To(MatchRegexp(cmdErr.Error()))
 		})
+		It("Rescan fails if unsupported Scan Attribute", func() {
+			err = bdUtils.Rescan(block_device_utils.SCSI, "-g")
+			Expect(err).To(HaveOccurred())
+		})
 		It("Rescan fails if unknown protocol", func() {
-			err = bdUtils.Rescan(3)
+			err = bdUtils.Rescan(3, "")
 			Expect(err).To(HaveOccurred())
 		})
 	})

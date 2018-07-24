@@ -21,16 +21,20 @@ import (
 	"github.com/IBM/ubiquity/utils/logs"
 )
 
-func (b *blockDeviceUtils) Rescan(protocol Protocol) error {
+func (b *blockDeviceUtils) Rescan(protocol Protocol, scanAttr string) error {
 	defer b.logger.Trace(logs.DEBUG)()
 
 	switch protocol {
 	case SCSI:
-		return b.RescanSCSI("-r")
+		if scanAttr == "-r"{
+			return b.RescanSCSI("-r")
+		}else if scanAttr == "-a"{
+			return b.RescanSCSI("-a")
+		}else{
+			return b.logger.ErrorRet(&unsupportedScanAttrError{scanAttr}, "failed")
+		}
 	case ISCSI:
 		return b.RescanISCSI()
-	case FC:
-		return b.RescanSCSI("-a")
 	default:
 		return b.logger.ErrorRet(&unsupportedProtocolError{protocol}, "failed")
 	}

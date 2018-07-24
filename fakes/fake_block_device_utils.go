@@ -8,10 +8,11 @@ import (
 )
 
 type FakeBlockDeviceUtils struct {
-	RescanStub        func(protocol block_device_utils.Protocol) error
+	RescanStub        func(protocol block_device_utils.Protocol, scanAttr string) error
 	rescanMutex       sync.RWMutex
 	rescanArgsForCall []struct {
 		protocol block_device_utils.Protocol
+		scanAttr string
 	}
 	rescanReturns struct {
 		result1 error
@@ -147,16 +148,17 @@ type FakeBlockDeviceUtils struct {
 	invocationsMutex sync.RWMutex
 }
 
-func (fake *FakeBlockDeviceUtils) Rescan(protocol block_device_utils.Protocol) error {
+func (fake *FakeBlockDeviceUtils) Rescan(protocol block_device_utils.Protocol, scanAttr string) error {
 	fake.rescanMutex.Lock()
 	ret, specificReturn := fake.rescanReturnsOnCall[len(fake.rescanArgsForCall)]
 	fake.rescanArgsForCall = append(fake.rescanArgsForCall, struct {
 		protocol block_device_utils.Protocol
-	}{protocol})
-	fake.recordInvocation("Rescan", []interface{}{protocol})
+		scanAttr string
+	}{protocol, scanAttr})
+	fake.recordInvocation("Rescan", []interface{}{protocol, scanAttr})
 	fake.rescanMutex.Unlock()
 	if fake.RescanStub != nil {
-		return fake.RescanStub(protocol)
+		return fake.RescanStub(protocol, scanAttr)
 	}
 	if specificReturn {
 		return ret.result1
@@ -170,10 +172,10 @@ func (fake *FakeBlockDeviceUtils) RescanCallCount() int {
 	return len(fake.rescanArgsForCall)
 }
 
-func (fake *FakeBlockDeviceUtils) RescanArgsForCall(i int) block_device_utils.Protocol {
+func (fake *FakeBlockDeviceUtils) RescanArgsForCall(i int) (block_device_utils.Protocol, string) {
 	fake.rescanMutex.RLock()
 	defer fake.rescanMutex.RUnlock()
-	return fake.rescanArgsForCall[i].protocol
+	return fake.rescanArgsForCall[i].protocol, fake.rescanArgsForCall[i].scanAttr
 }
 
 func (fake *FakeBlockDeviceUtils) RescanReturns(result1 error) {

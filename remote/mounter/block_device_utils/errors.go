@@ -64,6 +64,14 @@ func (e *unsupportedProtocolError) Error() string {
 	return fmt.Sprintf("Protocol [%v] is not supported", e.protocol)
 }
 
+type unsupportedScanAttrError struct {
+	scanAttr string
+}
+
+func (e *unsupportedScanAttrError) Error() string {
+	return fmt.Sprintf("Scan Attribute [%v] is not supported", e.scanAttr)
+}
+
 type noRegexWwnMatchInScsiInqError struct {
 	dev string
 	line string
