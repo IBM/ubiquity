@@ -66,7 +66,7 @@ func newBlockDeviceMounterUtils(blockDeviceUtils block_device_utils.BlockDeviceU
 	}
 }
 
-func (b *blockDeviceMounterUtils) getK8sBaseDir(k8sMountPoint string) (string, error ){
+func (b *blockDeviceMounterUtils) GetK8sBaseDir(k8sMountPoint string) (string, error ){
 	/*
 		we want to get from this kind of dir:
 			/var/lib/kubelet/pods/1f94f1d9-8f36-11e8-b227-005056a4d4cb/volumes/ibm~ubiquity-k8s-flex/...
@@ -80,7 +80,7 @@ func (b *blockDeviceMounterUtils) getK8sBaseDir(k8sMountPoint string) (string, e
 	 return filepath.Join(out[0], K8sPodsDirecotryName) , nil
 }
 
-func (b *blockDeviceMounterUtils) checkSlinkAlreadyExistsOnMountPoint(mountPoint string, k8sMountPoint string) (bool, error, []string){
+func (b *blockDeviceMounterUtils) CheckSlinkAlreadyExistsOnMountPoint(mountPoint string, k8sMountPoint string) (bool, error, []string){
 	/*
 		returned params:
 			1. bool: is this pvc already used,
