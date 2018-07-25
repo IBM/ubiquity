@@ -21,7 +21,7 @@ import (
 	"log"
 	"os"
 
-	"github.com/IBM/ubiquity/fakes"
+	"github.com/IBM/ubiquity/utils/utils_fakes"
 	"github.com/IBM/ubiquity/local/spectrumscale/connectors"
 	"github.com/IBM/ubiquity/resources"
 	. "github.com/onsi/ginkgo"
@@ -32,7 +32,7 @@ var _ = Describe("spectrum_mmcli", func() {
 	var (
 		spectrumMMCLI connectors.SpectrumScaleConnector
 		logger        *log.Logger
-		fakeExec      *fakes.FakeExecutor
+		fakeExec      *utils_fakes.FakeExecutor
 		opts          map[string]interface{}
 		err           error
 		fileset       string
@@ -41,7 +41,7 @@ var _ = Describe("spectrum_mmcli", func() {
 
 	BeforeEach(func() {
 		logger = log.New(os.Stdout, "spectrum: ", log.Lshortfile|log.LstdFlags)
-		fakeExec = new(fakes.FakeExecutor)
+		fakeExec = new(utils_fakes.FakeExecutor)
 		spectrumMMCLI, err = connectors.NewSpectrumMMCLIWithExecutor(logger, fakeExec)
 		Expect(err).ToNot(HaveOccurred())
 		fileset = "fake-fileset"

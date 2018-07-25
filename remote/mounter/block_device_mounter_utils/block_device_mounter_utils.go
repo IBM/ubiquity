@@ -25,6 +25,7 @@ import (
 	"time"
 	"fmt"
 	"strings"
+	"github.com/IBM/ubiquity/utils"
 )
 
 const (
@@ -66,7 +67,7 @@ func newBlockDeviceMounterUtils(blockDeviceUtils block_device_utils.BlockDeviceU
 	}
 }
 
-func (b *blockDeviceMounterUtils) GetK8sBaseDir(k8sMountPoint string) (string, error ){
+func getK8sBaseDir(k8sMountPoint string) (string, error ){
 	/*
 		we want to get from this kind of dir:
 			/var/lib/kubelet/pods/1f94f1d9-8f36-11e8-b227-005056a4d4cb/volumes/ibm~ubiquity-k8s-flex/...
@@ -80,7 +81,7 @@ func (b *blockDeviceMounterUtils) GetK8sBaseDir(k8sMountPoint string) (string, e
 	 return filepath.Join(out[0], K8sPodsDirecotryName) , nil
 }
 
-func (b *blockDeviceMounterUtils) CheckSlinkAlreadyExistsOnMountPoint(mountPoint string, k8sMountPoint string) (bool, error, []string){
+func checkSlinkAlreadyExistsOnMountPoint(mountPoint string, k8sMountPoint string, logger logs.Logger, executer utils.Executor) (bool, error, []string){
 	/*
 		returned params:
 			1. bool: is this pvc already used,
@@ -88,23 +89,32 @@ func (b *blockDeviceMounterUtils) CheckSlinkAlreadyExistsOnMountPoint(mountPoint
 			3. slinks : the list of slinks found so that an appropriate error could be returned,
 	*/
 	
-	defer b.logger.Trace(logs.INFO, logs.Args{{"mountPoint", mountPoint}, {"k8sMountPoint", k8sMountPoint}})()
+	defer logger.Trace(logs.INFO, logs.Args{{"mountPoint", mountPoint}, {"k8sMountPoint", k8sMountPoint}})()
 	
-	k8sBaseDir, err := b.getK8sBaseDir(k8sMountPoint)	
+	k8sBaseDir, err := getK8sBaseDir(k8sMountPoint)	
 	if err != nil{
 		return false, err, nil
 	}
 		
 	file_pattern := filepath.Join(k8sBaseDir, "*","volumes", "ibm~ubiquity-k8s-flex","*")
-	files, _ := filepath.Glob(file_pattern)
+	files, err := executer.GetGlobFiles(file_pattern)
+	if err != nil{
+			return false, err, nil
+	}
 	
 	slinks := []string{}
 	
 	// we will go over the files and check if any of them is the same as our destinated mountpoint
 	for _, file := range files {
-		fileStat, _ := os.Stat(file)
-		mountStat, _ := os.Stat(mountPoint)
-		isSameFile := os.SameFile(fileStat, mountStat)
+		fileStat, err := executer.Stat(file)
+		if err != nil{
+			return false, err, nil
+		}
+		mountStat, err := executer.Stat(mountPoint)
+		if err != nil{
+			return false, err, nil
+		}
+		isSameFile := executer.IsSameFile(fileStat, mountStat)
 		if isSameFile{
 			slinks = append(slinks, file)
 		}
@@ -154,7 +164,8 @@ func (b *blockDeviceMounterUtils) MountDeviceFlow(devicePath string, fsType stri
 			if mountpointi == mountPoint {
 				// we need to check that there is no one else that is already mounted to this device before we continue.
 				b.logger.Debug(fmt.Sprintf("k8s mount point : %s", k8sMountPoint))
-				doesSlinkExists, err, slinkList := b.checkSlinkAlreadyExistsOnMountPoint(mountPoint, k8sMountPoint)
+				executer := utils.NewExecutor()
+				doesSlinkExists, err, slinkList := checkSlinkAlreadyExistsOnMountPoint(mountPoint, k8sMountPoint, b.logger, executer)
 				if err!= nil {
 					b.logger.ErrorRet(err, "fail")
 				}
