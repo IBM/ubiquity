@@ -77,7 +77,7 @@ var _ = Describe("block_device_mounter_utils_test", func() {
 			fakeBlockDeviceUtils.MakeFsReturns(nil)
 			fakeBlockDeviceUtils.IsDeviceMountedReturns(true, []string{"fake_mountp"}, nil)
 
-			err = blockDeviceMounterUtils.MountDeviceFlow("fake_device", "fake_fstype", "fake_mountp", "fake_k8s_path")
+			err = blockDeviceMounterUtils.MountDeviceFlow("fake_device", "fake_fstype", "fake_mountp", "/tmp/pods/fake_k8s_path")
 
 			Expect(err).NotTo(HaveOccurred())
 			Expect(fakeBlockDeviceUtils.CheckFsCallCount()).To(Equal(1))

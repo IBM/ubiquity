@@ -2,11 +2,12 @@ package block_device_mounter_utils
 
 import (
 	"fmt"
-
+	"testing"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"github.com/IBM/ubiquity/utils/logs"
 	"github.com/IBM/ubiquity/utils/utils_fakes"
+	"github.com/IBM/ubiquity/utils"
 )
 
 var _ = Describe("block_device_mounter_utils_private_tests", func() {
@@ -29,7 +30,7 @@ var _ = Describe("block_device_mounter_utils_private_tests", func() {
 			Expect(res).To(Equal(""))
 		})
 	})
-	Context(".checkSlinkAlreadyEistsOnMountPoint", func() {
+	Context(".checkSlinkAlreadyExistsOnMountPoint", func() {
 		var (
 			fakeExecutor *utils_fakes.FakeExecutor
 		)
@@ -105,3 +106,10 @@ var _ = Describe("block_device_mounter_utils_private_tests", func() {
 		})
 	})
 })
+
+func TestGetBlockDeviceUtilsInternal(t *testing.T) {
+	RegisterFailHandler(Fail)
+	defer utils.InitUbiquityServerTestLogger()()
+	RunSpecs(t, "BlockDeviceMounterUtilsInternal Test Suite")
+}
+
