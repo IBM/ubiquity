@@ -5,11 +5,8 @@ import (
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
-	//"os"
 	"github.com/IBM/ubiquity/utils/logs"
 	"github.com/IBM/ubiquity/utils/utils_fakes"
-	//"github.com/IBM/ubiquity/remote/mounter/block_device_utils/block_device_utils_fakes"
-	//"errors"
 )
 
 var _ = Describe("block_device_mounter_utils_private_tests", func() {

@@ -188,6 +188,13 @@ var _ = Describe("block_device_mounter_utils_test", func() {
 			Expect(fakeBlockDeviceUtils.MakeFsCallCount()).To(Equal(0))
 			Expect(fakeBlockDeviceUtils.MountFsCallCount()).To(Equal(1))
 		})
+		It("should fail if checkSlink fails", func() {
+			fakeBlockDeviceUtils.IsDeviceMountedReturns(true, []string{"fake_mountp"}, nil)
+			err = blockDeviceMounterUtils.MountDeviceFlow("fake_device", "fake_fstype", "fake_mountp", "fake_k8s_path")
+			Expect(err).To(HaveOccurred())
+			Expect(fakeBlockDeviceUtils.MakeFsCallCount()).To(Equal(0))
+			Expect(fakeBlockDeviceUtils.MountFsCallCount()).To(Equal(0))
+		})
 	})
 	Context(".RescanAll", func() {
 		It("should succeed to skip rescan we try to rescan(for discover) a wwn that is already descovered", func() {

@@ -167,13 +167,12 @@ func (b *blockDeviceMounterUtils) MountDeviceFlow(devicePath string, fsType stri
 				executer := utils.NewExecutor()
 				doesSlinkExists, err, slinkList := checkSlinkAlreadyExistsOnMountPoint(mountPoint, k8sMountPoint, b.logger, executer)
 				if err!= nil {
-					b.logger.ErrorRet(err, "fail")
+					return b.logger.ErrorRet(err, "fail")
 				}
 				if doesSlinkExists{
 					// there is someone else that is mounted to this mount point
 					return b.logger.ErrorRet(&PVCIsAlreadyUsedByAnotherPod{mountPoint, slinkList}, "fail")
 				}
-				
 				b.logger.Warning(WarningMessageIdempotentDeviceAlreadyMounted, logs.Args{{"Device", devicePath}, {"mountpoint", mountPoint}})
 				return nil // Indicate idempotent issue
 			}
