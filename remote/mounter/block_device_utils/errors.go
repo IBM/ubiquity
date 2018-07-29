@@ -36,12 +36,12 @@ func (e *commandExecuteError) Error() string {
 	return fmt.Sprintf("command [%v] execution failure [%v]", e.cmd, e.err)
 }
 
-type volumeNotFoundError struct {
-	volName string
+type VolumeNotFoundError struct {
+	VolName string
 }
 
-func (e *volumeNotFoundError) Error() string {
-	return fmt.Sprintf("volume [%v] is not found", e.volName)
+func (e *VolumeNotFoundError) Error() string {
+	return fmt.Sprintf("volume [%v] is not found", e.VolName)
 }
 
 type wrongDeviceFoundError struct {

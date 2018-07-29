@@ -3,6 +3,8 @@ package mounter
 import (
 	"github.com/IBM/ubiquity/resources"
 	"github.com/IBM/ubiquity/utils/logs"
+	"github.com/IBM/ubiquity/utils"
+	"github.com/IBM/ubiquity/remote/mounter/block_device_mounter_utils"
 	"log"
 )
 
@@ -30,7 +32,9 @@ func (m *mounterFactory) GetMounterPerBackend(backend string, legacyLogger *log.
 	} else if backend == resources.SoftlayerNFS || backend == resources.SpectrumScaleNFS {
 		return NewNfsMounter(legacyLogger), nil
 	} else if backend == resources.SCBE {
-		return NewScbeMounter(pluginConfig.ScbeRemoteConfig), nil
+		blockDeviceMounterUtils := block_device_mounter_utils.NewBlockDeviceMounterUtils()
+		executer := utils.NewExecutor()
+		return NewScbeMounter(pluginConfig.ScbeRemoteConfig, blockDeviceMounterUtils, executer), nil
 	} else {
 		return nil, &NoMounterForVolumeError{backend}
 	}
