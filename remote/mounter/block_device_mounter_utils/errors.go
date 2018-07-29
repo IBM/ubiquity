@@ -38,13 +38,13 @@ func (e *DirPathAlreadyMountedToWrongDevice) Error() string {
 		e.mountPoint, e.unexpectedDevicesRefs, e.expectedDevice)
 }
 
-type PVCIsAlreadyUsedByAnotherPod struct {
+type PVIsAlreadyUsedByAnotherPod struct {
 	mountpoint string
 	slink      []string
 }
 
-func (e *PVCIsAlreadyUsedByAnotherPod) Error() string {
-	return fmt.Sprintf("PVC is already in use by another pod and has an existing slink to mountpoint. mountpoint=[%s], slinks=[%s]", e.mountpoint, e.slink)
+func (e *PVIsAlreadyUsedByAnotherPod) Error() string {
+	return fmt.Sprintf("PV is already in use by another pod and has an existing slink to mountpoint. mountpoint=[%s], slinks=[%s]", e.mountpoint, e.slink)
 }
 
 type WrongK8sDirectoryPathError struct {
@@ -52,5 +52,5 @@ type WrongK8sDirectoryPathError struct {
 }
 
 func (e *WrongK8sDirectoryPathError) Error() string {
-	return fmt.Sprintf("Expected to find \"pods\" directory in k8s mount path. k8smountdir=[%s]", e.k8smountdir)
+	return fmt.Sprintf("Expected to find \"%s\" directory in k8s mount path. k8smountdir=[%s]", K8sPodsDirecotryName, e.k8smountdir)
 }
