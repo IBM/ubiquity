@@ -27,7 +27,7 @@ import (
 	"time"
 )
 
-//go:generate counterfeiter -o ./utils_fakes/fake_executor.go . Executor
+//go:generate counterfeiter -o ../fakes/fake_executor.go . Executor
 type Executor interface { // basic host dependent functions
 	Execute(command string, args []string) ([]byte, error)
 	Stat(string) (os.FileInfo, error)

@@ -21,7 +21,7 @@ import (
 	"fmt"
 	"github.com/IBM/ubiquity/remote/mounter/block_device_utils"
 	"github.com/IBM/ubiquity/utils"
-	"github.com/IBM/ubiquity/utils/utils_fakes"
+	"github.com/IBM/ubiquity/fakes"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -32,14 +32,14 @@ import (
 
 var _ = Describe("block_device_utils_test", func() {
 	var (
-		fakeExec *utils_fakes.FakeExecutor
+		fakeExec *fakes.FakeExecutor
 		bdUtils  block_device_utils.BlockDeviceUtils
 		err      error
 		cmdErr   error = errors.New("command error")
 	)
 
 	BeforeEach(func() {
-		fakeExec = new(utils_fakes.FakeExecutor)
+		fakeExec = new(fakes.FakeExecutor)
 		bdUtils = block_device_utils.NewBlockDeviceUtilsWithExecutor(fakeExec)
 	})
 

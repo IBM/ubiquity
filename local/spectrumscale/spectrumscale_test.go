@@ -28,7 +28,6 @@ import (
 
 	"github.com/IBM/ubiquity/fakes"
 	"github.com/IBM/ubiquity/resources"
-	"github.com/IBM/ubiquity/utils/utils_fakes"
 )
 
 var _ = Describe("local-client", func() {
@@ -37,7 +36,7 @@ var _ = Describe("local-client", func() {
 		logger                     *log.Logger
 		fakeSpectrumScaleConnector *fakes.FakeSpectrumScaleConnector
 		fakeSpectrumDataModel      *fakes.FakeSpectrumDataModel
-		fakeExec                   *utils_fakes.FakeExecutor
+		fakeExec                   *fakes.FakeExecutor
 		fakeConfig                 resources.SpectrumScaleConfig
 		activateRequest            resources.ActivateRequest
 		createVolumeRequest        resources.CreateVolumeRequest
@@ -54,7 +53,7 @@ var _ = Describe("local-client", func() {
 		logger = log.New(os.Stdout, "ubiquity: ", log.Lshortfile|log.LstdFlags)
 		fakeSpectrumScaleConnector = new(fakes.FakeSpectrumScaleConnector)
 		backends = []string{resources.SpectrumScale}
-		fakeExec = new(utils_fakes.FakeExecutor)
+		fakeExec = new(fakes.FakeExecutor)
 		fakeSpectrumDataModel = new(fakes.FakeSpectrumDataModel)
 		fakeConfig = resources.SpectrumScaleConfig{}
 		activateRequest = resources.ActivateRequest{Backends: backends}

@@ -23,16 +23,11 @@ import (
 	"os"
 	"path/filepath"
 	"time"
-	"fmt"
-	"github.com/IBM/ubiquity/utils"
 )
 
 const (
 	WarningMessageIdempotentDeviceAlreadyMounted = "Device is already mounted, so skip mounting (Idempotent)."
-	TimeoutMilisecondFindCommand = 30 * 1000     // max to wait for mount command
-	K8sPodsDirecotryName = "pods"
-	k8sMountPointvolumeDirectoryName = "ibm~ubiquity-k8s-flex"
-	
+	TimeoutMilisecondFindCommand = 30 * 1000     // max to wait for mount command	
 )
 
 type blockDeviceMounterUtils struct {
@@ -67,82 +62,6 @@ func newBlockDeviceMounterUtils(blockDeviceUtils block_device_utils.BlockDeviceU
 	}
 }
 
-func getK8sPodsBaseDir(k8sMountPoint string) (string, error ){
-	/*
-		function is going to get from this kind of dir:
-			/var/lib/kubelet/pods/1f94f1d9-8f36-11e8-b227-005056a4d4cb/volumes/ibm~ubiquity-k8s-flex/...
-		to /var/lib/kubelet/pods/
-		note: /var/lib can be changed in configuration so we need to get the base dir at runtime
-	*/ 
-	tempMountPoint := k8sMountPoint
-	for i := 0 ; i < 4 ; i++ {
-		tempMountPoint = filepath.Dir(tempMountPoint)
-	}
-		
-	if filepath.Base(tempMountPoint) != K8sPodsDirecotryName{
-		fmt.Println("retugning")
-		return "", &WrongK8sDirectoryPathError{k8sMountPoint}
-	}
-	
-	return tempMountPoint, nil
-}
-
-func checkSlinkAlreadyExistsOnMountPoint(mountPoint string, k8sMountPoint string, logger logs.Logger, executer utils.Executor) (error){
-
-	defer logger.Trace(logs.INFO, logs.Args{{"mountPoint", mountPoint}, {"k8sMountPoint", k8sMountPoint}})()
-	
-	k8sBaseDir, err := getK8sPodsBaseDir(k8sMountPoint)	
-	if err != nil{
-		return logger.ErrorRet(err, "Failed to get k8s pods base dir.", logs.Args{{"k8sMountPoint", k8sMountPoint}})
-	}
-		
-	file_pattern := filepath.Join(k8sBaseDir, "*","volumes", k8sMountPointvolumeDirectoryName,"*")
-	files, err := executer.GetGlobFiles(file_pattern)
-	if err != nil{
-		return logger.ErrorRet(err, "Failed to get files that match the pattern.", logs.Args{{"file_pattern", file_pattern}})
-	}
-	
-	slinks := []string{}
-	if len(files) == 0 {
-		logger.Debug("No files that match the given pattern were found.", logs.Args{{"pattern", file_pattern}})
-		return nil
-	}
-	
-	mountStat, err := executer.Stat(mountPoint)
-	if err != nil{
-		return logger.ErrorRet(err, "Failed to get stat for mount point file.", logs.Args{{"file", mountPoint}})
-	}
-	
-	// go over the files and check if any of them is the same as our destinated mountpoint
-	for _, file := range files {
-		fileStat, err := executer.Stat(file)
-		if err != nil{
-			return logger.ErrorRet(err, "Failed to get stat for file.", logs.Args{{"file", file}})
-		}
-		
-		isSameFile := executer.IsSameFile(fileStat, mountStat)
-		if isSameFile{
-			slinks = append(slinks, file)
-		}
-	}
-		
-	if len(slinks) == 0 {
-		logger.Debug("There were no soft links pointing to given mountpoint.", logs.Args{{"mountpoint", mountPoint}})
-		return nil
-	}
-	
-	if len(slinks) > 1 {
-		return logger.ErrorRet(&PVIsAlreadyUsedByAnotherPod{mountPoint, slinks}, "More then 1 soft link was pointing to mountpoint.") 
-	}
-	
-	slink := slinks[0]
-	if slink != k8sMountPoint{
-		return logger.ErrorRet(&PVIsAlreadyUsedByAnotherPod{mountPoint, slinks}, "PV is used by another pod.") 
-	}
-	
-	return nil
-}
-
 // MountDeviceFlow create filesystem on the device (if needed) and then mount it on a given mountpoint
 func (b *blockDeviceMounterUtils) MountDeviceFlow(devicePath string, fsType string, mountPoint string, k8sMountPoint string) error {
 	defer b.logger.Trace(logs.INFO, logs.Args{{"devicePath", devicePath}, {"fsType", fsType}, {"mountPoint", mountPoint}})()
@@ -166,13 +85,6 @@ func (b *blockDeviceMounterUtils) MountDeviceFlow(devicePath string, fsType stri
 	if isMounted {
 		for _, mountpointi := range mountpointRefs {
 			if mountpointi == mountPoint {
-				// need to check that there is no one else that is already mounted to this device before we continue.
-				b.logger.Debug(fmt.Sprintf("k8s mount point : %s", k8sMountPoint))
-				executer := utils.NewExecutor()
-				err := checkSlinkAlreadyExistsOnMountPoint(mountPoint, k8sMountPoint, b.logger, executer)
-				if err!= nil {
-					return b.logger.ErrorRet(err, "fail")
-				}
 				b.logger.Warning(WarningMessageIdempotentDeviceAlreadyMounted, logs.Args{{"Device", devicePath}, {"mountpoint", mountPoint}})
 				return nil // Indicate idempotent issue
 			}
