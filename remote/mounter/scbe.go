@@ -32,7 +32,17 @@ type scbeMounter struct {
 	config                  resources.ScbeRemoteConfig
 }
 
-func NewScbeMounter(scbeRemoteConfig resources.ScbeRemoteConfig, blockDeviceMounterUtils block_device_mounter_utils.BlockDeviceMounterUtils, executer utils.Executor) resources.Mounter {
+func NewScbeMounter(scbeRemoteConfig resources.ScbeRemoteConfig) resources.Mounter {
+	blockDeviceMounterUtils := block_device_mounter_utils.NewBlockDeviceMounterUtils()
+	return &scbeMounter{
+		logger:                  logs.GetLogger(),
+		blockDeviceMounterUtils: blockDeviceMounterUtils,
+		exec:   utils.NewExecutor(),
+		config: scbeRemoteConfig,
+	}
+}
+
+func NewScbeMounterWithExecuter(scbeRemoteConfig resources.ScbeRemoteConfig, blockDeviceMounterUtils block_device_mounter_utils.BlockDeviceMounterUtils, executer utils.Executor) resources.Mounter {
 	return &scbeMounter{
 		logger:                  logs.GetLogger(),
 		blockDeviceMounterUtils: blockDeviceMounterUtils,
@@ -40,6 +50,7 @@ func NewScbeMounter(scbeRemoteConfig resources.ScbeRemoteConfig, blockDeviceMoun
 		config: scbeRemoteConfig,
 	}
 }
+
 
 func (s *scbeMounter) Mount(mountRequest resources.MountRequest) (string, error) {
 	defer s.logger.Trace(logs.DEBUG)()

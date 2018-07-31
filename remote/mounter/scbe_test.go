@@ -23,7 +23,7 @@ var _ = Describe("scbe_mounter_test", func() {
 	BeforeEach(func() {
 		fakeExec = new(fakes.FakeExecutor)
 		fakeBdUtils = new(fakes.FakeBlockDeviceMounterUtils)
-		scbeMounter = mounter.NewScbeMounter(resources.ScbeRemoteConfig{}, fakeBdUtils, fakeExec)
+		scbeMounter = mounter.NewScbeMounterWithExecuter(resources.ScbeRemoteConfig{}, fakeBdUtils, fakeExec)
 	})
 
 	Context(".Unmount", func() {
