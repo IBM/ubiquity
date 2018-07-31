@@ -247,8 +247,8 @@ type MountRequest struct {
 	Mountpoint   string
 	VolumeConfig map[string]interface{}
 	Context      RequestContext
-	K8sMountPath string
 }
+
 type UnmountRequest struct {
 	// TODO missing Mountpoint string
 	VolumeConfig map[string]interface{}

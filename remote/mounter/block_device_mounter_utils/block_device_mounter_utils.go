@@ -63,7 +63,7 @@ func newBlockDeviceMounterUtils(blockDeviceUtils block_device_utils.BlockDeviceU
 }
 
 // MountDeviceFlow create filesystem on the device (if needed) and then mount it on a given mountpoint
-func (b *blockDeviceMounterUtils) MountDeviceFlow(devicePath string, fsType string, mountPoint string, k8sMountPoint string) error {
+func (b *blockDeviceMounterUtils) MountDeviceFlow(devicePath string, fsType string, mountPoint string) error {
 	defer b.logger.Trace(logs.INFO, logs.Args{{"devicePath", devicePath}, {"fsType", fsType}, {"mountPoint", mountPoint}})()
 
 	needToCreateFS, err := b.blockDeviceUtils.CheckFs(devicePath)

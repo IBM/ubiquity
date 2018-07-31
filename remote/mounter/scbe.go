@@ -76,7 +76,7 @@ func (s *scbeMounter) Mount(mountRequest resources.MountRequest) (string, error)
 		fstype = fstypeInterface.(string)
 	}
 
-	if err := s.blockDeviceMounterUtils.MountDeviceFlow(devicePath, fstype, mountRequest.Mountpoint, mountRequest.K8sMountPath); err != nil {
+	if err := s.blockDeviceMounterUtils.MountDeviceFlow(devicePath, fstype, mountRequest.Mountpoint); err != nil {
 		return "", s.logger.ErrorRet(err, "MountDeviceFlow failed", logs.Args{{"devicePath", devicePath}})
 	}
 
