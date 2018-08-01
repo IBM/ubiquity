@@ -169,8 +169,13 @@ func (s *simpleRestClient) genericActionInternal(actionName string, resource_url
 	httpDataStr := string(data[:])
 	s.logger.Debug(actionName+" "+url, logs.Args{{"data", httpDataStr}})
 	if response.StatusCode != exitStatus {
-		return s.logger.ErrorRet(&BadHttpStatusCodeError{response.Status, httpDataStr, actionName, url},
-			"failed")
+		return s.logger.ErrorRet(&BadHttpStatusCodeError{
+			httpStatusCode:         response.StatusCode,
+			httpExpectedStatusCode: exitStatus,
+			httpDataStr:            httpDataStr,
+			httpAction:             actionName,
+			httpUrl:                url,
+		}, "failed")
 	}
 
 	if v != nil {
