@@ -206,3 +206,23 @@ type VolumeNotFoundOnArrayError struct {
 func (e *VolumeNotFoundOnArrayError) Error() string {
 	return fmt.Sprintf("[%s] "+VolumeNotFoundOnArrayErrorMsg, e.VolName)
 }
+
+const BadHttpStatusCodeErrorMsg = ScName + " - bad http status code"
+
+type BadHttpStatusCodeError struct {
+	httpStatus string
+	httpData   string
+	httpAction string
+	httpUrl    string
+}
+
+func (e *BadHttpStatusCodeError) Error() string {
+	return fmt.Sprintf("%s [%s]. response data [%s]. request action [%s] and url [%s].",
+		ScName,
+		VolumeNotFoundOnArrayErrorMsg,
+		e.httpStatus,
+		e.httpData,
+		e.httpAction,
+		e.httpUrl,
+	)
+}
