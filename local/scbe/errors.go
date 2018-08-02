@@ -28,8 +28,8 @@ type serviceDoesntExistError struct {
 }
 
 func (e *serviceDoesntExistError) Error() string {
-	return fmt.Sprintf("Cannot create volume [%s] on Spectrum Connect service [%s]. The service does not exist or it is not delegated to the %s interface in [%s]",
-		e.volName, e.serviceName, resources.ScbeInterfaceName, e.scbeName)
+	return fmt.Sprintf("Cannot create volume [%s] on %s service [%s]. The service does not exist or it is not delegated to the %s interface in [%s]",
+		e.volName, ScName, e.serviceName, resources.ScbeInterfaceName, e.scbeName)
 }
 
 type mappingResponseError struct {
@@ -47,8 +47,8 @@ type hostNotFoundvolumeNotFoundError struct {
 }
 
 func (e *hostNotFoundvolumeNotFoundError) Error() string {
-	return fmt.Sprintf("Host name [%s], related to the volume with WWN [%s] was not found on the storage system [%s], according to Spectrum Connect caching data",
-		e.hostName, e.volName, e.arrayName)
+	return fmt.Sprintf("Host name [%s], related to the volume with WWN [%s] was not found on the storage system [%s], according to %s caching data",
+		e.hostName, e.volName, e.arrayName, ScName)
 }
 
 type activateDefaultServiceError struct {
@@ -57,8 +57,8 @@ type activateDefaultServiceError struct {
 }
 
 func (e *activateDefaultServiceError) Error() string {
-	return fmt.Sprintf("Spectrum Connect backend activation error. The default service [%s] does not exist on Spectrum Connect [%s]",
-		e.serviceName, e.scbeName)
+	return fmt.Sprintf("%s backend activation error. The default service [%s] does not exist on %s [%s]",
+		ScName, e.serviceName, ScName, e.scbeName)
 }
 
 type provisionParamMissingError struct {
@@ -197,7 +197,7 @@ func (e *InvalidMappingsForVolume) Error() string {
 	return fmt.Sprintf("Invalid mappings for volume [%s]", e.volWwn)
 }
 
-const VolumeNotFoundOnArrayErrorMsg = "volume was not found on the Spectrum Connect interface."
+const VolumeNotFoundOnArrayErrorMsg = "volume was not found on the " + ScName + " interface."
 
 type VolumeNotFoundOnArrayError struct {
 	VolName string
@@ -205,4 +205,23 @@ type VolumeNotFoundOnArrayError struct {
 
 func (e *VolumeNotFoundOnArrayError) Error() string {
 	return fmt.Sprintf("[%s] "+VolumeNotFoundOnArrayErrorMsg, e.VolName)
+}
+
+type BadHttpStatusCodeError struct {
+	httpStatusCode         int
+	httpExpectedStatusCode int
+	httpDataStr            string
+	httpAction             string
+	httpUrl                string
+}
+
+func (e *BadHttpStatusCodeError) Error() string {
+	return fmt.Sprintf(
+		ScName+" unexpected HTTP status code. HTTP response detail: 'status code'=[%d], 'expected status code'=[%d], 'data'=[%s], 'action'=[%s], 'url'=[%s].",
+		e.httpStatusCode,
+		e.httpExpectedStatusCode,
+		e.httpDataStr,
+		e.httpAction,
+		e.httpUrl,
+	)
 }
