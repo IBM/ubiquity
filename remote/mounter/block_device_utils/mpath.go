@@ -83,7 +83,7 @@ func (b *blockDeviceUtils) Discover(volumeWwn string, deepDiscovery bool) (strin
 		dev, err = b.DiscoverBySgInq(string(outputBytes[:]), volumeWwn)
 		if err != nil {
 			b.logger.Debug(fmt.Sprintf("mpath device was NOT found for WWN [%s] even after sg_inq on all mpath devices.", volumeWwn))
-			return "", b.logger.ErrorRet(&volumeNotFoundError{volumeWwn}, "failed")
+			return "", b.logger.ErrorRet(&VolumeNotFoundError{volumeWwn}, "failed")
 		} else {
 			b.logger.Warning(fmt.Sprintf("device [%s] found for WWN [%s] after running sg_inq on all mpath devices although it was not found in multipath -ll. (Note: Could indicate multipathing issue).", dev, volumeWwn))
 			mpath = b.mpathDevFullPath(dev)
@@ -132,14 +132,14 @@ func (b *blockDeviceUtils) DiscoverBySgInq(mpathOutput string, volumeWwn string)
 			mpathFullPath := b.mpathDevFullPath(dev)
 			wwn, err := b.GetWwnByScsiInq(mpathFullPath)
 			if err != nil {
-				return "", b.logger.ErrorRet(&volumeNotFoundError{volumeWwn}, "failed")
+				return "", b.logger.ErrorRet(&VolumeNotFoundError{volumeWwn}, "failed")
 			}
 			if strings.ToLower(wwn) == strings.ToLower(volumeWwn) {
 				return dev, nil
 			}
 		}
 	}
-	return "", b.logger.ErrorRet(&volumeNotFoundError{volumeWwn}, "failed")
+	return "", b.logger.ErrorRet(&VolumeNotFoundError{volumeWwn}, "failed")
 }
 
 func (b *blockDeviceUtils) GetWwnByScsiInq(dev string) (string, error) {
@@ -225,7 +225,7 @@ func (b *blockDeviceUtils) GetWwnByScsiInq(dev string) (string, error) {
 		}
 
 	}
-	return "", b.logger.ErrorRet(&volumeNotFoundError{wwn}, "failed")
+	return "", b.logger.ErrorRet(&VolumeNotFoundError{wwn}, "failed")
 }
 
 func (b *blockDeviceUtils) Cleanup(mpath string) error {
