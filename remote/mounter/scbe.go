@@ -102,11 +102,11 @@ func (s *scbeMounter) Unmount(unmountRequest resources.UnmountRequest) error {
 	devicePath, err := s.blockDeviceMounterUtils.Discover(volumeWWN, true)
 	if err != nil {
 		switch err.(type) {
-        case *block_device_utils.VolumeNotFoundError:
-            s.logger.Warning("Idempotent issue encountered: volume not found. skipping UnmountDeviceFlow ",logs.Args{{"volumeWWN", volumeWWN}} )
-			skipUnmountFlow = true	
-        default:
-            return s.logger.ErrorRet(err, "Discover failed", logs.Args{{"volumeWWN", volumeWWN}})
+	        case *block_device_utils.VolumeNotFoundError:
+	            s.logger.Warning("Idempotent issue encountered: volume not found. skipping UnmountDeviceFlow ",logs.Args{{"volumeWWN", volumeWWN}} )
+				skipUnmountFlow = true	
+	        default:
+	            return s.logger.ErrorRet(err, "Discover failed", logs.Args{{"volumeWWN", volumeWWN}})
         }
 	}
 	if !skipUnmountFlow{
