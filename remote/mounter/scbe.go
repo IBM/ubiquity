@@ -32,23 +32,22 @@ type scbeMounter struct {
 	config                  resources.ScbeRemoteConfig
 }
 
-func NewScbeMounter(scbeRemoteConfig resources.ScbeRemoteConfig) resources.Mounter {
-	blockDeviceMounterUtils := block_device_mounter_utils.NewBlockDeviceMounterUtils()
-	return &scbeMounter{
-		logger:                  logs.GetLogger(),
-		blockDeviceMounterUtils: blockDeviceMounterUtils,
-		exec:   utils.NewExecutor(),
-		config: scbeRemoteConfig,
-	}
-}
-
-func NewScbeMounterWithExecuter(scbeRemoteConfig resources.ScbeRemoteConfig, blockDeviceMounterUtils block_device_mounter_utils.BlockDeviceMounterUtils, executer utils.Executor) resources.Mounter {
+func newScbMounter(scbeRemoteConfig resources.ScbeRemoteConfig, blockDeviceMounterUtils block_device_mounter_utils.BlockDeviceMounterUtils, executer utils.Executor) resources.Mounter{
 	return &scbeMounter{
 		logger:                  logs.GetLogger(),
 		blockDeviceMounterUtils: blockDeviceMounterUtils,
 		exec:  executer,
 		config: scbeRemoteConfig,
 	}
+}
+
+func NewScbeMounter(scbeRemoteConfig resources.ScbeRemoteConfig) resources.Mounter {
+	blockDeviceMounterUtils := block_device_mounter_utils.NewBlockDeviceMounterUtils()
+	return newScbMounter(scbeRemoteConfig, blockDeviceMounterUtils, utils.NewExecutor())
+}
+
+func NewScbeMounterWithExecuter(scbeRemoteConfig resources.ScbeRemoteConfig, blockDeviceMounterUtils block_device_mounter_utils.BlockDeviceMounterUtils, executer utils.Executor) resources.Mounter {
+	return newScbMounter(scbeRemoteConfig, blockDeviceMounterUtils, executer)
 }
 
 
@@ -102,13 +101,13 @@ func (s *scbeMounter) Unmount(unmountRequest resources.UnmountRequest) error {
 	skipUnmountFlow := false
 	devicePath, err := s.blockDeviceMounterUtils.Discover(volumeWWN, true)
 	if err != nil {
-		expectedError := &block_device_utils.VolumeNotFoundError{volumeWWN}
-		if err.Error() == expectedError.Error(){
-			s.logger.Warning("Idempotent issue encountered: volume not found. skipping UnmountDeviceFlow ",logs.Args{{"volumeWWN", volumeWWN}} )
+		switch err.(type) {
+        case *block_device_utils.VolumeNotFoundError:
+            s.logger.Warning("Idempotent issue encountered: volume not found. skipping UnmountDeviceFlow ",logs.Args{{"volumeWWN", volumeWWN}} )
 			skipUnmountFlow = true	
-		} else {
-			return s.logger.ErrorRet(err, "Discover failed", logs.Args{{"volumeWWN", volumeWWN}})
-		}
+        default:
+            return s.logger.ErrorRet(err, "Discover failed", logs.Args{{"volumeWWN", volumeWWN}})
+        }
 	}
 	if !skipUnmountFlow{
 		if err := s.blockDeviceMounterUtils.UnmountDeviceFlow(devicePath); err != nil {
