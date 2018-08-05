@@ -27,7 +27,6 @@ import (
 
 const (
 	WarningMessageIdempotentDeviceAlreadyMounted = "Device is already mounted, so skip mounting (Idempotent)."
-	TimeoutMilisecondFindCommand = 30 * 1000     // max to wait for mount command	
 )
 
 type blockDeviceMounterUtils struct {

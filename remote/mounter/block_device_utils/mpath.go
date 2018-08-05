@@ -27,6 +27,7 @@ import (
 )
 
 const multipathCmd = "multipath"
+const MultipathTimeout = 10*1000
 
 func (b *blockDeviceUtils) ReloadMultipath() error {
 	defer b.logger.Trace(logs.DEBUG)()
@@ -36,13 +37,13 @@ func (b *blockDeviceUtils) ReloadMultipath() error {
 	}
 
 	args := []string{}
-	_, err := b.exec.ExecuteWithTimeout(10*1000, multipathCmd, args)
+	_, err := b.exec.ExecuteWithTimeout(MultipathTimeout, multipathCmd, args)
 	if err != nil  {
 		return b.logger.ErrorRet(&commandExecuteError{multipathCmd, err}, "failed")
 	}
 
 	args = []string{"-r"}
-	_, err = b.exec.ExecuteWithTimeout(10*1000, multipathCmd, args)
+	_, err = b.exec.ExecuteWithTimeout(MultipathTimeout, multipathCmd, args)
 	if err != nil  {
 		return b.logger.ErrorRet(&commandExecuteError{multipathCmd, err}, "failed")
 	}

@@ -101,11 +101,11 @@ var _ = Describe("block_device_utils_test", func() {
 			tiemout, cmd, args := fakeExec.ExecuteWithTimeoutArgsForCall(0)
 			Expect(cmd).To(Equal("multipath"))
 			Expect(args).To(Equal([]string{}))
-			Expect(tiemout).To(Equal(10*1000))
+			Expect(tiemout).To(Equal(block_device_utils.MultipathTimeout))
 			tiemout, cmd, args = fakeExec.ExecuteWithTimeoutArgsForCall(1)
 			Expect(cmd).To(Equal("multipath"))
 			Expect(args).To(Equal([]string{"-r"}))
-			Expect(tiemout).To(Equal(10*1000))
+			Expect(tiemout).To(Equal(block_device_utils.MultipathTimeout))
 		})
 		It("ReloadMultipath fails if multipath command is missing", func() {
 			fakeExec.IsExecutableReturns(cmdErr)
