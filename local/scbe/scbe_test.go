@@ -498,15 +498,12 @@ var _ = Describe("scbeLocalClient", func() {
 			Expect(err).To(HaveOccurred())
 			Expect(err).To(MatchError(fakeErr))
 		})
-		It("should fail to detach the volume if vol not exist in DB", func() {
+		It("should not fail to detach the volume if vol not exist in DB", func() {
 			fakeScbeDataModel.GetVolumeReturns(scbe.ScbeVolume{}, nil)
 			err := client.Detach(fakeDetachRequest)
-			Expect(err).To(HaveOccurred())
-		})
-		It("should fail to detach the volume if vol already detached in DB", func() {
-			fakeScbeDataModel.GetVolumeReturns(scbe.ScbeVolume{}, nil)
-			err := client.Detach(fakeDetachRequest)
-			Expect(err).To(HaveOccurred())
+			Expect(err).ToNot(HaveOccurred())
+			Expect(fakeScbeRestClient.GetVolMappingCallCount()).To(Equal(1))
+			Expect(fakeScbeRestClient.UnmapVolumeCallCount()).To(Equal(0))
 		})
 		It("should fail to detach the volume if MapVolume failed", func() {
 			fakeScbeDataModel.GetVolumeReturns(scbe.ScbeVolume{}, nil)
