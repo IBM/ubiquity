@@ -166,9 +166,16 @@ func (s *simpleRestClient) genericActionInternal(actionName string, resource_url
 		return s.logger.ErrorRet(err, "ioutil.ReadAll failed")
 	}
 
-	s.logger.Debug(actionName+" "+url, logs.Args{{"data", string(data[:])}})
+	httpDataStr := string(data[:])
+	s.logger.Debug(actionName+" "+url, logs.Args{{"data", httpDataStr}})
 	if response.StatusCode != exitStatus {
-		return s.logger.ErrorRet(errors.New("bad status code "+response.Status), "failed", logs.Args{{actionName, url}})
+		return s.logger.ErrorRet(&BadHttpStatusCodeError{
+			httpStatusCode:         response.StatusCode,
+			httpExpectedStatusCode: exitStatus,
+			httpDataStr:            httpDataStr,
+			httpAction:             actionName,
+			httpUrl:                url,
+		}, "failed")
 	}
 
 	if v != nil {
