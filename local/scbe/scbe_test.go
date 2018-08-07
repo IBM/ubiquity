@@ -498,7 +498,7 @@ var _ = Describe("scbeLocalClient", func() {
 			Expect(err).To(HaveOccurred())
 			Expect(err).To(MatchError(fakeErr))
 		})
-		It("should fail to detach the volume if vol not exist in DB", func() {
+		It("should not fail to detach the volume if vol not exist in DB", func() {
 			fakeScbeDataModel.GetVolumeReturns(scbe.ScbeVolume{}, nil)
 			err := client.Detach(fakeDetachRequest)
 			Expect(err).ToNot(HaveOccurred())
