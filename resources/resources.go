@@ -248,6 +248,7 @@ type MountRequest struct {
 	VolumeConfig map[string]interface{}
 	Context      RequestContext
 }
+
 type UnmountRequest struct {
 	// TODO missing Mountpoint string
 	VolumeConfig map[string]interface{}

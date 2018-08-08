@@ -25,7 +25,9 @@ import (
 	"time"
 )
 
-const WarningMessageIdempotentDeviceAlreadyMounted = "Device is already mounted, so skip mounting (Idempotent)."
+const (
+	WarningMessageIdempotentDeviceAlreadyMounted = "Device is already mounted, so skip mounting (Idempotent)."
+)
 
 type blockDeviceMounterUtils struct {
 	logger           logs.Logger

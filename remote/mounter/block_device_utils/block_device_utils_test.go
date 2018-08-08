@@ -19,9 +19,10 @@ package block_device_utils_test
 import (
 	"errors"
 	"fmt"
-	"github.com/IBM/ubiquity/fakes"
 	"github.com/IBM/ubiquity/remote/mounter/block_device_utils"
 	"github.com/IBM/ubiquity/utils"
+	"github.com/IBM/ubiquity/fakes"
+
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"io/ioutil"
@@ -96,10 +97,15 @@ var _ = Describe("block_device_utils_test", func() {
 		It("ReloadMultipath calls multipath command", func() {
 			err = bdUtils.ReloadMultipath()
 			Expect(err).ToNot(HaveOccurred())
-			Expect(fakeExec.ExecuteCallCount()).To(Equal(1))
-			cmd, args := fakeExec.ExecuteArgsForCall(0)
+			Expect(fakeExec.ExecuteWithTimeoutCallCount()).To(Equal(2))
+			tiemout, cmd, args := fakeExec.ExecuteWithTimeoutArgsForCall(0)
+			Expect(cmd).To(Equal("multipath"))
+			Expect(args).To(Equal([]string{}))
+			Expect(tiemout).To(Equal(block_device_utils.MultipathTimeout))
+			tiemout, cmd, args = fakeExec.ExecuteWithTimeoutArgsForCall(1)
 			Expect(cmd).To(Equal("multipath"))
 			Expect(args).To(Equal([]string{"-r"}))
+			Expect(tiemout).To(Equal(block_device_utils.MultipathTimeout))
 		})
 		It("ReloadMultipath fails if multipath command is missing", func() {
 			fakeExec.IsExecutableReturns(cmdErr)
@@ -108,7 +114,7 @@ var _ = Describe("block_device_utils_test", func() {
 			Expect(err.Error()).To(MatchRegexp(cmdErr.Error()))
 		})
 		It("ReloadMultipath fails if multipath command fails", func() {
-			fakeExec.ExecuteReturns([]byte{}, cmdErr)
+			fakeExec.ExecuteWithTimeoutReturns([]byte{}, cmdErr)
 			err = bdUtils.ReloadMultipath()
 			Expect(err).To(HaveOccurred())
 			Expect(err.Error()).To(MatchRegexp(cmdErr.Error()))

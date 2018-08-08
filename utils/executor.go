@@ -44,6 +44,9 @@ type Executor interface { // basic host dependent functions
 	IsDir(fInfo os.FileInfo) bool
 	Symlink(target string, slink string) error
 	IsSlink(fInfo os.FileInfo) bool
+	GetGlobFiles(file_pattern string) (matches []string, err error)
+	IsSameFile(file1  os.FileInfo, file2 os.FileInfo) bool
+	
 }
 
 type executor struct {
@@ -157,4 +160,11 @@ func (e *executor) EvalSymlinks(path string) (string, error) {
 
 func (e *executor) Symlink(target string, slink string) error {
 	return os.Symlink(target, slink)
+}
+
+func (e *executor)	GetGlobFiles(file_pattern string) (matches []string, err error){
+	return filepath.Glob(file_pattern)
+}
+func (e *executor) IsSameFile(file1 os.FileInfo, file2 os.FileInfo) bool{
+	return os.SameFile(file1, file2)
 }

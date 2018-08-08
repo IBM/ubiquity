@@ -190,6 +190,31 @@ type FakeExecutor struct {
 	isSlinkReturnsOnCall map[int]struct {
 		result1 bool
 	}
+	GetGlobFilesStub        func(file_pattern string) (matches []string, err error)
+	getGlobFilesMutex       sync.RWMutex
+	getGlobFilesArgsForCall []struct {
+		file_pattern string
+	}
+	getGlobFilesReturns struct {
+		result1 []string
+		result2 error
+	}
+	getGlobFilesReturnsOnCall map[int]struct {
+		result1 []string
+		result2 error
+	}
+	IsSameFileStub        func(file1 os.FileInfo, file2 os.FileInfo) bool
+	isSameFileMutex       sync.RWMutex
+	isSameFileArgsForCall []struct {
+		file1 os.FileInfo
+		file2 os.FileInfo
+	}
+	isSameFileReturns struct {
+		result1 bool
+	}
+	isSameFileReturnsOnCall map[int]struct {
+		result1 bool
+	}
 	invocations      map[string][][]interface{}
 	invocationsMutex sync.RWMutex
 }
@@ -940,6 +965,106 @@ func (fake *FakeExecutor) IsSlinkReturnsOnCall(i int, result1 bool) {
 	}{result1}
 }
 
+func (fake *FakeExecutor) GetGlobFiles(file_pattern string) (matches []string, err error) {
+	fake.getGlobFilesMutex.Lock()
+	ret, specificReturn := fake.getGlobFilesReturnsOnCall[len(fake.getGlobFilesArgsForCall)]
+	fake.getGlobFilesArgsForCall = append(fake.getGlobFilesArgsForCall, struct {
+		file_pattern string
+	}{file_pattern})
+	fake.recordInvocation("GetGlobFiles", []interface{}{file_pattern})
+	fake.getGlobFilesMutex.Unlock()
+	if fake.GetGlobFilesStub != nil {
+		return fake.GetGlobFilesStub(file_pattern)
+	}
+	if specificReturn {
+		return ret.result1, ret.result2
+	}
+	return fake.getGlobFilesReturns.result1, fake.getGlobFilesReturns.result2
+}
+
+func (fake *FakeExecutor) GetGlobFilesCallCount() int {
+	fake.getGlobFilesMutex.RLock()
+	defer fake.getGlobFilesMutex.RUnlock()
+	return len(fake.getGlobFilesArgsForCall)
+}
+
+func (fake *FakeExecutor) GetGlobFilesArgsForCall(i int) string {
+	fake.getGlobFilesMutex.RLock()
+	defer fake.getGlobFilesMutex.RUnlock()
+	return fake.getGlobFilesArgsForCall[i].file_pattern
+}
+
+func (fake *FakeExecutor) GetGlobFilesReturns(result1 []string, result2 error) {
+	fake.GetGlobFilesStub = nil
+	fake.getGlobFilesReturns = struct {
+		result1 []string
+		result2 error
+	}{result1, result2}
+}
+
+func (fake *FakeExecutor) GetGlobFilesReturnsOnCall(i int, result1 []string, result2 error) {
+	fake.GetGlobFilesStub = nil
+	if fake.getGlobFilesReturnsOnCall == nil {
+		fake.getGlobFilesReturnsOnCall = make(map[int]struct {
+			result1 []string
+			result2 error
+		})
+	}
+	fake.getGlobFilesReturnsOnCall[i] = struct {
+		result1 []string
+		result2 error
+	}{result1, result2}
+}
+
+func (fake *FakeExecutor) IsSameFile(file1 os.FileInfo, file2 os.FileInfo) bool {
+	fake.isSameFileMutex.Lock()
+	ret, specificReturn := fake.isSameFileReturnsOnCall[len(fake.isSameFileArgsForCall)]
+	fake.isSameFileArgsForCall = append(fake.isSameFileArgsForCall, struct {
+		file1 os.FileInfo
+		file2 os.FileInfo
+	}{file1, file2})
+	fake.recordInvocation("IsSameFile", []interface{}{file1, file2})
+	fake.isSameFileMutex.Unlock()
+	if fake.IsSameFileStub != nil {
+		return fake.IsSameFileStub(file1, file2)
+	}
+	if specificReturn {
+		return ret.result1
+	}
+	return fake.isSameFileReturns.result1
+}
+
+func (fake *FakeExecutor) IsSameFileCallCount() int {
+	fake.isSameFileMutex.RLock()
+	defer fake.isSameFileMutex.RUnlock()
+	return len(fake.isSameFileArgsForCall)
+}
+
+func (fake *FakeExecutor) IsSameFileArgsForCall(i int) (os.FileInfo, os.FileInfo) {
+	fake.isSameFileMutex.RLock()
+	defer fake.isSameFileMutex.RUnlock()
+	return fake.isSameFileArgsForCall[i].file1, fake.isSameFileArgsForCall[i].file2
+}
+
+func (fake *FakeExecutor) IsSameFileReturns(result1 bool) {
+	fake.IsSameFileStub = nil
+	fake.isSameFileReturns = struct {
+		result1 bool
+	}{result1}
+}
+
+func (fake *FakeExecutor) IsSameFileReturnsOnCall(i int, result1 bool) {
+	fake.IsSameFileStub = nil
+	if fake.isSameFileReturnsOnCall == nil {
+		fake.isSameFileReturnsOnCall = make(map[int]struct {
+			result1 bool
+		})
+	}
+	fake.isSameFileReturnsOnCall[i] = struct {
+		result1 bool
+	}{result1}
+}
+
 func (fake *FakeExecutor) Invocations() map[string][][]interface{} {
 	fake.invocationsMutex.RLock()
 	defer fake.invocationsMutex.RUnlock()
@@ -973,6 +1098,10 @@ func (fake *FakeExecutor) Invocations() map[string][][]interface{} {
 	defer fake.symlinkMutex.RUnlock()
 	fake.isSlinkMutex.RLock()
 	defer fake.isSlinkMutex.RUnlock()
+	fake.getGlobFilesMutex.RLock()
+	defer fake.getGlobFilesMutex.RUnlock()
+	fake.isSameFileMutex.RLock()
+	defer fake.isSameFileMutex.RUnlock()
 	copiedInvocations := map[string][][]interface{}{}
 	for key, value := range fake.invocations {
 		copiedInvocations[key] = value
