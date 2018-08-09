@@ -96,8 +96,11 @@ func (b *blockDeviceUtils) Discover(volumeWwn string, deepDiscovery bool) (strin
 		SqInqWwn, err := b.GetWwnByScsiInq(mpath)
 		if err != nil {
 			args = []string{"-ll", dev}
+			b.logger.Debug(fmt.Sprintf("dev : %s ",dev))
 			outputBytes, err := b.exec.Execute(multipathCmd, args)
 			stringOutput := string(outputBytes[:])
+			b.logger.Debug(fmt.Sprintf("stringOutput : %s ",stringOutput))
+			b.logger.Debug(fmt.Sprintf("strings.Contains : %s ",strings.Contains(stringOutput, "faulty")))
 			if strings.Contains(stringOutput, "faulty"){
 				return mpath, b.logger.ErrorRet(&FaultyDeviceError{dev}, "failed")
 			}
