@@ -92,7 +92,7 @@ func (b *blockDeviceUtils) UmountFs(mpoint string) error {
 		return b.logger.ErrorRet(&commandNotFoundError{umountCmd, err}, "failed")
 	}
 
-	args := []string{mpoint}
+	args := []string{"-f", mpoint}
 	if _, err := b.exec.ExecuteWithTimeout(10*1000, umountCmd, args); err != nil {
 		if err.Error() == context.DeadlineExceeded.Error(){
 			return err
