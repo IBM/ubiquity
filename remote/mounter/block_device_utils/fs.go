@@ -94,7 +94,7 @@ func (b *blockDeviceUtils) UmountFs(mpoint string) error {
 
 	args := []string{mpoint}
 	if _, err := b.exec.ExecuteWithTimeout(10*1000, umountCmd, args); err != nil {
-		if err.Error() == context.DeadlineExceeded{
+		if err.Error() == context.DeadlineExceeded.Error(){
 			return err
 		}
 		isMounted, _, _err := b.IsDeviceMounted(mpoint)

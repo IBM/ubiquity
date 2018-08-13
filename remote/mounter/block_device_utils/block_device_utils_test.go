@@ -619,27 +619,26 @@ wrong format on /ubiquity/mpoint type ext4 (rw,relatime,data=ordered)
 			fakeExec.ExecuteReturnsOnCall(0, nil, nil) // the umount command
 			err = bdUtils.UmountFs(mpoint)
 			Expect(err).To(Not(HaveOccurred()))
-			Expect(fakeExec.ExecuteCallCount()).To(Equal(1))
+			Expect(fakeExec.ExecuteWithTimeoutCallCount()).To(Equal(1))
 
-			cmd, args := fakeExec.ExecuteArgsForCall(0)
+			_, cmd, args := fakeExec.ExecuteWithTimeoutArgsForCall(0)
 			Expect(cmd).To(Equal("umount"))
 			Expect(args).To(Equal([]string{mpoint}))
 		})
-		It("should succeed to UmountFs if mpath is already unmounted", func() {
+		FIt("should succeed to UmountFs if mpath is already unmounted", func() {
 			mpoint := "/dev/mapper/mpoint"
 			mountOutput := `
 /XXX/mpoint on /ubiquity/mpoint type ext4 (rw,relatime,data=ordered)
 /dev/mapper/yyy on /ubiquity/yyy type ext4 (rw,relatime,data=ordered)
 `
-			fakeExec.ExecuteReturnsOnCall(0, nil, cmdErr)                         // the umount command should fail
-			fakeExec.ExecuteWithTimeoutReturnsOnCall(0, []byte(mountOutput), nil) // mount for isMounted
+			fakeExec.ExecuteWithTimeoutReturnsOnCall(0, nil, cmdErr)                         // the umount command should fail
+			fakeExec.ExecuteWithTimeoutReturnsOnCall(1, []byte(mountOutput), nil) // mount for isMounted
 			err = bdUtils.UmountFs(mpoint)
 			Expect(err).To(Not(HaveOccurred()))
-			Expect(fakeExec.ExecuteCallCount()).To(Equal(1))
-			Expect(fakeExec.ExecuteWithTimeoutCallCount()).To(Equal(1))
-			cmd, _ := fakeExec.ExecuteArgsForCall(0)
+			Expect(fakeExec.ExecuteWithTimeoutCallCount()).To(Equal(2))
+			_, cmd, _ := fakeExec.ExecuteWithTimeoutArgsForCall(0)
 			Expect(cmd).To(Equal("umount")) // first check is the umount
-			_, cmd, _ = fakeExec.ExecuteWithTimeoutArgsForCall(0)
+			_, cmd, _ = fakeExec.ExecuteWithTimeoutArgsForCall(1)
 			Expect(cmd).To(Equal("mount")) // second check is the umount
 		})
 		It("UmountFs fails if umount command missing", func() {
