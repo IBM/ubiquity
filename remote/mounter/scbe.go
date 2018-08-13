@@ -111,7 +111,7 @@ func (s *scbeMounter) Unmount(unmountRequest resources.UnmountRequest) error {
         }
 	}
 	if !skipUnmountFlow{
-		if err := s.blockDeviceMounterUtils.UnmountDeviceFlow(devicePath); err != nil {
+		if err := s.blockDeviceMounterUtils.UnmountDeviceFlow(devicePath, volumeWWN); err != nil {
 			return s.logger.ErrorRet(err, "UnmountDeviceFlow failed", logs.Args{{"devicePath", devicePath}})
 		}
 	}

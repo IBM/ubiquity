@@ -617,7 +617,7 @@ wrong format on /ubiquity/mpoint type ext4 (rw,relatime,data=ordered)
 		It("UmountFs succeeds", func() {
 			mpoint := "/dev/mapper/mpoint"
 			fakeExec.ExecuteReturnsOnCall(0, nil, nil) // the umount command
-			err = bdUtils.UmountFs(mpoint)
+			err = bdUtils.UmountFs(mpoint, "")
 			Expect(err).To(Not(HaveOccurred()))
 			Expect(fakeExec.ExecuteCallCount()).To(Equal(1))
 
@@ -633,7 +633,7 @@ wrong format on /ubiquity/mpoint type ext4 (rw,relatime,data=ordered)
 `
 			fakeExec.ExecuteReturnsOnCall(0, nil, cmdErr)                         // the umount command should fail
 			fakeExec.ExecuteWithTimeoutReturnsOnCall(0, []byte(mountOutput), nil) // mount for isMounted
-			err = bdUtils.UmountFs(mpoint)
+			err = bdUtils.UmountFs(mpoint, "")
 			Expect(err).To(Not(HaveOccurred()))
 			Expect(fakeExec.ExecuteCallCount()).To(Equal(1))
 			Expect(fakeExec.ExecuteWithTimeoutCallCount()).To(Equal(1))
@@ -645,7 +645,7 @@ wrong format on /ubiquity/mpoint type ext4 (rw,relatime,data=ordered)
 		It("UmountFs fails if umount command missing", func() {
 			mpoint := "/dev/mapper/mpoint"
 			fakeExec.IsExecutableReturns(cmdErr)
-			err = bdUtils.UmountFs(mpoint)
+			err = bdUtils.UmountFs(mpoint, "")
 			Expect(err).To(HaveOccurred())
 			Expect(err.Error()).To(MatchRegexp(cmdErr.Error()))
 			Expect(fakeExec.ExecuteCallCount()).To(Equal(0))
@@ -654,7 +654,7 @@ wrong format on /ubiquity/mpoint type ext4 (rw,relatime,data=ordered)
 			mpoint := "mpoint"
 			fakeExec.ExecuteReturns([]byte{}, cmdErr)
 			fakeExec.ExecuteWithTimeoutReturns([]byte{}, cmdErr)
-			err = bdUtils.UmountFs(mpoint)
+			err = bdUtils.UmountFs(mpoint, "")
 			Expect(err).To(HaveOccurred())
 			Expect(err.Error()).To(MatchRegexp(cmdErr.Error()))
 		})

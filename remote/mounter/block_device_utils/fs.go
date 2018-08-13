@@ -82,7 +82,7 @@ func (b *blockDeviceUtils) MountFs(mpath string, mpoint string) error {
 	return nil
 }
 
-func (b *blockDeviceUtils) UmountFs(mpoint string) error {
+func (b *blockDeviceUtils) UmountFs(mpoint string, volumeWwn string) error {
 	// Execute unmount operation (skip, if mpoint its already unmounted)
 
 	defer b.logger.Trace(logs.DEBUG)()
@@ -98,7 +98,7 @@ func (b *blockDeviceUtils) UmountFs(mpoint string) error {
 			return _err
 		}
 		if !isMounted {
-			b.logger.Info("Device already unmounted.", logs.Args{{"mpoint", mpoint}})
+			b.logger.Info("Idempotent issue encountered - Device already unmounted.", logs.Args{{"mpath-device", mpoint}, {"volume-wwn", volumeWwn}})
 			return nil
 		}
 		return b.logger.ErrorRet(&commandExecuteError{umountCmd, err}, "failed")
