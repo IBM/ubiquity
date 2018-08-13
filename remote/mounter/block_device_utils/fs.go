@@ -93,6 +93,7 @@ func (b *blockDeviceUtils) UmountFs(mpoint string) error {
 	}
 
 	args := []string{"-f", mpoint}
+	b.logger.Debug("Runnig umount -f")
 	if _, err := b.exec.ExecuteWithTimeout(10*1000, umountCmd, args); err != nil {
 		if err.Error() == context.DeadlineExceeded.Error(){
 			return err
