@@ -277,14 +277,14 @@ var _ = Describe("block_device_mounter_utils_test", func() {
 	Context(".UnmountDeviceFlow", func() {
 		It("should fail if unmount failed", func() {
 			fakeBlockDeviceUtils.UmountFsReturns(callErr)
-			err = blockDeviceMounterUtils.UnmountDeviceFlow("fake_device", "")
+			err = blockDeviceMounterUtils.UnmountDeviceFlow("fake_device", "6001738CFC9035EA0000000000795164")
 			Expect(err).To(HaveOccurred())
 			Expect(err).To(MatchError(callErr))
 		})
 		It("should fail if Cleanup failed", func() {
 			fakeBlockDeviceUtils.UmountFsReturns(nil)
 			fakeBlockDeviceUtils.CleanupReturns(callErr)
-			err = blockDeviceMounterUtils.UnmountDeviceFlow("fake_device", "")
+			err = blockDeviceMounterUtils.UnmountDeviceFlow("fake_device", "6001738CFC9035EA0000000000795164")
 			Expect(err).To(HaveOccurred())
 			Expect(err).To(MatchError(callErr))
 			Expect(fakeBlockDeviceUtils.CleanupCallCount()).To(Equal(1))
@@ -292,7 +292,7 @@ var _ = Describe("block_device_mounter_utils_test", func() {
 		It("should succees if all is cool", func() {
 			fakeBlockDeviceUtils.UmountFsReturns(nil)
 			fakeBlockDeviceUtils.CleanupReturns(nil)
-			err = blockDeviceMounterUtils.UnmountDeviceFlow("fake_device", "")
+			err = blockDeviceMounterUtils.UnmountDeviceFlow("fake_device", "6001738CFC9035EA0000000000795164")
 			Expect(err).NotTo(HaveOccurred())
 			Expect(fakeBlockDeviceUtils.CleanupCallCount()).To(Equal(1))
 		})
