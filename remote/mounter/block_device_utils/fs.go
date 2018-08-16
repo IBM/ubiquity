@@ -92,7 +92,7 @@ func (b *blockDeviceUtils) UmountFs(mpoint string) error {
 	}
 
 	args := []string{mpoint}
-	if _, err := b.exec.Execute(umountCmd, args); err != nil {
+	if _, err := b.exec.ExecuteWithTimeout(30*1000, umountCmd, args); err != nil {
 		isMounted, _, _err := b.IsDeviceMounted(mpoint)
 		if _err != nil {
 			return _err
