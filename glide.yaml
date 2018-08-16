@@ -28,7 +28,7 @@ import:
 - package: github.com/pborman/uuid
   version: ca53cad383cad2479bbba7f7a1a05797ec1386e4
 - package: k8s.io/apimachinery
-  version: 68f9c3a1feb3140df59c67ced62d3a5df8e6c9c2
+  version: kubernetes-1.9.2
   subpackages:
   - pkg/types
   - pkg/util/uuid
