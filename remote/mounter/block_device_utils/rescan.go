@@ -42,7 +42,7 @@ func (b *blockDeviceUtils) RescanISCSI() error {
 	}
 	args := []string{"-m", "session", "--rescan"}
 	if _, err := b.exec.Execute(rescanCmd, args); err != nil {
-		return b.logger.ErrorRet(&commandExecuteError{rescanCmd, err}, "failed")
+		return b.logger.ErrorRet(&CommandExecuteError{rescanCmd, err}, "failed")
 	}
 	return nil
 }
@@ -62,7 +62,7 @@ func (b *blockDeviceUtils) RescanSCSI() error {
 	}
 	args := []string{"-r"} // TODO should use -r only in clean up
 	if _, err := b.exec.Execute(rescanCmd, args); err != nil {
-		return b.logger.ErrorRet(&commandExecuteError{rescanCmd, err}, "failed")
+		return b.logger.ErrorRet(&CommandExecuteError{rescanCmd, err}, "failed")
 	}
 	return nil
 }
