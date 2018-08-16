@@ -18,6 +18,7 @@ package scbe_test
 
 import (
 	"fmt"
+	"github.com/IBM/ubiquity/database"
 	"github.com/IBM/ubiquity/local/scbe"
 	"github.com/IBM/ubiquity/resources"
 	"github.com/IBM/ubiquity/utils/logs"
@@ -25,9 +26,7 @@ import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega" // including the whole package inside the file
 	"os"
-	"path"
 	"strconv"
-	"github.com/IBM/ubiquity/database"
 )
 
 var _ = Describe("restClient integration testing with existing SCBE instance", func() {
@@ -170,9 +169,9 @@ var _ = Describe("ScbeRestClient volume operations integration testing with exis
 
 var _ = Describe("datamodel integration testing with live DB", func() {
 	var (
-		DBPath    string
-		db        *gorm.DB
-		datamodel scbe.ScbeDataModel
+		DBPath       string
+		db           *gorm.DB
+		datamodel    scbe.ScbeDataModel
 		dbConnection database.Connection
 	)
 	BeforeEach(func() {
@@ -185,7 +184,6 @@ var _ = Describe("datamodel integration testing with live DB", func() {
 		// create DB
 		logs.GetLogger().Debug("Obtaining handle to DB")
 		var err error
-		database.InitSqlite(path.Join(DBPath, "integration-ubiquity.db"))
 		database.RegisterMigration(&resources.Volume{})
 		database.RegisterMigration(&scbe.ScbeVolume{})
 		dbConnection = database.NewConnection()

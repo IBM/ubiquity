@@ -19,8 +19,8 @@ package scbe
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/IBM/ubiquity/utils/logs"
 	"github.com/IBM/ubiquity/resources"
+	"github.com/IBM/ubiquity/utils/logs"
 	"strconv"
 )
 
@@ -43,16 +43,16 @@ type scbeRestClient struct {
 }
 
 const (
-	DefaultScbePort        = 8440
-	UrlScbeReferer         = "https://%s:%d/"
-	UrlScbeBaseSuffix      = "api/v1"
-	UrlScbeResourceGetAuth = "users/get-auth-token"
-	ScbeContainersGroupParam  = "containers"
-	UrlScbeResourceService = "services"
-	UrlScbeResourceVolume  = "volumes"
-	UrlScbeResourceMapping = "mappings"
-	UrlScbeResourceHost    = "hosts"
-	DefaultSizeUnit        = "gb"
+	DefaultScbePort          = 8440
+	UrlScbeReferer           = "https://%s:%d/"
+	UrlScbeBaseSuffix        = "api/v1"
+	UrlScbeResourceGetAuth   = "users/get-auth-token"
+	ScbeContainersGroupParam = "containers"
+	UrlScbeResourceService   = "services"
+	UrlScbeResourceVolume    = "volumes"
+	UrlScbeResourceMapping   = "mappings"
+	UrlScbeResourceHost      = "hosts"
+	DefaultSizeUnit          = "gb"
 )
 
 func NewScbeRestClient(conInfo resources.ConnectionInfo) (ScbeRestClient, error) {
@@ -278,7 +278,7 @@ func (s *scbeRestClient) getHostIdByVol(wwn string, host string) (int, error) {
 	}
 
 	if len(vols) == 0 {
-		return 0, s.logger.ErrorRet(&volumeNotFoundError{wwn}, "failed")
+		return 0, s.logger.ErrorRet(&VolumeNotFoundOnArrayError{VolName: wwn}, "failed")
 	}
 	vol := vols[0]
 	payload := make(map[string]string)

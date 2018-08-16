@@ -16,45 +16,29 @@
 
 package database_test
 
-
 import (
-    . "github.com/onsi/ginkgo"
-    . "github.com/onsi/gomega"
-    "github.com/IBM/ubiquity/database"
+	"github.com/IBM/ubiquity/database"
+	. "github.com/onsi/ginkgo"
+	. "github.com/onsi/gomega"
 )
 
-
 var _ = Describe("Connection", func() {
-    var (
-        err error
-    )
-    BeforeEach(func() {
-    })
+	var (
+		err error
+	)
+	BeforeEach(func() {
+	})
 
-    Context(".Open and Close", func() {
-        It("open and close success", func() {
+    Context(".Open", func() {
+        It("open success", func() {
+			defer database.InitTestCorrect()()
             dbConnection := database.NewConnection()
             Expect(dbConnection.GetDb()).To(BeNil())
             err = dbConnection.Open()
             Expect(err).To(Not(HaveOccurred()))
-            Expect(dbConnection.GetDb()).To(Not(BeNil()))
-            err = dbConnection.Close()
-            Expect(err).To(Not(HaveOccurred()))
-            Expect(dbConnection.GetDb()).To(BeNil())
-        })
-        It("open fail", func() {
-            dbConnection := database.NewConnection()
-            Expect(dbConnection.GetDb()).To(BeNil())
-            err = dbConnection.Open()
-            Expect(err).To(Not(HaveOccurred()))
-            Expect(dbConnection.GetDb()).To(Not(BeNil()))
-            err = dbConnection.Open()
-            Expect(err).To(HaveOccurred())
-            err = dbConnection.Close()
-            Expect(err).To(Not(HaveOccurred()))
-            Expect(dbConnection.GetDb()).To(BeNil())
         })
         It("close fail", func() {
+			defer database.InitTestCorrect()()
             dbConnection := database.NewConnection()
             Expect(dbConnection.GetDb()).To(BeNil())
             err = dbConnection.Close()

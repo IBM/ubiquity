@@ -17,73 +17,147 @@
 package logs
 
 import (
-    "github.com/op/go-logging"
-    "io"
+	"bytes"
+	"fmt"
+	"io"
+	"runtime"
+	"strconv"
+	"sync"
+
+	"github.com/IBM/ubiquity/resources"
+	"github.com/op/go-logging"
+	"k8s.io/apimachinery/pkg/util/uuid"
 )
 
 const (
-    traceEnter = "ENTER"
-    traceExit = "EXIT"
+	traceEnter = "ENTER"
+	traceExit  = "EXIT"
 )
 
-type goLoggingLogger struct {
-    logger *logging.Logger
+type LoggerParams struct {
+	ShowGoid bool
+	ShowPid  bool
 }
 
-func newGoLoggingLogger(level Level, writer io.Writer) *goLoggingLogger {
-    newLogger := logging.MustGetLogger("")
-    newLogger.ExtraCalldepth = 1
-    format := logging.MustStringFormatter("%{time:2006-01-02 15:04:05.999} %{level:.5s} %{pid} %{shortfile} %{shortpkg}::%{shortfunc} %{message}")
-    backend := logging.NewLogBackend(writer, "", 0)
-    backendFormatter := logging.NewBackendFormatter(backend, format)
-    backendLeveled := logging.AddModuleLevel(backendFormatter)
-    backendLeveled.SetLevel(getLevel(level), "")
-    newLogger.SetBackend(backendLeveled)
-    return &goLoggingLogger{newLogger}
+type goLoggingLogger struct {
+	logger *logging.Logger
+	params LoggerParams
+}
+
+func newGoLoggingLogger(level Level, writer io.Writer, params LoggerParams) *goLoggingLogger {
+	newLogger := logging.MustGetLogger("")
+	newLogger.ExtraCalldepth = 1
+	format_string := "%{time:2006-01-02 15:04:05.999} %{level:.7s}"
+	if params.ShowPid {
+		format_string = fmt.Sprintf("%s %s", format_string, "%{pid}")
+	}
+	format_string = fmt.Sprintf("%s %s", format_string, "%{shortfile} %{shortpkg}::%{shortfunc} %{message}")
+
+	format := logging.MustStringFormatter(format_string)
+	backend := logging.NewLogBackend(writer, "", 0)
+	backendFormatter := logging.NewBackendFormatter(backend, format)
+	backendLeveled := logging.AddModuleLevel(backendFormatter)
+	backendLeveled.SetLevel(getLevel(level), "")
+	newLogger.SetBackend(backendLeveled)
+	return &goLoggingLogger{newLogger, params}
+}
+
+func GetGoID() uint64 {
+	b := make([]byte, 64)
+	b = b[:runtime.Stack(b, false)]
+	b = bytes.TrimPrefix(b, []byte("goroutine "))
+	b = b[:bytes.IndexByte(b, ' ')]
+	n, _ := strconv.ParseUint(string(b), 10, 64)
+	return n
+}
+
+var GoIdToRequestIdMap = new(sync.Map)
+
+func (l *goLoggingLogger) getContextStringFromGoid() string {
+	go_id := GetGoID()
+	context, exists := GoIdToRequestIdMap.Load(go_id)
+	if !exists {
+		context = resources.RequestContext{Id: "NA", ActionName: "NA"}
+	}
+	
+	new_context := context.(resources.RequestContext)
+	if new_context.ActionName == "" {
+		new_context.ActionName = "NA"
+	}
+	if new_context.Id == "" {
+		new_context.Id = "NA"
+	}
+
+	if l.params.ShowGoid{
+		return fmt.Sprintf("%s:%d-%s", new_context.Id, go_id, new_context.ActionName)
+	} else {
+		return fmt.Sprintf("%s-%s", new_context.Id, new_context.ActionName)
+	}
+}
+
+func GetDeleteFromMapFunc(key interface{}) func() {
+	return func() { GoIdToRequestIdMap.Delete(key) }
 }
 
 func (l *goLoggingLogger) Debug(str string, args ...Args) {
-    l.logger.Debugf(str + " %v", args)
+	goid_context_string := l.getContextStringFromGoid()
+	l.logger.Debugf(fmt.Sprintf("[%s] %s %v", goid_context_string, str, args))
 }
 
 func (l *goLoggingLogger) Info(str string, args ...Args) {
-    l.logger.Infof(str + " %v", args)
+	goid_context_string := l.getContextStringFromGoid()
+	l.logger.Infof(fmt.Sprintf("[%s] %s %v", goid_context_string, str, args))
 }
 
 func (l *goLoggingLogger) Error(str string, args ...Args) {
-    l.logger.Errorf(str + " %v", args)
+	goid_context_string := l.getContextStringFromGoid()
+	l.logger.Errorf(fmt.Sprintf("[%s] %s %v", goid_context_string, str, args))
 }
 
 func (l *goLoggingLogger) ErrorRet(err error, str string, args ...Args) error {
-    l.logger.Errorf(str + " %v ", append(args, Args{{"error", err}}))
-    return err
+	goid_context_string := l.getContextStringFromGoid()
+	l.logger.Errorf(fmt.Sprintf("[%s] %s %v", goid_context_string, str, append(args, Args{{"error", err}})))
+	return err
+}
+
+func (l *goLoggingLogger) Warning(str string, args ...Args) {
+	goid_context_string := l.getContextStringFromGoid()
+	l.logger.Warning(fmt.Sprintf("[%s] %s %v", goid_context_string, str, args))
 }
 
 func (l *goLoggingLogger) Trace(level Level, args ...Args) func() {
-    switch level {
-    case DEBUG:
-        l.logger.Debug(traceEnter, args)
-        return func() { l.logger.Debug(traceExit, args) }
-    case INFO:
-        l.logger.Info(traceEnter, args)
-        return func() { l.logger.Info(traceExit, args) }
-    case ERROR:
-        l.logger.Error(traceEnter, args)
-        return func() { l.logger.Error(traceExit, args) }
-    default:
-        panic("unknown level")
-    }
+	goid_context_string := l.getContextStringFromGoid()
+	log_string_enter := fmt.Sprintf("[%s] %s", goid_context_string, traceEnter)
+	log_string_exit := fmt.Sprintf("[%s] %s", goid_context_string, traceExit)
+	switch level {
+	case DEBUG:
+		l.logger.Debug(log_string_enter, args)
+		return func() { l.logger.Debug(log_string_exit, args) }
+	case INFO:
+		l.logger.Info(log_string_enter, args)
+		return func() { l.logger.Info(log_string_exit, args) }
+	case ERROR:
+		l.logger.Error(log_string_enter, args)
+		return func() { l.logger.Error(log_string_exit, args) }
+	default:
+		panic("unknown level")
+	}
 }
 
 func getLevel(level Level) logging.Level {
-    switch level {
-    case DEBUG:
-        return logging.DEBUG
-    case INFO:
-        return logging.INFO
-    case ERROR:
-        return logging.ERROR
-    default:
-        panic("unknown level")
-    }
+	switch level {
+	case DEBUG:
+		return logging.DEBUG
+	case INFO:
+		return logging.INFO
+	case ERROR:
+		return logging.ERROR
+	default:
+		panic("unknown level")
+	}
+}
+
+func GetNewRequestContext(actionName string) resources.RequestContext{
+	request_uuid := fmt.Sprintf("%s", uuid.NewUUID())
+    return resources.RequestContext{Id: request_uuid, ActionName : actionName}
 }

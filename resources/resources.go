@@ -16,13 +16,16 @@
 
 package resources
 
-import "github.com/jinzhu/gorm"
+import (
+	"fmt"
+	"github.com/jinzhu/gorm"
+)
 
 const (
-	SpectrumScale    string = "spectrum-scale"
-	SpectrumScaleNFS string = "spectrum-scale-nfs"
-	SoftlayerNFS     string = "softlayer-nfs"
-	SCBE             string = "scbe"
+	SpectrumScale     string = "spectrum-scale"
+	SpectrumScaleNFS  string = "spectrum-scale-nfs"
+	SoftlayerNFS      string = "softlayer-nfs"
+	SCBE              string = "scbe"
 	ScbeInterfaceName string = "Enabler for Containers"
 )
 
@@ -108,6 +111,7 @@ type BrokerConfig struct {
 type UbiquityPluginConfig struct {
 	DockerPlugin            UbiquityDockerPluginConfig
 	LogPath                 string
+	LogRotateMaxSize        int
 	UbiquityServer          UbiquityServerConnectionInfo
 	SpectrumNfsRemoteConfig SpectrumNfsRemoteConfig
 	ScbeRemoteConfig        ScbeRemoteConfig
@@ -151,6 +155,26 @@ type StorageClient interface {
 	Detach(detachRequest DetachRequest) error
 }
 
+// volumeNotFoundError error for Attach, Detach, GetVolume, GetVolumeConfig, RemoveVolume interfaces if volume not found in Ubiquity DB
+const VolumeNotFoundErrorMsg = "volume was not found in Ubiqutiy database."
+
+type VolumeNotFoundError struct {
+	VolName string
+}
+
+func (e *VolumeNotFoundError) Error() string {
+	return fmt.Sprintf("[%s] "+VolumeNotFoundErrorMsg, e.VolName)
+}
+
+// volAlreadyExistsError error for Create interface if volume is already exist in the Ubiquity DB
+type VolAlreadyExistsError struct {
+	VolName string
+}
+
+func (e *VolAlreadyExistsError) Error() string {
+	return fmt.Sprintf("Volume [%s] already exists.", e.VolName)
+}
+
 //go:generate counterfeiter -o ../fakes/fake_mounter.go . Mounter
 
 type Mounter interface {
@@ -163,6 +187,7 @@ type ActivateRequest struct {
 	CredentialInfo CredentialInfo
 	Backends       []string
 	Opts           map[string]string
+	Context        RequestContext
 }
 
 type CreateVolumeRequest struct {
@@ -170,37 +195,44 @@ type CreateVolumeRequest struct {
 	Name           string
 	Backend        string
 	Opts           map[string]interface{}
+	Context        RequestContext
 }
 
 type RemoveVolumeRequest struct {
 	CredentialInfo CredentialInfo
 	Name           string
+	Context        RequestContext
 }
 
 type ListVolumesRequest struct {
 	CredentialInfo CredentialInfo
 	//TODO add filter
 	Backends []string
+	Context  RequestContext
 }
 
 type AttachRequest struct {
 	CredentialInfo CredentialInfo
 	Name           string
 	Host           string
+	Context        RequestContext
 }
 
 type DetachRequest struct {
 	CredentialInfo CredentialInfo
 	Name           string
 	Host           string
+	Context        RequestContext
 }
 type GetVolumeRequest struct {
 	CredentialInfo CredentialInfo
 	Name           string
+	Context        RequestContext
 }
 type GetVolumeConfigRequest struct {
 	CredentialInfo CredentialInfo
 	Name           string
+	Context        RequestContext
 }
 type ActivateResponse struct {
 	Implements []string
@@ -214,12 +246,17 @@ type GenericResponse struct {
 type MountRequest struct {
 	Mountpoint   string
 	VolumeConfig map[string]interface{}
+	Context      RequestContext
 }
+
 type UnmountRequest struct {
+	// TODO missing Mountpoint string
 	VolumeConfig map[string]interface{}
+	Context      RequestContext
 }
 type AfterDetachRequest struct {
 	VolumeConfig map[string]interface{}
+	Context      RequestContext
 }
 type AttachResponse struct {
 	Mountpoint string
@@ -283,4 +320,9 @@ type FlexVolumeAttachRequest struct {
 type FlexVolumeDetachRequest struct {
 	Name string `json:"name"`
 	Host string `json:"host"`
+}
+
+type RequestContext struct {
+	Id string
+	ActionName	string
 }

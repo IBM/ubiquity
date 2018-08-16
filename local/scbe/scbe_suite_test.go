@@ -21,13 +21,13 @@ import (
 	. "github.com/onsi/gomega"
 	"testing"
 
+	"github.com/IBM/ubiquity/utils"
 	"github.com/jarcoal/httpmock"
-	"github.com/IBM/ubiquity/utils/logs"
 )
 
 func TestScbe(t *testing.T) {
 	RegisterFailHandler(Fail)
-	defer logs.InitStdoutLogger(logs.DEBUG)()
+	defer utils.InitUbiquityServerTestLogger()()
 	RunSpecs(t, "SCBE Test Suite")
 }
 

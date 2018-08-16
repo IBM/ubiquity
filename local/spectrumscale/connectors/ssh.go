@@ -222,7 +222,7 @@ func (s *spectrum_ssh) ExportNfs(volumeMountpoint string, clientConfig string) e
 
 	s.logger.Println("spectrumLocalClient: ExportNfs start")
 	defer s.logger.Println("spectrumLocalClient: ExportNfs end")
-	quotedClientConf := fmt.Sprintf("'%s'",clientConfig)
+	quotedClientConf := fmt.Sprintf("'%s'", clientConfig)
 
 	spectrumCommand := "/usr/lpp/mmfs/bin/mmnfs"
 	userAndHost := fmt.Sprintf("%s@%s", s.user, s.host)

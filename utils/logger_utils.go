@@ -21,9 +21,21 @@ import (
 	"io"
 	"log"
 	"os"
+	"github.com/IBM/ubiquity/utils/logs"
 )
 
-func SetupOldLogger(loggerName string) (*log.Logger) {
+func SetupOldLogger(loggerName string) *log.Logger {
 	logger := log.New(io.MultiWriter(os.Stdout), fmt.Sprintf("%s: ", loggerName), log.Lshortfile|log.LstdFlags)
 	return logger
 }
+
+func InitUbiquityServerLogger() func(){
+	deferFunction :=  logs.InitStdoutLogger(logs.GetLogLevelFromString(os.Getenv("LOG_LEVEL")), logs.LoggerParams{ShowGoid: true, ShowPid : false})
+	return deferFunction
+}
+
+func InitUbiquityServerTestLogger() func(){
+	deferFunction :=  logs.InitStdoutLogger(logs.DEBUG, logs.LoggerParams{})
+	return deferFunction
+}
+
