@@ -19,15 +19,18 @@ package block_device_utils
 import (
 	"bufio"
 	"fmt"
-	"github.com/IBM/ubiquity/utils/logs"
 	"path"
 	"path/filepath"
 	"regexp"
 	"strings"
+
+	"github.com/IBM/ubiquity/utils/logs"
 )
 
 const multipathCmd = "multipath"
-const MultipathTimeout = 60*1000
+const MultipathTimeout = 60 * 1000
+const Discovertimeout = 20 * 1000
+const cleanupTimeout = 30 * 1000
 
 func (b *blockDeviceUtils) ReloadMultipath() error {
 	defer b.logger.Trace(logs.DEBUG)()
@@ -38,16 +41,16 @@ func (b *blockDeviceUtils) ReloadMultipath() error {
 
 	args := []string{}
 	_, err := b.exec.ExecuteWithTimeout(MultipathTimeout, multipathCmd, args)
-	if err != nil  {
+	if err != nil {
 		return b.logger.ErrorRet(&commandExecuteError{multipathCmd, err}, "failed")
 	}
 
 	args = []string{"-r"}
 	_, err = b.exec.ExecuteWithTimeout(MultipathTimeout, multipathCmd, args)
-	if err != nil  {
+	if err != nil {
 		return b.logger.ErrorRet(&commandExecuteError{multipathCmd, err}, "failed")
 	}
-	
+
 	return nil
 }
 
@@ -57,7 +60,7 @@ func (b *blockDeviceUtils) Discover(volumeWwn string, deepDiscovery bool) (strin
 		return "", b.logger.ErrorRet(&commandNotFoundError{multipathCmd, err}, "failed")
 	}
 	args := []string{"-ll"}
-	outputBytes, err := b.exec.ExecuteWithTimeout(20*1000, multipathCmd, args)
+	outputBytes, err := b.exec.ExecuteWithTimeout(Discovertimeout, multipathCmd, args)
 	if err != nil {
 		return "", b.logger.ErrorRet(&commandExecuteError{multipathCmd, err}, "failed")
 	}
@@ -231,7 +234,7 @@ func (b *blockDeviceUtils) GetWwnByScsiInq(dev string) (string, error) {
 
 func (b *blockDeviceUtils) Cleanup(mpath string) error {
 	defer b.logger.Trace(logs.DEBUG)()
-	cleanupTimeout := 30*1000
+
 	dev := path.Base(mpath)
 
 	_, err := b.exec.Stat(mpath)
