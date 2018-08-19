@@ -28,6 +28,7 @@ import (
 	"io/ioutil"
 	"strings"
 	"testing"
+	"os/exec"
 )
 
 var _ = Describe("block_device_utils_test", func() {
@@ -195,6 +196,21 @@ var _ = Describe("block_device_utils_test", func() {
 			_, err := bdUtils.Discover(volumeId, true)
 			Expect(err).To(HaveOccurred())
 		})
+		FIt("should return actual error when sg_inq command fails", func() {
+			volumeId := "0x6001738cfc9035eb0000000000cea5f6"
+			mpathOutput := `mpathhe (36001738cfc9035eb0000000000cea5f6) dm-3 IBM     ,2810XIV
+							size=19G features='1 queue_if_no_path' hwhandler='0' wp=rw
+							-+- policy='service-time 0' prio=1 status=active
+							|- 33:0:0:1 sdb 8:16 active ready running
+							- 34:0:0:1 sdc 8:32 active ready running`
+			fakeExec.ExecuteReturnsOnCall(0, []byte(mpathOutput), nil)
+			returnError :=  &exec.ExitError{}
+			//this execute with timeout makes the GetWwnByScsiInq to return an error
+			fakeExec.ExecuteWithTimeoutReturns([]byte(""),returnError)
+			_, err := bdUtils.Discover(volumeId, true)
+			Expect(err).To(HaveOccurred())
+			Expect(err).To(Equal(&block_device_utils.CommandExecuteError{"sg_inq",returnError}))
+		})
 	})
 	Context(".DiscoverBySgInq", func() {
 		It("should return mpathhe", func() {
@@ -257,6 +273,20 @@ mpathhb (36001738cfc9035eb0000000000cea###) dm-3 ##,##
 			fakeExec.ExecuteReturns([]byte{}, cmdErr)
 			_, err := bdUtils.DiscoverBySgInq(mpathOutput, wwn)
 			Expect(err).To(HaveOccurred())
+		})
+		It("should return actual error when sg_inq command fails", func() {
+			mpathOutput := `mpathhe (36001738cfc9035eb0000000000cea5f6) dm-3 IBM     ,2810XIV
+							size=19G features='1 queue_if_no_path' hwhandler='0' wp=rw
+							-+- policy='service-time 0' prio=1 status=active
+							|- 33:0:0:1 sdb 8:16 active ready running
+							- 34:0:0:1 sdc 8:32 active ready running`
+			wwn := "wwn"
+			returnError :=  &exec.ExitError{}
+			//this execute with timeout makes the GetWwnByScsiInq to return an error
+			fakeExec.ExecuteWithTimeoutReturns([]byte(""),returnError)
+			_, err := bdUtils.DiscoverBySgInq(mpathOutput, wwn)
+			Expect(err).To(HaveOccurred())
+			Expect(err).To(Equal(&block_device_utils.CommandExecuteError{"sg_inq",returnError}))
 		})
 	})
 	Context(".GetWwnByScsiInq", func() {
