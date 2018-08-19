@@ -124,7 +124,6 @@ func (b *blockDeviceUtils) DiscoverBySgInq(mpathOutput string, volumeWwn string)
 		return "", b.logger.ErrorRet(err, "failed")
 	}
 	dev := ""
-	
 	for scanner.Scan() {
 		line := scanner.Text()
 		b.logger.Debug(fmt.Sprintf("%s", line))
@@ -134,7 +133,7 @@ func (b *blockDeviceUtils) DiscoverBySgInq(mpathOutput string, volumeWwn string)
 			mpathFullPath := b.mpathDevFullPath(dev)
 			wwn, err := b.GetWwnByScsiInq(mpathFullPath)
 			if err != nil {
-				return "", b.logger.ErrorRet(err, "failed")				
+				return "", b.logger.ErrorRet(err, "failed")
 			}
 			if strings.ToLower(wwn) == strings.ToLower(volumeWwn) {
 				return dev, nil

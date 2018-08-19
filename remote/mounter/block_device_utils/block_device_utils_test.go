@@ -203,8 +203,7 @@ var _ = Describe("block_device_utils_test", func() {
 							-+- policy='service-time 0' prio=1 status=active
 							|- 33:0:0:1 sdb 8:16 active ready running
 							- 34:0:0:1 sdc 8:32 active ready running`
-			fakeExec.ExecuteReturnsOnCall(0, []byte(mpathOutput),
-				nil)
+			fakeExec.ExecuteReturnsOnCall(0, []byte(mpathOutput), nil)
 			returnError :=  &exec.ExitError{}
 			//this execute with timeout makes the GetWwnByScsiInq to return an error
 			fakeExec.ExecuteWithTimeoutReturns([]byte(""),returnError)
