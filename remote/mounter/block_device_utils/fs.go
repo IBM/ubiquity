@@ -83,6 +83,7 @@ func (b *blockDeviceUtils) MountFs(mpath string, mpoint string) error {
 }
 
 func (b *blockDeviceUtils) UmountFs(mpoint string, volumeWwn string) error {
+	// volumeWWN param is only used for logging - for the XAVI automation idempotent tests
 	// Execute unmount operation (skip, if mpoint its already unmounted)
 
 	defer b.logger.Trace(logs.DEBUG)()

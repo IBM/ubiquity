@@ -112,6 +112,7 @@ func (b *blockDeviceMounterUtils) MountDeviceFlow(devicePath string, fsType stri
 
 // UnmountDeviceFlow umount device, clean device and remove mountpoint folder
 func (b *blockDeviceMounterUtils) UnmountDeviceFlow(devicePath string, volumeWwn string) error {
+	// volumeWWN param is only used for logging - for the XAVI automation idempotent tests
 	// TODO consider also to receive the mountpoint(not only the devicepath), so the umount will use the mountpoint instead of the devicepath for future support double mounting of the same device.
 	defer b.logger.Trace(logs.INFO, logs.Args{{"devicePath", devicePath}})
 
