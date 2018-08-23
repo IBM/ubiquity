@@ -34,7 +34,7 @@ type BlockDeviceUtils interface {
 	CheckFs(mpath string) (bool, error)
 	MakeFs(mpath string, fsType string) error
 	MountFs(mpath string, mpoint string) error
-	UmountFs(mpoint string) error
+	UmountFs(mpoint string, volumeWwn string) error
 	IsDeviceMounted(devPath string) (bool, []string, error)
 	IsDirAMountPoint(dirPath string) (bool, []string, error)
 }

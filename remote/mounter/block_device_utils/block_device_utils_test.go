@@ -661,7 +661,7 @@ wrong format on /ubiquity/mpoint type ext4 (rw,relatime,data=ordered)
 		It("UmountFs succeeds", func() {
 			mpoint := "/dev/mapper/mpoint"
 			fakeExec.ExecuteReturnsOnCall(0, nil, nil) // the umount command
-			err = bdUtils.UmountFs(mpoint)
+			err = bdUtils.UmountFs(mpoint, "6001738CFC9035EA0000000000795164")
 			Expect(err).To(Not(HaveOccurred()))
 			Expect(fakeExec.ExecuteWithTimeoutCallCount()).To(Equal(1))
 			_, cmd, args := fakeExec.ExecuteWithTimeoutArgsForCall(0)
@@ -676,7 +676,7 @@ wrong format on /ubiquity/mpoint type ext4 (rw,relatime,data=ordered)
 `
 			fakeExec.ExecuteWithTimeoutReturnsOnCall(0, nil, cmdErr)                         // the umount command should fail
 			fakeExec.ExecuteWithTimeoutReturnsOnCall(1, []byte(mountOutput), nil) // mount for isMounted
-			err = bdUtils.UmountFs(mpoint)
+			err = bdUtils.UmountFs(mpoint, "6001738CFC9035EA0000000000795164")
 			Expect(err).To(Not(HaveOccurred()))
 			Expect(fakeExec.ExecuteWithTimeoutCallCount()).To(Equal(2))
 			_, cmd, _ := fakeExec.ExecuteWithTimeoutArgsForCall(0)
@@ -687,7 +687,7 @@ wrong format on /ubiquity/mpoint type ext4 (rw,relatime,data=ordered)
 		It("UmountFs fails if umount command missing", func() {
 			mpoint := "/dev/mapper/mpoint"
 			fakeExec.IsExecutableReturns(cmdErr)
-			err = bdUtils.UmountFs(mpoint)
+			err = bdUtils.UmountFs(mpoint, "6001738CFC9035EA0000000000795164")
 			Expect(err).To(HaveOccurred())
 			Expect(err.Error()).To(MatchRegexp(cmdErr.Error()))
 			Expect(fakeExec.ExecuteCallCount()).To(Equal(0))
@@ -696,7 +696,7 @@ wrong format on /ubiquity/mpoint type ext4 (rw,relatime,data=ordered)
 			mpoint := "mpoint"
 			fakeExec.ExecuteReturns([]byte{}, cmdErr)
 			fakeExec.ExecuteWithTimeoutReturns([]byte{}, cmdErr)
-			err = bdUtils.UmountFs(mpoint)
+			err = bdUtils.UmountFs(mpoint, "6001738CFC9035EA0000000000795164")
 			Expect(err).To(HaveOccurred())
 			Expect(err.Error()).To(MatchRegexp(cmdErr.Error()))
 		})
@@ -704,7 +704,7 @@ wrong format on /ubiquity/mpoint type ext4 (rw,relatime,data=ordered)
 			mpoint := "mpoint"
 			//fakeExec.ExecuteReturns([]byte{}, cmdErr)
 			fakeExec.ExecuteWithTimeoutReturns([]byte{}, context.DeadlineExceeded)
-			err = bdUtils.UmountFs(mpoint)
+			err = bdUtils.UmountFs(mpoint, "6001738CFC9035EA0000000000795164")
 			Expect(err).To(HaveOccurred())
 			Expect(err.Error()).To(MatchRegexp(context.DeadlineExceeded.Error()))
 		})

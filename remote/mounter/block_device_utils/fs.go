@@ -83,7 +83,8 @@ func (b *blockDeviceUtils) MountFs(mpath string, mpoint string) error {
 	return nil
 }
 
-func (b *blockDeviceUtils) UmountFs(mpoint string) error {
+func (b *blockDeviceUtils) UmountFs(mpoint string, volumeWwn string) error {
+	// volumeWWN param is only used for logging - for the XAVI automation idempotent tests
 	// Execute unmount operation (skip, if mpoint its already unmounted)
 
 	defer b.logger.Trace(logs.DEBUG)()
@@ -99,7 +100,7 @@ func (b *blockDeviceUtils) UmountFs(mpoint string) error {
 			return _err
 		}
 		if !isMounted {
-			b.logger.Info("Device already unmounted.", logs.Args{{"mpoint", mpoint}})
+			b.logger.Info("Idempotent issue encountered - Device already unmounted.", logs.Args{{"mpath-device", mpoint}, {"volume-wwn", volumeWwn}})
 			return nil
 		}
 		return b.logger.ErrorRet(&CommandExecuteError{umountCmd, err}, "failed")

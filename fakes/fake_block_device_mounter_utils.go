@@ -48,10 +48,11 @@ type FakeBlockDeviceMounterUtils struct {
 		result1 string
 		result2 error
 	}
-	UnmountDeviceFlowStub        func(devicePath string) error
+	UnmountDeviceFlowStub        func(devicePath string, volumeWwn string) error
 	unmountDeviceFlowMutex       sync.RWMutex
 	unmountDeviceFlowArgsForCall []struct {
 		devicePath string
+		volumeWwn  string
 	}
 	unmountDeviceFlowReturns struct {
 		result1 error
@@ -215,16 +216,17 @@ func (fake *FakeBlockDeviceMounterUtils) DiscoverReturnsOnCall(i int, result1 st
 	}{result1, result2}
 }
 
-func (fake *FakeBlockDeviceMounterUtils) UnmountDeviceFlow(devicePath string) error {
+func (fake *FakeBlockDeviceMounterUtils) UnmountDeviceFlow(devicePath string, volumeWwn string) error {
 	fake.unmountDeviceFlowMutex.Lock()
 	ret, specificReturn := fake.unmountDeviceFlowReturnsOnCall[len(fake.unmountDeviceFlowArgsForCall)]
 	fake.unmountDeviceFlowArgsForCall = append(fake.unmountDeviceFlowArgsForCall, struct {
 		devicePath string
-	}{devicePath})
-	fake.recordInvocation("UnmountDeviceFlow", []interface{}{devicePath})
+		volumeWwn  string
+	}{devicePath, volumeWwn})
+	fake.recordInvocation("UnmountDeviceFlow", []interface{}{devicePath, volumeWwn})
 	fake.unmountDeviceFlowMutex.Unlock()
 	if fake.UnmountDeviceFlowStub != nil {
-		return fake.UnmountDeviceFlowStub(devicePath)
+		return fake.UnmountDeviceFlowStub(devicePath, volumeWwn)
 	}
 	if specificReturn {
 		return ret.result1
@@ -238,10 +240,10 @@ func (fake *FakeBlockDeviceMounterUtils) UnmountDeviceFlowCallCount() int {
 	return len(fake.unmountDeviceFlowArgsForCall)
 }
 
-func (fake *FakeBlockDeviceMounterUtils) UnmountDeviceFlowArgsForCall(i int) string {
+func (fake *FakeBlockDeviceMounterUtils) UnmountDeviceFlowArgsForCall(i int) (string, string) {
 	fake.unmountDeviceFlowMutex.RLock()
 	defer fake.unmountDeviceFlowMutex.RUnlock()
-	return fake.unmountDeviceFlowArgsForCall[i].devicePath
+	return fake.unmountDeviceFlowArgsForCall[i].devicePath, fake.unmountDeviceFlowArgsForCall[i].volumeWwn
 }
 
 func (fake *FakeBlockDeviceMounterUtils) UnmountDeviceFlowReturns(result1 error) {
