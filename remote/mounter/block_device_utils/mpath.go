@@ -29,8 +29,8 @@ import (
 
 const multipathCmd = "multipath"
 const MultipathTimeout = 60 * 1000
-const Discovertimeout = 20 * 1000
-const cleanupTimeout = 30 * 1000
+const DiscoverTimeout = 20 * 1000
+const CleanupTimeout = 30 * 1000
 
 func (b *blockDeviceUtils) ReloadMultipath() error {
 	defer b.logger.Trace(logs.DEBUG)()
@@ -60,7 +60,7 @@ func (b *blockDeviceUtils) Discover(volumeWwn string, deepDiscovery bool) (strin
 		return "", b.logger.ErrorRet(&commandNotFoundError{multipathCmd, err}, "failed")
 	}
 	args := []string{"-ll"}
-	outputBytes, err := b.exec.ExecuteWithTimeout(Discovertimeout, multipathCmd, args)
+	outputBytes, err := b.exec.ExecuteWithTimeout(DiscoverTimeout, multipathCmd, args)
 	if err != nil {
 		return "", b.logger.ErrorRet(&commandExecuteError{multipathCmd, err}, "failed")
 	}
@@ -255,14 +255,14 @@ func (b *blockDeviceUtils) Cleanup(mpath string) error {
 	}
 
 	args := []string{"message", dev, "0", "fail_if_no_path"}
-	if _, err := b.exec.ExecuteWithTimeout(cleanupTimeout, dmsetupCmd, args); err != nil {
+	if _, err := b.exec.ExecuteWithTimeout(CleanupTimeout, dmsetupCmd, args); err != nil {
 		return b.logger.ErrorRet(&commandExecuteError{dmsetupCmd, err}, "failed")
 	}
 	if err := b.exec.IsExecutable(multipathCmd); err != nil {
 		return b.logger.ErrorRet(&commandNotFoundError{multipathCmd, err}, "failed")
 	}
 	args = []string{"-f", dev}
-	if _, err := b.exec.ExecuteWithTimeout(cleanupTimeout, multipathCmd, args); err != nil {
+	if _, err := b.exec.ExecuteWithTimeout(CleanupTimeout, multipathCmd, args); err != nil {
 		return b.logger.ErrorRet(&commandExecuteError{multipathCmd, err}, "failed")
 	}
 	b.logger.Info("flushed", logs.Args{{"mpath", mpath}})

@@ -28,6 +28,7 @@ import (
 	"io/ioutil"
 	"strings"
 	"testing"
+	"context"
 )
 
 var _ = Describe("block_device_utils_test", func() {
@@ -386,6 +387,20 @@ mpathhb (36001738cfc9035eb0000000000cea###) dm-3 ##,##
 			Expect(err).To(HaveOccurred())
 			Expect(err.Error()).To(MatchRegexp(cmdErr.Error()))
 		})
+		It("Cleanup fails if dmsetup command timeout exceeds", func() {
+			mpath := "mpath"
+			fakeExec.ExecuteWithTimeoutReturnsOnCall(0, []byte{}, context.DeadlineExceeded)
+			err = bdUtils.Cleanup(mpath)
+			Expect(err).To(HaveOccurred())
+			Expect(err.Error()).To(MatchRegexp(context.DeadlineExceeded.Error()))
+		})
+		It("Cleanup fails if multipath command timeout exceeds", func() {
+			mpath := "mpath"
+			fakeExec.ExecuteWithTimeoutReturnsOnCall(1, []byte{}, context.DeadlineExceeded)
+			err = bdUtils.Cleanup(mpath)
+			Expect(err).To(HaveOccurred())
+			Expect(err.Error()).To(MatchRegexp(context.DeadlineExceeded.Error()))
+		})
 	})
 	Context(".CheckFs", func() {
 		It("CheckFs detects exiting filesystem on device", func() {
@@ -654,6 +669,14 @@ wrong format on /ubiquity/mpoint type ext4 (rw,relatime,data=ordered)
 			err = bdUtils.UmountFs(mpoint)
 			Expect(err).To(HaveOccurred())
 			Expect(err.Error()).To(MatchRegexp(cmdErr.Error()))
+		})
+		It("UmountFs fails if umount command fails", func() {
+			mpoint := "mpoint"
+			//fakeExec.ExecuteReturns([]byte{}, cmdErr)
+			fakeExec.ExecuteWithTimeoutReturns([]byte{}, context.DeadlineExceeded)
+			err = bdUtils.UmountFs(mpoint)
+			Expect(err).To(HaveOccurred())
+			Expect(err.Error()).To(MatchRegexp(context.DeadlineExceeded.Error()))
 		})
 	})
 })
