@@ -19,20 +19,23 @@ function abort()
     exit $exitcode
 }
 
-USAGE="Usage : $0 [manifest-path] [image-amd64-path] [image-ppc64le-path] [fail-if-exist-optional]"
+USAGE="Usage : $0 [manifest-path] [image-amd64-path] [image-ppc64le-path] [image-s390x-path] [fail-if-exist-optional]"
 
-[ $# -eq 3 -o $# -eq 4 ] || abort 1 $USAGE
+[ $# -eq 4 -o $# -eq 5 ] || abort 1 $USAGE
 
-expected_manifest_arch_number=2
+expected_manifest_arch_number=3 # X, P and Z
 manifest=$1
 image_amd64=$2
 image_ppc64le=$3
-fail_if_exist="${4:-true}"  # by default fail if external manifest already exist
+image_s390x=$4
 
-echo "Preparing to create and push manifest for image_amd64 and image_ppc64le:"
+fail_if_exist="${5:-true}"  # by default fail if external manifest already exist
+
+echo "Preparing to create and push manifest for image_amd64, image_ppc64le and image_s390x:"
 echo "   manifest=[$manifest]"
 echo "   image_amd64=[$image_amd64]"
 echo "   image_ppc64le=[$image_ppc64le]"
+echo "   image_s390x=[$image_s390x]"
 
 
 manifest_dirname="~/.docker/manifests"
@@ -43,6 +46,7 @@ specific_manifest_dirname_with_prefix="$manifest_dirname/${dockerhub_prefix_mani
 echo "1. Make sure architecture images are not exist locally and if so remove them first for clean state..."
 [ -n "`docker images -q $image_amd64`" ]   && { docker rmi $image_amd64   || abort 1 "fail to clean image before creating manifest. [$image_amd64]"; }   || :
 [ -n "`docker images -q $image_ppc64le`" ] && { docker rmi $image_ppc64le || abort 1 "fail to clean image before creating manifest. [$image_ppc64le]"; } || :
+[ -n "`docker images -q $image_s390x`" ] && { docker rmi $image_s390x || abort 1 "fail to clean image before creating manifest. [$image_s390x]"; } || :
 
 
 echo "2. Manifest validation \(manifest should not exit, not local nor remote\)..."
@@ -54,7 +58,7 @@ else
 fi
 
 echo "3. Manifest creation and push..."
-docker manifest create $manifest ${image_amd64} ${image_ppc64le} 	|| abort 2 "fail to create manifest."
+docker manifest create $manifest ${image_amd64} ${image_ppc64le} ${image_s390x}	|| abort 2 "fail to create manifest."
 docker manifest inspect $manifest 	                                ||   abort 2 "fail to inspect local manifest."
 actual_manifest_arch_number=`docker manifest inspect $manifest | grep architecture | wc -l`
 [ $actual_manifest_arch_number -ne $expected_manifest_arch_number ] && abort 3 "Manifest created but its not contain [$expected_manifest_arch_number] architectures as expected."
@@ -75,9 +79,10 @@ actual_manifest_arch_number=`docker manifest inspect $manifest | grep architectu
 
 set +x
 echo "================================================================================"
-echo "Succeeded to create and push manifest for image_amd64 and image_ppc64le:"
+echo "Succeeded to create and push manifest for image_amd64, image_ppc64le and image_s390x:"
 echo "   manifest=[$manifest]"
 echo "   image_amd64=[$image_amd64]"
 echo "   image_ppc64le=[$image_ppc64le]"
+echo "   image_s390x=[$image_s390x]"
 set -x
 

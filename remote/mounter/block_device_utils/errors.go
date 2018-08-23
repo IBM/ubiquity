@@ -27,13 +27,13 @@ func (e *commandNotFoundError) Error() string {
 	return fmt.Sprintf("command [%v] is not found [%v]", e.cmd, e.err)
 }
 
-type commandExecuteError struct {
-	cmd string
-	err error
+type CommandExecuteError struct {
+	Cmd string
+	Err error
 }
 
-func (e *commandExecuteError) Error() string {
-	return fmt.Sprintf("command [%v] execution failure [%v]", e.cmd, e.err)
+func (e *CommandExecuteError) Error() string {
+	return fmt.Sprintf("command [%v] execution failure [%v]", e.Cmd, e.Err)
 }
 
 type VolumeNotFoundError struct {

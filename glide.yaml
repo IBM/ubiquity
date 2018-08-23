@@ -5,7 +5,7 @@ import:
 - package: github.com/djherbis/times
   version: v1.0.1
 - package: github.com/gorilla/context
-  version: 08b5f424b9271eedf6f9f0ce86cb9396ed337a42
+  version: v1.1.1
 - package: github.com/jinzhu/inflection
   version: 04140366298a54a039076d798123ffa108fff46c
 - package: github.com/lib/pq
@@ -16,7 +16,7 @@ import:
 - package: github.com/gorilla/mux
   version: v1.5.0
 - package: github.com/natefinch/lumberjack
-  version: v2.0
+  version: aee4629129445bbdfb69aa565537dcfa16544311
 - package: github.com/jinzhu/gorm
   version: v1.0
   subpackages:
@@ -28,7 +28,7 @@ import:
 - package: github.com/pborman/uuid
   version: ca53cad383cad2479bbba7f7a1a05797ec1386e4
 - package: k8s.io/apimachinery
-  version: 68f9c3a1feb3140df59c67ced62d3a5df8e6c9c2
+  version: kubernetes-1.9.2
   subpackages:
   - pkg/types
   - pkg/util/uuid
