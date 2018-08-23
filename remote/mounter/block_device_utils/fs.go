@@ -19,17 +19,18 @@ package block_device_utils
 import (
 	"bufio"
 	"fmt"
-	"github.com/IBM/ubiquity/utils/logs"
 	"os/exec"
 	"regexp"
 	"strings"
 	"syscall"
+	"github.com/IBM/ubiquity/utils/logs"
 )
 
 const (
 	NotMountedErrorMessage                   = "not mounted" // Error while umount device that is already unmounted
 	TimeoutMilisecondMountCmdIsDeviceMounted = 20 * 1000     // max to wait for mount command
 	TimeoutMilisecondMountCmdMountFs         = 120 * 1000    // max to wait for mounting device
+	TimeoutMilisecondUmountCmdUmountFs       = 30 * 1000	// max wait timeout for umount command
 )
 
 func (b *blockDeviceUtils) CheckFs(mpath string) (bool, error) {
@@ -92,7 +93,7 @@ func (b *blockDeviceUtils) UmountFs(mpoint string) error {
 	}
 
 	args := []string{mpoint}
-	if _, err := b.exec.Execute(umountCmd, args); err != nil {
+	if _, err := b.exec.ExecuteWithTimeout(TimeoutMilisecondUmountCmdUmountFs, umountCmd, args); err != nil {
 		isMounted, _, _err := b.IsDeviceMounted(mpoint)
 		if _err != nil {
 			return _err
