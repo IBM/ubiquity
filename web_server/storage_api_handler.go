@@ -363,7 +363,7 @@ func (h *StorageApiHandler) getBackend(name string) (resources.StorageClient, er
 
 	// get backend name for volume
 	if backendName = h.getBackendName(name); backendName == "" {
-		err := fmt.Errorf("volume %s not found", name)
+		err := resources.VolumeNotFoundError{name}
 		return nil, h.logger.ErrorRet(err, "failed")
 	}
 
