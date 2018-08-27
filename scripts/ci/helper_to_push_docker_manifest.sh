@@ -9,6 +9,8 @@
 #    2. The internal images should be exist in advance.
 #    3. The designated manifest should NOT be exist (the script will create it).
 #    4. "docker manifest" is enabled.
+#    5. Optional: set environment MANIFEST_FLAG with dedicated flags for docker manifest commands.
+#       For example to push docker manifest for internal registry without certificates, one can use: export MANIFEST_FLAG="--insecure"
 # ----------------------------------------------------------------
 
 function abort()
@@ -52,28 +54,28 @@ echo "1. Make sure architecture images are not exist locally and if so remove th
 echo "2. Manifest validation \(manifest should not exit, not local nor remote\)..."
 ls -ld "$specific_manifest_dirname $specific_manifest_dirname_with_prefix" 	&& abort 1 "local manifest dir should NOT exist before creating the manifest. Please clean it and rerun."
 if [ "$fail_if_exist" = "true" ]; then
-    docker manifest inspect $manifest 	&& abort 1 "manifest inspect should NOT exist before pushing it. Please clean it and rerun." || :
+    docker manifest inspect $MANIFEST_FLAG $manifest 	&& abort 1 "manifest inspect should NOT exist before pushing it. Please clean it and rerun." || :
 else
-    docker manifest inspect $manifest 	&& echo "manifest inspect should NOT exist before pushing it. BUT fail_if_exist is not true so skip validation." || :
+    docker manifest inspect $MANIFEST_FLAG $manifest 	&& echo "manifest inspect should NOT exist before pushing it. BUT fail_if_exist is not true so skip validation." || :
 fi
 
 echo "3. Manifest creation and push..."
-docker manifest create $manifest ${image_amd64} ${image_ppc64le} ${image_s390x}	|| abort 2 "fail to create manifest."
-docker manifest inspect $manifest 	                                ||   abort 2 "fail to inspect local manifest."
-actual_manifest_arch_number=`docker manifest inspect $manifest | grep architecture | wc -l`
+docker manifest create $MANIFEST_FLAG $manifest ${image_amd64} ${image_ppc64le} ${image_s390x}	|| abort 2 "fail to create manifest."
+docker manifest inspect $MANIFEST_FLAG $manifest 	                                ||   abort 2 "fail to inspect local manifest."
+actual_manifest_arch_number=`docker manifest inspect $MANIFEST_FLAG $manifest | grep architecture | wc -l`
 [ $actual_manifest_arch_number -ne $expected_manifest_arch_number ] && abort 3 "Manifest created but its not contain [$expected_manifest_arch_number] architectures as expected."
-docker manifest push --purge $manifest 	||  abort 2 "fail to push manifest to remote repo"
+docker manifest push $MANIFEST_FLAG --purge $manifest 	||  abort 2 "fail to push manifest to remote repo"
 ls -ld $specific_manifest_dirname $specific_manifest_dirname_with_prefix       && abort 2 "Local manifest file should NOT exist after successful manifest push. Please check." || :
 
 
 
 echo "4. Remote manifest validation..."
-docker manifest inspect $manifest 	    ||   abort 3 "fail to inspect remote manifest."
+docker manifest inspect $MANIFEST_FLAG $manifest 	    ||   abort 3 "fail to inspect remote manifest."
 docker pull $manifest                   ||   abort 3 "fail pull remote manifest."
 expected_arch=`uname -m`
 docker run  --rm $manifest uname -m | grep $expected_arch || abort 3 "The manifest run did not bring the expected arch"
 docker rmi $manifest  # just remove the local manifest that was pulled for testing
-actual_manifest_arch_number=`docker manifest inspect $manifest | grep architecture | wc -l`
+actual_manifest_arch_number=`docker manifest inspect $MANIFEST_FLAG $manifest | grep architecture | wc -l`
 [ $actual_manifest_arch_number -ne $expected_manifest_arch_number ] && abort 3 "Manifest pushed but its not contain [$expected_manifest_arch_number] architectures as expected."
 
 
