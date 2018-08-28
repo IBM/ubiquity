@@ -27,12 +27,12 @@ alpine-baselayout version 3.0.5
 apk-tools version 2.8.2
 CA-certificates 20171114
 busybox version 1.27.2
-kubernetes incubator-external-storage version 3.0.0-beta2
+kubernetes incubator-external-storage commit level 92295a3
 kubernetes version 1.9.2 
 libc-utils version 0.9.33.2
 pax-utils version 1.2.2
-ratelimit version 5b9ff86 
-yaml.v2 version 53feefa 
+ratelimit commit level 5b9ff86 
+yaml.v2 commit level 53feefa 
 
 
 
@@ -2414,9 +2414,9 @@ This Program includes some or all of the following Modifiable Third
 Party Code that IBM obtained under the GNU Lesser General Public License.
 
 Portions of kubernetes version 1.9.2
-Portions of kubernetes incubator-external-storage version 3.0.0-beta2
-ratelimit version 5b9ff86
-Portions of yaml.v2  version 53feefa
+Portions of kubernetes incubator-external-storage commit level 92295a3
+ratelimit commit level 5b9ff86
+Portions of yaml.v2 commit level 53feefa
 
 ---------------------------------------------------------------------------
 
@@ -4338,12 +4338,12 @@ alpine-baselayout version 3.0.5
 apk-tools version 2.8.2
 busybox version 1.27.2
 CA-certificates 20171114
-kubernetes incubator-external-storage version 3.0.0-beta2
+kubernetes incubator-external-storage commit level 92295a3
 kubernetes version 1.9.2 
 libc-utils version 0.9.33.2
 pax-utils version 1.2.2
-ratelimit version 5b9ff86 
-yaml.v2 version 53feefa 
+ratelimit commit level 5b9ff86 
+yaml.v2 commit level 53feefa 
 
 Source code for the above listed licensed software is available upon
 written request to the following address:    
@@ -4396,23 +4396,23 @@ APACHE 2.0 LICENSED CODE:  The Program includes all or portions of
 the following software which IBM obtained under the terms and conditions
 of the Apache License Version 2.0:
 
-btree version e89373f
+btree commit level e89373f
 concurrent version 1.0.3
-glog version 23def4e
-gnostic version 0c51083
-gofuzz version 24818f7
-groupcache version 24b0969
-jsonpointer version 0.15.0
-jsonreference version 0.15.0
-kube-openapi version e3762e8
+glog commit level 23def4e
+gnostic commit level 0c51083
+gofuzz commit level 44d8105
+groupcache commit level 02826c3
+jsonpointer commit level 46af16f
+jsonreference commit level 13c6e35
+kube-openapi commit level 39a7bf8
 kubernetes-client-go version 1.9.2
-kubernetes-incubator-external-storage version 3.0.0-beta2
+kubernetes-incubator-external-storage commit level 92295a3
 kubernetes version 1.9.2
 kubernetes-api version 1.9.2
 kubernetes-apimachinery version 1.9.2
 reflect2 version 1.0.0
-spec version 384415f
-swag version 0.15.0
+spec commit level 7abd574
+swag commit level f3f9494
 
 ---------------------------------------------------------------------------
 
@@ -4625,32 +4625,27 @@ swag version 0.15.0
 ========================================================================
 NOTICE file corresponding to section 4(d) of the Apache License,
 Version 2.0, in this case for the
-kubernetes-incubator-external-storage version 3.0.0-beta2 distribution
+kubernetes-incubator-external-storage commit level 92295a3 distribution
 ========================================================================
-procfs provides functions to retrieve system, kernel and process
-metrics from the pseudo-filesystem proc.
+Docker
+Copyright 2012-2016 Docker, Inc.
 
-Copyright 2014-2015 The Prometheus Authors
+This product includes software developed at Docker, Inc. (https://www.docker.com).
 
-This product includes software developed at
-SoundCloud Ltd. (http://soundcloud.com/).
+This product contains software (https://github.com/kr/pty) developed
+by Keith Rarick, licensed under the MIT License.
 
----------------------------------------------------------------------------
-
-Common libraries shared by Prometheus Go components.
-Copyright 2015 The Prometheus Authors
-
-This product includes software developed at
-SoundCloud Ltd. (http://soundcloud.com/).
+The following is courtesy of our legal counsel:
 
 
----------------------------------------------------------------------------
+Use and transfer of Docker may be subject to certain restrictions by the
+United States and other governments.
+It is your responsibility to ensure that your use and/or transfer does not
+violate applicable laws.
 
-Data model artifacts for Prometheus.
-Copyright 2012-2015 The Prometheus Authors
+For more information, please see https://www.bis.doc.gov
 
-This product includes software developed at
-SoundCloud Ltd. (http://soundcloud.com/).
+See also https://www.apache.org/dev/crypto.html and/or seek legal counsel.
 
 ---------------------------------------------------------------------------
 
@@ -4680,26 +4675,36 @@ Licensed under the Apache License, Version 2.0
 
 ---------------------------------------------------------------------------
 
-Docker
-Copyright 2012-2016 Docker, Inc.
+Data model artifacts for Prometheus.
+Copyright 2012-2015 The Prometheus Authors
 
-This product includes software developed at Docker, Inc. 
-(https://www.docker.com).
+This product includes software developed at
+SoundCloud Ltd. (http://soundcloud.com/).
 
-This product contains software (https://github.com/kr/pty) developed
-by Keith Rarick, licensed under the MIT License.
+---------------------------------------------------------------------------
 
-The following is courtesy of our legal counsel:
+Common libraries shared by Prometheus Go components.
+Copyright 2015 The Prometheus Authors
 
+This product includes software developed at
+SoundCloud Ltd. (http://soundcloud.com/).
 
-Use and transfer of Docker may be subject to certain restrictions by the
-United States and other governments.
-It is your responsibility to ensure that your use and/or transfer does not
-violate applicable laws.
+---------------------------------------------------------------------------
 
-For more information, please see https://www.bis.doc.gov
+procfs provides functions to retrieve system, kernel and process
+metrics from the pseudo-filesystem proc.
 
-See also https://www.apache.org/dev/crypto.html and/or seek legal counsel.
+Copyright 2014-2015 The Prometheus Authors
+
+This product includes software developed at
+SoundCloud Ltd. (http://soundcloud.com/).
+
+---------------------------------------------------------------------------
+
+AWS SDK for Go
+Copyright 2015 Amazon.com, Inc. or its affiliates. All Rights Reserved. 
+Copyright 2014-2015 Stripe, Inc.
+
 
 ========================================================================
 NOTICE file corresponding to section 4(d) of the Apache License,
@@ -7058,7 +7063,7 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 
 ===========================================================================
-Notices for yaml.v2 version53feefa
+Notices for yaml.v2 commit level 53feefa
 ---------------------------------------------------------------------------
 
 The following files were ported to Go from C files of libyaml, and thus
@@ -7096,298 +7101,23 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 
 
-===========================================================================
-Notices for kubernetes-incubator-external-storage version 3.0.0-beta2
----------------------------------------------------------------------------
-
-Copyright (c) 2009 The Go Authors. All rights reserved.
-
-Redistribution and use in source and binary forms, with or without
-modification, are permitted provided that the following conditions are
-met:
-
-   * Redistributions of source code must retain the above copyright
-notice, this list of conditions and the following disclaimer.
-   * Redistributions in binary form must reproduce the above
-copyright notice, this list of conditions and the following disclaimer
-in the documentation and/or other materials provided with the
-distribution.
-   * Neither the name of Google Inc. nor the names of its
-contributors may be used to endorse or promote products derived from
-this software without specific prior written permission.
-
-THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
-"AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
-LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
-A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
-OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
-SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
-LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
-DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
-THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
-(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
-OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-
----------------------------------------------------------------------------
-
-The MIT License (MIT)
-
-Copyright (c) 2014 Steve Francia
-
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
-
----------------------------------------------------------------------------
-
-Copyright (c) 2012 Péter Surányi. Portions Copyright (c) 2009 The Go
-Authors. All rights reserved.
-
-Redistribution and use in source and binary forms, with or without
-modification, are permitted provided that the following conditions are
-met:
-
-   * Redistributions of source code must retain the above copyright
-notice, this list of conditions and the following disclaimer.
-   * Redistributions in binary form must reproduce the above
-copyright notice, this list of conditions and the following disclaimer
-in the documentation and/or other materials provided with the
-distribution.
-   * Neither the name of Google Inc. nor the names of its
-contributors may be used to endorse or promote products derived from
-this software without specific prior written permission.
-
-THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
-"AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
-LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
-A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
-OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
-SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
-LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
-DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
-THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
-(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
-OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-
----------------------------------------------------------------------------
-
-Copyright (c) 2012 The Go Authors. All rights reserved.
-
-Redistribution and use in source and binary forms, with or without
-modification, are permitted provided that the following conditions are
-met:
-
-   * Redistributions of source code must retain the above copyright
-notice, this list of conditions and the following disclaimer.
-   * Redistributions in binary form must reproduce the above
-copyright notice, this list of conditions and the following disclaimer
-in the documentation and/or other materials provided with the
-distribution.
-   * Neither the name of Google Inc. nor the names of its
-contributors may be used to endorse or promote products derived from
-this software without specific prior written permission.
-
-THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
-"AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
-LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
-A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
-OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
-SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
-LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
-DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
-THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
-(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
-OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-
----------------------------------------------------------------------------
-
-Copyright (c) 2013-2014 Onsi Fakhouri
-
-Permission is hereby granted, free of charge, to any person obtaining
-a copy of this software and associated documentation files (the
-"Software"), to deal in the Software without restriction, including
-without limitation the rights to use, copy, modify, merge, publish,
-distribute, sublicense, and/or sell copies of the Software, and to
-permit persons to whom the Software is furnished to do so, subject to
-the following conditions:
-
-The above copyright notice and this permission notice shall be
-included in all copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
-EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
-MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
-NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
-LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
-OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
-WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-
----------------------------------------------------------------------------
-
-Copyright (c) 2012 - 2013 Mat Ryer and Tyler Bunnell
-
-Please consider promoting this project if you find it useful.
-
-Permission is hereby granted, free of charge, to any person 
-obtaining a copy of this software and associated documentation 
-files (the "Software"), to deal in the Software without restriction, 
-including without limitation the rights to use, copy, modify, merge, 
-publish, distribute, sublicense, and/or sell copies of the Software, 
-and to permit persons to whom the Software is furnished to do so, 
-subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included
-in all copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, 
-EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES 
-OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. 
-IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, 
-DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT 
-OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE 
-OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-
----------------------------------------------------------------------------
-
-Copyright 2016 The Go Authors.  All rights reserved.
+Copyright 2009 The Go Authors.  All rights reserved.
 https://github.com/golang/protobuf
-
-Redistribution and use in source and binary forms, with or without
-modification, are permitted provided that the following conditions are
-met:
-
-    * Redistributions of source code must retain the above copyright
-notice, this list of conditions and the following disclaimer.
-    * Redistributions in binary form must reproduce the above
-copyright notice, this list of conditions and the following disclaimer
-in the documentation and/or other materials provided with the
-distribution.
-    * Neither the name of Google Inc. nor the names of its
-contributors may be used to endorse or promote products derived from
-this software without specific prior written permission.
-
-THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
-"AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
-LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
-A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
-OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
-SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
-LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
-DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
-THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
-(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
-OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-
----------------------------------------------------------------------------
-
+Copyright 2010 The Go Authors.  All rights reserved.
+https://github.com/golang/protobuf
 Copyright 2011 The Go Authors.  All rights reserved.
 https://github.com/golang/protobuf
-
-Redistribution and use in source and binary forms, with or without
-modification, are permitted provided that the following conditions are
-met:
-
-    * Redistributions of source code must retain the above copyright
-notice, this list of conditions and the following disclaimer.
-    * Redistributions in binary form must reproduce the above
-copyright notice, this list of conditions and the following disclaimer
-in the documentation and/or other materials provided with the
-distribution.
-    * Neither the name of Google Inc. nor the names of its
-contributors may be used to endorse or promote products derived from
-this software without specific prior written permission.
-
-THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
-"AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
-LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
-A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
-OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
-SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
-LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
-DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
-THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
-(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
-OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-
----------------------------------------------------------------------------
-
 Copyright 2012 The Go Authors.  All rights reserved.
 https://github.com/golang/protobuf
-
-Redistribution and use in source and binary forms, with or without
-modification, are permitted provided that the following conditions are
-met:
-
-    * Redistributions of source code must retain the above copyright
-notice, this list of conditions and the following disclaimer.
-    * Redistributions in binary form must reproduce the above
-copyright notice, this list of conditions and the following disclaimer
-in the documentation and/or other materials provided with the
-distribution.
-    * Neither the name of Google Inc. nor the names of its
-contributors may be used to endorse or promote products derived from
-this software without specific prior written permission.
-
-THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
-"AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
-LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
-A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
-OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
-SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
-LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
-DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
-THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
-(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
-OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-
----------------------------------------------------------------------------
-
+Copyright 2013 The Go Authors.  All rights reserved.
+https://github.com/golang/protobuf
 Copyright 2014 The Go Authors.  All rights reserved.
 https://github.com/golang/protobuf
-
-Redistribution and use in source and binary forms, with or without
-modification, are permitted provided that the following conditions are
-met:
-
-    * Redistributions of source code must retain the above copyright
-notice, this list of conditions and the following disclaimer.
-    * Redistributions in binary form must reproduce the above
-copyright notice, this list of conditions and the following disclaimer
-in the documentation and/or other materials provided with the
-distribution.
-    * Neither the name of Google Inc. nor the names of its
-contributors may be used to endorse or promote products derived from
-this software without specific prior written permission.
-
-THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
-"AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
-LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
-A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
-OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
-SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
-LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
-DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
-THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
-(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
-OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-
----------------------------------------------------------------------------
-
-Copyright 2010 The Go Authors.  All rights reserved.
+Copyright 2015 The Go Authors.  All rights reserved.
+https://github.com/golang/protobuf
+Copyright 2016 The Go Authors.  All rights reserved.
+https://github.com/golang/protobuf
+Copyright 2017 The Go Authors.  All rights reserved.
 https://github.com/golang/protobuf
 
 Redistribution and use in source and binary forms, with or without
@@ -7449,450 +7179,9 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 ---------------------------------------------------------------------------
 
-Copyright (c) 2013, Dave Cheney
-All rights reserved.
-Copyright (c) 2015, Dave Cheney <dave@cheney.net>
-All rights reserved.
-
-
-Redistribution and use in source and binary forms, with or without 
-modification, are permitted provided that the following conditions are 
-met:
-
- * Redistributions of source code must retain the above copyright 
-   notice, this list of conditions and the following disclaimer.
- * Redistributions in binary form must reproduce the above copyright 
-   notice, this list of conditions and the following disclaimer in the 
-   documentation and/or other materials provided with the distribution.
-
-THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS 
-IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED 
-TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A 
-PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT 
-HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, 
-SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED 
-TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR 
-PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF 
-LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING 
-NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS 
-SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-
----------------------------------------------------------------------------
-
-Copyright (c) 2016 Péter Surányi.
-
-Redistribution and use in source and binary forms, with or without
-modification, are permitted provided that the following conditions are
-met:
-
-   * Redistributions of source code must retain the above copyright
-notice, this list of conditions and the following disclaimer.
-   * Redistributions in binary form must reproduce the above
-copyright notice, this list of conditions and the following disclaimer
-in the documentation and/or other materials provided with the
-distribution.
-
-THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
-"AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
-LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
-A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
-OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
-SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
-LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
-DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
-THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
-(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
-OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-
----------------------------------------------------------------------------
-
-Copyright (c) 2011 Google Inc. All rights reserved.
-
-Redistribution and use in source and binary forms, with or without
-modification, are permitted provided that the following conditions are
-met:
-
-   * Redistributions of source code must retain the above copyright
-notice, this list of conditions and the following disclaimer.
-   * Redistributions in binary form must reproduce the above
-copyright notice, this list of conditions and the following disclaimer
-in the documentation and/or other materials provided with the
-distribution.
-   * Neither the name of Google Inc. nor the names of its
-contributors may be used to endorse or promote products derived from
-this software without specific prior written permission.
-
-THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
-"AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
-LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
-A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
-OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
-SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
-LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
-DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
-THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
-(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
-OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-
----------------------------------------------------------------------------
-
-The MIT License (MIT)
-
-Copyright (c) 2014 Sam Ghods
-
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
-
----------------------------------------------------------------------------
-
-Copyright (c) 2012 Alex Ogier. All rights reserved.
-Copyright (c) 2012 The Go Authors. All rights reserved.
-
-Redistribution and use in source and binary forms, with or without
-modification, are permitted provided that the following conditions are
-met:
-
-   * Redistributions of source code must retain the above copyright
-notice, this list of conditions and the following disclaimer.
-   * Redistributions in binary form must reproduce the above
-copyright notice, this list of conditions and the following disclaimer
-in the documentation and/or other materials provided with the
-distribution.
-   * Neither the name of Google Inc. nor the names of its
-contributors may be used to endorse or promote products derived from
-this software without specific prior written permission.
-
-THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
-"AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
-LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
-A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
-OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
-SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
-LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
-DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
-THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
-(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
-OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-
----------------------------------------------------------------------------
-
-Copyright (C) 2013 Blake Mizerany
-
-Permission is hereby granted, free of charge, to any person obtaining
-a copy of this software and associated documentation files (the
-"Software"), to deal in the Software without restriction, including
-without limitation the rights to use, copy, modify, merge, publish,
-distribute, sublicense, and/or sell copies of the Software, and to
-permit persons to whom the Software is furnished to do so, subject to
-the following conditions:
-
-The above copyright notice and this permission notice shall be
-included in all copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
-EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
-MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
-NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
-LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
-OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
-WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-
----------------------------------------------------------------------------
-
-Copyright (c) 2009,2014 Google Inc. All rights reserved.
-
-Redistribution and use in source and binary forms, with or without
-modification, are permitted provided that the following conditions are
-met:
-
-   * Redistributions of source code must retain the above copyright
-notice, this list of conditions and the following disclaimer.
-   * Redistributions in binary form must reproduce the above
-copyright notice, this list of conditions and the following disclaimer
-in the documentation and/or other materials provided with the
-distribution.
-   * Neither the name of Google Inc. nor the names of its
-contributors may be used to endorse or promote products derived from
-this software without specific prior written permission.
-
-THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
-"AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
-LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
-A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
-OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
-SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
-LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
-DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
-THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
-(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
-OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-
----------------------------------------------------------------------------
-
-Copyright (c) 2013 Dario Castañé. All rights reserved.
-Copyright (c) 2012 The Go Authors. All rights reserved.
-
-Redistribution and use in source and binary forms, with or without
-modification, are permitted provided that the following conditions are
-met:
-
-   * Redistributions of source code must retain the above copyright
-notice, this list of conditions and the following disclaimer.
-   * Redistributions in binary form must reproduce the above
-copyright notice, this list of conditions and the following disclaimer
-in the documentation and/or other materials provided with the
-distribution.
-   * Neither the name of Google Inc. nor the names of its
-contributors may be used to endorse or promote products derived from
-this software without specific prior written permission.
-
-THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
-"AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
-LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
-A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
-OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
-SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
-LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
-DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
-THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
-(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
-OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-
----------------------------------------------------------------------------
-
-Copyright (c) 2006 Kirill Simonov
-
-Permission is hereby granted, free of charge, to any person obtaining a copy of
-this software and associated documentation files (the "Software"), to deal in
-the Software without restriction, including without limitation the rights to
-use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies
-of the Software, and to permit persons to whom the Software is furnished to do
-so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
-
----------------------------------------------------------------------------
-
-The MIT License (MIT)
-
-Copyright (c) 2014 Simon Eskildsen
-
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in
-all copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
-THE SOFTWARE.
-
----------------------------------------------------------------------------
-
-Copyright (c) 2012-2013 Dave Collins <dave@davec.name>
-
-Permission to use, copy, modify, and distribute this software for any
-purpose with or without fee is hereby granted, provided that the above
-copyright notice and this permission notice appear in all copies.
-
-THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
-WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
-MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
-ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
-WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
-ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
-OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE
-
----------------------------------------------------------------------------
-
-Copyright (c) 2013, Georg Reinke (<guelfey at gmail dot com>)
-All rights reserved.
-
-Redistribution and use in source and binary forms, with or without
-modification, are permitted provided that the following conditions
-are met:
-
-1. Redistributions of source code must retain the above copyright notice,
-this list of conditions and the following disclaimer.
-
-2. Redistributions in binary form must reproduce the above copyright
-notice, this list of conditions and the following disclaimer in the
-documentation and/or other materials provided with the distribution.
-
-THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
-"AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
-LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
-A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
-HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
-SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED
-TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
-PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
-LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
-NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
-SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-
----------------------------------------------------------------------------
-
-Copyright (c) 2016 Mail.Ru Group
-
-Permission is hereby granted, free of charge, to any person obtaining a 
-copy of this software and associated documentation files (the 
-"Software"), to deal in the Software without restriction, including 
-without limitation the rights to use, copy, modify, merge, publish, 
-distribute, sublicense, and/or sell copies of the Software, and to 
-permit persons to whom the Software is furnished to do so, subject to 
-the following conditions:
-
-The above copyright notice and this permission notice shall be included 
-in all copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS 
-OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF 
-MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. 
-IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY 
-CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, 
-TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE 
-SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-
----------------------------------------------------------------------------
-
-Copyright (c) 2012 Dave Grijalva
-
-Permission is hereby granted, free of charge, to any person obtaining a 
-copy of this software and associated documentation files (the 
-"Software"), to deal in the Software without restriction, including 
-without limitation the rights to use, copy, modify, merge, publish, 
-distribute, sublicense, and/or sell copies of the Software, and to 
-permit persons to whom the Software is furnished to do so, subject to 
-the following conditions:
-
-The above copyright notice and this permission notice shall be included 
-in all copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS 
-OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF 
-MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. 
-IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY 
-CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, 
-TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE 
-SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-
----------------------------------------------------------------------------
-
-MIT License
-
-Copyright (c) 2016 json-iterator
-
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
-
----------------------------------------------------------------------------
-
-The MIT License (MIT)
-
-Copyright (c) 2014 Stretchr, Inc.
-
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
-
----------------------------------------------------------------------------
-
-Copyright (c) 2012 The Go Authors. All rights reserved.
-Copyright (c) 2012 fsnotify Authors. All rights reserved.
-
-Redistribution and use in source and binary forms, with or without
-modification, are permitted provided that the following conditions are
-met:
-
-   * Redistributions of source code must retain the above copyright
-notice, this list of conditions and the following disclaimer.
-   * Redistributions in binary form must reproduce the above
-copyright notice, this list of conditions and the following disclaimer
-in the documentation and/or other materials provided with the
-distribution.
-   * Neither the name of Google Inc. nor the names of its
-contributors may be used to endorse or promote products derived from
-this software without specific prior written permission.
-
-THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
-"AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
-LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
-A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
-OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
-SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
-LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
-DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
-THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
-(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
-OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-
----------------------------------------------------------------------------
-
-ISC License
-
-Copyright (c) 2012 Chris Howey
+Copyright (c) 2013 Dave Collins <dave@davec.name>
+Copyright (c) 2015 Dave Collins <dave@davec.name>
+Copyright (c) 2013-2015 Dave Collins <dave@davec.name>
 
 Permission to use, copy, modify, and distribute this software for any
 purpose with or without fee is hereby granted, provided that the above
@@ -7908,85 +7197,7 @@ OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
 ---------------------------------------------------------------------------
 
-The MIT License (MIT)
-
-Copyright (c) 2013 - 2016 Thomas Pelletier, Eric Anderton
-
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
-
----------------------------------------------------------------------------
-
-Copyright (c) 2012, Martin Angers
-All rights reserved.
-
-Redistribution and use in source and binary forms, with or without 
-modification, are permitted provided that the following conditions are 
-met: 
-
-* Redistributions of source code must retain the above copyright notice, 
-this list of conditions and the following disclaimer. 
-
-* Redistributions in binary form must reproduce the above copyright 
-notice, this list of conditions and the following disclaimer in the 
-documentation and/or other materials provided with the distribution. 
-
-* Neither the name of the author nor the names of its contributors may 
-be used to endorse or promote products derived from this software 
-without specific prior written permission. 
-
-THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS 
-IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED 
-TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A 
-PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT 
-HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, 
-SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED 
-TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR 
-PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF 
-LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING 
-NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS 
-SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
-
----------------------------------------------------------------------------
-
-Copyright (c) 2011-2012 Peter Bourgon
-
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in
-all copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
-THE SOFTWARE.
-
----------------------------------------------------------------------------
-
-Copyright (c) 2013, Patrick Mezard
+Copyright (c) 2011, Open Knowledge Foundation Ltd.
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
@@ -7994,128 +7205,37 @@ modification, are permitted provided that the following conditions are
 met:
 
     Redistributions of source code must retain the above copyright
-notice, this list of conditions and the following disclaimer.
+    notice, this list of conditions and the following disclaimer.
+
     Redistributions in binary form must reproduce the above copyright
-notice, this list of conditions and the following disclaimer in the
-documentation and/or other materials provided with the distribution.
-    The names of its contributors may not be used to endorse or promote
-products derived from this software without specific prior written
-permission.
+    notice, this list of conditions and the following disclaimer in
+    the documentation and/or other materials provided with the
+    distribution.
 
-THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS
-IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED
-TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A
-PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+    Neither the name of the Open Knowledge Foundation Ltd. nor the
+    names of its contributors may be used to endorse or promote
+    products derived from this software without specific prior written
+    permission.
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+"AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
 HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
-SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED
-TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
-PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
-LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
-NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
-SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 ---------------------------------------------------------------------------
 
-Copyright (c) 2015 Alex Efros
-
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
-
----------------------------------------------------------------------------
-
-Copyright (c) 2012,2013 Ernest Micklei
-
-MIT License
-
-Permission is hereby granted, free of charge, to any person obtaining
-a copy of this software and associated documentation files (the
-"Software"), to deal in the Software without restriction, including
-without limitation the rights to use, copy, modify, merge, publish,
-distribute, sublicense, and/or sell copies of the Software, and to
-permit persons to whom the Software is furnished to do so, subject to
-the following conditions:
-
-The above copyright notice and this permission notice shall be
-included in all copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
-EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
-MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
-NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
-LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
-OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
-WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-
----------------------------------------------------------------------------
-
-opyright (c) 2013-2014 - Frank Schroeder
-
-All rights reserved.
-
-Redistribution and use in source and binary forms, with or without
-modification, are permitted provided that the following conditions are met:
-
-1. Redistributions of source code must retain the above copyright notice, this
-   list of conditions and the following disclaimer.
-2. Redistributions in binary form must reproduce the above copyright notice,
-   this list of conditions and the following disclaimer in the documentation
-   and/or other materials provided with the distribution.
-
-THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
-ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
-WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
-DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR
-ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
-(INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
-LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
-ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
-(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
-SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-
----------------------------------------------------------------------------
-
-Copyright (c) 2013 Mitchell Hashimoto
-
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in
-all copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
-THE SOFTWARE.
-
----------------------------------------------------------------------------
-
-Copyright © 2012 Greg Jones (greg.jones@gmail.com)
+Copyright © 2014 Steve Francia <spf@spf13.com>
 
 Permission is hereby granted, free of charge, to any person obtaining a 
 copy of this software and associated documentation files (the 
-“Software”), to deal in the Software without restriction, including 
+"Software"), to deal in the Software without restriction, including 
 without limitation the rights to use, copy, modify, merge, publish, 
 distribute, sublicense, and/or sell copies of the Software, and to 
 permit persons to whom the Software is furnished to do so, subject to 
@@ -8124,8 +7244,8 @@ the following conditions:
 The above copyright notice and this permission notice shall be included 
 in all copies or substantial portions of the Software. 
 
-THE SOFTWARE IS PROVIDED “AS IS”, WITHOUT WARRANTY OF ANY KIND, 
-EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF 
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS 
+OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF 
 MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. 
 IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY 
 CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, 
@@ -8134,32 +7254,7 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 ---------------------------------------------------------------------------
 
-Copyright (c) 2017 Ernest Micklei
-
-MIT License
-
-Permission is hereby granted, free of charge, to any person obtaining
-a copy of this software and associated documentation files (the
-"Software"), to deal in the Software without restriction, including
-without limitation the rights to use, copy, modify, merge, publish,
-distribute, sublicense, and/or sell copies of the Software, and to
-permit persons to whom the Software is furnished to do so, subject to
-the following conditions:
-
-The above copyright notice and this permission notice shall be
-included in all copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
-EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
-MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
-NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
-LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
-OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
-WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-
----------------------------------------------------------------------------
-
-Copyright (c) 2013 Joshua Tacoma
+Copyright (c) 2016 Thomas Pelletier
 
 Permission is hereby granted, free of charge, to any person obtaining a copy of
 this software and associated documentation files (the "Software"), to deal in
@@ -8180,9 +7275,9 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 ---------------------------------------------------------------------------
 
-Copyright (c) Yasuhiro MATSUMOTO <mattn.jp@gmail.com>
+Copyright (c) 2012 - 2013 Mat Ryer and Tyler Bunnell
 
-MIT License (Expat)
+Please consider promoting this project if you find it useful.
 
 Permission is hereby granted, free of charge, to any person obtaining a 
 copy of this software and associated documentation files (the 
@@ -8204,28 +7299,6 @@ TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
 SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE. 
 
 ---------------------------------------------------------------------------
-
-The MIT License (MIT)
-
-Copyright (c) 2016 Yasuhiro Matsumoto
-
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
 
 
 
@@ -8348,9 +7421,9 @@ END OF context version 1.1.1 NOTICES AND INFORMATION
 
 @@@@@@@@@@@@
 ===========================================================================
-crypto version 56440b8: The Program includes crypto version 56440b8
-software. IBM obtained the crypto version 56440b8 software under the
-terms and conditions of the following license(s):
+crypto commit level 81e9090: The Program includes crypto commit level
+81e9090 software. IBM obtained the crypto commit level 81e9090
+software under the terms and conditions of the following license(s):
 
 ---------------------------------------------------------------------------
 
@@ -8384,15 +7457,15 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 
 =======================================================================
-END OF crypto version 56440b8 NOTICES AND INFORMATION 
+END OF crypto commit level 81e9090 NOTICES AND INFORMATION 
 =======================================================================
 
 
 @@@@@@@@@@@@
 ===========================================================================
-diskv version 5f041e8: The Program includes diskv version 5f041e8
-software. IBM obtained the diskv version 5f041e8 software under the
-terms and conditions of the following license(s):
+diskv commit level 5f041e8: The Program includes diskv commit level
+5f041e8 software. IBM obtained the diskv commit level 5f041e8
+software under the terms and conditions of the following license(s):
 
 ---------------------------------------------------------------------------
 
@@ -8418,15 +7491,15 @@ THE SOFTWARE.
 
 
 =======================================================================
-END OF diskv version 5f041e8 NOTICES AND INFORMATION 
+END OF diskv commit level 5f041e8 NOTICES AND INFORMATION 
 =======================================================================
 
 
 @@@@@@@@@@@@
 ===========================================================================
-easyjson version 03f2033: The Program includes easyjson version
-03f2033 software. IBM obtained the easyjson version 03f2033 software
-under the terms and conditions of the following license(s):
+easyjson commit level 2f5df55: The Program includes easyjson commit
+level 2f5df55 software. IBM obtained the easyjson commit level
+2f5df55 software under the terms and conditions of the following license(s):
 
 ---------------------------------------------------------------------------
 
@@ -8453,15 +7526,15 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 
 =======================================================================
-END OF easyjson version 03f2033 NOTICES AND INFORMATION 
+END OF easyjson commit level 2f5df55 NOTICES AND INFORMATION 
 =======================================================================
 
 
 @@@@@@@@@@@@
 ===========================================================================
-go version 1.0.0: The Program includes go version 1.0.0 software. IBM
-obtained the go version 1.0.0 software under the terms and conditions
-of the following license(s):
+go commit level 36b1496: The Program includes go commit level 36b1496
+software. IBM obtained the go commit level 36b1496 software under the
+terms and conditions of the following license(s):
 
 ---------------------------------------------------------------------------
 
@@ -8490,15 +7563,15 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 
 =======================================================================
-END OF go version 1.0.0 NOTICES AND INFORMATION 
+END OF go commit level 36b1496 NOTICES AND INFORMATION 
 =======================================================================
 
 
 @@@@@@@@@@@@
 ===========================================================================
-go-flags version  f88afde: The Program includes go-flags version 
-f88afde software. IBM obtained the go-flags version  f88afde software
-under the terms and conditions of the following license(s):
+go-flags version  1.4.0: The Program includes go-flags version  1.4.0
+software. IBM obtained the go-flags version  1.4.0 software under the
+terms and conditions of the following license(s):
 
 ---------------------------------------------------------------------------
 
@@ -8531,7 +7604,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 
 =======================================================================
-END OF go-flags version  f88afde NOTICES AND INFORMATION 
+END OF go-flags version  1.4.0 NOTICES AND INFORMATION 
 =======================================================================
 
 
@@ -8579,9 +7652,10 @@ END OF go-logging version 1 NOTICES AND INFORMATION
 
 @@@@@@@@@@@@
 ===========================================================================
-go-restful version ff4f55a: The Program includes go-restful version
-ff4f55a software. IBM obtained the go-restful version ff4f55a
-software under the terms and conditions of the following license(s):
+go-restful commit level ff4f55a: The Program includes go-restful
+commit level ff4f55a software. IBM obtained the go-restful commit
+level ff4f55a software under the terms and conditions of the
+following license(s):
 
 ---------------------------------------------------------------------------
 
@@ -8610,15 +7684,15 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 
 =======================================================================
-END OF go-restful version ff4f55a NOTICES AND INFORMATION 
+END OF go-restful commit level ff4f55a NOTICES AND INFORMATION 
 =======================================================================
 
 
 @@@@@@@@@@@@
 ===========================================================================
-go-spew version 04cdfd4: The Program includes go-spew version 04cdfd4
-software. IBM obtained the go-spew version 04cdfd4 software under the
-terms and conditions of the following license(s):
+go-spew commit level 04cdfd4: The Program includes go-spew commit
+level 04cdfd4 software. IBM obtained the go-spew commit level 04cdfd4
+software under the terms and conditions of the following license(s):
 
 ---------------------------------------------------------------------------
 
@@ -8640,7 +7714,7 @@ OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
 
 =======================================================================
-END OF go-spew version 04cdfd4 NOTICES AND INFORMATION 
+END OF go-spew commit level 04cdfd4 NOTICES AND INFORMATION 
 =======================================================================
 
 
@@ -8710,9 +7784,9 @@ END OF go-sqlite3 version 1.3.0 NOTICES AND INFORMATION
 
 @@@@@@@@@@@@
 ===========================================================================
-gopass version bf9dde6: The Program includes gopass version bf9dde6
-software. IBM obtained the gopass version bf9dde6 software under the
-terms and conditions of the following license(s):
+gopass commit level bf9dde6: The Program includes gopass commit level
+bf9dde6 software. IBM obtained the gopass commit level bf9dde6
+software under the terms and conditions of the following license(s):
 
 ---------------------------------------------------------------------------
 
@@ -8734,7 +7808,7 @@ OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
 
 =======================================================================
-END OF gopass version bf9dde6 NOTICES AND INFORMATION 
+END OF gopass commit level bf9dde6 NOTICES AND INFORMATION 
 =======================================================================
 
 
@@ -8776,9 +7850,9 @@ END OF gorm version 1.0 NOTICES AND INFORMATION
 
 @@@@@@@@@@@@
 ===========================================================================
-httpcache version 9cad4c3: The Program includes httpcache version
-9cad4c3 software. IBM obtained the httpcache version 9cad4c3 software
-under the terms and conditions of the following license(s):
+httpcache commit level 787624d: The Program includes httpcache commit
+level 787624d software. IBM obtained the httpcache commit level
+787624d software under the terms and conditions of the following license(s):
 
 ---------------------------------------------------------------------------
 
@@ -8805,15 +7879,15 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 
 =======================================================================
-END OF httpcache version 9cad4c3 NOTICES AND INFORMATION 
+END OF httpcache commit level 787624d NOTICES AND INFORMATION 
 =======================================================================
 
 
 @@@@@@@@@@@@
 ===========================================================================
-inf version d2d2541: The Program includes inf version d2d2541
-software. IBM obtained the inf version d2d2541 software under the
-terms and conditions of the following license(s):
+inf commit level 3887ee9: The Program includes inf commit level
+3887ee9 software. IBM obtained the inf commit level 3887ee9 software
+under the terms and conditions of the following license(s):
 
 ---------------------------------------------------------------------------
 
@@ -8848,15 +7922,16 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 
 =======================================================================
-END OF inf version d2d2541 NOTICES AND INFORMATION 
+END OF inf commit level 3887ee9 NOTICES AND INFORMATION 
 =======================================================================
 
 
 @@@@@@@@@@@@
 ===========================================================================
-inflection version 0414036: The Program includes inflection version
-0414036 software. IBM obtained the inflection version 0414036
-software under the terms and conditions of the following license(s):
+inflection commit level 0414036: The Program includes inflection
+commit level 0414036 software. IBM obtained the inflection commit
+level 0414036 software under the terms and conditions of the
+following license(s):
 
 ---------------------------------------------------------------------------
 
@@ -8885,7 +7960,7 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 
 =======================================================================
-END OF inflection version 0414036 NOTICES AND INFORMATION 
+END OF inflection commit level 0414036 NOTICES AND INFORMATION 
 =======================================================================
 
 
@@ -10468,9 +9543,9 @@ END OF libressl version 2.6.3 NOTICES AND INFORMATION
 
 @@@@@@@@@@@@
 ===========================================================================
-lockfile version 6a197d5: The Program includes lockfile version
-6a197d5 software. IBM obtained the lockfile version 6a197d5 software
-under the terms and conditions of the following license(s):
+lockfile commit level 6a197d5: The Program includes lockfile commit
+level 6a197d5 software. IBM obtained the lockfile commit level
+6a197d5 software under the terms and conditions of the following license(s):
 
 ---------------------------------------------------------------------------
 
@@ -10497,7 +9572,7 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 
 =======================================================================
-END OF lockfile version 6a197d5 NOTICES AND INFORMATION 
+END OF lockfile commit level 6a197d5 NOTICES AND INFORMATION 
 =======================================================================
 
 
@@ -10538,9 +9613,9 @@ END OF lumberjack version 2.0 NOTICES AND INFORMATION
 
 @@@@@@@@@@@@
 ===========================================================================
-mergo version 6633656: The Program includes mergo version 6633656
-software. IBM obtained the mergo version 6633656 software under the
-terms and conditions of the following license(s):
+mergo commit level 6633656: The Program includes mergo commit level
+6633656 software. IBM obtained the mergo commit level 6633656
+software under the terms and conditions of the following license(s):
 
 ---------------------------------------------------------------------------
 
@@ -10575,7 +9650,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 
 =======================================================================
-END OF mergo version 6633656 NOTICES AND INFORMATION 
+END OF mergo commit level 6633656 NOTICES AND INFORMATION 
 =======================================================================
 
 
@@ -10871,9 +9946,9 @@ END OF mux version 1.5.0 NOTICES AND INFORMATION
 
 @@@@@@@@@@@@
 ===========================================================================
-net version f4c29de: The Program includes net version f4c29de
-software. IBM obtained the net version f4c29de software under the
-terms and conditions of the following license(s):
+net commit level 1c05540: The Program includes net commit level
+1c05540 software. IBM obtained the net commit level 1c05540 software
+under the terms and conditions of the following license(s):
 
 ---------------------------------------------------------------------------
 
@@ -10907,15 +9982,15 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 
 =======================================================================
-END OF net version f4c29de NOTICES AND INFORMATION 
+END OF net commit level 1c05540 NOTICES AND INFORMATION 
 =======================================================================
 
 
 @@@@@@@@@@@@
 ===========================================================================
-nightlyone-lockfile version 6a197d5: The Program includes
-nightlyone-lockfile version 6a197d5 software. IBM obtained the
-nightlyone-lockfile version 6a197d5 software under the terms and
+nightlyone-lockfile commit level 6a197d5: The Program includes
+nightlyone-lockfile commit level 6a197d5 software. IBM obtained the
+nightlyone-lockfile commit level 6a197d5 software under the terms and
 conditions of the following license(s):
 
 ---------------------------------------------------------------------------
@@ -10942,7 +10017,7 @@ THE SOFTWARE.
 
 
 =======================================================================
-END OF nightlyone-lockfile version 6a197d5 NOTICES AND
+END OF nightlyone-lockfile commit level 6a197d5 NOTICES AND
 INFORMATION 
 =======================================================================
 
@@ -11477,9 +10552,9 @@ END OF OpenSSL version 1.0.2o NOTICES AND INFORMATION
 
 @@@@@@@@@@@@
 ===========================================================================
-pflag  version 5ccb023: The Program includes pflag  version 5ccb023
-software. IBM obtained the pflag  version 5ccb023 software under the
-terms and conditions of the following license(s):
+pflag  commit level 5ccb023: The Program includes pflag  commit level
+5ccb023 software. IBM obtained the pflag  commit level 5ccb023
+software under the terms and conditions of the following license(s):
 
 ---------------------------------------------------------------------------
 
@@ -11514,15 +10589,15 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 
 =======================================================================
-END OF pflag  version 5ccb023 NOTICES AND INFORMATION 
+END OF pflag  commit level 5ccb023 NOTICES AND INFORMATION 
 =======================================================================
 
 
 @@@@@@@@@@@@
 ===========================================================================
-pq version 90697d6: The Program includes pq version 90697d6 software.
-IBM obtained the pq version 90697d6 software under the terms and
-conditions of the following license(s):
+pq commit level 90697d6: The Program includes pq commit level 90697d6
+software. IBM obtained the pq commit level 90697d6 software under the
+terms and conditions of the following license(s):
 
 ---------------------------------------------------------------------------
 
@@ -11550,15 +10625,15 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 
 =======================================================================
-END OF pq version 90697d6 NOTICES AND INFORMATION 
+END OF pq commit level 90697d6 NOTICES AND INFORMATION 
 =======================================================================
 
 
 @@@@@@@@@@@@
 ===========================================================================
-protobuf version 1643683: The Program includes protobuf version
-1643683 software. IBM obtained the protobuf version 1643683 software
-under the terms and conditions of the following license(s):
+protobuf commit level 1643683: The Program includes protobuf commit
+level 1643683 software. IBM obtained the protobuf commit level
+1643683 software under the terms and conditions of the following license(s):
 
 ---------------------------------------------------------------------------
 
@@ -11595,15 +10670,15 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 
 =======================================================================
-END OF protobuf version 1643683 NOTICES AND INFORMATION 
+END OF protobuf commit level 1643683 NOTICES AND INFORMATION 
 =======================================================================
 
 
 @@@@@@@@@@@@
 ===========================================================================
-protobuf version c0656ed: The Program includes protobuf version
-c0656ed software. IBM obtained the protobuf version c0656ed software
-under the terms and conditions of the following license(s):
+protobuf commit level c0656ed: The Program includes protobuf commit
+level c0656ed software. IBM obtained the protobuf commit level
+c0656ed software under the terms and conditions of the following license(s):
 
 ---------------------------------------------------------------------------
 
@@ -11645,15 +10720,15 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 
 =======================================================================
-END OF protobuf version c0656ed NOTICES AND INFORMATION 
+END OF protobuf commit level c0656ed NOTICES AND INFORMATION 
 =======================================================================
 
 
 @@@@@@@@@@@@
 ===========================================================================
-purell version 8a29053: The Program includes purell version 8a29053
-software. IBM obtained the purell version 8a29053 software under the
-terms and conditions of the following license(s):
+purell commit level 8a29053: The Program includes purell commit level
+8a29053 software. IBM obtained the purell commit level 8a29053
+software under the terms and conditions of the following license(s):
 
 ---------------------------------------------------------------------------
 
@@ -11689,15 +10764,15 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 
 =======================================================================
-END OF purell version 8a29053 NOTICES AND INFORMATION 
+END OF purell commit level 8a29053 NOTICES AND INFORMATION 
 =======================================================================
 
 
 @@@@@@@@@@@@
 ===========================================================================
-sys version 34b17bd: The Program includes sys version 34b17bd
-software. IBM obtained the sys version 34b17bd software under the
-terms and conditions of the following license(s):
+sys commit level a2e06a1: The Program includes sys commit level
+a2e06a1 software. IBM obtained the sys commit level a2e06a1 software
+under the terms and conditions of the following license(s):
 
 ---------------------------------------------------------------------------
 
@@ -11731,15 +10806,15 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 
 =======================================================================
-END OF sys version 34b17bd NOTICES AND INFORMATION 
+END OF sys commit level a2e06a1 NOTICES AND INFORMATION 
 =======================================================================
 
 
 @@@@@@@@@@@@
 ===========================================================================
-text version cb67308: The Program includes text version cb67308
-software. IBM obtained the text version cb67308 software under the
-terms and conditions of the following license(s):
+text commit level b19bf47: The Program includes text commit level
+b19bf47 software. IBM obtained the text commit level b19bf47 software
+under the terms and conditions of the following license(s):
 
 ---------------------------------------------------------------------------
 
@@ -11773,7 +10848,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 
 =======================================================================
-END OF text version cb67308 NOTICES AND INFORMATION 
+END OF text commit level b19bf47 NOTICES AND INFORMATION 
 =======================================================================
 
 
@@ -11815,9 +10890,9 @@ END OF times version 1.0.1 NOTICES AND INFORMATION
 
 @@@@@@@@@@@@
 ===========================================================================
-urlesc version de5bf2a: The Program includes urlesc version de5bf2a
-software. IBM obtained the urlesc version de5bf2a software under the
-terms and conditions of the following license(s):
+urlesc commit level 5bd2802: The Program includes urlesc commit level
+5bd2802 software. IBM obtained the urlesc commit level 5bd2802
+software under the terms and conditions of the following license(s):
 
 ---------------------------------------------------------------------------
 
@@ -11851,15 +10926,15 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 
 =======================================================================
-END OF urlesc version de5bf2a NOTICES AND INFORMATION 
+END OF urlesc commit level 5bd2802 NOTICES AND INFORMATION 
 =======================================================================
 
 
 @@@@@@@@@@@@
 ===========================================================================
-uuid version ca53cad: The Program includes uuid version ca53cad
-software. IBM obtained the uuid version ca53cad software under the
-terms and conditions of the following license(s):
+uuid commit level ca53cad: The Program includes uuid commit level
+ca53cad software. IBM obtained the uuid commit level ca53cad software
+under the terms and conditions of the following license(s):
 
 ---------------------------------------------------------------------------
 
@@ -11893,15 +10968,15 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 
 =======================================================================
-END OF uuid version ca53cad NOTICES AND INFORMATION 
+END OF uuid commit level ca53cad NOTICES AND INFORMATION 
 =======================================================================
 
 
 @@@@@@@@@@@@
 ===========================================================================
-yaml version 73d445a: The Program includes yaml version 73d445a
-software. IBM obtained the yaml version 73d445a software under the
-terms and conditions of the following license(s):
+yaml commit level 73d445a: The Program includes yaml commit level
+73d445a software. IBM obtained the yaml commit level 73d445a software
+under the terms and conditions of the following license(s):
 
 ---------------------------------------------------------------------------
 
@@ -11961,7 +11036,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 
 =======================================================================
-END OF yaml version 73d445a NOTICES AND INFORMATION 
+END OF yaml commit level 73d445a NOTICES AND INFORMATION 
 =======================================================================
 
 
@@ -12222,7 +11297,7 @@ The Program includes some or all of the following that IBM obtained
 under the Common Development and Distribution License (source code 
 available via the indicated URL):
 
-kubernetes-incubator-external-storage
+kubernetes-incubator-external-storage commit level 92295a3
     (http://github.com/kubernetes-incubator/external-storage)
 
 Portions of kubernetes version 1.9.2
@@ -12347,7 +11422,6 @@ combination).
 (c) The licenses granted in Sections 2.2(a) and 2.2(b) are effective on 
 the date Contributor first distributes or otherwise makes the 
 Modifications available to a third party. 
-
 
 (d) Notwithstanding Section 2.2(b) above, no patent license is granted: 
 (1) for any code that Contributor has deleted from the Contributor 
@@ -12580,7 +11654,7 @@ The Program includes some or all of the following that IBM obtained
 under the Mozilla PuIblic License, Version 2.0 (source code available 
 via the indicated URL):
 
-kubernetes-incubator-external-storage version 3.0.0-beta.2
+kubernetes-incubator-external-storage commit level 92295a3
     (http://github.com/kubernetes-incubator/external-storage)
 
 Portions of kubernetes version 1.9.2	
@@ -12589,7 +11663,7 @@ Portions of kubernetes version 1.9.2
 CA-Certificates version 20171114
 	(https://github.com/alpinelinux/ca-certificates)
 
-golang-lru version 0fb14ef 
+golang-lru commit level a0d98a5
     (https://github.com/hashicorp/golang-lru)
 
 ---------------------------------------------------------------------------	
