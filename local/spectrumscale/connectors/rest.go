@@ -36,7 +36,7 @@ type spectrum_rest struct {
 }
 
 func NewSpectrumRest(logger *log.Logger, restConfig resources.RestConfig) (SpectrumScaleConnector, error) {
-	endpoint := restConfig.Endpoint
+	endpoint := fmt.Sprintf("https://%s:%d/", restConfig.ManagementIP, restConfig.Port)
 	user := restConfig.User
 	password := restConfig.Password
 
@@ -48,7 +48,7 @@ func NewSpectrumRest(logger *log.Logger, restConfig resources.RestConfig) (Spect
 }
 
 func NewSpectrumRestWithClient(logger *log.Logger, restConfig resources.RestConfig, client *http.Client) (SpectrumScaleConnector, error) {
-	endpoint := restConfig.Endpoint
+	endpoint := fmt.Sprintf("https://%s:%d/", restConfig.ManagementIP, restConfig.Port)
 	return &spectrum_rest{logger: logger, httpClient: client, endpoint: endpoint}, nil
 }
 

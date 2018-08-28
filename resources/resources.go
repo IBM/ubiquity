@@ -85,6 +85,8 @@ const KeyScbeSslMode = "SCBE_SSL_MODE"
 const DefaultDbSslMode = SslModeVerifyFull
 const DefaultScbeSslMode = SslModeVerifyFull
 const DefaultPluginsSslMode = SslModeVerifyFull
+const SpectrumscaleDefaultPort = 443                              // the default port for SPECTRUM SCALE management
+
 
 type SshConfig struct {
 	User string
@@ -93,10 +95,11 @@ type SshConfig struct {
 }
 
 type RestConfig struct {
-	Endpoint string
-	User     string
-	Password string
-	Hostname string
+	Port          int
+	ManagementIP  string
+	User          string
+	Password      string
+	Hostname      string
 }
 
 type SpectrumNfsRemoteConfig struct {
