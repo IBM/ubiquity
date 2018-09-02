@@ -91,9 +91,16 @@ func (b *blockDeviceUtils) UmountFs(mpoint string) error {
 	if err := b.exec.IsExecutable(umountCmd); err != nil {
 		return b.logger.ErrorRet(&commandNotFoundError{umountCmd, err}, "failed")
 	}
-
-	args := []string{"-f", mpoint}
-	b.logger.Debug("Runnig umount -f")
+	
+	//TODO: remove this:
+	b.logger.Debug("Trying to run dmsetup before running the umount")
+	args := []string{"message", dev, "0", "fail_if_no_path"}
+	if _, err := b.exec.Execute("dmsetup", args); err != nil {
+		return b.logger.ErrorRet(&commandExecuteError{dmsetupCmd, err}, "failed")
+	}
+	
+	args := []string{mpoint}
+	b.logger.Debug("Runnig umount")
 	if _, err := b.exec.ExecuteWithTimeout(10*1000, umountCmd, args); err != nil {
 		if err.Error() == context.DeadlineExceeded.Error(){
 			return err
