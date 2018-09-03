@@ -276,7 +276,7 @@ func (b *blockDeviceUtils) Cleanup(mpath string) error {
 	if err := b.exec.IsExecutable(multipathCmd); err != nil {
 		return b.logger.ErrorRet(&commandNotFoundError{multipathCmd, err}, "failed")
 	}
-	args = []string{"-f", dev}
+	args := []string{"-f", dev}
 	if _, err := b.exec.ExecuteWithTimeout(CleanupTimeout, multipathCmd, args); err != nil {
 		return b.logger.ErrorRet(&CommandExecuteError{multipathCmd, err}, "failed")
 	}

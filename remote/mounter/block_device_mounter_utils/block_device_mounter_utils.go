@@ -121,7 +121,7 @@ func (b *blockDeviceMounterUtils) UnmountDeviceFlow(devicePath string, volumeWwn
 		return b.logger.ErrorRet(err, "Dmsetup failed")
 	}
 
-	err := b.blockDeviceUtils.UmountFs(devicePath, volumeWwn)
+	err = b.blockDeviceUtils.UmountFs(devicePath, volumeWwn)
 	if err != nil {
 		return b.logger.ErrorRet(err, "UmountFs failed")
 	}
