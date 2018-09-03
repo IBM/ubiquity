@@ -117,10 +117,11 @@ type FakeBlockDeviceUtils struct {
 	mountFsReturnsOnCall map[int]struct {
 		result1 error
 	}
-	UmountFsStub        func(mpoint string) error
+	UmountFsStub        func(mpoint string, volumeWwn string) error
 	umountFsMutex       sync.RWMutex
 	umountFsArgsForCall []struct {
-		mpoint string
+		mpoint    string
+		volumeWwn string
 	}
 	umountFsReturns struct {
 		result1 error
@@ -613,16 +614,17 @@ func (fake *FakeBlockDeviceUtils) MountFsReturnsOnCall(i int, result1 error) {
 	}{result1}
 }
 
-func (fake *FakeBlockDeviceUtils) UmountFs(mpoint string) error {
+func (fake *FakeBlockDeviceUtils) UmountFs(mpoint string, volumeWwn string) error {
 	fake.umountFsMutex.Lock()
 	ret, specificReturn := fake.umountFsReturnsOnCall[len(fake.umountFsArgsForCall)]
 	fake.umountFsArgsForCall = append(fake.umountFsArgsForCall, struct {
-		mpoint string
-	}{mpoint})
-	fake.recordInvocation("UmountFs", []interface{}{mpoint})
+		mpoint    string
+		volumeWwn string
+	}{mpoint, volumeWwn})
+	fake.recordInvocation("UmountFs", []interface{}{mpoint, volumeWwn})
 	fake.umountFsMutex.Unlock()
 	if fake.UmountFsStub != nil {
-		return fake.UmountFsStub(mpoint)
+		return fake.UmountFsStub(mpoint, volumeWwn)
 	}
 	if specificReturn {
 		return ret.result1
@@ -636,10 +638,10 @@ func (fake *FakeBlockDeviceUtils) UmountFsCallCount() int {
 	return len(fake.umountFsArgsForCall)
 }
 
-func (fake *FakeBlockDeviceUtils) UmountFsArgsForCall(i int) string {
+func (fake *FakeBlockDeviceUtils) UmountFsArgsForCall(i int) (string, string) {
 	fake.umountFsMutex.RLock()
 	defer fake.umountFsMutex.RUnlock()
-	return fake.umountFsArgsForCall[i].mpoint
+	return fake.umountFsArgsForCall[i].mpoint, fake.umountFsArgsForCall[i].volumeWwn
 }
 
 func (fake *FakeBlockDeviceUtils) UmountFsReturns(result1 error) {

@@ -19,18 +19,19 @@ package block_device_utils
 import (
 	"bufio"
 	"fmt"
-	"github.com/IBM/ubiquity/utils/logs"
 	"os/exec"
 	"regexp"
 	"strings"
 	"syscall"
 	"context"
+	"github.com/IBM/ubiquity/utils/logs"
 )
 
 const (
 	NotMountedErrorMessage                   = "not mounted" // Error while umount device that is already unmounted
 	TimeoutMilisecondMountCmdIsDeviceMounted = 20 * 1000     // max to wait for mount command
 	TimeoutMilisecondMountCmdMountFs         = 120 * 1000    // max to wait for mounting device
+	TimeoutMilisecondUmountCmdUmountFs       = 30 * 1000	// max wait timeout for umount command
 )
 
 func (b *blockDeviceUtils) CheckFs(mpath string) (bool, error) {
@@ -48,7 +49,7 @@ func (b *blockDeviceUtils) CheckFs(mpath string) (bool, error) {
 			// TODO we can improve it by double check the fs type of this device and maybe log warning if its not the same fstype we expacted
 			needFs = true
 		} else {
-			return false, b.logger.ErrorRet(&commandExecuteError{blkidCmd, err}, "failed")
+			return false, b.logger.ErrorRet(&CommandExecuteError{blkidCmd, err}, "failed")
 		}
 	}
 	b.logger.Info("checked", logs.Args{{"needFs", needFs}, {"mpath", mpath}, {blkidCmd, outputBytes}})
@@ -63,7 +64,7 @@ func (b *blockDeviceUtils) MakeFs(mpath string, fsType string) error {
 	}
 	args := []string{"-t", fsType, mpath}
 	if _, err := b.exec.Execute(mkfsCmd, args); err != nil {
-		return b.logger.ErrorRet(&commandExecuteError{mkfsCmd, err}, "failed")
+		return b.logger.ErrorRet(&CommandExecuteError{mkfsCmd, err}, "failed")
 	}
 	b.logger.Info("created", logs.Args{{"fsType", fsType}, {"mpath", mpath}})
 	return nil
@@ -77,13 +78,14 @@ func (b *blockDeviceUtils) MountFs(mpath string, mpoint string) error {
 	}
 	args := []string{mpath, mpoint}
 	if _, err := b.exec.ExecuteWithTimeout(TimeoutMilisecondMountCmdMountFs, mountCmd, args); err != nil {
-		return b.logger.ErrorRet(&commandExecuteError{mountCmd, err}, "failed")
+		return b.logger.ErrorRet(&CommandExecuteError{mountCmd, err}, "failed")
 	}
 	b.logger.Info("mounted", logs.Args{{"mpoint", mpoint}})
 	return nil
 }
 
-func (b *blockDeviceUtils) UmountFs(mpoint string) error {
+func (b *blockDeviceUtils) UmountFs(mpoint string, volumeWwn string) error {
+	// volumeWWN param is only used for logging - for the XAVI automation idempotent tests
 	// Execute unmount operation (skip, if mpoint its already unmounted)
 
 	defer b.logger.Trace(logs.DEBUG)()
@@ -93,19 +95,20 @@ func (b *blockDeviceUtils) UmountFs(mpoint string) error {
 	}
 	
 	args := []string{mpoint}
-	if _, err := b.exec.ExecuteWithTimeout(10*1000, umountCmd, args); err != nil {
+	if _, err := b.exec.ExecuteWithTimeout(TimeoutMilisecondUmountCmdUmountFs, umountCmd, args); err != nil {
 		if err.Error() == context.DeadlineExceeded.Error(){
 			return err
 		}
+
 		isMounted, _, _err := b.IsDeviceMounted(mpoint)
 		if _err != nil {
 			return _err
 		}
 		if !isMounted {
-			b.logger.Info("Device already unmounted.", logs.Args{{"mpoint", mpoint}})
+			b.logger.Info("Idempotent issue encountered - Device already unmounted.", logs.Args{{"mpath-device", mpoint}, {"volume-wwn", volumeWwn}})
 			return nil
 		}
-		return b.logger.ErrorRet(&commandExecuteError{umountCmd, err}, "failed")
+		return b.logger.ErrorRet(&CommandExecuteError{umountCmd, err}, "failed")
 	}
 	b.logger.Info("umounted", logs.Args{{"mpoint", mpoint}})
 	return nil
@@ -114,7 +117,7 @@ func (b *blockDeviceUtils) UmountFs(mpoint string) error {
 func (b *blockDeviceUtils) executeMountCmdToViewMountpoints() ([]byte, error) {
 	/*
 	   Check if mount command exist (if not return error commandNotFoundError)
-	   then trigger the mount command with no params (if failed return error commandExecuteError)
+	   then trigger the mount command with no params (if failed return error CommandExecuteError)
 	   and return the output as []byte.
 	*/
 
@@ -126,7 +129,7 @@ func (b *blockDeviceUtils) executeMountCmdToViewMountpoints() ([]byte, error) {
 
 	outputBytes, err := b.exec.ExecuteWithTimeout(TimeoutMilisecondMountCmdIsDeviceMounted, mountCmd, nil)
 	if err != nil {
-		return nil, b.logger.ErrorRet(&commandExecuteError{mountCmd, err}, "failed")
+		return nil, b.logger.ErrorRet(&CommandExecuteError{mountCmd, err}, "failed")
 	}
 
 	return outputBytes, nil

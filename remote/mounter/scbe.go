@@ -23,6 +23,7 @@ import (
 	"github.com/IBM/ubiquity/resources"
 	"github.com/IBM/ubiquity/utils"
 	"github.com/IBM/ubiquity/utils/logs"
+	"os"
 )
 
 type scbeMounter struct {
@@ -112,7 +113,7 @@ func (s *scbeMounter) Unmount(unmountRequest resources.UnmountRequest) error {
         }
 	}
 	if !skipUnmountFlow{
-		if err := s.blockDeviceMounterUtils.UnmountDeviceFlow(devicePath); err != nil {
+		if err := s.blockDeviceMounterUtils.UnmountDeviceFlow(devicePath, volumeWWN); err != nil {
 			return s.logger.ErrorRet(err, "UnmountDeviceFlow failed", logs.Args{{"devicePath", devicePath}})
 		}
 	}
@@ -122,6 +123,10 @@ func (s *scbeMounter) Unmount(unmountRequest resources.UnmountRequest) error {
 	if _, err := s.exec.Stat(mountpoint); err == nil {
 		if err := s.exec.RemoveAll(mountpoint); err != nil { // TODO its enough to do Remove without All.
 			return s.logger.ErrorRet(err, "RemoveAll failed", logs.Args{{"mountpoint", mountpoint}})
+		}
+	} else{
+		if os.IsNotExist(err){
+			s.logger.Warning("Idempotent issue encountered: mountpoint directory does not exist.", logs.Args{{"mountpoint", mountpoint}})
 		}
 	}
 
