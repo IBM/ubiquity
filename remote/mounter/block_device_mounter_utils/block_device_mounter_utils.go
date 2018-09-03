@@ -115,7 +115,12 @@ func (b *blockDeviceMounterUtils) UnmountDeviceFlow(devicePath string) error {
 	// TODO consider also to receive the mountpoint(not only the devicepath), so the umount will use the mountpoint instead of the devicepath for future support double mounting of the same device.
 	defer b.logger.Trace(logs.INFO, logs.Args{{"devicePath", devicePath}})
 
-	err := b.blockDeviceUtils.UmountFs(devicePath)
+	err := b.blockDeviceUtils.SetDmsetup(devicePath)
+	if err != nil {
+		return b.logger.ErrorRet(err, "Dmsetup failed")
+	}
+
+	err = b.blockDeviceUtils.UmountFs(devicePath)
 	if err != nil {
 		return b.logger.ErrorRet(err, "UmountFs failed")
 	}

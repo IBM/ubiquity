@@ -158,6 +158,17 @@ type FakeBlockDeviceUtils struct {
 		result2 []string
 		result3 error
 	}
+	SetDmsetupStub        func(mpath string) error
+	setDmsetupMutex       sync.RWMutex
+	setDmsetupArgsForCall []struct {
+		mpath string
+	}
+	setDmsetupReturns struct {
+		result1 error
+	}
+	setDmsetupReturnsOnCall map[int]struct {
+		result1 error
+	}
 	invocations      map[string][][]interface{}
 	invocationsMutex sync.RWMutex
 }
@@ -758,6 +769,54 @@ func (fake *FakeBlockDeviceUtils) IsDirAMountPointReturnsOnCall(i int, result1 b
 	}{result1, result2, result3}
 }
 
+func (fake *FakeBlockDeviceUtils) SetDmsetup(mpath string) error {
+	fake.setDmsetupMutex.Lock()
+	ret, specificReturn := fake.setDmsetupReturnsOnCall[len(fake.setDmsetupArgsForCall)]
+	fake.setDmsetupArgsForCall = append(fake.setDmsetupArgsForCall, struct {
+		mpath string
+	}{mpath})
+	fake.recordInvocation("SetDmsetup", []interface{}{mpath})
+	fake.setDmsetupMutex.Unlock()
+	if fake.SetDmsetupStub != nil {
+		return fake.SetDmsetupStub(mpath)
+	}
+	if specificReturn {
+		return ret.result1
+	}
+	return fake.setDmsetupReturns.result1
+}
+
+func (fake *FakeBlockDeviceUtils) SetDmsetupCallCount() int {
+	fake.setDmsetupMutex.RLock()
+	defer fake.setDmsetupMutex.RUnlock()
+	return len(fake.setDmsetupArgsForCall)
+}
+
+func (fake *FakeBlockDeviceUtils) SetDmsetupArgsForCall(i int) string {
+	fake.setDmsetupMutex.RLock()
+	defer fake.setDmsetupMutex.RUnlock()
+	return fake.setDmsetupArgsForCall[i].mpath
+}
+
+func (fake *FakeBlockDeviceUtils) SetDmsetupReturns(result1 error) {
+	fake.SetDmsetupStub = nil
+	fake.setDmsetupReturns = struct {
+		result1 error
+	}{result1}
+}
+
+func (fake *FakeBlockDeviceUtils) SetDmsetupReturnsOnCall(i int, result1 error) {
+	fake.SetDmsetupStub = nil
+	if fake.setDmsetupReturnsOnCall == nil {
+		fake.setDmsetupReturnsOnCall = make(map[int]struct {
+			result1 error
+		})
+	}
+	fake.setDmsetupReturnsOnCall[i] = struct {
+		result1 error
+	}{result1}
+}
+
 func (fake *FakeBlockDeviceUtils) Invocations() map[string][][]interface{} {
 	fake.invocationsMutex.RLock()
 	defer fake.invocationsMutex.RUnlock()
@@ -785,6 +844,8 @@ func (fake *FakeBlockDeviceUtils) Invocations() map[string][][]interface{} {
 	defer fake.isDeviceMountedMutex.RUnlock()
 	fake.isDirAMountPointMutex.RLock()
 	defer fake.isDirAMountPointMutex.RUnlock()
+	fake.setDmsetupMutex.RLock()
+	defer fake.setDmsetupMutex.RUnlock()
 	copiedInvocations := map[string][][]interface{}{}
 	for key, value := range fake.invocations {
 		copiedInvocations[key] = value

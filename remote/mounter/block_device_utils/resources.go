@@ -37,4 +37,5 @@ type BlockDeviceUtils interface {
 	UmountFs(mpoint string) error
 	IsDeviceMounted(devPath string) (bool, []string, error)
 	IsDirAMountPoint(dirPath string) (bool, []string, error)
+	SetDmsetup(mpath string) error
 }

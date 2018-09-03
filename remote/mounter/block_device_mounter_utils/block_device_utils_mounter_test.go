@@ -281,6 +281,15 @@ var _ = Describe("block_device_mounter_utils_test", func() {
 			Expect(err).To(HaveOccurred())
 			Expect(err).To(MatchError(callErr))
 		})
+		FIt("should fail if dmsetup failed", func() {
+			fakeBlockDeviceUtils.SetDmsetupReturns(callErr)
+			fakeBlockDeviceUtils.UmountFsReturns(nil)
+			err = blockDeviceMounterUtils.UnmountDeviceFlow("fake_device")
+			Expect(err).To(HaveOccurred())
+			Expect(err).To(MatchError(callErr))
+			Expect(fakeBlockDeviceUtils.SetDmsetupCallCount()).To(Equal(1))
+			Expect(fakeBlockDeviceUtils.UmountFsCallCount()).To(Equal(0))
+		})
 		It("should fail if Cleanup failed", func() {
 			fakeBlockDeviceUtils.UmountFsReturns(nil)
 			fakeBlockDeviceUtils.CleanupReturns(callErr)
