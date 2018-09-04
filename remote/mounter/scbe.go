@@ -50,7 +50,7 @@ func (s *scbeMounter) Mount(mountRequest resources.MountRequest) (string, error)
 	volumeWWN := mountRequest.VolumeConfig["Wwn"].(string)
 
 	// Rescan OS
-	if err := s.blockDeviceMounterUtils.RescanAll(!s.config.SkipRescanISCSI, volumeWWN, false); err != nil {
+	if err := s.blockDeviceMounterUtils.RescanAll(!s.config.SkipRescanISCSI, volumeWWN, false, false); err != nil {
 		return "", s.logger.ErrorRet(err, "RescanAll failed")
 	}
 
@@ -61,7 +61,8 @@ func (s *scbeMounter) Mount(mountRequest resources.MountRequest) (string, error)
 		// For DS8k, "rescan-scsi-bus.sh -r" cannot discover the LUN0, need to use "rescan-scsi-bus.sh -a" instead
 		s.logger.Debug("volumeConfig: ", logs.Args{{"volumeConfig: ", mountRequest.VolumeConfig}})
 		if isDS8kLun0(mountRequest) {
-			if err := s.blockDeviceMounterUtils.RescanAll(!s.config.SkipRescanISCSI, volumeWWN, false); err != nil {
+			s.logger.Debug("It is the first lun of DS8k, will try to rescan with parameter -a")
+			if err := s.blockDeviceMounterUtils.RescanAll(!s.config.SkipRescanISCSI, volumeWWN, false, true); err != nil {
 				return "", s.logger.ErrorRet(err, "RescanAll Targets failed", logs.Args{{"volumeWWN", volumeWWN}})
 			}
 			devicePath, err = s.blockDeviceMounterUtils.Discover(volumeWWN, true)
@@ -130,7 +131,7 @@ func (s *scbeMounter) ActionAfterDetach(request resources.AfterDetachRequest) er
 	volumeWWN := request.VolumeConfig["Wwn"].(string)
 
 	// Rescan OS
-	if err := s.blockDeviceMounterUtils.RescanAll(!s.config.SkipRescanISCSI, volumeWWN, true); err != nil {
+	if err := s.blockDeviceMounterUtils.RescanAll(!s.config.SkipRescanISCSI, volumeWWN, true, false); err != nil {
 		return s.logger.ErrorRet(err, "RescanAll failed")
 	}
 	return nil

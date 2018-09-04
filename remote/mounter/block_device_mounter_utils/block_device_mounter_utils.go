@@ -140,7 +140,7 @@ func (b *blockDeviceMounterUtils) UnmountDeviceFlow(devicePath string) error {
 // 2. SCSI rescan
 // 3. multipathing rescan
 // return error if one of the steps fail
-func (b *blockDeviceMounterUtils) RescanAll(withISCSI bool, wwn string, rescanForCleanUp bool) error {
+func (b *blockDeviceMounterUtils) RescanAll(withISCSI bool, wwn string, rescanForCleanUp bool, ds8kLun0 bool) error {
 	defer b.logger.Trace(logs.INFO, logs.Args{{"withISCSI", withISCSI}})
 
 	// locking for concurrent rescans and reduce rescans if no need
@@ -176,12 +176,13 @@ func (b *blockDeviceMounterUtils) RescanAll(withISCSI bool, wwn string, rescanFo
 		if err := b.blockDeviceUtils.Rescan(rescanISCSI, noscanAttr); err != nil {
 			return b.logger.ErrorRet(err, "Rescan failed", logs.Args{{"protocol", block_device_utils.ISCSI}})
 		}
-
-		if err := b.blockDeviceUtils.Rescan(rescanSCSI, rescanSCSIWithPARAM_r);err != nil {
+	}
+	if ds8kLun0{
+		if err := b.blockDeviceUtils.Rescan(rescanSCSI, rescanSCSIWithPARAM_a); err != nil {
 			return b.logger.ErrorRet(err, "Rescan failed", logs.Args{{"protocol", block_device_utils.SCSI}})
 		}
 	} else {
-		if err := b.blockDeviceUtils.Rescan(rescanSCSI, rescanSCSIWithPARAM_a); err != nil {
+		if err := b.blockDeviceUtils.Rescan(rescanSCSI, rescanSCSIWithPARAM_r);err != nil {
 			return b.logger.ErrorRet(err, "Rescan failed", logs.Args{{"protocol", block_device_utils.SCSI}})
 		}
 	}
