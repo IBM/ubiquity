@@ -75,9 +75,9 @@ func (e *noRegexWwnMatchInScsiInqError) Error() string {
 }
 
 type FaultyDeviceError struct {
-	dev  string
+	Dev  string
 }
 
 func (e *FaultyDeviceError) Error() string {
-	return fmt.Sprintf("Device [%s] is in faulty state", e.dev)
+	return fmt.Sprintf("Device [%s] is in faulty state", e.Dev)
 }

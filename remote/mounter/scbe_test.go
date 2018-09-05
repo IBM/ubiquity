@@ -87,6 +87,17 @@ var _ = Describe("scbe_mounter_test", func() {
 			Expect(fakeExec.StatCallCount()).To(Equal(1))
 			Expect(fakeExec.RemoveAllCallCount()).To(Equal(1))
 		})
+		It("should  continue if discover failed on faulty device", func() {
+			returnedErr := &block_device_utils.FaultyDeviceError{"mapthx"}
+			fakeBdUtils.DiscoverReturns("", returnedErr)
+			volumeConfig := make(map[string]interface{})
+			volumeConfig["Wwn"] = "volumewwn"
+			_ = scbeMounter.Unmount(resources.UnmountRequest{volumeConfig, resources.RequestContext{}})
+			Expect(fakeBdUtils.DiscoverCallCount()).To(Equal(1))
+			Expect(fakeBdUtils.UnmountDeviceFlowCallCount()).To(Equal(1))
+			Expect(fakeExec.StatCallCount()).To(Equal(1))
+			Expect(fakeExec.RemoveAllCallCount()).To(Equal(1))
+		})
 	})
 })
 

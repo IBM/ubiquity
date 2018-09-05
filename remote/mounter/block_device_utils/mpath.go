@@ -100,10 +100,14 @@ func (b *blockDeviceUtils) Discover(volumeWwn string, deepDiscovery bool) (strin
 		if err != nil {
 			args = []string{"-ll", dev}
 			b.logger.Debug(fmt.Sprintf("dev : %s ",dev))
-			outputBytes, err := b.exec.Execute(multipathCmd, args)
-			stringOutput := string(outputBytes[:])
-			if strings.Contains(stringOutput, "faulty"){
-				return mpath, b.logger.ErrorRet(&FaultyDeviceError{dev}, "failed")
+			outputBytes, merr := b.exec.Execute(multipathCmd, args)
+			if merr == nil {
+				stringOutput := string(outputBytes[:])
+				if strings.Contains(stringOutput, "faulty"){
+					return mpath, b.logger.ErrorRet(&FaultyDeviceError{dev}, "failed")
+				}
+			} else {
+				b.logger.Error("Failed to run multipath command while executing sg_inq." , logs.Args{{"err", merr}})
 			}
 			
 			return "", b.logger.ErrorRet(&CommandExecuteError{"sg_inq", err}, "failed")
