@@ -87,6 +87,29 @@ var _ = Describe("scbe_mounter_test", func() {
 			Expect(fakeExec.StatCallCount()).To(Equal(1))
 			Expect(fakeExec.RemoveAllCallCount()).To(Equal(1))
 		})
+		It("should  fail if mountpoint dir is not empty", func() {
+			fakeExec.NumberOfFilesInDirReturns(1, nil)
+			volumeConfig := make(map[string]interface{})
+			volumeConfig["Wwn"] = "volumewwn"
+			err := scbeMounter.Unmount(resources.UnmountRequest{volumeConfig, resources.RequestContext{}})
+			Expect(err).To(HaveOccurred())
+			Expect(err).To(Equal(&mounter.DirecotryIsNotEmptyError{fmt.Sprintf("/ubiquity/%s", volumeConfig["Wwn"])}))
+			Expect(fakeBdUtils.UnmountDeviceFlowCallCount()).To(Equal(1))
+			Expect(fakeExec.StatCallCount()).To(Equal(1))
+			Expect(fakeExec.RemoveAllCallCount()).To(Equal(0))
+		})
+		FIt("should  fail if mountpoint dir returns erorr", func() {
+			returnedErr := fmt.Errorf("An error has occured")
+			fakeExec.NumberOfFilesInDirReturns(-1, returnedErr)
+			volumeConfig := make(map[string]interface{})
+			volumeConfig["Wwn"] = "volumewwn"
+			err := scbeMounter.Unmount(resources.UnmountRequest{volumeConfig, resources.RequestContext{}})
+			Expect(err).To(HaveOccurred())
+			Expect(err).To(Equal(returnedErr))
+			Expect(fakeBdUtils.UnmountDeviceFlowCallCount()).To(Equal(1))
+			Expect(fakeExec.StatCallCount()).To(Equal(1))
+			Expect(fakeExec.RemoveAllCallCount()).To(Equal(0))
+		})
 	})
 })
 

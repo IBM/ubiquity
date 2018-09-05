@@ -25,6 +25,7 @@ import (
 	"os/exec"
 	"path/filepath"
 	"time"
+	"io/ioutil"
 )
 
 //go:generate counterfeiter -o ../fakes/fake_executor.go . Executor
@@ -46,6 +47,7 @@ type Executor interface { // basic host dependent functions
 	IsSlink(fInfo os.FileInfo) bool
 	GetGlobFiles(file_pattern string) (matches []string, err error)
 	IsSameFile(file1  os.FileInfo, file2 os.FileInfo) bool
+	NumberOfFilesInDir(dir string) (int, error)
 	
 }
 
@@ -167,4 +169,13 @@ func (e *executor)	GetGlobFiles(file_pattern string) (matches []string, err erro
 }
 func (e *executor) IsSameFile(file1 os.FileInfo, file2 os.FileInfo) bool{
 	return os.SameFile(file1, file2)
+}
+
+func (e *executor) NumberOfFilesInDir(dir string) (int, error){
+	files, err:= ioutil.ReadDir(dir)
+	if err != nil{
+		return -1, err
+	}
+	
+	return len(files), nil
 }

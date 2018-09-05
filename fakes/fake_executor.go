@@ -215,6 +215,19 @@ type FakeExecutor struct {
 	isSameFileReturnsOnCall map[int]struct {
 		result1 bool
 	}
+	NumberOfFilesInDirStub        func(dir string) (int, error)
+	numberOfFilesInDirMutex       sync.RWMutex
+	numberOfFilesInDirArgsForCall []struct {
+		dir string
+	}
+	numberOfFilesInDirReturns struct {
+		result1 int
+		result2 error
+	}
+	numberOfFilesInDirReturnsOnCall map[int]struct {
+		result1 int
+		result2 error
+	}
 	invocations      map[string][][]interface{}
 	invocationsMutex sync.RWMutex
 }
@@ -1065,6 +1078,57 @@ func (fake *FakeExecutor) IsSameFileReturnsOnCall(i int, result1 bool) {
 	}{result1}
 }
 
+func (fake *FakeExecutor) NumberOfFilesInDir(dir string) (int, error) {
+	fake.numberOfFilesInDirMutex.Lock()
+	ret, specificReturn := fake.numberOfFilesInDirReturnsOnCall[len(fake.numberOfFilesInDirArgsForCall)]
+	fake.numberOfFilesInDirArgsForCall = append(fake.numberOfFilesInDirArgsForCall, struct {
+		dir string
+	}{dir})
+	fake.recordInvocation("NumberOfFilesInDir", []interface{}{dir})
+	fake.numberOfFilesInDirMutex.Unlock()
+	if fake.NumberOfFilesInDirStub != nil {
+		return fake.NumberOfFilesInDirStub(dir)
+	}
+	if specificReturn {
+		return ret.result1, ret.result2
+	}
+	return fake.numberOfFilesInDirReturns.result1, fake.numberOfFilesInDirReturns.result2
+}
+
+func (fake *FakeExecutor) NumberOfFilesInDirCallCount() int {
+	fake.numberOfFilesInDirMutex.RLock()
+	defer fake.numberOfFilesInDirMutex.RUnlock()
+	return len(fake.numberOfFilesInDirArgsForCall)
+}
+
+func (fake *FakeExecutor) NumberOfFilesInDirArgsForCall(i int) string {
+	fake.numberOfFilesInDirMutex.RLock()
+	defer fake.numberOfFilesInDirMutex.RUnlock()
+	return fake.numberOfFilesInDirArgsForCall[i].dir
+}
+
+func (fake *FakeExecutor) NumberOfFilesInDirReturns(result1 int, result2 error) {
+	fake.NumberOfFilesInDirStub = nil
+	fake.numberOfFilesInDirReturns = struct {
+		result1 int
+		result2 error
+	}{result1, result2}
+}
+
+func (fake *FakeExecutor) NumberOfFilesInDirReturnsOnCall(i int, result1 int, result2 error) {
+	fake.NumberOfFilesInDirStub = nil
+	if fake.numberOfFilesInDirReturnsOnCall == nil {
+		fake.numberOfFilesInDirReturnsOnCall = make(map[int]struct {
+			result1 int
+			result2 error
+		})
+	}
+	fake.numberOfFilesInDirReturnsOnCall[i] = struct {
+		result1 int
+		result2 error
+	}{result1, result2}
+}
+
 func (fake *FakeExecutor) Invocations() map[string][][]interface{} {
 	fake.invocationsMutex.RLock()
 	defer fake.invocationsMutex.RUnlock()
@@ -1102,6 +1166,8 @@ func (fake *FakeExecutor) Invocations() map[string][][]interface{} {
 	defer fake.getGlobFilesMutex.RUnlock()
 	fake.isSameFileMutex.RLock()
 	defer fake.isSameFileMutex.RUnlock()
+	fake.numberOfFilesInDirMutex.RLock()
+	defer fake.numberOfFilesInDirMutex.RUnlock()
 	copiedInvocations := map[string][][]interface{}{}
 	for key, value := range fake.invocations {
 		copiedInvocations[key] = value
