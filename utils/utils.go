@@ -225,13 +225,6 @@ func LoadConfig() (resources.UbiquityServerConfig, error) {
 	config.LogLevel = os.Getenv("LOG_LEVEL")
 
 	sscConfig := resources.SpectrumScaleConfig{}
-	sshConfig := resources.SshConfig{}
-	sshConfig.User = os.Getenv("SSC_SSH_USER")
-	sshConfig.Host = os.Getenv("SSC_SSH_HOST")
-	sshConfig.Port = os.Getenv("SSC_SSH_PORT")
-	if sshConfig.User != "" && sshConfig.Host != "" && sshConfig.Port != "" {
-		sscConfig.SshConfig = sshConfig
-	}
 	restConfig := resources.RestConfig{}
 	restConfig.User = os.Getenv(resources.SpectrumScaleParamPrefix + "REST_USER")
 	restConfig.Password = os.Getenv(resources.SpectrumScaleParamPrefix + "REST_PASSWORD")

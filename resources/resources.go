@@ -44,7 +44,6 @@ type UbiquityServerConfig struct {
 type SpectrumScaleConfig struct {
 	DefaultFilesystemName string
 	NfsServerAddr         string
-	SshConfig             SshConfig
 	RestConfig            RestConfig
 	ForceDelete           bool
 }
@@ -87,12 +86,6 @@ const DefaultScbeSslMode = SslModeVerifyFull
 const DefaultPluginsSslMode = SslModeVerifyFull
 const SpectrumscaleDefaultPort = 443                              // the default port for SPECTRUM SCALE management
 const SpectrumScaleParamPrefix = "SPECTRUMSCALE_"
-
-type SshConfig struct {
-	User string
-	Host string
-	Port string
-}
 
 type RestConfig struct {
 	Port          int
