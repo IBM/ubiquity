@@ -17,8 +17,7 @@
 package connectors
 
 import (
-	"log"
-
+	"github.com/IBM/ubiquity/utils/logs"
 	"github.com/IBM/ubiquity/resources"
 )
 
@@ -44,16 +43,20 @@ type SpectrumScaleConnector interface {
 	SetFilesetQuota(filesystemName string, filesetName string, quota string) error
 	ExportNfs(volumeMountpoint string, clientConfig string) error
 	UnexportNfs(volumeMountpoint string) error
+    //Lightweight volume operations
+    CreateLightweightVolume(filesystemName string, filesetName string, directory string) error
+    DeleteLightweightVolume(filesystemName string, filesetName string, directory string) error
+    LightweightVolumeExists(filesystemName string, filesetName string, directory string) (bool, error)
 }
 
 const (
 	UserSpecifiedFilesetType string = "fileset-type"
 	UserSpecifiedInodeLimit  string = "inode-limit"
 	UserSpecifiedUid         string = "uid"
-	UserSpecifiedGid         string = "gid"
+	UserSpecifiedGid	 string = "gid"
 )
 
-func GetSpectrumScaleConnector(logger *log.Logger, config resources.SpectrumScaleConfig) (SpectrumScaleConnector, error) {
-	logger.Printf("Initializing SpectrumScale REST connector\n")
+func GetSpectrumScaleConnector(logger logs.Logger, config resources.SpectrumScaleConfig) (SpectrumScaleConnector, error) {
+	logger.Debug("Initializing SpectrumScale REST connector\n")
 	return NewSpectrumRestV2(logger, config.RestConfig)
 }
