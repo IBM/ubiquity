@@ -86,6 +86,14 @@ const DefaultScbeSslMode = SslModeVerifyFull
 const DefaultPluginsSslMode = SslModeVerifyFull
 const SpectrumscaleDefaultPort = 443                              // the default port for SPECTRUM SCALE management
 const SpectrumScaleParamPrefix = "SPECTRUMSCALE_"
+const KeySpectrumScaleSslMode = "SPECTRUMSCALE_SSL_MODE"
+const DefaultSpectrumScaleSslMode = SslModeVerifyFull
+
+type SshConfig struct {
+	User string
+	Host string
+	Port string
+}
 
 type RestConfig struct {
 	Port          int

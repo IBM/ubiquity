@@ -18,6 +18,7 @@ package connectors
 
 import (
 	"crypto/tls"
+	"crypto/x509"
 	"fmt"
 	"github.com/IBM/ubiquity/utils/logs"
 	"net/http"
@@ -37,6 +38,24 @@ type spectrumRestV2 struct {
 	endpoint   string
 	user       string
 	password   string
+}
+
+type SslModeValueInvalid struct {
+        sslModeInValid string
+}
+
+func (e *SslModeValueInvalid) Error() string {
+        return fmt.Sprintf("Illegal SSL mode value [%s]. The allowed values are [%s, %s]",
+                e.sslModeInValid, resources.SslModeRequire, resources.SslModeVerifyFull)
+}
+
+type SslModeFullVerifyWithoutCAfile struct {
+        VerifyCaEnvName string
+}
+
+func (e *SslModeFullVerifyWithoutCAfile) Error() string {
+        return fmt.Sprintf("Environment variable [%s] must be set for the SSL mode [%s]",
+                e.VerifyCaEnvName, resources.SslModeVerifyFull)
 }
 
 func (s *spectrumRestV2) isStatusOK(statusCode int) bool {
@@ -122,10 +141,42 @@ func NewSpectrumRestV2(logger logs.Logger, restConfig resources.RestConfig) (Spe
 	user := restConfig.User
 	password := restConfig.Password
 
-	tr := &http.Transport{
-		TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
+	sslMode := strings.ToLower(os.Getenv(resources.KeySpectrumScaleSslMode))
+	exec := utils.NewExecutor()
+
+	if sslMode == "" {
+		sslMode = resources.DefaultSpectrumScaleSslMode
 	}
-	return &spectrumRestV2{logger: logger, httpClient: &http.Client{Transport: tr}, endpoint: endpoint, user: user, password: password}, nil
+
+	if sslMode == resources.SslModeVerifyFull {
+		verifyFileCA := os.Getenv("UBIQUITY_SERVER_VERIFY_SPECTRUMSCALE_CERT")
+
+               if verifyFileCA != "" {
+                    if _, err := exec.Stat(verifyFileCA); err != nil {
+                        return &spectrumRestV2{}, logger.ErrorRet(err, "failed")
+                    }
+                    caCert, err := ioutil.ReadFile(verifyFileCA)
+                    if err != nil {
+                        return &spectrumRestV2{}, logger.ErrorRet(err, "failed")
+                    }
+                    caCertPool := x509.NewCertPool()
+                    if ok := caCertPool.AppendCertsFromPEM(caCert); !ok {
+                        return &spectrumRestV2{}, fmt.Errorf("parse %v failed", verifyFileCA)
+                    }
+                    tr = &http.Transport{TLSClientConfig: &tls.Config{RootCAs: caCertPool}}
+                    logger.Debug("", logs.Args{{"UBIQUITY_SERVER_VERIFY_SPECTRUMSCALE_CERT", verifyFileCA}})
+		} else {
+		     return &spectrumRestV2{}, logger.ErrorRet(&SslModeFullVerifyWithoutCAfile{"UBIQUITY_SERVER_VERIFY_SPECTRUMSCALE_CERT"}, "failed")
+		}
+	} else if sslMode == resources.SslModeRequire {
+		logger.Debug(
+                    fmt.Sprintf("Client SSL Mode set to [%s]. Means the communication to ubiquity is InsecureSkipVerify", sslMode))
+		tr = &http.Transport{TLSClientConfig: &tls.Config{InsecureSkipVerify: true}}
+	} else {
+		return &spectrumRestV2{}, logger.ErrorRet(&SslModeValueInvalid{sslMode}, "failed")
+	}
+
+	return &spectrumRestV2{logger: logger, httpClient: &http.Client{Transport: tr}, endpoint: endpoint, user: user, password: password, hostname: hostname}, nil
 }
 
 func NewspectrumRestV2WithClient(logger logs.Logger, restConfig resources.RestConfig) (SpectrumScaleConnector, *http.Client, error) {
