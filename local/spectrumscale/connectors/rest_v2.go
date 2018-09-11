@@ -611,16 +611,3 @@ func (s *spectrumRestV2) doHTTP(endpoint string, method string, responseObject i
 
 	return nil
 }
-
-//TODO : Remove these functions with complete lightweight functionality
-func (s *spectrumRestV2) CreateLightweightVolume(filesystemName string, filesetName string, directory string)     error {
-    return nil
-}
-
-func (s *spectrumRestV2) DeleteLightweightVolume(filesystemName string, filesetName string, directory string)     error {
-    return nil
-}
-
-func (s *spectrumRestV2) LightweightVolumeExists(filesystemName string, filesetName string, directory string)     (bool, error) {
-    return true, nil
-}

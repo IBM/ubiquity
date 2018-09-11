@@ -18,24 +18,21 @@ package mounter
 
 import (
 	"fmt"
-	"log"
-
+	"github.com/IBM/ubiquity/utils/logs"
 	"github.com/IBM/ubiquity/resources"
 	"github.com/IBM/ubiquity/utils"
 )
 
 type spectrumScaleMounter struct {
-	logger   *log.Logger
+	logger   logs.Logger
 	executor utils.Executor
 }
 
-func NewSpectrumScaleMounter(logger *log.Logger) resources.Mounter {
+func NewSpectrumScaleMounter(logger logs.Logger) resources.Mounter {
 	return &spectrumScaleMounter{logger: logger, executor: utils.NewExecutor()}
 }
 
 func (s *spectrumScaleMounter) Mount(mountRequest resources.MountRequest) (string, error) {
-	s.logger.Println("spectrumScaleMounter: Mount start")
-	defer s.logger.Println("spectrumScaleMounter: Mount end")
 
 	isPreexisting, isPreexistingSpecified := mountRequest.VolumeConfig["isPreexisting"]
 	if isPreexistingSpecified && isPreexisting.(bool) == false {
@@ -46,23 +43,20 @@ func (s *spectrumScaleMounter) Mount(mountRequest resources.MountRequest) (strin
 			args := []string{fmt.Sprintf("%s:%s", uid, gid), mountRequest.Mountpoint}
 			_, err := s.executor.Execute("chown", args)
 			if err != nil {
-				s.logger.Printf("Failed to change permissions of mountpoint %s: %s", mountRequest.Mountpoint, err.Error())
-				return "", err
+			    return "", s.logger.ErrorRet(err, "Failed to change permissions of mountpoint", logs.Args{{"mountpoint", mountRequest.Mountpoint}})
 			}
 			//set permissions to specific user
 			args = []string{"og-rw", mountRequest.Mountpoint}
 			_, err = s.executor.Execute("chmod", args)
 			if err != nil {
-				s.logger.Printf("Failed to set user permissions of mountpoint %s: %s", mountRequest.Mountpoint, err.Error())
-				return "", err
+			    return "", s.logger.ErrorRet(err, "Failed to set user permissions of mountpoint", logs.Args{{"mountpoint", mountRequest.Mountpoint}})
 			}
 		} else {
 			//chmod 777 mountpoint
 			args := []string{"777", mountRequest.Mountpoint}
 			_, err := s.executor.Execute("chmod", args)
 			if err != nil {
-				s.logger.Printf("Failed to change permissions of mountpoint %s: %s", mountRequest.Mountpoint, err.Error())
-				return "", err
+			    return "", s.logger.ErrorRet(err, "Failed to change permissions of mountpoint", logs.Args{{"mountpoint", mountRequest.Mountpoint}})
 			}
 		}
 	}
@@ -71,8 +65,7 @@ func (s *spectrumScaleMounter) Mount(mountRequest resources.MountRequest) (strin
 }
 
 func (s *spectrumScaleMounter) Unmount(unmountRequest resources.UnmountRequest) error {
-	s.logger.Println("spectrumScaleMounter: Unmount start")
-	defer s.logger.Println("spectrumScaleMounter: Unmount end")
+	defer s.logger.Trace(logs.DEBUG)()
 
 	// for spectrum-scale native: No Op for now
 	return nil
@@ -80,6 +73,7 @@ func (s *spectrumScaleMounter) Unmount(unmountRequest resources.UnmountRequest) 
 }
 
 func (s *spectrumScaleMounter) ActionAfterDetach(request resources.AfterDetachRequest) error {
+	defer s.logger.Trace(logs.DEBUG)()
 	// no action needed for SSc
 	return nil
 }

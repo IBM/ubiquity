@@ -43,10 +43,6 @@ type SpectrumScaleConnector interface {
 	SetFilesetQuota(filesystemName string, filesetName string, quota string) error
 	ExportNfs(volumeMountpoint string, clientConfig string) error
 	UnexportNfs(volumeMountpoint string) error
-    //Lightweight volume operations
-    CreateLightweightVolume(filesystemName string, filesetName string, directory string) error
-    DeleteLightweightVolume(filesystemName string, filesetName string, directory string) error
-    LightweightVolumeExists(filesystemName string, filesetName string, directory string) (bool, error)
 }
 
 const (
