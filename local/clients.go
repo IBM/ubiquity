@@ -37,8 +37,8 @@ func GetLocalClients(logger *log.Logger, config resources.UbiquityServerConfig) 
   }
 
 	if len(clients) == 0 {
-		logger.Println("No client can be initialized....please check config file")
-		return nil, fmt.Errorf("No client can be initialized....please check config file")
+		logger.Println("No client can be initialized. Please check ubiquity-configmap parameters")
+		return nil, fmt.Errorf("No client can be initialized. Please check ubiquity-configmap parameters")
 	}
 	return clients, nil
 }
