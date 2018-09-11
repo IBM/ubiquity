@@ -532,64 +532,6 @@ func (s *spectrumRestV2) ListFilesetQuota(filesystemName string, filesetName str
 	}
 }
 
-func (s *spectrumRestV2) ExportNfs(volumeMountpoint string, clientConfig string) error {
-    defer s.logger.Trace(logs.DEBUG)()
-
-	exportNfsURL := utils.FormatURL(s.endpoint, fmt.Sprintf("scalemgmt/v2/nfs/exports"))
-	nfsExportReq := nfsExportRequest{}
-	nfsExportReq.Path = volumeMountpoint
-	nfsExportReq.ClientDetail = append(nfsExportReq.ClientDetail, clientConfig)
-
-	s.logger.Debug("Export NFS URL", logs.Args{{"exportNfsURL", exportNfsURL}})
-	s.logger.Debug("", logs.Args{{"nfsExportReq.Path", nfsExportReq.Path} , {"nfsExportReq.ClientDetail", nfsExportReq.ClientDetail}})
-
-	nfsExportResp := GenericResponse{}
-	err := s.doHTTP(exportNfsURL, "POST", &nfsExportResp, nfsExportReq)
-	if err != nil {
-		s.logger.Debug("error during NFS export", logs.Args{{"Error", err}})
-		return fmt.Errorf("Unable to export %v. Please refer Ubiquity server logs for more details", volumeMountpoint)
-	}
-
-	err = s.isRequestAccepted(nfsExportResp, exportNfsURL)
-	if err != nil {
-		return err
-	}
-
-	err = s.waitForJobCompletion(nfsExportResp.Status.Code, nfsExportResp.Jobs[0].JobID)
-	if err != nil {
-		return fmt.Errorf("Unable to export %v:%v. Please refer Ubiquity server logs for more details", volumeMountpoint, err)
-	}
-	return nil
-}
-
-func (s *spectrumRestV2) UnexportNfs(volumeMountpoint string) error {
-    defer s.logger.Trace(logs.DEBUG)()
-
-	volumeMountpoint = url.QueryEscape(volumeMountpoint)
-	unexportNfsURL := utils.FormatURL(s.endpoint, "scalemgmt/v2/nfs/exports/", volumeMountpoint)
-	unexportNfsResp := GenericResponse{}
-
-	s.logger.Debug("NFS export DELETE URL", logs.Args{{"unexportNfsURL", unexportNfsURL}})
-
-	err := s.doHTTP(unexportNfsURL, "DELETE", &unexportNfsResp, nil)
-	if err != nil {
-		s.logger.Debug("Error while deleting NFS export", logs.Args{{"Error", err}})
-		return fmt.Errorf("Unable to remove export %v. Please refer Ubiquity server logs for more details", volumeMountpoint)
-	}
-
-	err = s.isRequestAccepted(unexportNfsResp, unexportNfsURL)
-	if err != nil {
-		return err
-	}
-
-	err = s.waitForJobCompletion(unexportNfsResp.Status.Code, unexportNfsResp.Jobs[0].JobID)
-
-	if err != nil {
-		return fmt.Errorf("Unable to remove export %v:%v. Please refer Ubiquity server logs for more details", volumeMountpoint, err)
-	}
-	return nil
-}
-
 func (s *spectrumRestV2) doHTTP(endpoint string, method string, responseObject interface{}, param interface{}) error {
 	response, err := utils.HttpExecuteUserAuth(s.httpClient, method, endpoint, s.user, s.password, param)
 	if err != nil {
