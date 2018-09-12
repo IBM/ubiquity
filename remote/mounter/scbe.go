@@ -121,6 +121,7 @@ func (s *scbeMounter) Unmount(unmountRequest resources.UnmountRequest) error {
 	if _, err := s.exec.Stat(mountpoint); err == nil {
 		s.logger.Debug("Checking if mountpoint is empty and can be deleted", logs.Args{{"mountpoint", mountpoint}})
 		numFiles, err := s.exec.NumberOfFilesInDir(mountpoint)
+		s.logger.Info("number of files is", logs.Args{{"files", numFiles}})
 		if err != nil {
 			return s.logger.ErrorRet(err, "Getting number of files failed.", logs.Args{{"mountpoint", mountpoint}})
 		}
