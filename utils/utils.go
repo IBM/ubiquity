@@ -21,13 +21,9 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
-
 	"github.com/IBM/ubiquity/resources"
-
 	"path"
-
 	"github.com/IBM/ubiquity/utils/logs"
-	"log"
 	"strconv"
 	"strings"
 )
@@ -153,7 +149,7 @@ func StringInSlice(a string, list []string) bool {
 	return false
 }
 
-func ConvertToBytes(logger *log.Logger, inputStr string) (uint64, error) {
+func ConvertToBytes(logger logs.Logger, inputStr string) (uint64, error) {
 	var Iter int
 	var byteSlice []byte
 	var retValue uint64
@@ -182,7 +178,7 @@ func ConvertToBytes(logger *log.Logger, inputStr string) (uint64, error) {
 	}
 
 	if Iter == len(inputStr) {
-		logger.Printf("Input string has no Unit, returning %v\n", retValue)
+        logger.Debug("Input string has no Unit. returning", logs.Args{{"retValue", retValue}})
 		return retValue, nil
 	}
 

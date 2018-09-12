@@ -24,7 +24,6 @@ import (
 	"github.com/IBM/ubiquity/local/spectrumscale/connectors"
 	"sync"
 	"github.com/IBM/ubiquity/resources"
-	"os"
 )
 
 type spectrumLocalClient struct {
@@ -71,7 +70,7 @@ func NewSpectrumLocalClientWithConnectors(logger logs.Logger, connector connecto
 
 func newSpectrumLocalClient(config resources.SpectrumScaleConfig, backend string) (*spectrumLocalClient, error) {
     logger := logs.GetLogger()
-    defer s.logger.Trace(logs.DEBUG)()
+    defer logger.Trace(logs.DEBUG)()
 
 	client, err := connectors.GetSpectrumScaleConnector(logger, config)
 	if err != nil {
@@ -82,27 +81,25 @@ func newSpectrumLocalClient(config resources.SpectrumScaleConfig, backend string
 
 	dbName := datamodel.GetDbName()
 
-	logger.Debug("Going to check for DB volume fileset", logs.Args{{"Filesystem", config.DefaultFilesystemName}, {"Fileset", dbName}})
+	SpectrumScaleLocalClient := &spectrumLocalClient{logger: logger, connector: client, dataModel: datamodel, config: config, executor: utils.NewExecutor(), activationLock: &sync.RWMutex{}}
 
 	volume, err := client.ListFileset(config.DefaultFilesystemName, dbName)
 
 	if err == nil {
 		logger.Debug("DB volume fileset present")
-		fsMountpoint, err := client.GetFilesystemMountpoint(config.DefaultFilesystemName)
-	        if err != nil {
-			logger.Debug("Error while getting filesystem", logs.Args{{"Filesystem", config.DefaultFilesystemName}})
-	                return &spectrumLocalClient{}, err
-	        }
-		mountLoc := path.Join(fsMountpoint, dbName)
-		logger.Debug("Mount Location for DB", logs.Args{{"Mount", mountLoc}})
-
-		scaleDbVol := &SpectrumScaleVolume{Volume: resources.Volume{Name: volume.Name, Backend: backend, Mountpoint: mountLoc}, Type: Fileset, FileSystem: config.DefaultFilesystemName, Fileset: dbName}
-		datamodel.UpdateDatabaseVolume(scaleDbVol)
+        scaleDbVol := &SpectrumScaleVolume{Volume: resources.Volume{Name: volume.Name, Backend: backend}, Type: Fileset, FileSystem: config.DefaultFilesystemName, Fileset: dbName}
+        mountLoc, err := SpectrumScaleLocalClient.getVolumeMountPoint(*scaleDbVol)
+        if err != nil {
+            return &spectrumLocalClient{}, err
+        }
+        logger.Debug("Mount Location for DB", logs.Args{{"Mount", mountLoc}})
+        scaleDbVol.Volume.Mountpoint = mountLoc
+        datamodel.UpdateDatabaseVolume(scaleDbVol)
 	} else {
 		logger.Debug("DB Vol Fileset Not Found", logs.Args{{"Filesystem", config.DefaultFilesystemName}, {"Fileset", dbName}})
 
 	}
-	return &spectrumLocalClient{logger: logger, connector: client, dataModel: datamodel, config: config, executor: utils.NewExecutor(), activationLock: &sync.RWMutex{}}, nil
+	return SpectrumScaleLocalClient, nil
 }
 
 func (s *spectrumLocalClient) Activate(activateRequest resources.ActivateRequest) (err error) {
@@ -174,7 +171,7 @@ func (s *spectrumLocalClient) CreateVolume(createVolumeRequest resources.CreateV
 		//fileset
 		return s.createFilesetVolume(s.config.DefaultFilesystemName, createVolumeRequest.Name, createVolumeRequest.Opts)
 	}
-	s.logger.Debug("Trying to determine type for request\n")
+	s.logger.Debug("Trying to determine type for request")
 	userSpecifiedType, err := determineTypeFromRequest(s.logger, createVolumeRequest.Opts)
 	if err != nil {
 		s.logger.Debug("Error determining type", logs.Args{{"Error", err.Error()}})
@@ -557,28 +554,21 @@ func (s *spectrumLocalClient) updateDBWithExistingFilesetQuota(filesystem, name,
 		return err
 	}
 
-	if s.config.RestConfig.ManagementIP != "" {
-		s.logger.Debug("For REST connector converting quotas to bytes\n")
-		filesetQuotaBytes, err := utils.ConvertToBytes(s.logger, filesetQuota)
-		if err != nil {
-			s.logger.Debug("utils.ConvertToBytes failed", logs.Args{{"Error", err}})
-			return err
-		}
+	s.logger.Debug("For REST connector converting quotas to bytes")
+	filesetQuotaBytes, err := utils.ConvertToBytes(s.logger, filesetQuota)
+	if err != nil {
+		s.logger.Debug("utils.ConvertToBytes failed", logs.Args{{"Error", err}})
+		return err
+	}
 
-		quotasBytes, err := utils.ConvertToBytes(s.logger, quota)
-		if err != nil {
-            s.logger.Debug("utils.ConvertToBytes failed ", logs.Args{{"Error", err}})
-			return err
-		}
+	quotasBytes, err := utils.ConvertToBytes(s.logger, quota)
+	if err != nil {
+        s.logger.Debug("utils.ConvertToBytes failed ", logs.Args{{"Error", err}})
+		return err
+	}
 
-		if filesetQuotaBytes != quotasBytes {
-			return fmt.Errorf("Mismatch between user-specified %v and listed quota %v for fileset %s", quotasBytes, filesetQuotaBytes, userSpecifiedFileset)
-		}
-	} else {
-		if filesetQuota != quota {
-			return fmt.Errorf("Mismatch between user-specified and listed quota for fileset %s", userSpecifiedFileset)
-
-		}
+	if filesetQuotaBytes != quotasBytes {
+		return fmt.Errorf("Mismatch between user-specified %v and listed quota %v for fileset %s", quotasBytes, filesetQuotaBytes, userSpecifiedFileset)
 	}
 
 	err = s.dataModel.InsertFilesetQuotaVolume(userSpecifiedFileset, quota, name, filesystem, true, opts)
@@ -591,7 +581,7 @@ func (s *spectrumLocalClient) updateDBWithExistingFilesetQuota(filesystem, name,
 }
 
 func determineTypeFromRequest(logger logs.Logger, opts map[string]interface{}) (string, error) {
-    defer s.logger.Trace(logs.DEBUG)()
+    defer logger.Trace(logs.DEBUG)()
 
 	userSpecifiedType, exists := opts[Type]
 	if exists == false {
@@ -679,6 +669,7 @@ func (s *spectrumLocalClient) updatePermissions(name string) error {
 	if exists == false {
 		return fmt.Errorf("Cannot determine type for volume: %s", name)
 	}
+    s.logger.Debug("", logs.Args{{"volumeType", volumeType}})
 	fileset, exists := volumeConfig[FilesetID]
 	if exists == false {
 		return fmt.Errorf("Cannot determine filesetId for volume: %s", name)

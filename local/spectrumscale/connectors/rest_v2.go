@@ -137,6 +137,7 @@ func (s *spectrumRestV2) AsyncJobCompletion(jobURL string) error {
 
 func NewSpectrumRestV2(logger logs.Logger, restConfig resources.RestConfig) (SpectrumScaleConnector, error) {
 
+	var tr * http.Transport
 	endpoint := fmt.Sprintf("https://%s:%d/", restConfig.ManagementIP, restConfig.Port)
 	user := restConfig.User
 	password := restConfig.Password
@@ -176,12 +177,11 @@ func NewSpectrumRestV2(logger logs.Logger, restConfig resources.RestConfig) (Spe
 		return &spectrumRestV2{}, logger.ErrorRet(&SslModeValueInvalid{sslMode}, "failed")
 	}
 
-	return &spectrumRestV2{logger: logger, httpClient: &http.Client{Transport: tr}, endpoint: endpoint, user: user, password: password, hostname: hostname}, nil
+	return &spectrumRestV2{logger: logger, httpClient: &http.Client{Transport: tr}, endpoint: endpoint, user: user, password: password}, nil
 }
 
 func NewspectrumRestV2WithClient(logger logs.Logger, restConfig resources.RestConfig) (SpectrumScaleConnector, *http.Client, error) {
 
-	var tr * http.Transport
 	endpoint := fmt.Sprintf("https://%s:%d/", restConfig.ManagementIP, restConfig.Port)
 	user := restConfig.User
 	password := restConfig.Password

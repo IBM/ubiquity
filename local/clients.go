@@ -26,7 +26,7 @@ import (
 
 func GetLocalClients(logger *log.Logger, config resources.UbiquityServerConfig) (map[string]resources.StorageClient, error) {
 	// TODO need to refactor and load all the existing clients automatically (instead of hardcore each one here)
-	// clients := make(map[string]resources.StorageClient)
+	clients := make(map[string]resources.StorageClient)
 	if (config.ScbeConfig.ConnectionInfo.ManagementIP != "") {
 		ScbeClient, err := scbe.NewScbeLocalClient(config.ScbeConfig)
 	  	if err != nil {
