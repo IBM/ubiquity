@@ -110,6 +110,10 @@ func (s *scbeMounter) Unmount(unmountRequest resources.UnmountRequest) error {
 	            return s.logger.ErrorRet(err, "Discover failed", logs.Args{{"volumeWWN", volumeWWN}})
         }
 	}
+	
+	numFiles, err1 := s.exec.NumberOfFilesInDir(mountpoint)
+	s.logger.Info("checking number of files in dir before the umount flow", logs.Args{{"files", numFiles }})
+	
 	if !skipUnmountFlow{
 		if err := s.blockDeviceMounterUtils.UnmountDeviceFlow(devicePath, volumeWWN); err != nil {
 			return s.logger.ErrorRet(err, "UnmountDeviceFlow failed", logs.Args{{"devicePath", devicePath}})
