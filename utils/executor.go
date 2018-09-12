@@ -173,6 +173,7 @@ func (e *executor) IsSameFile(file1 os.FileInfo, file2 os.FileInfo) bool{
 
 func (e *executor) NumberOfFilesInDir(dir string) (int, error){
 	files, err:= ioutil.ReadDir(dir)
+	e.logger.Debug("the files", logs.Args{{"files", files}})
 	if err != nil{
 		return -1, err
 	}
