@@ -111,7 +111,7 @@ func (s *scbeMounter) Unmount(unmountRequest resources.UnmountRequest) error {
         }
 	}
 	
-	numFiles, err1 := s.exec.NumberOfFilesInDir(mountpoint)
+	numFiles, _ := s.exec.NumberOfFilesInDir(mountpoint)
 	s.logger.Info("checking number of files in dir before the umount flow", logs.Args{{"files", numFiles }})
 	
 	if !skipUnmountFlow{
