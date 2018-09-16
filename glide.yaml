@@ -4,23 +4,48 @@ import:
   version: v0.3.0
 - package: github.com/djherbis/times
   version: v1.0.1
+- package: github.com/gorilla/context
+  version: v1.1.1
+- package: github.com/jinzhu/inflection
+  version: 04140366298a54a039076d798123ffa108fff46c
+- package: github.com/lib/pq
+  version: 90697d60dd844d5ef6ff15135d0203f65d2f53b8
+  subpackages:
+  - hstore
+  - oid
 - package: github.com/gorilla/mux
   version: v1.5.0
+- package: github.com/natefinch/lumberjack
+  version: aee4629129445bbdfb69aa565537dcfa16544311
 - package: github.com/jinzhu/gorm
   version: v1.0
   subpackages:
-  - dialects/sqlite
   - dialects/postgres
-- package: github.com/mattn/go-sqlite3
-  version: v1.3.0
 - package: github.com/op/go-logging
   version: 970db520ece77730c7e4724c61121037378659d9
 - package: github.com/nightlyone/lockfile
   version: 6a197d5ea61168f2ac821de2b7f011b250904900
+- package: github.com/pborman/uuid
+  version: ca53cad383cad2479bbba7f7a1a05797ec1386e4
+- package: k8s.io/apimachinery
+  version: kubernetes-1.9.2
+  subpackages:
+  - pkg/types
+  - pkg/util/uuid
 testImport:
 - package: github.com/onsi/ginkgo
-  version: bb93381d543b0e5725244abe752214a110791d01
+  version: v1.5.0
 - package: github.com/onsi/gomega
-  version: c463cd2a8578290d4be7a25cba69de81cf35785e
+  version: v1.4.0
 - package: github.com/jarcoal/httpmock
   version: 4442edb3db31196622da56482fd8d0fa375fba4d
+- package: golang.org/x/net
+  version: 1c05540f6879653db88113bc4a2b70aec4bd491f
+- package: golang.org/x/sys
+  version: a2e06a18b0d52d8cb2010e04b372a1965d8e3439
+  subpackages:
+  - unix
+- package: golang.org/x/text
+  version: b19bf474d317b857955b12035d2c5acb57ce8b01
+- package: gopkg.in/yaml.v2
+  version: 53feefa2559fb8dfa8d81baad31be332c97d6c77

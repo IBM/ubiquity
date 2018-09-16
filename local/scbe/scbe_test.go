@@ -498,15 +498,12 @@ var _ = Describe("scbeLocalClient", func() {
 			Expect(err).To(HaveOccurred())
 			Expect(err).To(MatchError(fakeErr))
 		})
-		It("should fail to detach the volume if vol not exist in DB", func() {
+		It("should not fail to detach the volume if vol not exist in DB", func() {
 			fakeScbeDataModel.GetVolumeReturns(scbe.ScbeVolume{}, nil)
 			err := client.Detach(fakeDetachRequest)
-			Expect(err).To(HaveOccurred())
-		})
-		It("should fail to detach the volume if vol already detached in DB", func() {
-			fakeScbeDataModel.GetVolumeReturns(scbe.ScbeVolume{}, nil)
-			err := client.Detach(fakeDetachRequest)
-			Expect(err).To(HaveOccurred())
+			Expect(err).ToNot(HaveOccurred())
+			Expect(fakeScbeRestClient.GetVolMappingCallCount()).To(Equal(1))
+			Expect(fakeScbeRestClient.UnmapVolumeCallCount()).To(Equal(0))
 		})
 		It("should fail to detach the volume if MapVolume failed", func() {
 			fakeScbeDataModel.GetVolumeReturns(scbe.ScbeVolume{}, nil)
@@ -531,7 +528,7 @@ var _ = Describe("scbeLocalClient", func() {
 			fakeScbeDataModel.GetVolumeReturns(scbe.ScbeVolume{WWN: "wwn", FSType: "ext4"}, nil)
 			fakeScbeRestClient.GetVolumesReturns(volumes, nil)
 			fakeScbeRestClient.GetVolMappingReturns(fakeHost, nil)
-			volConfig, err := client.GetVolumeConfig(resources.GetVolumeConfigRequest{Name:"name"})
+			volConfig, err := client.GetVolumeConfig(resources.GetVolumeConfigRequest{Name: "name"})
 			Expect(err).To(Not(HaveOccurred()))
 			Expect(len(volConfig)).To(Equal(val.Type().NumField() + scbe.GetVolumeConfigExtraParams))
 			fstype, ok := volConfig[resources.OptionNameForVolumeFsType]
@@ -551,19 +548,19 @@ var _ = Describe("scbeLocalClient", func() {
 		})
 		It("fail upon GetVolume error", func() {
 			fakeScbeDataModel.GetVolumeReturns(scbe.ScbeVolume{}, fakeErr)
-			_, err := client.GetVolumeConfig(resources.GetVolumeConfigRequest{Name:"name"})
+			_, err := client.GetVolumeConfig(resources.GetVolumeConfigRequest{Name: "name"})
 			Expect(err).To(HaveOccurred())
 			Expect(err).To(MatchError(fakeErr))
 		})
 		It("fail if GetVolume returns false", func() {
 			fakeScbeDataModel.GetVolumeReturns(scbe.ScbeVolume{WWN: "wwn"}, nil)
-			_, err := client.GetVolumeConfig(resources.GetVolumeConfigRequest{Name:"name"})
+			_, err := client.GetVolumeConfig(resources.GetVolumeConfigRequest{Name: "name"})
 			Expect(err).To(HaveOccurred())
 		})
 		It("fail upon GetVolumes error", func() {
 			fakeScbeDataModel.GetVolumeReturns(scbe.ScbeVolume{WWN: "wwn"}, nil)
 			fakeScbeRestClient.GetVolumesReturns(nil, fakeErr)
-			_, err := client.GetVolumeConfig(resources.GetVolumeConfigRequest{Name:"name"})
+			_, err := client.GetVolumeConfig(resources.GetVolumeConfigRequest{Name: "name"})
 			Expect(err).To(HaveOccurred())
 			Expect(err).To(MatchError(fakeErr))
 		})
@@ -571,9 +568,13 @@ var _ = Describe("scbeLocalClient", func() {
 			volumes := make([]scbe.ScbeVolumeInfo, 0)
 			fakeScbeDataModel.GetVolumeReturns(scbe.ScbeVolume{WWN: "wwn"}, nil)
 			fakeScbeRestClient.GetVolumesReturns(volumes, nil)
-			_, err := client.GetVolumeConfig(resources.GetVolumeConfigRequest{Name:"name"})
+			_, err := client.GetVolumeConfig(resources.GetVolumeConfigRequest{Name: "name"})
 			Expect(err).To(HaveOccurred())
+			_, ok := err.(*scbe.VolumeNotFoundOnArrayError)
+			Expect(ok).To(Equal(true))
+
 		})
+		// TODO add missing unit testing for GetVolumeConfig
 	})
 	Context(".Remove", func() {
 		It("should fail to remove the volume if GetVolume failed", func() {
@@ -688,14 +689,13 @@ var _ = Describe("scbeLocalClient", func() {
 			}
 			fakeScbeDataModel.GetVolumeReturns(scbe.ScbeVolume{WWN: "wwn", FSType: "ext4"}, nil)
 			otherFakeScbeRestClient.GetVolumesReturns(volumes, nil)
-			_, err := client.GetVolumeConfig(resources.GetVolumeConfigRequest{CredentialInfo: resources.CredentialInfo{UserName: "user2", Password: "pass2"}, Name:"name"})
+			_, err := client.GetVolumeConfig(resources.GetVolumeConfigRequest{CredentialInfo: resources.CredentialInfo{UserName: "user2", Password: "pass2"}, Name: "name"})
 			Expect(err).To(Not(HaveOccurred()))
 			Expect(otherFakeScbeRestClient.LoginCallCount()).To(Equal(1))
 			Expect(otherFakeScbeRestClient.GetVolumesCallCount()).To(Equal(1))
 		})
 	})
 })
-
 
 func GenFakeScbeRestClient(newClient scbe.ScbeRestClient) scbe.ScbeRestClientGen {
 	return func(conInfo resources.ConnectionInfo) (scbe.ScbeRestClient, error) {

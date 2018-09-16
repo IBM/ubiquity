@@ -1,5 +1,5 @@
 /**
- * Copyright 2017 IBM Corp.
+ * Copyright 2018 IBM Corp.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,28 +14,16 @@
  * limitations under the License.
  */
 
-package scbe_test
+package mounter
 
 import (
-	. "github.com/onsi/ginkgo"
-	. "github.com/onsi/gomega"
-	"testing"
-
-	"github.com/IBM/ubiquity/utils"
-	"github.com/jarcoal/httpmock"
+	"fmt"
 )
 
-func TestScbe(t *testing.T) {
-	RegisterFailHandler(Fail)
-	defer utils.InitUbiquityServerTestLogger()()
-	RunSpecs(t, "SCBE Test Suite")
+type NoMounterForVolumeError struct {
+	mounter string
 }
 
-var _ = BeforeSuite(func() {
-	// block all HTTP requests
-	httpmock.Activate()
-})
-
-var _ = AfterSuite(func() {
-	httpmock.DeactivateAndReset()
-})
+func (e *NoMounterForVolumeError) Error() string {
+	return fmt.Sprintf("Mounter not found for backend: %s", e.mounter)
+}

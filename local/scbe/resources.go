@@ -22,6 +22,10 @@ type LoginResponse struct {
 	Token string `json:"token"`
 }
 
+const (
+	ScName = "Spectrum Connect"
+)
+
 type ScbeStorageService struct {
 	Id                                 string `json:"id"`
 	UniqueIdentifier                   string `json:"unique_identifier"`

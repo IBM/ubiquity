@@ -19,9 +19,11 @@ package mounter
 import (
 	"fmt"
 	"github.com/IBM/ubiquity/remote/mounter/block_device_mounter_utils"
+	"github.com/IBM/ubiquity/remote/mounter/block_device_utils"
 	"github.com/IBM/ubiquity/resources"
 	"github.com/IBM/ubiquity/utils"
 	"github.com/IBM/ubiquity/utils/logs"
+	"os"
 )
 
 type scbeMounter struct {
@@ -31,15 +33,24 @@ type scbeMounter struct {
 	config                  resources.ScbeRemoteConfig
 }
 
-func NewScbeMounter(scbeRemoteConfig resources.ScbeRemoteConfig) resources.Mounter {
-	blockDeviceMounterUtils := block_device_mounter_utils.NewBlockDeviceMounterUtils()
+func newScbMounter(scbeRemoteConfig resources.ScbeRemoteConfig, blockDeviceMounterUtils block_device_mounter_utils.BlockDeviceMounterUtils, executer utils.Executor) resources.Mounter{
 	return &scbeMounter{
 		logger:                  logs.GetLogger(),
 		blockDeviceMounterUtils: blockDeviceMounterUtils,
-		exec: utils.NewExecutor(),
+		exec:  executer,
 		config: scbeRemoteConfig,
 	}
 }
+
+func NewScbeMounter(scbeRemoteConfig resources.ScbeRemoteConfig) resources.Mounter {
+	blockDeviceMounterUtils := block_device_mounter_utils.NewBlockDeviceMounterUtils()
+	return newScbMounter(scbeRemoteConfig, blockDeviceMounterUtils, utils.NewExecutor())
+}
+
+func NewScbeMounterWithExecuter(scbeRemoteConfig resources.ScbeRemoteConfig, blockDeviceMounterUtils block_device_mounter_utils.BlockDeviceMounterUtils, executer utils.Executor) resources.Mounter {
+	return newScbMounter(scbeRemoteConfig, blockDeviceMounterUtils, executer)
+}
+
 
 func (s *scbeMounter) Mount(mountRequest resources.MountRequest) (string, error) {
 	defer s.logger.Trace(logs.DEBUG)()
@@ -62,6 +73,8 @@ func (s *scbeMounter) Mount(mountRequest resources.MountRequest) (string, error)
 		if err := s.exec.MkdirAll(mountRequest.Mountpoint, 0700); err != nil {
 			return "", s.logger.ErrorRet(err, "MkdirAll failed", logs.Args{{"mountpoint", mountRequest.Mountpoint}})
 		}
+	} else {
+		s.logger.Warning("Idempotent issue : mount point directory already exists", logs.Args{{"mountpoint", mountRequest.Mountpoint}})
 	}
 
 	// Mount device and mkfs if needed
@@ -85,22 +98,33 @@ func (s *scbeMounter) Unmount(unmountRequest resources.UnmountRequest) error {
 	defer s.logger.Trace(logs.DEBUG)()
 
 	volumeWWN := unmountRequest.VolumeConfig["Wwn"].(string)
-	mountpoint := fmt.Sprintf(resources.PathToMountUbiquityBlockDevices, volumeWWN)
+	mountpoint := fmt.Sprintf(resources.PathToMountUbiquityBlockDevices, volumeWWN) // TODO instead of build the mountpoint it should come from unmountRequest.
+	skipUnmountFlow := false
 	devicePath, err := s.blockDeviceMounterUtils.Discover(volumeWWN, true)
 	if err != nil {
-		return s.logger.ErrorRet(err, "Discover failed", logs.Args{{"volumeWWN", volumeWWN}})
+		switch err.(type) {
+	        case *block_device_utils.VolumeNotFoundError:
+	            s.logger.Warning("Idempotent issue encountered: volume not found. skipping UnmountDeviceFlow ",logs.Args{{"volumeWWN", volumeWWN}} )
+				skipUnmountFlow = true	
+	        default:
+	            return s.logger.ErrorRet(err, "Discover failed", logs.Args{{"volumeWWN", volumeWWN}})
+        }
 	}
-
-	if err := s.blockDeviceMounterUtils.UnmountDeviceFlow(devicePath); err != nil {
-		return s.logger.ErrorRet(err, "UnmountDeviceFlow failed", logs.Args{{"devicePath", devicePath}})
+	if !skipUnmountFlow{
+		if err := s.blockDeviceMounterUtils.UnmountDeviceFlow(devicePath, volumeWWN); err != nil {
+			return s.logger.ErrorRet(err, "UnmountDeviceFlow failed", logs.Args{{"devicePath", devicePath}})
+		}
 	}
-
+	
 	s.logger.Info("Delete mountpoint directory if exist", logs.Args{{"mountpoint", mountpoint}})
 	// TODO move this part to the util
 	if _, err := s.exec.Stat(mountpoint); err == nil {
-		// TODO consider to add the prefix of the wwn in the OS (multipath -ll output)
-		if err := s.exec.RemoveAll(mountpoint); err != nil {
+		if err := s.exec.RemoveAll(mountpoint); err != nil { // TODO its enough to do Remove without All.
 			return s.logger.ErrorRet(err, "RemoveAll failed", logs.Args{{"mountpoint", mountpoint}})
+		}
+	} else{
+		if os.IsNotExist(err){
+			s.logger.Warning("Idempotent issue encountered: mountpoint directory does not exist.", logs.Args{{"mountpoint", mountpoint}})
 		}
 	}
 

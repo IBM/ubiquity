@@ -1,5 +1,5 @@
 /**
- * Copyright 2017 IBM Corp.
+ * Copyright 2016, 2017 IBM Corp.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,28 +14,17 @@
  * limitations under the License.
  */
 
-package scbe_test
+
+package utils
 
 import (
-	. "github.com/onsi/ginkgo"
-	. "github.com/onsi/gomega"
-	"testing"
-
-	"github.com/IBM/ubiquity/utils"
-	"github.com/jarcoal/httpmock"
+	"fmt"
 )
 
-func TestScbe(t *testing.T) {
-	RegisterFailHandler(Fail)
-	defer utils.InitUbiquityServerTestLogger()()
-	RunSpecs(t, "SCBE Test Suite")
+type NoENVKeyError struct {
+	EnvKeyName string
 }
 
-var _ = BeforeSuite(func() {
-	// block all HTTP requests
-	httpmock.Activate()
-})
-
-var _ = AfterSuite(func() {
-	httpmock.DeactivateAndReset()
-})
+func (e *NoENVKeyError) Error() string {
+	return fmt.Sprintf("ENV Key [%s] not exist.", e.EnvKeyName)
+}

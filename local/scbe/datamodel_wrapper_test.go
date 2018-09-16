@@ -17,11 +17,10 @@
 package scbe_test
 
 import (
-	. "github.com/onsi/ginkgo"
-	. "github.com/onsi/gomega"
+  . "github.com/onsi/ginkgo"
+  . "github.com/onsi/gomega"
 	"github.com/IBM/ubiquity/database"
 	"github.com/IBM/ubiquity/local/scbe"
-	"os"
 )
 
 var _ = Describe("ScbeDataModelWrapper test", func() {
@@ -29,7 +28,6 @@ var _ = Describe("ScbeDataModelWrapper test", func() {
 	var (
 		dataModelWrapper   scbe.ScbeDataModelWrapper
 		err                error
-		sqliteDbPath       string = "/tmp/ScbeDataModelWrapper_test"
 		volumeName         string = "volumeName"
 		volumeWwn          string = "wwn"
 		volumeFsType       string = "volumeFsType"
@@ -37,16 +35,14 @@ var _ = Describe("ScbeDataModelWrapper test", func() {
 		volumeWwnDb        string = volumeWwn + database.VolumeNameSuffix
 		volumeFsTypeDb     string = volumeFsType + database.VolumeNameSuffix
 		scbeVolume         scbe.ScbeVolume
-        listVolumes        []scbe.ScbeVolume
 	)
 
 	BeforeEach(func() {
 		dataModelWrapper = scbe.NewScbeDataModelWrapper()
-		os.Remove(sqliteDbPath)
 	})
-    AfterEach(func() {
-        database.UnregisterAllMigrations()
-    })
+	AfterEach(func() {
+		database.UnregisterAllMigrations()
+	})
 
 	Context("Database cannot be accessed yet", func() {
         Context("InsertVolume", func() {
@@ -77,17 +73,6 @@ var _ = Describe("ScbeDataModelWrapper test", func() {
                 scbeVolume, err = dataModelWrapper.GetVolume(volumeNameDb, false)
                 Expect(err).To(Not(HaveOccurred()))
             })
-            It("fail for non db volume", func() {
-                sqliteDbCloseFunc := database.InitSqlite(sqliteDbPath)
-                err = dataModelWrapper.InsertVolume(volumeName, volumeWwn, volumeFsType)
-                Expect(err).To(Not(HaveOccurred()))
-                scbeVolume, err = dataModelWrapper.GetVolume(volumeName, true)
-                Expect(err).To(Not(HaveOccurred()))
-                sqliteDbCloseFunc()
-                defer database.InitTestError()()
-                err = dataModelWrapper.DeleteVolume(volumeName)
-                Expect(err).To(HaveOccurred())
-            })
         })
         Context("UpdateDatabaseVolume", func() {
             It("succeed", func() {
@@ -106,144 +91,23 @@ var _ = Describe("ScbeDataModelWrapper test", func() {
                 Expect(err).To(Not(HaveOccurred()))
             })
         })
-        Context("ListVolumes", func() {
-            It("empty when there is no db volume", func() {
-                sqliteDbCloseFunc := database.InitSqlite(sqliteDbPath)
-                err = dataModelWrapper.InsertVolume(volumeName, volumeWwn, volumeFsType)
-                Expect(err).To(Not(HaveOccurred()))
-                scbeVolume, err = dataModelWrapper.GetVolume(volumeName, true)
-                Expect(err).To(Not(HaveOccurred()))
-                sqliteDbCloseFunc()
-                defer database.InitTestError()()
-                var emptyList []scbe.ScbeVolume
-                listVolumes, err = dataModelWrapper.ListVolumes()
-                Expect(err).To(Not(HaveOccurred()))
-                Expect(listVolumes).To(Equal(emptyList))
-            })
-            It("only db volume is returned when it exists", func() {
-                sqliteDbCloseFunc := database.InitSqlite(sqliteDbPath)
-                err = dataModelWrapper.InsertVolume(volumeName, volumeWwn, volumeFsType)
-                Expect(err).To(Not(HaveOccurred()))
-                scbeVolume, err = dataModelWrapper.GetVolume(volumeName, true)
-                Expect(err).To(Not(HaveOccurred()))
-                sqliteDbCloseFunc()
-                defer database.InitTestError()()
-                err = dataModelWrapper.InsertVolume(volumeNameDb, volumeWwnDb, volumeFsTypeDb)
-                Expect(err).To(Not(HaveOccurred()))
-                scbeVolume, err = dataModelWrapper.GetVolume(volumeNameDb, true)
-                Expect(err).To(Not(HaveOccurred()))
-                scbeVolumes := []scbe.ScbeVolume{scbeVolume}
-                listVolumes, err = dataModelWrapper.ListVolumes()
-                Expect(err).To(Not(HaveOccurred()))
-                Expect(isEqualScbeVolumes(listVolumes, scbeVolumes)).To(Equal(true))
-            })
-        })
     })
-	Context("Database can be accessed", func() {
-		Context("InsertVolume", func() {
-			It("succeed for db volume", func() {
-				defer database.InitSqlite(sqliteDbPath)()
-				err = dataModelWrapper.InsertVolume(volumeNameDb, volumeWwnDb, volumeFsTypeDb)
-				Expect(err).To(Not(HaveOccurred()))
-				scbeVolume, err = dataModelWrapper.GetVolume(volumeNameDb, true)
-				Expect(err).To(Not(HaveOccurred()))
-			})
-			It("succeed for non db volume", func() {
-				defer database.InitSqlite(sqliteDbPath)()
-				err = dataModelWrapper.InsertVolume(volumeName, volumeWwn, volumeFsType)
-				Expect(err).To(Not(HaveOccurred()))
-				scbeVolume, err = dataModelWrapper.GetVolume(volumeName, true)
-				Expect(err).To(Not(HaveOccurred()))
-			})
-		})
-		Context("DeleteVolume", func() {
-			It("succeed for db volume", func() {
-				defer database.InitSqlite(sqliteDbPath)()
-				err = dataModelWrapper.InsertVolume(volumeNameDb, volumeWwnDb, volumeFsTypeDb)
-				Expect(err).To(Not(HaveOccurred()))
-				scbeVolume, err = dataModelWrapper.GetVolume(volumeNameDb, true)
-				Expect(err).To(Not(HaveOccurred()))
-				err = dataModelWrapper.DeleteVolume(volumeNameDb)
-				Expect(err).To(Not(HaveOccurred()))
-				scbeVolume, err = dataModelWrapper.GetVolume(volumeNameDb, false)
-				Expect(err).To(Not(HaveOccurred()))
-			})
-			It("succeed for non db volume", func() {
-				defer database.InitSqlite(sqliteDbPath)()
-				err = dataModelWrapper.InsertVolume(volumeName, volumeWwn, volumeFsType)
-				Expect(err).To(Not(HaveOccurred()))
-				scbeVolume, err = dataModelWrapper.GetVolume(volumeName, true)
-				Expect(err).To(Not(HaveOccurred()))
-				err = dataModelWrapper.DeleteVolume(volumeName)
-				Expect(err).To(Not(HaveOccurred()))
-				scbeVolume, err = dataModelWrapper.GetVolume(volumeName, false)
-				Expect(err).To(Not(HaveOccurred()))
-			})
-		})
-        Context("ListVolumes", func() {
-            It("empty when there is no volume", func() {
-                defer database.InitSqlite(sqliteDbPath)()
-                var emptyList []scbe.ScbeVolume
-                listVolumes, err = dataModelWrapper.ListVolumes()
-                Expect(err).To(Not(HaveOccurred()))
-                Expect(listVolumes).To(Equal(emptyList))
-            })
-            It("only db volume is returned if only db volume exists", func() {
-                defer database.InitSqlite(sqliteDbPath)()
-                err = dataModelWrapper.InsertVolume(volumeNameDb, volumeWwnDb, volumeFsTypeDb)
-                Expect(err).To(Not(HaveOccurred()))
-                dbVolume, err := dataModelWrapper.GetVolume(volumeNameDb, true)
-                Expect(err).To(Not(HaveOccurred()))
-                scbeVolumes := []scbe.ScbeVolume{dbVolume}
-                listVolumes, err = dataModelWrapper.ListVolumes()
-                Expect(err).To(Not(HaveOccurred()))
-                Expect(isEqualScbeVolumes(listVolumes, scbeVolumes)).To(Equal(true))
-            })
-            It("only non db volume is returned if only non db volume exists", func() {
-                defer database.InitSqlite(sqliteDbPath)()
-                err = dataModelWrapper.InsertVolume(volumeName, volumeWwn, volumeFsType)
-                Expect(err).To(Not(HaveOccurred()))
-                nonDbVolume, err := dataModelWrapper.GetVolume(volumeName, true)
-                Expect(err).To(Not(HaveOccurred()))
-                scbeVolumes := []scbe.ScbeVolume{nonDbVolume}
-                listVolumes, err = dataModelWrapper.ListVolumes()
-                Expect(err).To(Not(HaveOccurred()))
-                Expect(isEqualScbeVolumes(listVolumes, scbeVolumes)).To(Equal(true))
-            })
-            It("all volumes", func() {
-                defer database.InitSqlite(sqliteDbPath)()
-                err = dataModelWrapper.InsertVolume(volumeNameDb, volumeWwnDb, volumeFsTypeDb)
-                Expect(err).To(Not(HaveOccurred()))
-                dbVolume, err := dataModelWrapper.GetVolume(volumeNameDb, true)
-                Expect(err).To(Not(HaveOccurred()))
-                err = dataModelWrapper.InsertVolume(volumeName, volumeWwn, volumeFsType)
-                Expect(err).To(Not(HaveOccurred()))
-                scbeVolume, err = dataModelWrapper.GetVolume(volumeName, true)
-                scbeVolumes := []scbe.ScbeVolume{scbeVolume, dbVolume}
-                listVolumes, err = dataModelWrapper.ListVolumes()
-                Expect(err).To(Not(HaveOccurred()))
-                Expect(isEqualScbeVolumes(listVolumes, scbeVolumes)).To(Equal(true))
-            })
-        })
-
-	})
 })
 
-
 func isEqualScbeVolumes(list1 []scbe.ScbeVolume, list2 []scbe.ScbeVolume) bool {
-    if len(list1) != len(list2) {
-        return false
-    }
+	if len(list1) != len(list2) {
+		return false
+	}
 
-    for i, v := range list1 {
-        if !isEqualScbeVolume(v, list2[i]) {
-            return false
-        }
-    }
+	for i, v := range list1 {
+		if !isEqualScbeVolume(v, list2[i]) {
+			return false
+		}
+	}
 
-    return true
+	return true
 }
 
 func isEqualScbeVolume(vol1 scbe.ScbeVolume, vol2 scbe.ScbeVolume) bool {
-    return vol1.Volume.Name == vol2.Volume.Name && vol1.WWN == vol2.WWN
+	return vol1.Volume.Name == vol2.Volume.Name && vol1.WWN == vol2.WWN
 }

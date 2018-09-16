@@ -16,25 +16,15 @@
 
 package database_test
 
-
 import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"testing"
-
-	"github.com/IBM/ubiquity/utils/logs"
-	"github.com/IBM/ubiquity/database"
-	"os"
-)
-
-const (
-	dbPath = "/tmp/database_test"
+	"github.com/IBM/ubiquity/utils"
 )
 
 func TestDb(t *testing.T) {
 	RegisterFailHandler(Fail)
-	defer logs.InitStdoutLogger(logs.DEBUG)()
-	os.Remove(dbPath)
-	defer database.InitSqlite(dbPath)()
+	defer utils.InitUbiquityServerTestLogger()()
 	RunSpecs(t, "database Test Suite")
 }

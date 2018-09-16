@@ -20,16 +20,19 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"path"
 	"strings"
+
+	"github.com/natefinch/lumberjack"
 )
 
 var logger Logger = nil
 
-func initLogger(level Level, writer io.Writer) {
+func initLogger(level Level, writer io.Writer, params LoggerParams) {
 	if logger != nil {
 		panic("logger already initialized")
 	}
-	logger = newGoLoggingLogger(level, writer)
+	logger = newGoLoggingLogger(level, writer, params)
 }
 
 // GetLogLevelFromString translates string log level to Level type
@@ -51,32 +54,61 @@ func GetLogLevelFromString(level string) Level {
 // InitFileLogger initializes the global logger with a file writer to filePath and set at level.
 // It returns a function that clears the global logger.
 // If the global logger is already initialized InitFileLogger panics.
-func InitFileLogger(level Level, filePath string) func() {
+func InitFileLogger(level Level, filePath string, rotateSize int, params LoggerParams) func() {
+	_, err := os.Stat(filePath)
+	if os.IsNotExist(err) {
+		fileDir, _ := path.Split(filePath)
+		err := os.MkdirAll(fileDir, 0766)
+		if err != nil {
+			panic(fmt.Sprintf("failed to create log folder %v", err))
+		}
+	}
+
 	logFile, err := os.OpenFile(filePath, os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0640)
 	if err != nil {
 		panic(fmt.Sprintf("failed to init logger %v", err))
 	}
-	initLogger(level, io.MultiWriter(logFile))
+
+	fileStat, err := logFile.Stat()
+	if err != nil {
+		panic(fmt.Sprintf("failed to stat logger file %v", err))
+	}
+
+	fileStatSize := int(fileStat.Size()) / 1024 / 1024
+
+	// If log file size bigger than rotateSize, will use lunberjack to run the logrotate
+	if fileStatSize < rotateSize {
+		initLogger(level, io.MultiWriter(logFile), params)
+	} else {
+		initLogger(level, &lumberjack.Logger{
+			Filename:   filePath,
+			MaxSize:    rotateSize,
+			MaxBackups: 5,
+			MaxAge:     50,
+			Compress:   true,
+		}, params)
+	}
+
 	return func() { logFile.Close(); logger = nil }
 }
 
 // InitLogger initializes the global logger with a file writer to filePath and stdout and set at level.
 // It returns a function that clears the global logger.
 // If the global logger is already initialized InitLogger panics.
-func InitLogger(level Level, filePath string) func() {
+func InitLogger(level Level, filePath string, params LoggerParams) func() {
 	logFile, err := os.OpenFile(filePath, os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0640)
 	if err != nil {
 		panic(fmt.Sprintf("failed to init logger %v", err))
 	}
-	initLogger(level, io.MultiWriter(os.Stdout, logFile))
+	initLogger(level, io.MultiWriter(os.Stdout, logFile), params)
 	return func() { logFile.Close(); logger = nil }
 }
 
 // InitStdoutLogger initializes the global logger with stdout and set at level.
 // It returns a function that clears the global logger.
 // If the global logger is already initialized InitStdoutLogger panics.
-func InitStdoutLogger(level Level) func() {
-	initLogger(level, os.Stdout)
+func InitStdoutLogger(level Level, params LoggerParams) func() {
+	initLogger(level, os.Stdout, params)
 	return func() { logger = nil }
 }
 

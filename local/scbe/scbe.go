@@ -19,13 +19,13 @@ package scbe
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/IBM/ubiquity/database"
 	"github.com/IBM/ubiquity/resources"
 	"github.com/IBM/ubiquity/utils"
 	"github.com/IBM/ubiquity/utils/logs"
 	"strconv"
 	"strings"
 	"sync"
-	"github.com/IBM/ubiquity/database"
 )
 
 type scbeLocalClient struct {
@@ -114,7 +114,7 @@ func (s *scbeLocalClient) basicScbeLocalClientStartupAndValidation(restClient Sc
 		if database.IsDatabaseVolume(volInfo.Name) && s.isInstanceVolume(volInfo.Name) {
 			volume := &ScbeVolume{
 				Volume: resources.Volume{Name: database.VolumeNameSuffix, Backend: resources.SCBE},
-				WWN:      volInfo.Wwn,
+				WWN:    volInfo.Wwn,
 				FSType: s.config.DefaultFilesystemType,
 			}
 			s.logger.Info("update db volume", logs.Args{{"volume", volume}})
@@ -183,13 +183,13 @@ func validateScbeConfig(config *resources.ScbeConfig) error {
 func (s *scbeLocalClient) Activate(activateRequest resources.ActivateRequest) error {
 	defer s.logger.Trace(logs.DEBUG)()
 
-    // authenticate
-    _, err := s.getAuthenticatedScbeRestClient(activateRequest.CredentialInfo)
-    if err != nil {
-        return s.logger.ErrorRet(err, "getAuthenticatedScbeRestClient failed")
-    }
+	// authenticate
+	_, err := s.getAuthenticatedScbeRestClient(activateRequest.CredentialInfo)
+	if err != nil {
+		return s.logger.ErrorRet(err, "getAuthenticatedScbeRestClient failed")
+	}
 
-    s.activationLock.RLock()
+	s.activationLock.RLock()
 	if s.isActivated {
 		s.activationLock.RUnlock()
 		return nil
@@ -358,7 +358,7 @@ func (s *scbeLocalClient) GetVolumeConfig(getVolumeConfigRequest resources.GetVo
 
 	// verify volume is found
 	if len(volumeInfo) != 1 {
-		return nil, s.logger.ErrorRet(&volumeNotFoundError{getVolumeConfigRequest.Name}, "failed", logs.Args{{"volumeInfo", volumeInfo}})
+		return nil, s.logger.ErrorRet(&VolumeNotFoundOnArrayError{VolName: getVolumeConfigRequest.Name}, "failed", logs.Args{{"volumeInfo", volumeInfo}})
 	}
 
 	// serialize scbeVolumeInfo to json
@@ -457,11 +457,12 @@ func (s *scbeLocalClient) Detach(detachRequest resources.DetachRequest) (err err
 		return s.logger.ErrorRet(err, "scbeRestClient.GetVolMapping failed")
 	}
 
-	// Fail if vol already detach
 	if hostAttach == EmptyHost {
-		return s.logger.ErrorRet(&volNotAttachedError{detachRequest.Name}, "failed")
+		s.logger.Warning("Volume is already detached from host.", logs.Args{{"volume", existingVolume.WWN}})
+		return nil
 	}
 
+	// TODO idempotent, if volume attach to different host, then we should also return succeed.
 	s.logger.Debug("Detaching", logs.Args{{"volume", existingVolume}})
 	if err = scbeRestClient.UnmapVolume(existingVolume.WWN, host2detach); err != nil {
 		return s.logger.ErrorRet(err, "scbeRestClient.UnmapVolume failed")

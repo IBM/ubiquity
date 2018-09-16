@@ -99,7 +99,8 @@ var _ = Describe("restClient", func() {
 			httpmock.RegisterResponder("POST", fakeScbeUrlAuthFull, httpmock.NewStringResponder(http.StatusBadRequest, "{}"))
 			err = client.Login()
 			Expect(err).To(HaveOccurred())
-			Expect(err.Error()).To(MatchRegexp("^bad status code"))
+			_, ok := err.(*scbe.BadHttpStatusCodeError)
+			Expect(ok).To(Equal(true))
 		})
 		It("should fail when httpClient.Post returns invalid json", func() {
 			httpmock.RegisterResponder("POST", fakeScbeUrlAuthFull, httpmock.NewStringResponder(http.StatusOK, "yyy"))
@@ -153,7 +154,8 @@ var _ = Describe("restClient", func() {
 			var services []scbe.ScbeStorageService
 			err = client.Get(scbe.UrlScbeResourceService, nil, -1, &services)
 			Expect(err).To(HaveOccurred())
-			Expect(err.Error()).To(MatchRegexp("^bad status code"))
+			_, ok := err.(*scbe.BadHttpStatusCodeError)
+			Expect(ok).To(Equal(true))
 		})
 		It("should fail when httpClient.Get returns invalid json", func() {
 			httpmock.RegisterResponder(
