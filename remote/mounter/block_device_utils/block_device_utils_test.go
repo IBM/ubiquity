@@ -211,6 +211,43 @@ var _ = Describe("block_device_utils_test", func() {
 			Expect(err).To(HaveOccurred())
 			Expect(err).To(Equal(&block_device_utils.CommandExecuteError{"sg_inq",returnError}))
 		})
+		It("should return faulty error when failing sg_inq on faulty device.", func() {
+			volumeId := "6001738cfc9035ea0000000000796463"
+			device := "mpathx"
+			mpathOutput := fmt.Sprintf(`%s (3%s) dm-4 IBM     ,2810XIV         
+							size=954M features='1 queue_if_no_path' hwhandler='0' wp=rw
+							-+- policy='service-time 0' prio=0 status=active
+							  |- 35:0:0:2 sdd 8:48 failed faulty running
+							  |- 36:0:0:2 sdg 8:96 failed faulty running
+							  - 37:0:0:2 sde 8:64 failed faulty running`, device, volumeId)
+			fakeExec.ExecuteWithTimeoutReturnsOnCall(0, []byte(mpathOutput), nil)
+			returnError :=  &exec.ExitError{}
+			//this execute with timeout makes the GetWwnByScsiInq to return an error
+			fakeExec.ExecuteWithTimeoutReturnsOnCall(2, []byte(""),returnError)
+			fakeExec.ExecuteReturns([]byte(mpathOutput), nil)
+			_, err := bdUtils.Discover(volumeId, true)
+			Expect(err).To(HaveOccurred())
+			Expect(err).To(Equal(&block_device_utils.FaultyDeviceError{device}))	
+		})
+		It("should return command execution error if device is not faulty.", func() {
+			volumeId := "6001738cfc9035ea0000000000796463"
+			device := "mpathx"
+			mpathOutput := fmt.Sprintf(`%s (3%s) dm-4 IBM     ,2810XIV         
+							size=954M features='1 queue_if_no_path' hwhandler='0' wp=rw
+							-+- policy='service-time 0' prio=0 status=active
+							  |- 35:0:0:2 sdd 8:48 active ready running
+							  |- 36:0:0:2 sdg 8:96 active ready running
+							  - 37:0:0:2 sde 8:64 active ready running`, device, volumeId)
+			fakeExec.ExecuteWithTimeoutReturnsOnCall(0, []byte(mpathOutput), nil)
+			returnError :=  &exec.ExitError{}
+			//this execute with timeout makes the GetWwnByScsiInq to return an error
+			fakeExec.ExecuteWithTimeoutReturnsOnCall(2, []byte(""),returnError)
+			fakeExec.ExecuteReturns([]byte(mpathOutput), nil)
+			_, err := bdUtils.Discover(volumeId, true)
+			Expect(err).To(HaveOccurred())
+			_, ok := err.(*block_device_utils.CommandExecuteError)
+			Expect(ok).To(BeTrue())	
+		})
 	})
 	Context(".DiscoverBySgInq", func() {
 		It("should return mpathhe", func() {
@@ -362,13 +399,10 @@ mpathhb (36001738cfc9035eb0000000000cea###) dm-3 ##,##
 			mpath := "mpath"
 			err = bdUtils.Cleanup(mpath)
 			Expect(err).ToNot(HaveOccurred())
-			Expect(fakeExec.ExecuteWithTimeoutCallCount()).To(Equal(2))
+			Expect(fakeExec.ExecuteWithTimeoutCallCount()).To(Equal(1))
 			_, cmd1, args1 := fakeExec.ExecuteWithTimeoutArgsForCall(0)
-			Expect(cmd1).To(Equal("dmsetup"))
-			Expect(args1).To(Equal([]string{"message", mpath, "0", "fail_if_no_path"}))
-			_, cmd2, args2 := fakeExec.ExecuteWithTimeoutArgsForCall(1)
-			Expect(cmd2).To(Equal("multipath"))
-			Expect(args2).To(Equal([]string{"-f", mpath}))
+			Expect(cmd1).To(Equal("multipath"))
+			Expect(args1).To(Equal([]string{"-f", mpath}))
 		})
 		It("should succeed to Cleanup mpath if the device not exist", func() {
 			mpath := "mpath"
@@ -404,29 +438,15 @@ mpathhb (36001738cfc9035eb0000000000cea###) dm-3 ##,##
 		})
 		It("Cleanup fails if multipath command missing", func() {
 			mpath := "/dev/mapper/mpath"
-			fakeExec.IsExecutableReturnsOnCall(1, cmdErr)
+			fakeExec.IsExecutableReturnsOnCall(0, cmdErr)
 			err = bdUtils.Cleanup(mpath)
 			Expect(err).To(HaveOccurred())
 			Expect(err.Error()).To(MatchRegexp(cmdErr.Error()))
-			Expect(fakeExec.IsExecutableCallCount()).To(Equal(2))
-		})
-		It("Cleanup fails if multipath command fails", func() {
-			mpath := "mpath"
-			fakeExec.ExecuteWithTimeoutReturnsOnCall(1, []byte{}, cmdErr)
-			err = bdUtils.Cleanup(mpath)
-			Expect(err).To(HaveOccurred())
-			Expect(err.Error()).To(MatchRegexp(cmdErr.Error()))
-		})
-		It("Cleanup fails if dmsetup command timeout exceeds", func() {
-			mpath := "mpath"
-			fakeExec.ExecuteWithTimeoutReturnsOnCall(0, []byte{}, context.DeadlineExceeded)
-			err = bdUtils.Cleanup(mpath)
-			Expect(err).To(HaveOccurred())
-			Expect(err.Error()).To(MatchRegexp(context.DeadlineExceeded.Error()))
+			Expect(fakeExec.IsExecutableCallCount()).To(Equal(1))
 		})
 		It("Cleanup fails if multipath command timeout exceeds", func() {
 			mpath := "mpath"
-			fakeExec.ExecuteWithTimeoutReturnsOnCall(1, []byte{}, context.DeadlineExceeded)
+			fakeExec.ExecuteWithTimeoutReturnsOnCall(0, []byte{}, context.DeadlineExceeded)
 			err = bdUtils.Cleanup(mpath)
 			Expect(err).To(HaveOccurred())
 			Expect(err.Error()).To(MatchRegexp(context.DeadlineExceeded.Error()))
@@ -664,6 +684,7 @@ wrong format on /ubiquity/mpoint type ext4 (rw,relatime,data=ordered)
 			err = bdUtils.UmountFs(mpoint, "6001738CFC9035EA0000000000795164")
 			Expect(err).To(Not(HaveOccurred()))
 			Expect(fakeExec.ExecuteWithTimeoutCallCount()).To(Equal(1))
+
 			_, cmd, args := fakeExec.ExecuteWithTimeoutArgsForCall(0)
 			Expect(cmd).To(Equal("umount"))
 			Expect(args).To(Equal([]string{mpoint}))

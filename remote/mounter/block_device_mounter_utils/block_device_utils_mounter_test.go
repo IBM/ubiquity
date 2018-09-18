@@ -281,6 +281,15 @@ var _ = Describe("block_device_mounter_utils_test", func() {
 			Expect(err).To(HaveOccurred())
 			Expect(err).To(MatchError(callErr))
 		})
+		It("should fail if dmsetup failed", func() {
+			fakeBlockDeviceUtils.SetDmsetupReturns(callErr)
+			fakeBlockDeviceUtils.UmountFsReturns(nil)
+			err = blockDeviceMounterUtils.UnmountDeviceFlow("fake_device", "6001738CFC9035EA0000000000795164")
+			Expect(err).To(HaveOccurred())
+			Expect(err).To(MatchError(callErr))
+			Expect(fakeBlockDeviceUtils.SetDmsetupCallCount()).To(Equal(1))
+			Expect(fakeBlockDeviceUtils.UmountFsCallCount()).To(Equal(0))
+		})
 		It("should fail if Cleanup failed", func() {
 			fakeBlockDeviceUtils.UmountFsReturns(nil)
 			fakeBlockDeviceUtils.CleanupReturns(callErr)
@@ -299,8 +308,8 @@ var _ = Describe("block_device_mounter_utils_test", func() {
 	})
 })
 
-func TestGetBlockDeviceUtils(t *testing.T) {
+func TestGetBlockDeviceMounterUtils(t *testing.T) {
 	RegisterFailHandler(Fail)
 	defer utils.InitUbiquityServerTestLogger()()
-	RunSpecs(t, "BlockDeviceUtils Test Suite")
+	RunSpecs(t, "BlockDeviceMounterUtils Test Suite")
 }
