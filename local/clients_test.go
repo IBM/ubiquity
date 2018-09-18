@@ -14,9 +14,11 @@ var _ = Describe("Clients", func() {
 		fakeConfig          resources.UbiquityServerConfig
 		fakeScbeConfig      resources.ScbeConfig
 		fakeConnectionInfo  resources.ConnectionInfo
+		fakeRestConfig	    resources.RestConfig
+	        fakeSpectrumScaleConfig	resources.SpectrumScaleConfig
 		err                 error
 		logger              *log.Logger
-		client		        map[string]resources.StorageClient
+		client		    map[string]resources.StorageClient
 	)
 	BeforeEach(func() {
 		logger = log.New(os.Stdout, "ubiquity: ", log.Lshortfile|log.LstdFlags)
@@ -27,6 +29,26 @@ var _ = Describe("Clients", func() {
 		fakeConnectionInfo = resources.ConnectionInfo{}
 		fakeScbeConfig	   = resources.ScbeConfig{ConnectionInfo: fakeConnectionInfo,}
 		fakeConfig	   = resources.UbiquityServerConfig{ScbeConfig: fakeScbeConfig,}
+		client, err = local.GetLocalClients(logger, fakeConfig)
+		Expect(client).To(BeNil())
+		Expect(err).To(HaveOccurred())
+		Expect(err.Error()).To(Equal("No client can be initialized. Please check ubiquity-configmap parameters"))
+	})
+	It("should fail when ManagementIP is empty for Spectrum Scale backend", func() {
+		fakeRestConfig = resources.RestConfig{}
+		fakeSpectrumScaleConfig = resources.SpectrumScaleConfig{RestConfig: fakeRestConfig,}
+		fakeConfig = resources.UbiquityServerConfig{SpectrumScaleConfig: fakeSpectrumScaleConfig,}
+		client, err = local.GetLocalClients(logger, fakeConfig)
+		Expect(client).To(BeNil())
+		Expect(err).To(HaveOccurred())
+		Expect(err.Error()).To(Equal("No client can be initialized. Please check ubiquity-configmap parameters"))
+	})
+	It("should fail when ManagementIP is empty for both backend", func() {
+		fakeConnectionInfo = resources.ConnectionInfo{}
+		fakeScbeConfig	   = resources.ScbeConfig{ConnectionInfo: fakeConnectionInfo,}
+		fakeRestConfig = resources.RestConfig{}
+		fakeSpectrumScaleConfig = resources.SpectrumScaleConfig{RestConfig: fakeRestConfig,}
+		fakeConfig	   = resources.UbiquityServerConfig{ScbeConfig: fakeScbeConfig,SpectrumScaleConfig: fakeSpectrumScaleConfig,}
 		client, err = local.GetLocalClients(logger, fakeConfig)
 		Expect(client).To(BeNil())
 		Expect(err).To(HaveOccurred())

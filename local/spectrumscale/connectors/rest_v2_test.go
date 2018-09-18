@@ -18,21 +18,22 @@ package connectors_test
 
 import (
 	"encoding/json"
-	"log"
 	"net/http"
-	"os"
-
+	"github.com/IBM/ubiquity/utils/logs"
 	"github.com/IBM/ubiquity/local/spectrumscale/connectors"
 	"github.com/IBM/ubiquity/resources"
+	"github.com/IBM/ubiquity/utils"
 	"github.com/jarcoal/httpmock"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
+	"fmt"
+	"net/url"
 )
 
 var _ = Describe("spectrumRestV2", func() {
 	var (
 		spectrumRestV2 connectors.SpectrumScaleConnector
-		logger         *log.Logger
+		logger         logs.Logger
 		fakeurl        string
 		restConfig     resources.RestConfig
 		opts           map[string]interface{}
@@ -43,9 +44,10 @@ var _ = Describe("spectrumRestV2", func() {
 	)
 
 	BeforeEach(func() {
-		logger = log.New(os.Stdout, "spectrum: ", log.Lshortfile|log.LstdFlags)
+		//logger = log.New(os.Stdout, "spectrum: ", log.Lshortfile|log.LstdFlags)
+		logger = logs.GetLogger()
 		httpmock.Activate()
-		fakeurl = "http://1.1.1.1:443"
+		fakeurl = "https://1.1.1.1:443"
 		restConfig.ManagementIP = "1.1.1.1"
 		restConfig.Port = 443
 		restConfig.User = "fakeuser"
@@ -96,82 +98,22 @@ var _ = Describe("spectrumRestV2", func() {
 
 	Context(".IsFilesystemMounted", func() {
 		It("Should pass and return true", func() {
-			getnodeResp := connectors.GetNodesResponse_v2{}
-			getnodeResp.Nodes = make([]connectors.Node_v2, 1)
-			getnodeResp.Nodes[0].AdminNodename = "fakehostname"
-			getnodeResp.Status.Code = 200
-			marshalledResponse, err := json.Marshal(getnodeResp)
+			getownerResp := connectors.OwnerResp_v2{}
+			getownerResp.Owner.GID = 0
+			getownerResp.Owner.Group = "root"
+			getownerResp.Owner.UID = 0
+			getownerResp.Owner.User = "root"
+			getownerResp.Status.Code = 200
+			marshalledResponse, err := json.Marshal(getownerResp)
 			Expect(err).ToNot(HaveOccurred())
-			registerurl := fakeurl + "/scalemgmt/v2/nodes"
+			registerurl := utils.FormatURL(fakeurl, fmt.Sprintf("scalemgmt/v2/filesystems/%s/owner/%s", filesystem, url.QueryEscape("/")))
+			//registerurl := fakeurl + "scalemgmt/v2/filesystems/fake-filesystem/owner/%2F"
 			httpmock.RegisterResponder(
 				"GET",
 				registerurl,
 				httpmock.NewStringResponder(200, string(marshalledResponse)),
 			)
 			ismounted, err := spectrumRestV2.IsFilesystemMounted(filesystem)
-			Expect(err).ToNot(HaveOccurred())
-			Expect(ismounted).To(Equal(true))
-		})
-
-		It("Should pass but return false as node name is not matching", func() {
-			getnodeResp := connectors.GetNodesResponse_v2{}
-			getnodeResp.Nodes = make([]connectors.Node_v2, 1)
-			getnodeResp.Nodes[0].AdminNodename = "fakehostname1"
-			getnodeResp.Status.Code = 200
-			marshalledResponse, err := json.Marshal(getnodeResp)
-			Expect(err).ToNot(HaveOccurred())
-			registerurl := fakeurl + "/scalemgmt/v2/nodes"
-			httpmock.RegisterResponder(
-				"GET",
-				registerurl,
-				httpmock.NewStringResponder(200, string(marshalledResponse)),
-			)
-			ismounted, err := spectrumRestV2.IsFilesystemMounted(filesystem)
-			Expect(err).ToNot(HaveOccurred())
-			Expect(ismounted).To(Equal(false))
-		})
-
-		It("Should fail with http error and return false", func() {
-			getnodeResp := connectors.GetNodesResponse_v2{}
-			getnodeResp.Nodes = make([]connectors.Node_v2, 1)
-			getnodeResp.Nodes[0].AdminNodename = "fakehostname"
-			getnodeResp.Status.Code = 500
-			marshalledResponse, err := json.Marshal(getnodeResp)
-			Expect(err).ToNot(HaveOccurred())
-			registerurl := fakeurl + "/scalemgmt/v2/nodes"
-			httpmock.RegisterResponder(
-				"GET",
-				registerurl,
-				httpmock.NewStringResponder(500, string(marshalledResponse)),
-			)
-			ismounted, err := spectrumRestV2.IsFilesystemMounted(filesystem)
-			Expect(err).To(HaveOccurred())
-			Expect(ismounted).To(Equal(false))
-		})
-
-		It("Should pass by getting hostname from system ", func() {
-			getnodeResp := connectors.GetNodesResponse_v2{}
-			getnodeResp.Nodes = make([]connectors.Node_v2, 1)
-			hostn, err := os.Hostname()
-			Expect(err).ToNot(HaveOccurred())
-			getnodeResp.Nodes[0].AdminNodename = hostn
-			getnodeResp.Status.Code = 200
-			marshalledResponse, err := json.Marshal(getnodeResp)
-			Expect(err).ToNot(HaveOccurred())
-			registerurl := fakeurl + "/scalemgmt/v2/nodes"
-			httpmock.RegisterResponder(
-				"GET",
-				registerurl,
-				httpmock.NewStringResponder(200, string(marshalledResponse)),
-			)
-
-			restConfig.Hostname = ""
-
-			nspectrumRestV2, nclient, err := connectors.NewspectrumRestV2WithClient(logger, restConfig)
-			Expect(err).ToNot(HaveOccurred())
-			httpmock.ActivateNonDefault(nclient)
-
-			ismounted, err := nspectrumRestV2.IsFilesystemMounted(filesystem)
 			Expect(err).ToNot(HaveOccurred())
 			Expect(ismounted).To(Equal(true))
 		})
@@ -964,7 +906,7 @@ var _ = Describe("spectrumRestV2", func() {
 			setFilesetResp = connectors.GenericResponse{}
 			setFilesetResp.Jobs = make([]connectors.Job, 1)
 			setFilesetResp.Jobs[0].JobID = 1234
-			registerurl = fakeurl + "/scalemgmt/v2/filesystems/" + filesystem + "/filesets/" + fileset + "/quotas"
+			registerurl = fakeurl + "/scalemgmt/v2/filesystems/" + filesystem + "/quotas"
 			joburl = fakeurl + "/scalemgmt/v2/jobs?filter=jobId=1234&fields=:all:"
 
 		})
@@ -1109,252 +1051,6 @@ var _ = Describe("spectrumRestV2", func() {
 			quota, err := spectrumRestV2.ListFilesetQuota(filesystem, fileset)
 			Expect(err).To(HaveOccurred())
 			Expect(quota).To(Equal(""))
-		})
-	})
-
-	Context(".ExportNfs", func() {
-		var (
-			exportNfsResp connectors.GenericResponse
-			registerurl   string
-			joburl        string
-		)
-		BeforeEach(func() {
-			exportNfsResp = connectors.GenericResponse{}
-			exportNfsResp.Jobs = make([]connectors.Job, 1)
-			exportNfsResp.Jobs[0].JobID = 1234
-			registerurl = fakeurl + "/scalemgmt/v2/nfs/exports"
-			joburl = fakeurl + "/scalemgmt/v2/jobs?filter=jobId=1234&fields=:all:"
-
-		})
-		It("Should pass while creating a fileset", func() {
-
-			exportNfsResp.Status.Code = 202
-
-			exportNfsResp.Jobs[0].Status = "COMPLETED"
-			marshalledResponse, err := json.Marshal(exportNfsResp)
-			Expect(err).ToNot(HaveOccurred())
-
-			httpmock.RegisterResponder(
-				"POST",
-				registerurl,
-				httpmock.NewStringResponder(http.StatusAccepted, string(marshalledResponse)),
-			)
-
-			httpmock.RegisterResponder(
-				"GET",
-				joburl,
-				httpmock.NewStringResponder(http.StatusAccepted, string(marshalledResponse)),
-			)
-			err = spectrumRestV2.ExportNfs(filesystem, filesystem)
-			Expect(err).ToNot(HaveOccurred())
-		})
-
-		It("Should fail with http error", func() {
-			exportNfsResp.Status.Code = 500
-			exportNfsResp.Jobs[0].Status = "COMPLETED"
-			marshalledResponse, err := json.Marshal(exportNfsResp)
-			Expect(err).ToNot(HaveOccurred())
-
-			httpmock.RegisterResponder(
-				"POST",
-				registerurl,
-				httpmock.NewStringResponder(500, string(marshalledResponse)),
-			)
-
-			httpmock.RegisterResponder(
-				"GET",
-				joburl,
-				httpmock.NewStringResponder(200, string(marshalledResponse)),
-			)
-			err = spectrumRestV2.ExportNfs(filesystem, fileset)
-			Expect(err).To(HaveOccurred())
-		})
-
-		It("Should fail since it is unable to fetch job details due to http error", func() {
-			exportNfsResp.Status.Code = 202
-			exportNfsResp.Jobs[0].JobID = 1234
-			exportNfsResp.Jobs[0].Status = "COMPLETED"
-			marshalledResponse, err := json.Marshal(exportNfsResp)
-			Expect(err).ToNot(HaveOccurred())
-
-			httpmock.RegisterResponder(
-				"POST",
-				registerurl,
-				httpmock.NewStringResponder(202, string(marshalledResponse)),
-			)
-
-			httpmock.RegisterResponder(
-				"GET",
-				joburl,
-				httpmock.NewStringResponder(400, string(marshalledResponse)),
-			)
-			err = spectrumRestV2.ExportNfs(filesystem, fileset)
-			Expect(err).To(HaveOccurred())
-		})
-
-		It("Should fail to do zero length job array", func() {
-			exportNfsResp.Status.Code = 202
-			exportNfsResp.Jobs = make([]connectors.Job, 0)
-			marshalledResponse, err := json.Marshal(exportNfsResp)
-			Expect(err).ToNot(HaveOccurred())
-
-			httpmock.RegisterResponder(
-				"POST",
-				registerurl,
-				httpmock.NewStringResponder(202, string(marshalledResponse)),
-			)
-
-			httpmock.RegisterResponder(
-				"GET",
-				joburl,
-				httpmock.NewStringResponder(200, string(marshalledResponse)),
-			)
-			err = spectrumRestV2.ExportNfs(filesystem, fileset)
-			Expect(err).To(HaveOccurred())
-
-		})
-	})
-
-	Context(".UnexportNfs", func() {
-		var (
-			unexportNfs connectors.GenericResponse
-			registerurl string
-			joburl      string
-		)
-		BeforeEach(func() {
-			unexportNfs = connectors.GenericResponse{}
-			unexportNfs.Jobs = make([]connectors.Job, 1)
-			unexportNfs.Jobs[0].JobID = 1234
-			registerurl = fakeurl + "/scalemgmt/v2/nfs/exports/" + fileset
-			joburl = fakeurl + "/scalemgmt/v2/jobs?filter=jobId=1234&fields=:all:"
-
-		})
-		It("Should pass while deleting a fileset", func() {
-			unexportNfs.Status.Code = 202
-			unexportNfs.Jobs[0].Status = "COMPLETED"
-			marshalledResponse, err := json.Marshal(unexportNfs)
-			Expect(err).ToNot(HaveOccurred())
-
-			httpmock.RegisterResponder(
-				"DELETE",
-				registerurl,
-				httpmock.NewStringResponder(202, string(marshalledResponse)),
-			)
-
-			httpmock.RegisterResponder(
-				"GET",
-				joburl,
-				httpmock.NewStringResponder(200, string(marshalledResponse)),
-			)
-			err = spectrumRestV2.UnexportNfs(fileset)
-			Expect(err).ToNot(HaveOccurred())
-		})
-
-		It("Should fail with http error", func() {
-			unexportNfs.Status.Code = 500
-			unexportNfs.Jobs[0].Status = "COMPLETED"
-			marshalledResponse, err := json.Marshal(unexportNfs)
-			Expect(err).ToNot(HaveOccurred())
-
-			httpmock.RegisterResponder(
-				"DELETE",
-				registerurl,
-				httpmock.NewStringResponder(500, string(marshalledResponse)),
-			)
-
-			httpmock.RegisterResponder(
-				"GET",
-				joburl,
-				httpmock.NewStringResponder(200, string(marshalledResponse)),
-			)
-			err = spectrumRestV2.UnexportNfs(fileset)
-			Expect(err).To(HaveOccurred())
-		})
-
-		It("Should fail since it is unable to fetch job details due to http error", func() {
-			unexportNfs.Status.Code = 202
-			unexportNfs.Jobs[0].Status = "COMPLETED"
-			marshalledResponse, err := json.Marshal(unexportNfs)
-			Expect(err).ToNot(HaveOccurred())
-
-			httpmock.RegisterResponder(
-				"DELETE",
-				registerurl,
-				httpmock.NewStringResponder(202, string(marshalledResponse)),
-			)
-
-			httpmock.RegisterResponder(
-				"GET",
-				joburl,
-				httpmock.NewStringResponder(400, string(marshalledResponse)),
-			)
-			err = spectrumRestV2.UnexportNfs(fileset)
-			Expect(err).To(HaveOccurred())
-		})
-
-		It("Should fail to do zero length job array", func() {
-			unexportNfs.Status.Code = 202
-			unexportNfs.Jobs = make([]connectors.Job, 0)
-			marshalledResponse, err := json.Marshal(unexportNfs)
-			Expect(err).ToNot(HaveOccurred())
-
-			httpmock.RegisterResponder(
-				"DELETE",
-				registerurl,
-				httpmock.NewStringResponder(202, string(marshalledResponse)),
-			)
-
-			httpmock.RegisterResponder(
-				"GET",
-				joburl,
-				httpmock.NewStringResponder(200, string(marshalledResponse)),
-			)
-			err = spectrumRestV2.UnexportNfs(fileset)
-			Expect(err).To(HaveOccurred())
-
-		})
-		It("Should fail with UnMarshalling error", func() {
-			unexportNfs.Status.Code = 200
-			unexportNfs.Jobs = make([]connectors.Job, 0)
-
-			httpmock.RegisterResponder(
-				"DELETE",
-				registerurl,
-				httpmock.NewStringResponder(200, string("fake")),
-			)
-
-			httpmock.RegisterResponder(
-				"GET",
-				joburl,
-				httpmock.NewStringResponder(200, string("fake")),
-			)
-			err = spectrumRestV2.UnexportNfs(fileset)
-			Expect(err).To(HaveOccurred())
-
-		})
-		It("Should fail due to empty username", func() {
-			unexportNfs.Status.Code = 200
-			unexportNfs.Jobs = make([]connectors.Job, 0)
-
-			httpmock.RegisterResponder(
-				"DELETE",
-				registerurl,
-				httpmock.NewStringResponder(200, string("fake")),
-			)
-
-			httpmock.RegisterResponder(
-				"GET",
-				joburl,
-				httpmock.NewStringResponder(200, string("fake")),
-			)
-			restConfig.User = ""
-			restConfig.Password = "fakepassword"
-			restConfig.Hostname = "fakehostname"
-			spectrumRestV2, err = connectors.NewSpectrumRestV2(logger, restConfig)
-			spectrumRestV2, client, err = connectors.NewspectrumRestV2WithClient(logger, restConfig)
-			err = spectrumRestV2.UnexportNfs(fileset)
-			Expect(err).To(HaveOccurred())
-
 		})
 	})
 })
