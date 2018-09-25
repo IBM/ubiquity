@@ -137,7 +137,7 @@ func (b *blockDeviceUtils) DiscoverBySgInq(mpathOutput string, volumeWwn string)
 			wwn, err := b.GetWwnByScsiInq(mpathFullPath)
 			if err != nil {
 				// we ignore errors and keep trying other devices.
-				b.logger.Debug(fmt.Sprintf("device [%s] cannot be sg_inq to validate if its related to WWN [%s]. sg_inq error is [%s]. Skip to the next mpath device.",dev,volumeWwn, err))
+				b.logger.Warning(fmt.Sprintf("device [%s] cannot be sg_inq to validate if its related to WWN [%s]. sg_inq error is [%s]. Skip to the next mpath device.",dev,volumeWwn, err))
 				continue
 			}
 			if strings.ToLower(wwn) == strings.ToLower(volumeWwn) {
