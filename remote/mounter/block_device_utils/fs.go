@@ -23,6 +23,7 @@ import (
 	"regexp"
 	"strings"
 	"syscall"
+	"context"
 	"github.com/IBM/ubiquity/utils/logs"
 )
 
@@ -92,9 +93,13 @@ func (b *blockDeviceUtils) UmountFs(mpoint string, volumeWwn string) error {
 	if err := b.exec.IsExecutable(umountCmd); err != nil {
 		return b.logger.ErrorRet(&commandNotFoundError{umountCmd, err}, "failed")
 	}
-
+	
 	args := []string{mpoint}
 	if _, err := b.exec.ExecuteWithTimeout(TimeoutMilisecondUmountCmdUmountFs, umountCmd, args); err != nil {
+		if err.Error() == context.DeadlineExceeded.Error(){
+			return err
+		}
+
 		isMounted, _, _err := b.IsDeviceMounted(mpoint)
 		if _err != nil {
 			return _err

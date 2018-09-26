@@ -73,3 +73,11 @@ func (e *noRegexWwnMatchInScsiInqError) Error() string {
 	return fmt.Sprintf("Could not find wwn pattern in sg_inq of mpath devive: [%s] in line Vendor Specific "+
 		"Identifier Extension: [%s]", e.dev, e.line)
 }
+
+type FaultyDeviceError struct {
+	Dev  string
+}
+
+func (e *FaultyDeviceError) Error() string {
+	return fmt.Sprintf("Device [%s] is in faulty state", e.Dev)
+}

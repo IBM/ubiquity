@@ -98,6 +98,18 @@ func (b *blockDeviceUtils) Discover(volumeWwn string, deepDiscovery bool) (strin
 		// Validate that we have the correct wwn.
 		SqInqWwn, err := b.GetWwnByScsiInq(mpath)
 		if err != nil {
+			args = []string{"-ll", dev}
+			b.logger.Debug(fmt.Sprintf("dev : %s ",dev))
+			outputBytes, merr := b.exec.Execute(multipathCmd, args)
+			if merr == nil {
+				stringOutput := string(outputBytes[:])
+				if strings.Contains(stringOutput, "faulty"){
+					return mpath, b.logger.ErrorRet(&FaultyDeviceError{dev}, "failed")
+				}
+			} else {
+				b.logger.Error("Failed to run multipath command while executing sg_inq." , logs.Args{{"err", merr}})
+			}
+			
 			return "", b.logger.ErrorRet(&CommandExecuteError{"sg_inq", err}, "failed")
 		}
 
@@ -136,7 +148,9 @@ func (b *blockDeviceUtils) DiscoverBySgInq(mpathOutput string, volumeWwn string)
 			mpathFullPath := b.mpathDevFullPath(dev)
 			wwn, err := b.GetWwnByScsiInq(mpathFullPath)
 			if err != nil {
-				return "", b.logger.ErrorRet(err, "failed")
+				// we ignore errors and keep trying other devices.
+				b.logger.Warning(fmt.Sprintf("device [%s] cannot be sg_inq to validate if its related to WWN [%s]. sg_inq error is [%s]. Skip to the next mpath device.",dev,volumeWwn, err))
+				continue
 			}
 			if strings.ToLower(wwn) == strings.ToLower(volumeWwn) {
 				return dev, nil
@@ -195,6 +209,7 @@ func (b *blockDeviceUtils) GetWwnByScsiInq(dev string) (string, error) {
 	}
 	wwnRegex := "(?i)" + `\[0x(.*?)\]`
 	wwnRegexCompiled, err := regexp.Compile(wwnRegex)
+	
 	if err != nil {
 		return "", b.logger.ErrorRet(err, "failed")
 	}
@@ -232,6 +247,22 @@ func (b *blockDeviceUtils) GetWwnByScsiInq(dev string) (string, error) {
 	return "", b.logger.ErrorRet(&VolumeNotFoundError{wwn}, "failed")
 }
 
+func (b *blockDeviceUtils) SetDmsetup(mpath string) error{
+	defer b.logger.Trace(logs.DEBUG)()
+	
+	dev := path.Base(mpath)	
+	dmsetupCmd := "dmsetup"
+	if err := b.exec.IsExecutable(dmsetupCmd); err != nil {
+		return b.logger.ErrorRet(&commandNotFoundError{dmsetupCmd, err}, "failed")
+	}
+	args := []string{"message", dev, "0", "fail_if_no_path"}
+	if _, err := b.exec.ExecuteWithTimeout(CleanupTimeout, dmsetupCmd, args); err != nil {
+		return b.logger.ErrorRet(&CommandExecuteError{dmsetupCmd, err}, "failed")
+	}
+	
+	return nil
+}
+
 func (b *blockDeviceUtils) Cleanup(mpath string) error {
 	defer b.logger.Trace(logs.DEBUG)()
 
@@ -249,22 +280,14 @@ func (b *blockDeviceUtils) Cleanup(mpath string) error {
 		}
 	}
 
-	dmsetupCmd := "dmsetup"
-	if err := b.exec.IsExecutable(dmsetupCmd); err != nil {
-		return b.logger.ErrorRet(&commandNotFoundError{dmsetupCmd, err}, "failed")
-	}
-
-	args := []string{"message", dev, "0", "fail_if_no_path"}
-	if _, err := b.exec.ExecuteWithTimeout(CleanupTimeout, dmsetupCmd, args); err != nil {
-		return b.logger.ErrorRet(&CommandExecuteError{dmsetupCmd, err}, "failed")
-	}
 	if err := b.exec.IsExecutable(multipathCmd); err != nil {
 		return b.logger.ErrorRet(&commandNotFoundError{multipathCmd, err}, "failed")
 	}
-	args = []string{"-f", dev}
+	args := []string{"-f", dev}
 	if _, err := b.exec.ExecuteWithTimeout(CleanupTimeout, multipathCmd, args); err != nil {
 		return b.logger.ErrorRet(&CommandExecuteError{multipathCmd, err}, "failed")
 	}
+	
 	b.logger.Info("flushed", logs.Args{{"mpath", mpath}})
 	return nil
 }
