@@ -112,6 +112,7 @@ func (s *scbeMounter) Unmount(unmountRequest resources.UnmountRequest) error {
 	            return s.logger.ErrorRet(err, "Discover failed", logs.Args{{"volumeWWN", volumeWWN}})
         }
 	}
+	
 	if !skipUnmountFlow{
 		if err := s.blockDeviceMounterUtils.UnmountDeviceFlow(devicePath, volumeWWN); err != nil {
 			return s.logger.ErrorRet(err, "UnmountDeviceFlow failed", logs.Args{{"devicePath", devicePath}})
@@ -121,6 +122,15 @@ func (s *scbeMounter) Unmount(unmountRequest resources.UnmountRequest) error {
 	s.logger.Info("Delete mountpoint directory if exist", logs.Args{{"mountpoint", mountpoint}})
 	// TODO move this part to the util
 	if _, err := s.exec.Stat(mountpoint); err == nil {
+		s.logger.Debug("Checking if mountpoint is empty and can be deleted", logs.Args{{"mountpoint", mountpoint}})
+		emptyDir, err := s.exec.IsDirEmpty(mountpoint)
+		if err != nil {
+			return s.logger.ErrorRet(err, "Getting number of files failed.", logs.Args{{"mountpoint", mountpoint}})
+		}
+		if emptyDir != true {
+			return s.logger.ErrorRet(&DirecotryIsNotEmptyError{mountpoint}, "Directory is not empty and cannot be removed.", logs.Args{{"mountpoint", mountpoint}})
+		}
+		
 		if err := s.exec.RemoveAll(mountpoint); err != nil { // TODO its enough to do Remove without All.
 			return s.logger.ErrorRet(err, "RemoveAll failed", logs.Args{{"mountpoint", mountpoint}})
 		}

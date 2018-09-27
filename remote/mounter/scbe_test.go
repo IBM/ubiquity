@@ -24,9 +24,10 @@ var _ = Describe("scbe_mounter_test", func() {
 		fakeExec = new(fakes.FakeExecutor)
 		fakeBdUtils = new(fakes.FakeBlockDeviceMounterUtils)
 		scbeMounter = mounter.NewScbeMounterWithExecuter(resources.ScbeRemoteConfig{}, fakeBdUtils, fakeExec)
+		fakeExec.IsDirEmptyReturns(true, nil)
 	})
 
-	Context(".Unmount", func() {
+	Context(".Unmount", func() { 
 		It("should continue flow if volume is not discovered", func() {
 			returnedErr := &block_device_utils.VolumeNotFoundError{"volumewwn"}
 			fakeBdUtils.DiscoverReturns("", returnedErr)
@@ -86,6 +87,29 @@ var _ = Describe("scbe_mounter_test", func() {
 			Expect(fakeBdUtils.UnmountDeviceFlowCallCount()).To(Equal(1))
 			Expect(fakeExec.StatCallCount()).To(Equal(1))
 			Expect(fakeExec.RemoveAllCallCount()).To(Equal(1))
+		})
+		It("should  fail if mountpoint dir is not empty", func() {
+			fakeExec.IsDirEmptyReturns(false, nil)
+			volumeConfig := make(map[string]interface{})
+			volumeConfig["Wwn"] = "volumewwn"
+			err := scbeMounter.Unmount(resources.UnmountRequest{volumeConfig, resources.RequestContext{}})
+			Expect(err).To(HaveOccurred())
+			Expect(err).To(Equal(&mounter.DirecotryIsNotEmptyError{fmt.Sprintf("/ubiquity/%s", volumeConfig["Wwn"])}))
+			Expect(fakeBdUtils.UnmountDeviceFlowCallCount()).To(Equal(1))
+			Expect(fakeExec.StatCallCount()).To(Equal(1))
+			Expect(fakeExec.RemoveAllCallCount()).To(Equal(0))
+		})
+		It("should  fail if mountpoint dir returns erorr", func() {
+			returnedErr := fmt.Errorf("An error has occured")
+			fakeExec.IsDirEmptyReturns(false, returnedErr)
+			volumeConfig := make(map[string]interface{})
+			volumeConfig["Wwn"] = "volumewwn"
+			err := scbeMounter.Unmount(resources.UnmountRequest{volumeConfig, resources.RequestContext{}})
+			Expect(err).To(HaveOccurred())
+			Expect(err).To(Equal(returnedErr))
+			Expect(fakeBdUtils.UnmountDeviceFlowCallCount()).To(Equal(1))
+			Expect(fakeExec.StatCallCount()).To(Equal(1))
+			Expect(fakeExec.RemoveAllCallCount()).To(Equal(0))
 		})
 		It("should  continue if discover failed on faulty device", func() {
 			returnedErr := &block_device_utils.FaultyDeviceError{"mapthx"}

@@ -215,6 +215,19 @@ type FakeExecutor struct {
 	isSameFileReturnsOnCall map[int]struct {
 		result1 bool
 	}
+	IsDirEmptyStub        func(dir string) (bool, error)
+	isDirEmptyMutex       sync.RWMutex
+	isDirEmptyArgsForCall []struct {
+		dir string
+	}
+	isDirEmptyReturns struct {
+		result1 bool
+		result2 error
+	}
+	isDirEmptyReturnsOnCall map[int]struct {
+		result1 bool
+		result2 error
+	}
 	invocations      map[string][][]interface{}
 	invocationsMutex sync.RWMutex
 }
@@ -1065,6 +1078,57 @@ func (fake *FakeExecutor) IsSameFileReturnsOnCall(i int, result1 bool) {
 	}{result1}
 }
 
+func (fake *FakeExecutor) IsDirEmpty(dir string) (bool, error) {
+	fake.isDirEmptyMutex.Lock()
+	ret, specificReturn := fake.isDirEmptyReturnsOnCall[len(fake.isDirEmptyArgsForCall)]
+	fake.isDirEmptyArgsForCall = append(fake.isDirEmptyArgsForCall, struct {
+		dir string
+	}{dir})
+	fake.recordInvocation("IsDirEmpty", []interface{}{dir})
+	fake.isDirEmptyMutex.Unlock()
+	if fake.IsDirEmptyStub != nil {
+		return fake.IsDirEmptyStub(dir)
+	}
+	if specificReturn {
+		return ret.result1, ret.result2
+	}
+	return fake.isDirEmptyReturns.result1, fake.isDirEmptyReturns.result2
+}
+
+func (fake *FakeExecutor) IsDirEmptyCallCount() int {
+	fake.isDirEmptyMutex.RLock()
+	defer fake.isDirEmptyMutex.RUnlock()
+	return len(fake.isDirEmptyArgsForCall)
+}
+
+func (fake *FakeExecutor) IsDirEmptyArgsForCall(i int) string {
+	fake.isDirEmptyMutex.RLock()
+	defer fake.isDirEmptyMutex.RUnlock()
+	return fake.isDirEmptyArgsForCall[i].dir
+}
+
+func (fake *FakeExecutor) IsDirEmptyReturns(result1 bool, result2 error) {
+	fake.IsDirEmptyStub = nil
+	fake.isDirEmptyReturns = struct {
+		result1 bool
+		result2 error
+	}{result1, result2}
+}
+
+func (fake *FakeExecutor) IsDirEmptyReturnsOnCall(i int, result1 bool, result2 error) {
+	fake.IsDirEmptyStub = nil
+	if fake.isDirEmptyReturnsOnCall == nil {
+		fake.isDirEmptyReturnsOnCall = make(map[int]struct {
+			result1 bool
+			result2 error
+		})
+	}
+	fake.isDirEmptyReturnsOnCall[i] = struct {
+		result1 bool
+		result2 error
+	}{result1, result2}
+}
+
 func (fake *FakeExecutor) Invocations() map[string][][]interface{} {
 	fake.invocationsMutex.RLock()
 	defer fake.invocationsMutex.RUnlock()
@@ -1102,6 +1166,8 @@ func (fake *FakeExecutor) Invocations() map[string][][]interface{} {
 	defer fake.getGlobFilesMutex.RUnlock()
 	fake.isSameFileMutex.RLock()
 	defer fake.isSameFileMutex.RUnlock()
+	fake.isDirEmptyMutex.RLock()
+	defer fake.isDirEmptyMutex.RUnlock()
 	copiedInvocations := map[string][][]interface{}{}
 	for key, value := range fake.invocations {
 		copiedInvocations[key] = value
