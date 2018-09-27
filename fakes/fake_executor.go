@@ -215,17 +215,17 @@ type FakeExecutor struct {
 	isSameFileReturnsOnCall map[int]struct {
 		result1 bool
 	}
-	NumberOfFilesInDirStub        func(dir string) (int, error)
-	numberOfFilesInDirMutex       sync.RWMutex
-	numberOfFilesInDirArgsForCall []struct {
+	IsDirEmptyStub        func(dir string) (bool, error)
+	isDirEmptyMutex       sync.RWMutex
+	isDirEmptyArgsForCall []struct {
 		dir string
 	}
-	numberOfFilesInDirReturns struct {
-		result1 int
+	isDirEmptyReturns struct {
+		result1 bool
 		result2 error
 	}
-	numberOfFilesInDirReturnsOnCall map[int]struct {
-		result1 int
+	isDirEmptyReturnsOnCall map[int]struct {
+		result1 bool
 		result2 error
 	}
 	invocations      map[string][][]interface{}
@@ -1078,53 +1078,53 @@ func (fake *FakeExecutor) IsSameFileReturnsOnCall(i int, result1 bool) {
 	}{result1}
 }
 
-func (fake *FakeExecutor) NumberOfFilesInDir(dir string) (int, error) {
-	fake.numberOfFilesInDirMutex.Lock()
-	ret, specificReturn := fake.numberOfFilesInDirReturnsOnCall[len(fake.numberOfFilesInDirArgsForCall)]
-	fake.numberOfFilesInDirArgsForCall = append(fake.numberOfFilesInDirArgsForCall, struct {
+func (fake *FakeExecutor) IsDirEmpty(dir string) (bool, error) {
+	fake.isDirEmptyMutex.Lock()
+	ret, specificReturn := fake.isDirEmptyReturnsOnCall[len(fake.isDirEmptyArgsForCall)]
+	fake.isDirEmptyArgsForCall = append(fake.isDirEmptyArgsForCall, struct {
 		dir string
 	}{dir})
-	fake.recordInvocation("NumberOfFilesInDir", []interface{}{dir})
-	fake.numberOfFilesInDirMutex.Unlock()
-	if fake.NumberOfFilesInDirStub != nil {
-		return fake.NumberOfFilesInDirStub(dir)
+	fake.recordInvocation("IsDirEmpty", []interface{}{dir})
+	fake.isDirEmptyMutex.Unlock()
+	if fake.IsDirEmptyStub != nil {
+		return fake.IsDirEmptyStub(dir)
 	}
 	if specificReturn {
 		return ret.result1, ret.result2
 	}
-	return fake.numberOfFilesInDirReturns.result1, fake.numberOfFilesInDirReturns.result2
+	return fake.isDirEmptyReturns.result1, fake.isDirEmptyReturns.result2
 }
 
-func (fake *FakeExecutor) NumberOfFilesInDirCallCount() int {
-	fake.numberOfFilesInDirMutex.RLock()
-	defer fake.numberOfFilesInDirMutex.RUnlock()
-	return len(fake.numberOfFilesInDirArgsForCall)
+func (fake *FakeExecutor) IsDirEmptyCallCount() int {
+	fake.isDirEmptyMutex.RLock()
+	defer fake.isDirEmptyMutex.RUnlock()
+	return len(fake.isDirEmptyArgsForCall)
 }
 
-func (fake *FakeExecutor) NumberOfFilesInDirArgsForCall(i int) string {
-	fake.numberOfFilesInDirMutex.RLock()
-	defer fake.numberOfFilesInDirMutex.RUnlock()
-	return fake.numberOfFilesInDirArgsForCall[i].dir
+func (fake *FakeExecutor) IsDirEmptyArgsForCall(i int) string {
+	fake.isDirEmptyMutex.RLock()
+	defer fake.isDirEmptyMutex.RUnlock()
+	return fake.isDirEmptyArgsForCall[i].dir
 }
 
-func (fake *FakeExecutor) NumberOfFilesInDirReturns(result1 int, result2 error) {
-	fake.NumberOfFilesInDirStub = nil
-	fake.numberOfFilesInDirReturns = struct {
-		result1 int
+func (fake *FakeExecutor) IsDirEmptyReturns(result1 bool, result2 error) {
+	fake.IsDirEmptyStub = nil
+	fake.isDirEmptyReturns = struct {
+		result1 bool
 		result2 error
 	}{result1, result2}
 }
 
-func (fake *FakeExecutor) NumberOfFilesInDirReturnsOnCall(i int, result1 int, result2 error) {
-	fake.NumberOfFilesInDirStub = nil
-	if fake.numberOfFilesInDirReturnsOnCall == nil {
-		fake.numberOfFilesInDirReturnsOnCall = make(map[int]struct {
-			result1 int
+func (fake *FakeExecutor) IsDirEmptyReturnsOnCall(i int, result1 bool, result2 error) {
+	fake.IsDirEmptyStub = nil
+	if fake.isDirEmptyReturnsOnCall == nil {
+		fake.isDirEmptyReturnsOnCall = make(map[int]struct {
+			result1 bool
 			result2 error
 		})
 	}
-	fake.numberOfFilesInDirReturnsOnCall[i] = struct {
-		result1 int
+	fake.isDirEmptyReturnsOnCall[i] = struct {
+		result1 bool
 		result2 error
 	}{result1, result2}
 }
@@ -1166,8 +1166,8 @@ func (fake *FakeExecutor) Invocations() map[string][][]interface{} {
 	defer fake.getGlobFilesMutex.RUnlock()
 	fake.isSameFileMutex.RLock()
 	defer fake.isSameFileMutex.RUnlock()
-	fake.numberOfFilesInDirMutex.RLock()
-	defer fake.numberOfFilesInDirMutex.RUnlock()
+	fake.isDirEmptyMutex.RLock()
+	defer fake.isDirEmptyMutex.RUnlock()
 	copiedInvocations := map[string][][]interface{}{}
 	for key, value := range fake.invocations {
 		copiedInvocations[key] = value

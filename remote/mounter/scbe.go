@@ -123,13 +123,12 @@ func (s *scbeMounter) Unmount(unmountRequest resources.UnmountRequest) error {
 	// TODO move this part to the util
 	if _, err := s.exec.Stat(mountpoint); err == nil {
 		s.logger.Debug("Checking if mountpoint is empty and can be deleted", logs.Args{{"mountpoint", mountpoint}})
-		numFiles, err := s.exec.NumberOfFilesInDir(mountpoint)
-		s.logger.Info("number of files is", logs.Args{{"files", numFiles}})
+		emptyDir, err := s.exec.IsDirEmpty(mountpoint)
 		if err != nil {
 			return s.logger.ErrorRet(err, "Getting number of files failed.", logs.Args{{"mountpoint", mountpoint}})
 		}
-		if numFiles != 0 {
-			return s.logger.ErrorRet(&DirecotryIsNotEmptyError{mountpoint}, "Directory is not empty and cannot be removed.", logs.Args{{"mountpoint", mountpoint}, {"number of files" , numFiles}})
+		if emptyDir != true {
+			return s.logger.ErrorRet(&DirecotryIsNotEmptyError{mountpoint}, "Directory is not empty and cannot be removed.", logs.Args{{"mountpoint", mountpoint}})
 		}
 		
 		if err := s.exec.RemoveAll(mountpoint); err != nil { // TODO its enough to do Remove without All.
