@@ -17,10 +17,8 @@
 package spectrumscale
 
 import (
-	"log"
-
 	"fmt"
-
+	"github.com/IBM/ubiquity/utils/logs"
 	"github.com/IBM/ubiquity/model"
 	"github.com/IBM/ubiquity/resources"
 	"github.com/jinzhu/gorm"
@@ -33,7 +31,6 @@ type SpectrumDataModel interface {
 	GetClusterId() string
 	DeleteVolume(name string) error
 	InsertFilesetVolume(fileset, volumeName string, filesystem string, isPreexisting bool, opts map[string]interface{}) error
-	InsertLightweightVolume(fileset, directory, volumeName string, filesystem string, isPreexisting bool, opts map[string]interface{}) error
 	InsertFilesetQuotaVolume(fileset, quota, volumeName string, filesystem string, isPreexisting bool, opts map[string]interface{}) error
 	GetVolume(name string) (SpectrumScaleVolume, bool, error)
 	ListVolumes() ([]resources.Volume, error)
@@ -41,7 +38,7 @@ type SpectrumDataModel interface {
 }
 
 type spectrumDataModel struct {
-	log       *log.Logger
+	log       logs.Logger
 	database  *gorm.DB
 	clusterId string
 	backend   string
@@ -75,7 +72,7 @@ type SpectrumScaleVolume struct {
 	IsPreexisting bool
 }
 
-func NewSpectrumDataModel(log *log.Logger, db *gorm.DB, backend string) SpectrumDataModel {
+func NewSpectrumDataModel(log logs.Logger, db *gorm.DB, backend string) SpectrumDataModel {
 	return &spectrumDataModel{log: log, database: db, backend: backend}
 }
 
@@ -86,9 +83,7 @@ func (d *spectrumDataModel) GetClusterId() string {
 	return d.clusterId
 }
 func (d *spectrumDataModel) CreateVolumeTable() error {
-	d.log.Println("SpectrumDataModel: Create Volumes Table start")
-	defer d.log.Println("SpectrumDataModel: Create Volumes Table end")
-
+	defer d.log.Trace(logs.DEBUG)()
 	if err := d.database.AutoMigrate(&SpectrumScaleVolume{}).Error; err != nil {
 		return err
 	}
@@ -96,9 +91,7 @@ func (d *spectrumDataModel) CreateVolumeTable() error {
 }
 
 func (d *spectrumDataModel) DeleteVolume(name string) error {
-	d.log.Println("SpectrumDataModel: DeleteVolume start")
-	defer d.log.Println("SpectrumDataModel: DeleteVolume end")
-
+	defer d.log.Trace(logs.DEBUG)()
 	volume, exists, err := d.GetVolume(name)
 
 	if err != nil {
@@ -118,9 +111,7 @@ func (d *spectrumDataModel) DeleteVolume(name string) error {
 }
 
 func (d *spectrumDataModel) InsertFilesetVolume(fileset, volumeName string, filesystem string, isPreexisting bool, opts map[string]interface{}) error {
-	d.log.Println("SpectrumDataModel: InsertFilesetVolume start")
-	defer d.log.Println("SpectrumDataModel: InsertFilesetVolume end")
-
+	defer d.log.Trace(logs.DEBUG)()
 	volume := SpectrumScaleVolume{Volume: resources.Volume{Name: volumeName, Backend: d.backend}, Type: Fileset, ClusterId: d.clusterId, FileSystem: filesystem,
 		Fileset: fileset, IsPreexisting: isPreexisting}
 
@@ -129,22 +120,8 @@ func (d *spectrumDataModel) InsertFilesetVolume(fileset, volumeName string, file
 	return d.insertVolume(volume)
 }
 
-func (d *spectrumDataModel) InsertLightweightVolume(fileset, directory, volumeName string, filesystem string, isPreexisting bool, opts map[string]interface{}) error {
-	d.log.Println("SpectrumDataModel: InsertLightweightVolume start")
-	defer d.log.Println("SpectrumDataModel: InsertLightweightVolume end")
-
-	volume := SpectrumScaleVolume{Volume: resources.Volume{Name: volumeName, Backend: d.backend}, Type: Lightweight, ClusterId: d.clusterId, FileSystem: filesystem,
-		Fileset: fileset, Directory: directory, IsPreexisting: isPreexisting}
-
-	addPermissionsForVolume(&volume, opts)
-
-	return d.insertVolume(volume)
-}
-
 func (d *spectrumDataModel) InsertFilesetQuotaVolume(fileset, quota, volumeName string, filesystem string, isPreexisting bool, opts map[string]interface{}) error {
-	d.log.Println("SpectrumDataModel: InsertFilesetQuotaVolume start")
-	defer d.log.Println("SpectrumDataModel: InsertFilesetQuotaVolume end")
-
+	defer d.log.Trace(logs.DEBUG)()
 	volume := SpectrumScaleVolume{Volume: resources.Volume{Name: volumeName, Backend: d.backend}, Type: FilesetWithQuota, ClusterId: d.clusterId, FileSystem: filesystem,
 		Fileset: fileset, Quota: quota, IsPreexisting: isPreexisting}
 
@@ -154,8 +131,7 @@ func (d *spectrumDataModel) InsertFilesetQuotaVolume(fileset, quota, volumeName 
 }
 
 func (d *spectrumDataModel) insertVolume(volume SpectrumScaleVolume) error {
-	d.log.Println("SpectrumDataModel: insertVolume start")
-	defer d.log.Println("SpectrumDataModel: insertVolume end")
+	defer d.log.Trace(logs.DEBUG)()
 	if err := d.database.Create(&volume).Error; err != nil {
 		return err
 	}
@@ -163,9 +139,7 @@ func (d *spectrumDataModel) insertVolume(volume SpectrumScaleVolume) error {
 }
 
 func (d *spectrumDataModel) GetVolume(name string) (SpectrumScaleVolume, bool, error) {
-	d.log.Println("SpectrumDataModel: GetVolume start")
-	defer d.log.Println("SpectrumDataModel: GetVolume end")
-
+	defer d.log.Trace(logs.DEBUG)()
 	volume, err := model.GetVolume(d.database, name, d.backend)
 	if err != nil {
 		if err.Error() == "record not found" {
@@ -185,9 +159,7 @@ func (d *spectrumDataModel) GetVolume(name string) (SpectrumScaleVolume, bool, e
 }
 
 func (d *spectrumDataModel) ListVolumes() ([]resources.Volume, error) {
-	d.log.Println("SpectrumDataModel: ListVolumes start")
-	defer d.log.Println("SpectrumDataModel: ListVolumes end")
-
+	defer d.log.Trace(logs.DEBUG)()
 	var volumesInDb []SpectrumScaleVolume
 	if err := d.database.Preload("Volume").Find(&volumesInDb).Error; err != nil {
 		return nil, err
@@ -204,9 +176,7 @@ func (d *spectrumDataModel) ListVolumes() ([]resources.Volume, error) {
 }
 
 func (d *spectrumDataModel) UpdateVolumeMountpoint(name string, mountpoint string) error {
-	d.log.Println("SpectrumDataModel: UpdateVolumeMountpoint start")
-	defer d.log.Println("SpectrumDataModel: UpdateVolumeMountpoint end")
-
+	defer d.log.Trace(logs.DEBUG)()
 	volume, err := model.GetVolume(d.database, name, d.backend)
 	if err != nil {
 		return err
