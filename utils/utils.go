@@ -233,16 +233,20 @@ func LoadConfig() (resources.UbiquityServerConfig, error) {
 		sscConfig.SshConfig = sshConfig
 	}
 	restConfig := resources.RestConfig{}
-	restConfig.Endpoint = os.Getenv("SSC_REST_ENDPOINT")
-	restConfig.User = os.Getenv("SSC_REST_USER")
-	restConfig.Password = os.Getenv("SSC_REST_PASSWORD")
-	restConfig.Hostname = os.Getenv("SSC_REST_HOSTNAME")
-	if restConfig.User != "" && restConfig.Hostname != "" && restConfig.Password != "" {
-		sscConfig.RestConfig = restConfig
+	restConfig.User = os.Getenv(resources.SpectrumScaleParamPrefix + "REST_USER")
+	restConfig.Password = os.Getenv(resources.SpectrumScaleParamPrefix + "REST_PASSWORD")
+	restConfig.Hostname = os.Getenv(resources.SpectrumScaleParamPrefix + "REST_HOSTNAME")
+	restConfig.ManagementIP = os.Getenv(resources.SpectrumScaleParamPrefix + "MANAGEMENT_IP")
+	spectrumscalePort, err := strconv.ParseInt(os.Getenv(resources.SpectrumScaleParamPrefix + "MANAGEMENT_PORT"), 0, 32)
+	if err != nil {
+		restConfig.Port = resources.SpectrumscaleDefaultPort
+	} else {
+		restConfig.Port = int(spectrumscalePort)
 	}
-	sscConfig.DefaultFilesystemName = os.Getenv("DEFAULT_FILESYSTEM_NAME")
+	sscConfig.RestConfig = restConfig
+	sscConfig.DefaultFilesystemName = os.Getenv(resources.SpectrumScaleParamPrefix + "DEFAULT_FILESYSTEM_NAME")
 	sscConfig.NfsServerAddr = os.Getenv("SSC_NFS_SERVER_ADDRESS")
-	forceDelete, err := strconv.ParseBool(os.Getenv("FORCE_DELETE"))
+	forceDelete, err := strconv.ParseBool(os.Getenv(resources.SpectrumScaleParamPrefix + "FORCE_DELETE"))
 	if err != nil {
 		sscConfig.ForceDelete = false
 	} else {

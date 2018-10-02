@@ -123,7 +123,7 @@ func (s *spectrumRestV2) AsyncJobCompletion(jobURL string) error {
 
 func NewSpectrumRestV2(logger *log.Logger, restConfig resources.RestConfig) (SpectrumScaleConnector, error) {
 
-	endpoint := restConfig.Endpoint
+	endpoint := fmt.Sprintf("https://%s:%d/", restConfig.ManagementIP, restConfig.Port)
 	user := restConfig.User
 	password := restConfig.Password
 	hostname := restConfig.Hostname
@@ -135,7 +135,7 @@ func NewSpectrumRestV2(logger *log.Logger, restConfig resources.RestConfig) (Spe
 }
 
 func NewspectrumRestV2WithClient(logger *log.Logger, restConfig resources.RestConfig) (SpectrumScaleConnector, *http.Client, error) {
-	endpoint := restConfig.Endpoint
+	endpoint := fmt.Sprintf("https://%s:%d/", restConfig.ManagementIP, restConfig.Port)
 	user := restConfig.User
 	password := restConfig.Password
 	hostname := restConfig.Hostname

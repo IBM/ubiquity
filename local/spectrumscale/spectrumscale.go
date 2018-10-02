@@ -630,7 +630,7 @@ func (s *spectrumLocalClient) updateDBWithExistingFilesetQuota(filesystem, name,
 		return err
 	}
 
-	if s.config.RestConfig.Endpoint != "" {
+	if s.config.RestConfig.ManagementIP != "" {
 		s.logger.Printf("For REST connector converting quotas to bytes\n")
 		filesetQuotaBytes, err := utils.ConvertToBytes(s.logger, filesetQuota)
 		if err != nil {

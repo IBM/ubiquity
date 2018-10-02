@@ -26,16 +26,19 @@ import (
 func GetLocalClients(logger *log.Logger, config resources.UbiquityServerConfig) (map[string]resources.StorageClient, error) {
 	// TODO need to refactor and load all the existing clients automatically (instead of hardcore each one here)
 	clients := make(map[string]resources.StorageClient)
-	ScbeClient, err := scbe.NewScbeLocalClient(config.ScbeConfig)
-	if err != nil {
-		logger.Printf("Not enough params to initialize '%s' client", resources.SCBE)
-	} else {
-		clients[resources.SCBE] = ScbeClient
-	}
+
+	if (config.ScbeConfig.ConnectionInfo.ManagementIP != "") {
+	  ScbeClient, err := scbe.NewScbeLocalClient(config.ScbeConfig)
+	  if err != nil {
+		  logger.Printf("Not enough params to initialize '%s' client", resources.SCBE)
+	  } else {
+		  clients[resources.SCBE] = ScbeClient
+    }
+  }
 
 	if len(clients) == 0 {
-		log.Fatal("No client can be initialized....please check config file")
-		return nil, fmt.Errorf("No client can be initialized....please check config file")
+		logger.Println("No client can be initialized. Please check ubiquity-configmap parameters")
+		return nil, fmt.Errorf("No client can be initialized. Please check ubiquity-configmap parameters")
 	}
 	return clients, nil
 }
