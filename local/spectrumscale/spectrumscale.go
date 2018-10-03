@@ -193,7 +193,7 @@ func (s *spectrumLocalClient) RemoveVolume(removeVolumeRequest resources.RemoveV
 	}
 
 	if volExists == false {
-		return fmt.Errorf("Volume not found")
+		return &resources.VolumeNotFoundError{VolName: removeVolumeRequest.Name}
 	}
 
 	isFilesetLinked, err := s.connector.IsFilesetLinked(existingVolume.FileSystem, existingVolume.Fileset)
@@ -237,7 +237,7 @@ func (s *spectrumLocalClient) GetVolume(getVolumeRequest resources.GetVolumeRequ
 		return resources.Volume{}, err
 	}
 	if volExists == false {
-		return resources.Volume{}, fmt.Errorf("Volume not found")
+		return resources.Volume{},&resources.VolumeNotFoundError{VolName: getVolumeRequest.Name}
 	}
 
 	return resources.Volume{Name: existingVolume.Volume.Name, Backend: existingVolume.Volume.Backend, Mountpoint: existingVolume.Volume.Mountpoint}, nil
@@ -284,7 +284,7 @@ func (s *spectrumLocalClient) GetVolumeConfig(getVolumeConfigRequest resources.G
 
 		return volumeConfigDetails, nil
 	}
-	return nil, fmt.Errorf("Volume not found")
+	return nil, &resources.VolumeNotFoundError{VolName: getVolumeConfigRequest.Name}
 }
 
 func (s *spectrumLocalClient) Attach(attachRequest resources.AttachRequest) (volumeMountpoint string, err error) {
@@ -298,7 +298,7 @@ func (s *spectrumLocalClient) Attach(attachRequest resources.AttachRequest) (vol
 	}
 
 	if !volExists {
-		return "", fmt.Errorf("Volume not found")
+		return "", &resources.VolumeNotFoundError{VolName: attachRequest.Name}
 	}
 
 	volumeMountpoint, err = s.getVolumeMountPoint(existingVolume)
@@ -340,7 +340,7 @@ func (s *spectrumLocalClient) Detach(detachRequest resources.DetachRequest) (err
 	}
 
 	if !volExists {
-		return fmt.Errorf("Volume not found")
+		return &resources.VolumeNotFoundError{VolName: detachRequest.Name}
 	}
 
 	_, err = s.getVolumeMountPoint(existingVolume)

@@ -281,14 +281,15 @@ func (s *spectrumRestV2) CreateFileset(filesystemName string, filesetName string
 
 	filesetType, filesetTypeSpecified := opts[UserSpecifiedFilesetType]
 	inodeLimit, inodeLimitSpecified := opts[UserSpecifiedInodeLimit]
-	if filesetTypeSpecified && filesetType.(string) == "independent" {
+
+	if filesetTypeSpecified && filesetType.(string) == "dependent" {
+		filesetreq.InodeSpace = "root"
+	} else {
 		filesetreq.InodeSpace = "new"
 		if inodeLimitSpecified {
 			filesetreq.MaxNumInodes = inodeLimit.(string)
 			filesetreq.AllocInodes = inodeLimit.(string)
 		}
-	} else {
-		filesetreq.InodeSpace = "root"
 	}
 
 	s.logger.Debug("filesetreq ", logs.Args{{"filesetreq", filesetreq}})

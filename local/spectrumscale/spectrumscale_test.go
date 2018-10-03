@@ -288,7 +288,7 @@ var _ = Describe("local-client", func() {
 			fakeSpectrumDataModel.GetVolumeReturns(spectrumscale.SpectrumScaleVolume{}, false, nil)
 			err = client.RemoveVolume(removeVolumeRequest)
 			Expect(err).To(HaveOccurred())
-			Expect(err.Error()).To(Equal("Volume not found"))
+			Expect(err.Error()).To(Equal("[fake-volume] "+resources.VolumeNotFoundErrorMsg))
 			Expect(fakeSpectrumDataModel.GetVolumeCallCount()).To(Equal(1))
 		})
 
@@ -449,7 +449,7 @@ var _ = Describe("local-client", func() {
 			fakeSpectrumDataModel.GetVolumeReturns(spectrumscale.SpectrumScaleVolume{}, false, nil)
 			_, err = client.GetVolume(getVolumeRequest)
 			Expect(err).To(HaveOccurred())
-			Expect(err.Error()).To(Equal("Volume not found"))
+			Expect(err.Error()).To(Equal("[fake-volume] "+resources.VolumeNotFoundErrorMsg))
 			Expect(fakeSpectrumDataModel.GetVolumeCallCount()).To(Equal(1))
 		})
 
@@ -482,7 +482,7 @@ var _ = Describe("local-client", func() {
 			fakeSpectrumDataModel.GetVolumeReturns(spectrumscale.SpectrumScaleVolume{}, false, nil)
 			mountpath, err := client.Attach(attachRequest)
 			Expect(err).To(HaveOccurred())
-			Expect(err.Error()).To(Equal("Volume not found"))
+			Expect(err.Error()).To(Equal("[fake-volume] "+resources.VolumeNotFoundErrorMsg))
 			Expect(mountpath).To(Equal(""))
 			Expect(fakeSpectrumDataModel.GetVolumeCallCount()).To(Equal(1))
 		})
@@ -576,7 +576,7 @@ var _ = Describe("local-client", func() {
 			fakeSpectrumDataModel.GetVolumeReturns(spectrumscale.SpectrumScaleVolume{}, false, nil)
 			err = client.Detach(detachRequest)
 			Expect(err).To(HaveOccurred())
-			Expect(err.Error()).To(Equal("Volume not found"))
+			Expect(err.Error()).To(Equal("[fake-volume] "+resources.VolumeNotFoundErrorMsg))
 			Expect(fakeSpectrumDataModel.GetVolumeCallCount()).To(Equal(1))
 		})
 
