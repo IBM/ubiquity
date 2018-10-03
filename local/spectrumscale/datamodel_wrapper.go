@@ -22,7 +22,6 @@ import (
 )
 
 type SpectrumDataModelWrapper interface {
-	CreateVolumeTable() error
 	DeleteVolume(name string) error
 	InsertFilesetVolume(fileset, volumeName string, filesystem string, isPreexisting bool, opts map[string]interface{}) error
 	InsertFilesetQuotaVolume(fileset, quota, volumeName string, filesystem string, isPreexisting bool, opts map[string]interface{}) error
@@ -37,7 +36,6 @@ type spectrumDataModelWrapper struct {
 	logger logs.Logger
 	dbVolume *SpectrumScaleVolume
 	backend string
-	clusterId string
 }
 
 func NewSpectrumDataModelWrapper(backend string) SpectrumDataModelWrapper {
@@ -98,23 +96,6 @@ func (d *spectrumDataModelWrapper) GetVolume(name string) (SpectrumScaleVolume, 
 	return volume, isExists, nil
 }
 
-func (d *spectrumDataModelWrapper) CreateVolumeTable() error {
-
-	defer d.logger.Trace(logs.DEBUG)()
-	var err error
-	dbConnection := database.NewConnection()
-    if err = dbConnection.Open(); err != nil {
-		return d.logger.ErrorRet(err, "dbConnection.Open failed")
-	}
-	defer dbConnection.Close()
-	dataModel := NewSpectrumDataModel(d.logger, dbConnection.GetDb(), d.backend)
-	err = dataModel.CreateVolumeTable()
-	if err != nil {
-	    return err
-	}
-	return nil
-}
-
 func (d *spectrumDataModelWrapper) DeleteVolume(volName string) error {
 
 	defer d.logger.Trace(logs.DEBUG)()
@@ -164,7 +145,7 @@ func (d *spectrumDataModelWrapper) InsertFilesetVolume(fileset string, volumeNam
 		if d.dbVolume != nil {
 			return d.logger.ErrorRet(&resources.VolAlreadyExistsError{volumeName}, "failed")
 		}
-		volume := &SpectrumScaleVolume{Volume: resources.Volume{Name: volumeName, Backend: d.backend}, Type: Fileset, ClusterId: d.clusterId, FileSystem: filesystem, Fileset: fileset, IsPreexisting: isPreexisting}
+		volume := &SpectrumScaleVolume{Volume: resources.Volume{Name: volumeName, Backend: d.backend}, Type: Fileset, FileSystem: filesystem, Fileset: fileset, IsPreexisting: isPreexisting}
 		d.addPermissionsForVolume(volume, opts)
 		d.UpdateDatabaseVolume(volume)
 	} else {
@@ -190,7 +171,7 @@ func (d *spectrumDataModelWrapper) InsertFilesetQuotaVolume(fileset string, quot
 		if d.dbVolume != nil {
 			return d.logger.ErrorRet(&resources.VolAlreadyExistsError{volumeName}, "failed")
 		}
-		volume := &SpectrumScaleVolume{Volume: resources.Volume{Name: volumeName, Backend: d.backend}, Type: FilesetWithQuota, ClusterId: d.clusterId, FileSystem: filesystem, Fileset: fileset, Quota: quota, IsPreexisting: isPreexisting}
+		volume := &SpectrumScaleVolume{Volume: resources.Volume{Name: volumeName, Backend: d.backend}, Type: FilesetWithQuota, FileSystem: filesystem, Fileset: fileset, Quota: quota, IsPreexisting: isPreexisting}
 		d.addPermissionsForVolume(volume, opts)
 		d.UpdateDatabaseVolume(volume)
 	} else {

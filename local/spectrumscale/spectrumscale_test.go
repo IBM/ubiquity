@@ -80,33 +80,27 @@ var _ = Describe("local-client", func() {
 
 		It("should succeed when everything is fine with no mounting", func() {
 			fakeSpectrumScaleConnector.IsFilesystemMountedReturns(true, nil)
-			fakeSpectrumDataModel.CreateVolumeTableReturns(nil)
 			err = client.Activate(activateRequest)
 			Expect(err).ToNot(HaveOccurred())
 			Expect(fakeSpectrumScaleConnector.IsFilesystemMountedCallCount()).To(Equal(1))
 			Expect(fakeSpectrumScaleConnector.MountFileSystemCallCount()).To(Equal(0))
-			Expect(fakeSpectrumDataModel.CreateVolumeTableCallCount()).To(Equal(1))
 		})
 
 		It("should succeed when everything is fine with mounting", func() {
 			fakeSpectrumScaleConnector.IsFilesystemMountedReturns(false, nil)
 			fakeSpectrumScaleConnector.MountFileSystemReturns(nil)
-			fakeSpectrumDataModel.CreateVolumeTableReturns(nil)
 			err = client.Activate(activateRequest)
 			Expect(err).ToNot(HaveOccurred())
 			Expect(fakeSpectrumScaleConnector.IsFilesystemMountedCallCount()).To(Equal(1))
 			Expect(fakeSpectrumScaleConnector.MountFileSystemCallCount()).To(Equal(1))
-			Expect(fakeSpectrumDataModel.CreateVolumeTableCallCount()).To(Equal(1))
 		})
 		It("should succeed on subsequent activate without duplicating execution", func() {
 			fakeSpectrumScaleConnector.IsFilesystemMountedReturns(false, nil)
 			fakeSpectrumScaleConnector.MountFileSystemReturns(nil)
-			fakeSpectrumDataModel.CreateVolumeTableReturns(nil)
 			err = client.Activate(activateRequest)
 			Expect(err).ToNot(HaveOccurred())
 			Expect(fakeSpectrumScaleConnector.IsFilesystemMountedCallCount()).To(Equal(1))
 			Expect(fakeSpectrumScaleConnector.MountFileSystemCallCount()).To(Equal(1))
-			Expect(fakeSpectrumDataModel.CreateVolumeTableCallCount()).To(Equal(1))
 
 			err = client.Activate(activateRequest)
 			Expect(err).ToNot(HaveOccurred())
@@ -126,7 +120,6 @@ var _ = Describe("local-client", func() {
 			Expect(err).ToNot(HaveOccurred())
 			fakeSpectrumScaleConnector.IsFilesystemMountedReturns(false, nil)
 			fakeSpectrumScaleConnector.MountFileSystemReturns(nil)
-			fakeSpectrumDataModel.CreateVolumeTableReturns(nil)
 			err = client.Activate(activateRequest)
 			Expect(err).ToNot(HaveOccurred())
 

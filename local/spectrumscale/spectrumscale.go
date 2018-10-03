@@ -49,7 +49,6 @@ const (
 
 	IsPreexisting string = "isPreexisting"
 
-	Cluster string = "clusterId"
 )
 
 func NewSpectrumLocalClient(config resources.UbiquityServerConfig) (resources.StorageClient, error) {
@@ -61,10 +60,6 @@ func NewSpectrumLocalClient(config resources.UbiquityServerConfig) (resources.St
 }
 
 func NewSpectrumLocalClientWithConnectors(logger logs.Logger, connector connectors.SpectrumScaleConnector, spectrumExecutor utils.Executor, config resources.SpectrumScaleConfig, datamodel SpectrumDataModelWrapper) (resources.StorageClient, error) {
-	err := datamodel.CreateVolumeTable()
-	if err != nil {
-		return &spectrumLocalClient{}, err
-	}
 	return &spectrumLocalClient{logger: logger, connector: connector, dataModel: datamodel, executor: spectrumExecutor, config: config, activationLock: &sync.RWMutex{}}, nil
 }
 
@@ -272,7 +267,6 @@ func (s *spectrumLocalClient) GetVolumeConfig(getVolumeConfigRequest resources.G
 
 		volumeConfigDetails[FilesetID] = existingVolume.Fileset
 		volumeConfigDetails[Filesystem] = existingVolume.FileSystem
-		volumeConfigDetails[Cluster] = existingVolume.ClusterId
 		if existingVolume.GID != "" {
 			volumeConfigDetails[UserSpecifiedGID] = existingVolume.GID
 		}
