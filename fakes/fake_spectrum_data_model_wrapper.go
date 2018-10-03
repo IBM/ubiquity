@@ -140,18 +140,6 @@ type FakeSpectrumDataModelWrapper struct {
 		result1 []resources.Volume
 		result2 error
 	}
-	UpdateVolumeMountpointStub        func(name string, mountpoint string) error
-	updateVolumeMountpointMutex       sync.RWMutex
-	updateVolumeMountpointArgsForCall []struct {
-		name       string
-		mountpoint string
-	}
-	updateVolumeMountpointReturns struct {
-		result1 error
-	}
-	updateVolumeMountpointReturnsOnCall map[int]struct {
-		result1 error
-	}
     UpdateDatabaseVolumeStub        func(newVolume *spectrumscale.SpectrumScaleVolume)
     updateDatabaseVolumeMutex       sync.RWMutex
     updateDatabaseVolumeArgsForCall []struct {
@@ -604,55 +592,6 @@ func (fake *FakeSpectrumDataModelWrapper) ListVolumesReturnsOnCall(i int, result
 	}{result1, result2}
 }
 
-func (fake *FakeSpectrumDataModelWrapper) UpdateVolumeMountpoint(name string, mountpoint string) error {
-	fake.updateVolumeMountpointMutex.Lock()
-	ret, specificReturn := fake.updateVolumeMountpointReturnsOnCall[len(fake.updateVolumeMountpointArgsForCall)]
-	fake.updateVolumeMountpointArgsForCall = append(fake.updateVolumeMountpointArgsForCall, struct {
-		name       string
-		mountpoint string
-	}{name, mountpoint})
-	fake.recordInvocation("UpdateVolumeMountpoint", []interface{}{name, mountpoint})
-	fake.updateVolumeMountpointMutex.Unlock()
-	if fake.UpdateVolumeMountpointStub != nil {
-		return fake.UpdateVolumeMountpointStub(name, mountpoint)
-	}
-	if specificReturn {
-		return ret.result1
-	}
-	return fake.updateVolumeMountpointReturns.result1
-}
-
-func (fake *FakeSpectrumDataModelWrapper) UpdateVolumeMountpointCallCount() int {
-	fake.updateVolumeMountpointMutex.RLock()
-	defer fake.updateVolumeMountpointMutex.RUnlock()
-	return len(fake.updateVolumeMountpointArgsForCall)
-}
-
-func (fake *FakeSpectrumDataModelWrapper) UpdateVolumeMountpointArgsForCall(i int) (string, string) {
-	fake.updateVolumeMountpointMutex.RLock()
-	defer fake.updateVolumeMountpointMutex.RUnlock()
-	return fake.updateVolumeMountpointArgsForCall[i].name, fake.updateVolumeMountpointArgsForCall[i].mountpoint
-}
-
-func (fake *FakeSpectrumDataModelWrapper) UpdateVolumeMountpointReturns(result1 error) {
-	fake.UpdateVolumeMountpointStub = nil
-	fake.updateVolumeMountpointReturns = struct {
-		result1 error
-	}{result1}
-}
-
-func (fake *FakeSpectrumDataModelWrapper) UpdateVolumeMountpointReturnsOnCall(i int, result1 error) {
-	fake.UpdateVolumeMountpointStub = nil
-	if fake.updateVolumeMountpointReturnsOnCall == nil {
-		fake.updateVolumeMountpointReturnsOnCall = make(map[int]struct {
-			result1 error
-		})
-	}
-	fake.updateVolumeMountpointReturnsOnCall[i] = struct {
-		result1 error
-	}{result1}
-}
-
 func (fake *FakeSpectrumDataModelWrapper) UpdateDatabaseVolume(newVolume *spectrumscale.SpectrumScaleVolume) {
     fake.updateDatabaseVolumeMutex.Lock()
     fake.updateDatabaseVolumeArgsForCall = append(fake.updateDatabaseVolumeArgsForCall, struct {
@@ -696,8 +635,6 @@ func (fake *FakeSpectrumDataModelWrapper) Invocations() map[string][][]interface
 	defer fake.getVolumeMutex.RUnlock()
 	fake.listVolumesMutex.RLock()
 	defer fake.listVolumesMutex.RUnlock()
-	fake.updateVolumeMountpointMutex.RLock()
-	defer fake.updateVolumeMountpointMutex.RUnlock()
     fake.updateDatabaseVolumeMutex.RLock()
     defer fake.updateDatabaseVolumeMutex.RUnlock()
     fake.getDbNameMutex.RLock()

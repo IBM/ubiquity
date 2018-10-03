@@ -23,14 +23,11 @@ import (
 
 type SpectrumDataModelWrapper interface {
 	CreateVolumeTable() error
-	SetClusterId(string)
-	GetClusterId() string
 	DeleteVolume(name string) error
 	InsertFilesetVolume(fileset, volumeName string, filesystem string, isPreexisting bool, opts map[string]interface{}) error
 	InsertFilesetQuotaVolume(fileset, quota, volumeName string, filesystem string, isPreexisting bool, opts map[string]interface{}) error
 	GetVolume(name string) (SpectrumScaleVolume, bool, error)
 	ListVolumes() ([]resources.Volume, error)
-	UpdateVolumeMountpoint(name string, mountpoint string) error
 	UpdateDatabaseVolume(newVolume *SpectrumScaleVolume)
 	IsDbVolume(name string) bool
 	GetDbName() string 
@@ -99,16 +96,6 @@ func (d *spectrumDataModelWrapper) GetVolume(name string) (SpectrumScaleVolume, 
     }
 	d.logger.Debug("Got volume", logs.Args{{"VolumeName", name}, {"Volume Details",volume}})
 	return volume, isExists, nil
-}
-
-func (d *spectrumDataModelWrapper) SetClusterId(id string) {
-	defer d.logger.Trace(logs.DEBUG)()
-	d.clusterId = id
-}
-
-func (d *spectrumDataModelWrapper) GetClusterId() string {
-	defer d.logger.Trace(logs.DEBUG)()
-	return d.clusterId
 }
 
 func (d *spectrumDataModelWrapper) CreateVolumeTable() error {
@@ -240,25 +227,4 @@ func (d *spectrumDataModelWrapper) ListVolumes() ([]resources.Volume, error) {
 		volumes = append(volumes,(*d.dbVolume).Volume)
 	}
 	return volumes, nil
-}
-
-func (d *spectrumDataModelWrapper) UpdateVolumeMountpoint(name string, mountpoint string) error {
-
-	defer d.logger.Trace(logs.DEBUG)()
-	var err error
-
-	if !database.IsDatabaseVolume(name) {
-		dbConnection := database.NewConnection()
-		err = dbConnection.Open()
-		if err == nil {
-			defer dbConnection.Close()
-			dataModel := NewSpectrumDataModel(d.logger, dbConnection.GetDb(), d.backend)
-			if err = dataModel.UpdateVolumeMountpoint(name, mountpoint); err != nil {
-				return d.logger.ErrorRet(err, "dataModel.UpdateVolumeMountpoint failed")
-			}
-	    } else {
-			return err
-		}
-	}
-	return nil
 }

@@ -88,12 +88,6 @@ func newSpectrumLocalClient(config resources.SpectrumScaleConfig, backend string
 	if err == nil {
 		logger.Debug("DB volume fileset present")
         scaleDbVol := &SpectrumScaleVolume{Volume: resources.Volume{Name: volume.Name, Backend: backend}, Type: Fileset, FileSystem: config.DefaultFilesystemName, Fileset: dbName}
-        mountLoc, err := SpectrumScaleLocalClient.getVolumeMountPoint(*scaleDbVol)
-        if err != nil {
-            return &spectrumLocalClient{}, err
-        }
-        logger.Debug("Mount Location for DB", logs.Args{{"Mount", mountLoc}})
-        scaleDbVol.Volume.Mountpoint = mountLoc
         datamodel.UpdateDatabaseVolume(scaleDbVol)
 	} else {
 		logger.Debug("DB Vol Fileset Not Found", logs.Args{{"Filesystem", config.DefaultFilesystemName}, {"Fileset", dbName}})
@@ -131,21 +125,6 @@ func (s *spectrumLocalClient) Activate(activateRequest resources.ActivateRequest
 			return err
 		}
 	}
-
-	clusterId, err := s.connector.GetClusterId()
-
-	if err != nil {
-		s.logger.Debug("", logs.Args{{"Error", err.Error()}})
-		return err
-	}
-
-	if len(clusterId) == 0 {
-		clusterIdErr := fmt.Errorf("Unable to retrieve clusterId: clusterId is empty")
-		s.logger.Debug("", logs.Args{{"Error", clusterIdErr.Error()}})
-		return clusterIdErr
-	}
-
-	s.dataModel.SetClusterId(clusterId)
 
 	s.isActivated = true
 	return nil
@@ -347,13 +326,6 @@ func (s *spectrumLocalClient) Attach(attachRequest resources.AttachRequest) (vol
 
 	existingVolume.Volume.Mountpoint = volumeMountpoint
 
-	err = s.dataModel.UpdateVolumeMountpoint(attachRequest.Name, volumeMountpoint)
-
-	if err != nil {
-		s.logger.Debug("", logs.Args{{"Error", err.Error()}})
-		return "", err
-	}
-
 	return volumeMountpoint, nil
 }
 
@@ -385,7 +357,6 @@ func (s *spectrumLocalClient) Detach(detachRequest resources.DetachRequest) (err
 		return fmt.Errorf("volume not attached")
 	}
 
-	err = s.dataModel.UpdateVolumeMountpoint(detachRequest.Name, "")
 	if err != nil {
 		s.logger.Debug("", logs.Args{{"Error", err.Error()}})
 		return err
