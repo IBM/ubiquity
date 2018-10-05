@@ -54,7 +54,6 @@ func main() {
 	defer utils.InitUbiquityServerLogger()()
 	
 	logger := logs.GetLogger()
-	oldLogger := utils.SetupOldLogger("ubiquity")
 
 	executor := utils.NewExecutor()
 	ubiquityConfigPath, err := utils.SetupConfigDirectory(executor, config.ConfigPath)
