@@ -50,6 +50,7 @@ const (
 )
 
 func GetSpectrumScaleConnector(logger logs.Logger, config resources.SpectrumScaleConfig) (SpectrumScaleConnector, error) {
+	defer logger.Trace(logs.DEBUG)()
 	logger.Debug("Initializing SpectrumScale REST connector\n")
 	return NewSpectrumRestV2(logger, config.RestConfig)
 }

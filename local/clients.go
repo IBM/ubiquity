@@ -30,7 +30,7 @@ func GetLocalClients(logger logs.Logger, config resources.UbiquityServerConfig) 
 	if (config.ScbeConfig.ConnectionInfo.ManagementIP != "") {
 		ScbeClient, err := scbe.NewScbeLocalClient(config.ScbeConfig)
 	  	if err != nil {
-			return nil, &resources.BackendInitializationError{BackendName: resources.SCBE}
+			return nil, &resources.BackendInitializationError{BackendName: resources.SCBE, Err: err}
 	  	} else {
 			clients[resources.SCBE] = ScbeClient
 		}
@@ -39,7 +39,7 @@ func GetLocalClients(logger logs.Logger, config resources.UbiquityServerConfig) 
 	if (config.SpectrumScaleConfig.RestConfig.ManagementIP != "") {
 		spectrumClient, err := spectrumscale.NewSpectrumLocalClient(config)
 		if err != nil {
-			return nil, &resources.BackendInitializationError{BackendName: resources.SpectrumScale}
+			return nil, &resources.BackendInitializationError{BackendName: resources.SpectrumScale, Err: err}
 		} else {
 			clients[resources.SpectrumScale] = spectrumClient
 		}

@@ -39,8 +39,6 @@ var _ = Describe("local-client", func() {
 		activateRequest            resources.ActivateRequest
 		createVolumeRequest        resources.CreateVolumeRequest
 		removeVolumeRequest        resources.RemoveVolumeRequest
-		attachRequest              resources.AttachRequest
-		detachRequest              resources.DetachRequest
 		getVolumeRequest           resources.GetVolumeRequest
 		backends                   []string
 		// getVolumeConfigRequest     resources.GetVolumeConfigRequest

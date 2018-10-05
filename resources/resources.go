@@ -86,7 +86,7 @@ const DefaultScbeSslMode = SslModeVerifyFull
 const DefaultPluginsSslMode = SslModeVerifyFull
 const SpectrumscaleDefaultPort = 443                              // the default port for SPECTRUM SCALE management
 const SpectrumScaleParamPrefix = "SPECTRUMSCALE_"
-const KeySpectrumScaleSslMode = "SPECTRUMSCALE_SSL_MODE"
+const KeySpectrumScaleSslMode = SpectrumScaleParamPrefix + "SSL_MODE"
 const DefaultSpectrumScaleSslMode = SslModeVerifyFull
 
 type SshConfig struct {
@@ -180,10 +180,11 @@ func (e *VolAlreadyExistsError) Error() string {
 
 type BackendInitializationError struct {
 	BackendName	string
+	Err		    error
 }
 
 func (e *BackendInitializationError) Error() string {
-	return fmt.Sprintf("Not enough params to initialize %s client.", e.BackendName)
+	return fmt.Sprintf("Error while initializing %s client:[%s]", e.BackendName, e.Err.Error())
 }
 
 const ClientInitializationErrorStr = "Check backend configuration - SpectrumScale ManagementIP or SpectrumConnect managmentIP is mandatory in the ubiqutiy-configmap."

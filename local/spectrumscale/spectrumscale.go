@@ -294,13 +294,15 @@ func (s *spectrumLocalClient) createFilesetVolume(filesystem, name string, opts 
 
 	var dbVolerr error
 	var err error
-	if s.dataModel.IsDbVolume(name) {
+
+	isDbVolume := s.dataModel.IsDbVolume(name)
+	if isDbVolume {
 		/* Check if fileset is present */
 		s.logger.Debug("DB Volume, check if present",logs.Args{{"VolumeName",name},{"Filesystem",filesystem}})
 		_, dbVolerr = s.connector.ListFileset(filesystem, name)
 	}
 
-	if !s.dataModel.IsDbVolume(name) || dbVolerr != nil {
+	if !isDbVolume || dbVolerr != nil {
 
 		s.logger.Debug("Create fileset: DB volume is not present OR it is normal volume creation", logs.Args{{"VolumeName", filesetName}, {"Filesystem", filesystem}})
 		err := s.connector.CreateFileset(filesystem, filesetName, opts)
@@ -504,39 +506,4 @@ func (s *spectrumLocalClient) getVolumeMountPoint(volume SpectrumScaleVolume) (s
 
 	return path.Join(fsMountpoint, volume.Fileset), nil
 
-}
-func (s *spectrumLocalClient) updatePermissions(name string) error {
-    defer s.logger.Trace(logs.DEBUG)()
-
-	getVolumeConfigRequest := resources.GetVolumeConfigRequest{Name: name}
-	volumeConfig, err := s.GetVolumeConfig(getVolumeConfigRequest)
-	if err != nil {
-		return err
-	}
-	filesystem, exists := volumeConfig[Filesystem]
-	if exists == false {
-		return s.logger.ErrorRet(fmt.Errorf("Cannot determine filesystem for volume: %s", name),"")
-	}
-	fsMountpoint, err := s.connector.GetFilesystemMountpoint(filesystem.(string))
-	if err != nil {
-		return err
-	}
-	volumeType, exists := volumeConfig[Type]
-	if exists == false {
-		return s.logger.ErrorRet(fmt.Errorf("Cannot determine type for volume: %s", name), "")
-	}
-    s.logger.Debug("", logs.Args{{"volumeType", volumeType}})
-	fileset, exists := volumeConfig[FilesetID]
-	if exists == false {
-		return s.logger.ErrorRet(fmt.Errorf("Cannot determine filesetId for volume: %s", name), "")
-	}
-	// executor := utils.NewExecutor() // TODO check why its here ( #39: new logger in block_device_mounter_utils)
-	filesetPath := path.Join(fsMountpoint, fileset.(string))
-	//chmod 777 mountpoint
-	args := []string{"750", filesetPath}
-	_, err = s.executor.Execute("chmod", args)
-	if err != nil {
-		return s.logger.ErrorRet(err, "Failed to change permissions of filesetpath", logs.Args{{"filesetPath", filesetPath}, {"Error", err.Error()}})
-	}
-	return nil
 }

@@ -45,22 +45,8 @@ func (s *spectrumScaleMounter) Mount(mountRequest resources.MountRequest) (strin
 			if err != nil {
 			    return "", s.logger.ErrorRet(err, "Failed to change permissions of mountpoint", logs.Args{{"mountpoint", mountRequest.Mountpoint}})
 			}
-			//set permissions to specific user
-			args = []string{"og-rw", mountRequest.Mountpoint}
-			_, err = s.executor.Execute("chmod", args)
-			if err != nil {
-			    return "", s.logger.ErrorRet(err, "Failed to set user permissions of mountpoint", logs.Args{{"mountpoint", mountRequest.Mountpoint}})
-			}
-		} else {
-			//chmod 777 mountpoint
-			args := []string{"777", mountRequest.Mountpoint}
-			_, err := s.executor.Execute("chmod", args)
-			if err != nil {
-			    return "", s.logger.ErrorRet(err, "Failed to change permissions of mountpoint", logs.Args{{"mountpoint", mountRequest.Mountpoint}})
-			}
 		}
 	}
-
 	return mountRequest.Mountpoint, nil
 }
 
