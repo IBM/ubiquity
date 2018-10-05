@@ -69,8 +69,7 @@ func newSpectrumLocalClient(config resources.SpectrumScaleConfig, backend string
 
 	client, err := connectors.GetSpectrumScaleConnector(logger, config)
 	if err != nil {
-        logger.Debug("", logs.Args{{"Error", err.Error()}})
-		return &spectrumLocalClient{}, err
+		return &spectrumLocalClient{}, logger.ErrorRet(err, "GetSpectrumScaleConnector failed")
 	}
 	datamodel := NewSpectrumDataModelWrapper(backend)
 
@@ -89,6 +88,14 @@ func newSpectrumLocalClient(config resources.SpectrumScaleConfig, backend string
 
 	}
 	return SpectrumScaleLocalClient, nil
+}
+
+func (s *spectrumLocalClient) Attach(attachRequest resources.AttachRequest) (volumeMountpoint string, err error) {
+	return "", nil
+}
+
+func (s *spectrumLocalClient) Detach(detachRequest resources.DetachRequest) (err error) {
+	return nil
 }
 
 func (s *spectrumLocalClient) Activate(activateRequest resources.ActivateRequest) (err error) {
@@ -114,12 +121,11 @@ func (s *spectrumLocalClient) CreateVolume(createVolumeRequest resources.CreateV
 	_, volExists, err := s.dataModel.GetVolume(createVolumeRequest.Name)
 
 	if err != nil {
-		s.logger.Debug("", logs.Args{{"Error", err.Error()}})
-		return err
+		return s.logger.ErrorRet(err, "Failed to get volume details from Database", logs.Args{{"name", createVolumeRequest.Name}})
 	}
 
 	if volExists {
-		return fmt.Errorf("Volume already exists")
+		return s.logger.ErrorRet(fmt.Errorf("Volume already exists"),"")
 	}
 
 	s.logger.Debug("Opts for create:", logs.Args{{"Opts", createVolumeRequest.Opts}})
@@ -131,14 +137,12 @@ func (s *spectrumLocalClient) CreateVolume(createVolumeRequest resources.CreateV
 	s.logger.Debug("Trying to determine type for request")
 	userSpecifiedType, err := determineTypeFromRequest(s.logger, createVolumeRequest.Opts)
 	if err != nil {
-		s.logger.Debug("Error determining type", logs.Args{{"Error", err.Error()}})
-		return err
+		return s.logger.ErrorRet(err, "Error determining type")
 	}
 	s.logger.Debug("Volume type requested", logs.Args{{"userSpecifiedType",userSpecifiedType}})
 	isExistingVolume, filesystem, existingFileset, err := s.validateAndParseParams(s.logger, createVolumeRequest.Opts)
 	if err != nil {
-		s.logger.Debug("Error in validate params", logs.Args{{"Error", err.Error()}})
-		return err
+		return s.logger.ErrorRet(err, "Error in validate params")
 	}
 
 
@@ -157,7 +161,7 @@ func (s *spectrumLocalClient) CreateVolume(createVolumeRequest resources.CreateV
 		}
 		return s.createFilesetVolume(filesystem, createVolumeRequest.Name, createVolumeRequest.Opts)
 	}
-	return fmt.Errorf("Internal error")
+	return s.logger.ErrorRet(fmt.Errorf("Internal error"),"")
 }
 
 func (s *spectrumLocalClient) RemoveVolume(removeVolumeRequest resources.RemoveVolumeRequest) (err error) {
@@ -166,8 +170,7 @@ func (s *spectrumLocalClient) RemoveVolume(removeVolumeRequest resources.RemoveV
 	existingVolume, volExists, err := s.dataModel.GetVolume(removeVolumeRequest.Name)
 
 	if err != nil {
-		s.logger.Debug("",logs.Args{{"Error", err.Error()}})
-		return err
+		return s.logger.ErrorRet(err, "Unable to get volume from Database", logs.Args{{"VolumeName", removeVolumeRequest.Name}})
 	}
 
 	if volExists == false {
@@ -177,30 +180,26 @@ func (s *spectrumLocalClient) RemoveVolume(removeVolumeRequest resources.RemoveV
 	isFilesetLinked, err := s.connector.IsFilesetLinked(existingVolume.FileSystem, existingVolume.Fileset)
 
 	if err != nil {
-		s.logger.Debug("", logs.Args{{"Error", err.Error()}})
-		return err
+		return s.logger.ErrorRet(err, "Unable to check if fileset is linked", logs.Args{{"Filesystem", existingVolume.FileSystem}, {"Fileset", existingVolume.Fileset}})
 	}
 
 	if isFilesetLinked {
 		err := s.connector.UnlinkFileset(existingVolume.FileSystem, existingVolume.Fileset)
 
 		if err != nil {
-			s.logger.Debug("", logs.Args{{"Error", err.Error()}})
-			return err
+			return s.logger.ErrorRet(err, "Failed to Unlink fileset", logs.Args{{"Filesystem", existingVolume.FileSystem}, {"Fileset", existingVolume.Fileset}})
 		}
 	}
 	err = s.dataModel.DeleteVolume(removeVolumeRequest.Name)
 
 	if err != nil {
-		s.logger.Debug("", logs.Args{{"Error", err.Error()}})
-		return err
+		return s.logger.ErrorRet(err, "failed to delete volume", logs.Args{{"VolumeName", removeVolumeRequest.Name}})
 	}
 	if s.config.ForceDelete == true && existingVolume.IsPreexisting == false {
 		err = s.connector.DeleteFileset(existingVolume.FileSystem, existingVolume.Fileset)
 
 		if err != nil {
-		    s.logger.Debug("", logs.Args{{"Error", err.Error()}})
-			return err
+			return s.logger.ErrorRet(err, "failed to delete fileset", logs.Args{{"Filesystem", existingVolume.FileSystem}, {"Fileset", existingVolume.Fileset}})
 		}
 	}
 
@@ -227,22 +226,19 @@ func (s *spectrumLocalClient) GetVolumeConfig(getVolumeConfigRequest resources.G
 	existingVolume, volExists, err := s.dataModel.GetVolume(getVolumeConfigRequest.Name)
 
 	if err != nil {
-		s.logger.Debug("", logs.Args{{"Error", err.Error()}})
-		return nil, err
+		return nil, s.logger.ErrorRet(err, "GetVolume failed", logs.Args{{"VolumeName", getVolumeConfigRequest.Name}})
 	}
 
 	if volExists {
 		volumeConfigDetails = make(map[string]interface{})
 		volumeMountpoint, err := s.getVolumeMountPoint(existingVolume)
 		if err != nil {
-			s.logger.Debug("", logs.Args{{"Error", err.Error()}})
-			return nil, err
+			return nil, s.logger.ErrorRet(err, "failed to get mountpoint for volume", logs.Args{{"VolumeName", getVolumeConfigRequest.Name}})
 		}
 
 		isFilesetLinked, err := s.connector.IsFilesetLinked(existingVolume.FileSystem, existingVolume.Fileset)
 		if err != nil {
-			s.logger.Debug("", logs.Args{{"Error", err.Error()}})
-			return nil, err
+			return nil, s.logger.ErrorRet(err, "failed to check if fileset is linked", logs.Args{{"Filesystem", existingVolume.FileSystem}, {"Fileset", existingVolume.Fileset}})
 		}
 		if isFilesetLinked {
 			volumeConfigDetails["mountpoint"] = volumeMountpoint
@@ -264,84 +260,6 @@ func (s *spectrumLocalClient) GetVolumeConfig(getVolumeConfigRequest resources.G
 	return nil, &resources.VolumeNotFoundError{VolName: getVolumeConfigRequest.Name}
 }
 
-func (s *spectrumLocalClient) Attach(attachRequest resources.AttachRequest) (volumeMountpoint string, err error) {
-    defer s.logger.Trace(logs.DEBUG)()
-
-	existingVolume, volExists, err := s.dataModel.GetVolume(attachRequest.Name)
-
-	if err != nil {
-		s.logger.Debug("", logs.Args{{"Error", err.Error()}})
-		return "", err
-	}
-
-	if !volExists {
-		return "", &resources.VolumeNotFoundError{VolName: attachRequest.Name}
-	}
-
-	volumeMountpoint, err = s.getVolumeMountPoint(existingVolume)
-
-	if err != nil {
-		s.logger.Debug("", logs.Args{{"Error", err.Error()}})
-		return "", err
-	}
-
-	isFilesetLinked, err := s.connector.IsFilesetLinked(existingVolume.FileSystem, existingVolume.Fileset)
-
-	if err != nil {
-		s.logger.Debug("", logs.Args{{"Error", err.Error()}})
-		return "", err
-	}
-
-	if isFilesetLinked == false {
-		err = s.connector.LinkFileset(existingVolume.FileSystem, existingVolume.Fileset)
-
-		if err != nil {
-			s.logger.Debug("", logs.Args{{"Error", err.Error()}})
-			return "", err
-		}
-	}
-
-	existingVolume.Volume.Mountpoint = volumeMountpoint
-
-	return volumeMountpoint, nil
-}
-
-func (s *spectrumLocalClient) Detach(detachRequest resources.DetachRequest) (err error) {
-    defer s.logger.Trace(logs.DEBUG)()
-
-	existingVolume, volExists, err := s.dataModel.GetVolume(detachRequest.Name)
-
-	if err != nil {
-		s.logger.Debug("", logs.Args{{"Error", err.Error()}})
-		return err
-	}
-
-	if !volExists {
-		return &resources.VolumeNotFoundError{VolName: detachRequest.Name}
-	}
-
-	_, err = s.getVolumeMountPoint(existingVolume)
-	if err != nil {
-		return err
-	}
-	isFilesetLinked, err := s.connector.IsFilesetLinked(existingVolume.FileSystem, existingVolume.Fileset)
-
-	if err != nil {
-		s.logger.Debug("", logs.Args{{"Error", err.Error()}})
-		return err
-	}
-	if isFilesetLinked == false {
-		return fmt.Errorf("volume not attached")
-	}
-
-	if err != nil {
-		s.logger.Debug("", logs.Args{{"Error", err.Error()}})
-		return err
-	}
-
-	return nil
-}
-
 func (s *spectrumLocalClient) ListVolumes(listVolumesRequest resources.ListVolumesRequest) ([]resources.Volume, error) {
     defer s.logger.Trace(logs.DEBUG)()
 
@@ -350,8 +268,7 @@ func (s *spectrumLocalClient) ListVolumes(listVolumesRequest resources.ListVolum
 	volumesInDb, err := s.dataModel.ListVolumes()
 
 	if err != nil {
-		s.logger.Debug("error retrieving volumes from db", logs.Args{{"Error",err}})
-		return nil, err
+		return nil, s.logger.ErrorRet(err, "failed to list volumes")
 	}
 	//s.logger.Printf("Volumes in db: %d\n", len(volumesInDb))
 	//var volumes []resources.Volume
@@ -389,16 +306,14 @@ func (s *spectrumLocalClient) createFilesetVolume(filesystem, name string, opts 
 		err := s.connector.CreateFileset(filesystem, filesetName, opts)
 
 		if  err != nil {
-			s.logger.Debug("Error creating fileset", logs.Args{{"Error", err}})
-			return err
+			return s.logger.ErrorRet(err, "Error creating fileset", logs.Args{{"Filesystem", filesystem}, {"Fileset", filesetName}})
 		}
 	}
 
 	err = s.dataModel.InsertFilesetVolume(filesetName, name, filesystem, false, opts)
 
 	if err != nil {
-		s.logger.Debug("Error inserting fileset", logs.Args{{"Error", err}})
-		return err
+		return s.logger.ErrorRet(err, "Error inserting fileset", logs.Args{{"Filesystem", filesystem}, {"Fileset", filesetName}})
 	}
 
 	s.logger.Debug("Created fileset volume with fileset ", logs.Args{{"filesetName", filesetName}})
@@ -424,15 +339,14 @@ func (s *spectrumLocalClient) createFilesetQuotaVolume(filesystem, name, quota s
                 err := s.connector.CreateFileset(filesystem, filesetName, opts)
           
                 if  err != nil {
-                        s.logger.Debug("Error creating fileset", logs.Args{{"Error", err}})       
-                        return err
+                        return s.logger.ErrorRet(err, "Error creating fileset", logs.Args{{"Filesystem", filesystem}, {"Fileset", filesetName}})
                 }
 		err = s.connector.SetFilesetQuota(filesystem, filesetName, quota)
 
 		if err != nil {
 			deleteErr := s.connector.DeleteFileset(filesystem, filesetName)
 			if deleteErr != nil {
-				return fmt.Errorf("Error setting quota (rollback error on delete fileset %s - manual cleanup needed)", filesetName)
+				return s.logger.ErrorRet(deleteErr, "Error setting quota (rollback error on delete fileset", logs.Args{{"filesetName", filesetName}})
 			}
 			return err
 		}
@@ -463,15 +377,13 @@ func (s *spectrumLocalClient) updateDBWithExistingFileset(filesystem, name, user
 
 	_, err := s.connector.ListFileset(filesystem, userSpecifiedFileset)
 	if err != nil {
-		s.logger.Debug("Fileset does not exist",logs.Args{{"Error", err.Error()}})
-		return err
+		return s.logger.ErrorRet(err, "Fileset does not exist", logs.Args{{"filesystem", filesystem}, {"Fileset", userSpecifiedFileset}})
 	}
 
 	err = s.dataModel.InsertFilesetVolume(userSpecifiedFileset, name, filesystem, true, opts)
 
 	if err != nil {
-		s.logger.Debug("",logs.Args{{"Error", err.Error()}})
-		return err
+		return s.logger.ErrorRet(err, "InsertFilesetVolume failed", logs.Args{{"filesystem", filesystem}, {"Fileset", userSpecifiedFileset}})
 	}
 	return nil
 }
@@ -482,12 +394,11 @@ func (s *spectrumLocalClient) checkIfVolumeExistsInDB(name, userSpecifiedFileset
 	volumeConfigDetails, err := s.GetVolumeConfig(getVolumeConfigRequest)
 
 	if err != nil {
-		s.logger.Debug("",logs.Args{{"Error", err.Error()}})
-		return err
+		return s.logger.ErrorRet(err, "GetVolumeConfig failed", logs.Args{{"VolumeName", name}})
 	}
 
 	if volumeConfigDetails["FilesetId"] != userSpecifiedFileset {
-		return fmt.Errorf("volume %s with fileset %s not found", name, userSpecifiedFileset)
+		return s.logger.ErrorRet(fmt.Errorf("volume %s with fileset %s not found", name, userSpecifiedFileset),"")
 	}
 	return nil
 }
@@ -498,32 +409,30 @@ func (s *spectrumLocalClient) updateDBWithExistingFilesetQuota(filesystem, name,
 	filesetQuota, err := s.connector.ListFilesetQuota(filesystem, userSpecifiedFileset)
 
 	if err != nil {
-		s.logger.Debug("",logs.Args{{"Error", err.Error()}})
-		return err
+		return s.logger.ErrorRet(err, "ListFilesetQuota failed",logs.Args{{"filesystem", filesystem}, {"Fileset", userSpecifiedFileset}})
 	}
 
 	s.logger.Debug("For REST connector converting quotas to bytes")
 	filesetQuotaBytes, err := utils.ConvertToBytes(s.logger, filesetQuota)
 	if err != nil {
-		s.logger.Debug("utils.ConvertToBytes failed", logs.Args{{"Error", err}})
-		return err
+		return s.logger.ErrorRet(err, "utils.ConvertToBytes failed", logs.Args{{"filesetQuota", filesetQuota}})
 	}
 
 	quotasBytes, err := utils.ConvertToBytes(s.logger, quota)
 	if err != nil {
         s.logger.Debug("utils.ConvertToBytes failed ", logs.Args{{"Error", err}})
-		return err
+		return s.logger.ErrorRet(err, "utils.ConvertToBytes failed ", logs.Args{{"Fileset Quota", quota}})
 	}
 
 	if filesetQuotaBytes != quotasBytes {
-		return fmt.Errorf("Mismatch between user-specified %v and listed quota %v for fileset %s", quotasBytes, filesetQuotaBytes, userSpecifiedFileset)
+		return s.logger.ErrorRet(fmt.Errorf("Mismatch between user-specified %v and listed quota %v for fileset %s", quotasBytes, filesetQuotaBytes, userSpecifiedFileset),"")
 	}
 
 	err = s.dataModel.InsertFilesetQuotaVolume(userSpecifiedFileset, quota, name, filesystem, true, opts)
 
 	if err != nil {
 		s.logger.Debug("", logs.Args{{"Error", err.Error()}})
-		return err
+		return s.logger.ErrorRet(err, "InsertFilesetQuotaVolume failed")
 	}
 	return nil
 }
@@ -537,7 +446,7 @@ func determineTypeFromRequest(logger logs.Logger, opts map[string]interface{}) (
 	}
 
 	if userSpecifiedType.(string) != TypeFileset {
-		return "", fmt.Errorf("Unknown 'type' = %s specified", userSpecifiedType.(string))
+		return "", logger.ErrorRet(fmt.Errorf("Unknown 'type' = %s specified", userSpecifiedType.(string)), "")
 	}
 
 	return userSpecifiedType.(string), nil
@@ -553,20 +462,19 @@ func (s *spectrumLocalClient) validateAndParseParams(logger logs.Logger, opts ma
 
 	userSpecifiedType, err := determineTypeFromRequest(logger, opts)
 	if err != nil {
-		logger.Debug("", logs.Args{{"Error", err.Error()}})
-		return false, "", "", err
+		return false, "", "", s.logger.ErrorRet(err, "failed to determine type")
 	}
 
 	if uidSpecified && gidSpecified {
 		if existingFilesetSpecified{
-			return true, "", "", fmt.Errorf("uid/gid cannot be specified along with existing fileset")
+			return true, "", "", s.logger.ErrorRet(fmt.Errorf("uid/gid cannot be specified along with existing fileset"), "")
 		}
 	}
 
 	if (userSpecifiedType == TypeFileset && existingFilesetSpecified){
 		if filesystemSpecified == false {
 			logger.Debug("'filesystem' is a required opt for using existing volumes")
-			return true, filesystem.(string), existingFileset.(string), fmt.Errorf("'filesystem' is a required opt for using existing volumes")
+			return true, filesystem.(string), existingFileset.(string), s.logger.ErrorRet(fmt.Errorf("'filesystem' is a required opt for using existing volumes"), "")
 		}
 		logger.Debug("Valid: existing FILESET")
 		return true, filesystem.(string), existingFileset.(string), nil
@@ -607,7 +515,7 @@ func (s *spectrumLocalClient) updatePermissions(name string) error {
 	}
 	filesystem, exists := volumeConfig[Filesystem]
 	if exists == false {
-		return fmt.Errorf("Cannot determine filesystem for volume: %s", name)
+		return s.logger.ErrorRet(fmt.Errorf("Cannot determine filesystem for volume: %s", name),"")
 	}
 	fsMountpoint, err := s.connector.GetFilesystemMountpoint(filesystem.(string))
 	if err != nil {
@@ -615,21 +523,20 @@ func (s *spectrumLocalClient) updatePermissions(name string) error {
 	}
 	volumeType, exists := volumeConfig[Type]
 	if exists == false {
-		return fmt.Errorf("Cannot determine type for volume: %s", name)
+		return s.logger.ErrorRet(fmt.Errorf("Cannot determine type for volume: %s", name), "")
 	}
     s.logger.Debug("", logs.Args{{"volumeType", volumeType}})
 	fileset, exists := volumeConfig[FilesetID]
 	if exists == false {
-		return fmt.Errorf("Cannot determine filesetId for volume: %s", name)
+		return s.logger.ErrorRet(fmt.Errorf("Cannot determine filesetId for volume: %s", name), "")
 	}
 	// executor := utils.NewExecutor() // TODO check why its here ( #39: new logger in block_device_mounter_utils)
 	filesetPath := path.Join(fsMountpoint, fileset.(string))
 	//chmod 777 mountpoint
-	args := []string{"777", filesetPath}
+	args := []string{"750", filesetPath}
 	_, err = s.executor.Execute("chmod", args)
 	if err != nil {
-		s.logger.Debug("Failed to change permissions of filesetpath", logs.Args{{"filesetPath", filesetPath}, {"Error", err.Error()}})
-		return err
+		return s.logger.ErrorRet(err, "Failed to change permissions of filesetpath", logs.Args{{"filesetPath", filesetPath}, {"Error", err.Error()}})
 	}
 	return nil
 }
