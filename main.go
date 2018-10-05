@@ -77,7 +77,7 @@ func main() {
 
 	defer database.Initialize()()
 
-	clients, err := local.GetLocalClients(oldLogger, config)
+	clients, err := local.GetLocalClients(logger, config)
 	if err != nil {
 		panic(err)
 	}

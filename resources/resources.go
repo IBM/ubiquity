@@ -178,6 +178,16 @@ func (e *VolAlreadyExistsError) Error() string {
 	return fmt.Sprintf("Volume [%s] already exists.", e.VolName)
 }
 
+type BackendInitializationError struct {
+	BackendName	string
+}
+
+func (e *BackendInitializationError) Error() string {
+	return fmt.Sprintf("Not enough params to initialize %s client.", e.BackendName)
+}
+
+const ClientInitializationErrorStr = "Check backend configuration - SpectrumScale ManagementIP or SpectrumConnect managmentIP is mandatory in the ubiqutiy-configmap."
+
 //go:generate counterfeiter -o ../fakes/fake_mounter.go . Mounter
 
 type Mounter interface {

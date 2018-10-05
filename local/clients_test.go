@@ -1,8 +1,7 @@
 package local_test
 
 import (
-	"os"
-	"log"
+	"github.com/IBM/ubiquity/utils/logs"
 	"github.com/IBM/ubiquity/resources"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -17,11 +16,11 @@ var _ = Describe("Clients", func() {
 		fakeRestConfig	    resources.RestConfig
 	        fakeSpectrumScaleConfig	resources.SpectrumScaleConfig
 		err                 error
-		logger              *log.Logger
+		logger              logs.Logger
 		client		    map[string]resources.StorageClient
 	)
 	BeforeEach(func() {
-		logger = log.New(os.Stdout, "ubiquity: ", log.Lshortfile|log.LstdFlags)
+		logger = logs.GetLogger()
 	})
 
 	Context(".GetLocalClients", func() {
@@ -32,7 +31,7 @@ var _ = Describe("Clients", func() {
 		client, err = local.GetLocalClients(logger, fakeConfig)
 		Expect(client).To(BeNil())
 		Expect(err).To(HaveOccurred())
-		Expect(err.Error()).To(Equal("No client can be initialized. Please check ubiquity-configmap parameters"))
+		Expect(err.Error()).To(Equal(resources.ClientInitializationErrorStr))
 	})
 	It("should fail when ManagementIP is empty for Spectrum Scale backend", func() {
 		fakeRestConfig = resources.RestConfig{}
@@ -41,7 +40,7 @@ var _ = Describe("Clients", func() {
 		client, err = local.GetLocalClients(logger, fakeConfig)
 		Expect(client).To(BeNil())
 		Expect(err).To(HaveOccurred())
-		Expect(err.Error()).To(Equal("No client can be initialized. Please check ubiquity-configmap parameters"))
+		Expect(err.Error()).To(Equal(resources.ClientInitializationErrorStr))
 	})
 	It("should fail when ManagementIP is empty for both backend", func() {
 		fakeConnectionInfo = resources.ConnectionInfo{}
@@ -52,7 +51,7 @@ var _ = Describe("Clients", func() {
 		client, err = local.GetLocalClients(logger, fakeConfig)
 		Expect(client).To(BeNil())
 		Expect(err).To(HaveOccurred())
-		Expect(err.Error()).To(Equal("No client can be initialized. Please check ubiquity-configmap parameters"))
+		Expect(err.Error()).To(Equal(resources.ClientInitializationErrorStr))
 	})
 	})
 })
