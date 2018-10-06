@@ -24,11 +24,14 @@ import (
 	"github.com/IBM/ubiquity/utils/logs"
 )
 
+var NewScbeLocalClient = scbe.NewScbeLocalClient
+var NewSpectrumLocalClient = spectrumscale.NewSpectrumLocalClient
+
 func GetLocalClients(logger logs.Logger, config resources.UbiquityServerConfig) (map[string]resources.StorageClient, error) {
 	// TODO need to refactor and load all the existing clients automatically (instead of hardcore each one here)
 	clients := make(map[string]resources.StorageClient)
 	if (config.ScbeConfig.ConnectionInfo.ManagementIP != "") {
-		ScbeClient, err := scbe.NewScbeLocalClient(config.ScbeConfig)
+		ScbeClient, err := NewScbeLocalClient(config.ScbeConfig)
 	  	if err != nil {
 			return nil, &resources.BackendInitializationError{BackendName: resources.SCBE, Err: err}
 	  	} else {
@@ -37,7 +40,7 @@ func GetLocalClients(logger logs.Logger, config resources.UbiquityServerConfig) 
 	}
 
 	if (config.SpectrumScaleConfig.RestConfig.ManagementIP != "") {
-		spectrumClient, err := spectrumscale.NewSpectrumLocalClient(config)
+		spectrumClient, err := NewSpectrumLocalClient(config)
 		if err != nil {
 			return nil, &resources.BackendInitializationError{BackendName: resources.SpectrumScale, Err: err}
 		} else {
