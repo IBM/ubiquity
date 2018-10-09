@@ -27,8 +27,6 @@ import (
 //go:generate counterfeiter -o ../../fakes/fake_SpectrumDataModel.go . SpectrumDataModel
 type SpectrumDataModel interface {
 	CreateVolumeTable() error
-	SetClusterId(string)
-	GetClusterId() string
 	DeleteVolume(name string) error
 	InsertFilesetVolume(fileset, volumeName string, filesystem string, isPreexisting bool, opts map[string]interface{}) error
 	InsertFilesetQuotaVolume(fileset, quota, volumeName string, filesystem string, isPreexisting bool, opts map[string]interface{}) error
@@ -76,12 +74,6 @@ func NewSpectrumDataModel(log logs.Logger, db *gorm.DB, backend string) Spectrum
 	return &spectrumDataModel{log: log, database: db, backend: backend}
 }
 
-func (d *spectrumDataModel) SetClusterId(id string) {
-	d.clusterId = id
-}
-func (d *spectrumDataModel) GetClusterId() string {
-	return d.clusterId
-}
 func (d *spectrumDataModel) CreateVolumeTable() error {
 	defer d.log.Trace(logs.DEBUG)()
 	if err := d.database.AutoMigrate(&SpectrumScaleVolume{}).Error; err != nil {

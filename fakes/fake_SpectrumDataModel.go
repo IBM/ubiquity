@@ -34,20 +34,6 @@ type FakeSpectrumDataModel struct {
 	createVolumeTableReturnsOnCall map[int]struct {
 		result1 error
 	}
-	SetClusterIdStub        func(string)
-	setClusterIdMutex       sync.RWMutex
-	setClusterIdArgsForCall []struct {
-		arg1 string
-	}
-	GetClusterIdStub        func() string
-	getClusterIdMutex       sync.RWMutex
-	getClusterIdArgsForCall []struct{}
-	getClusterIdReturns     struct {
-		result1 string
-	}
-	getClusterIdReturnsOnCall map[int]struct {
-		result1 string
-	}
 	DeleteVolumeStub        func(name string) error
 	deleteVolumeMutex       sync.RWMutex
 	deleteVolumeArgsForCall []struct {
@@ -185,70 +171,6 @@ func (fake *FakeSpectrumDataModel) CreateVolumeTableReturnsOnCall(i int, result1
 	}
 	fake.createVolumeTableReturnsOnCall[i] = struct {
 		result1 error
-	}{result1}
-}
-
-func (fake *FakeSpectrumDataModel) SetClusterId(arg1 string) {
-	fake.setClusterIdMutex.Lock()
-	fake.setClusterIdArgsForCall = append(fake.setClusterIdArgsForCall, struct {
-		arg1 string
-	}{arg1})
-	fake.recordInvocation("SetClusterId", []interface{}{arg1})
-	fake.setClusterIdMutex.Unlock()
-	if fake.SetClusterIdStub != nil {
-		fake.SetClusterIdStub(arg1)
-	}
-}
-
-func (fake *FakeSpectrumDataModel) SetClusterIdCallCount() int {
-	fake.setClusterIdMutex.RLock()
-	defer fake.setClusterIdMutex.RUnlock()
-	return len(fake.setClusterIdArgsForCall)
-}
-
-func (fake *FakeSpectrumDataModel) SetClusterIdArgsForCall(i int) string {
-	fake.setClusterIdMutex.RLock()
-	defer fake.setClusterIdMutex.RUnlock()
-	return fake.setClusterIdArgsForCall[i].arg1
-}
-
-func (fake *FakeSpectrumDataModel) GetClusterId() string {
-	fake.getClusterIdMutex.Lock()
-	ret, specificReturn := fake.getClusterIdReturnsOnCall[len(fake.getClusterIdArgsForCall)]
-	fake.getClusterIdArgsForCall = append(fake.getClusterIdArgsForCall, struct{}{})
-	fake.recordInvocation("GetClusterId", []interface{}{})
-	fake.getClusterIdMutex.Unlock()
-	if fake.GetClusterIdStub != nil {
-		return fake.GetClusterIdStub()
-	}
-	if specificReturn {
-		return ret.result1
-	}
-	return fake.getClusterIdReturns.result1
-}
-
-func (fake *FakeSpectrumDataModel) GetClusterIdCallCount() int {
-	fake.getClusterIdMutex.RLock()
-	defer fake.getClusterIdMutex.RUnlock()
-	return len(fake.getClusterIdArgsForCall)
-}
-
-func (fake *FakeSpectrumDataModel) GetClusterIdReturns(result1 string) {
-	fake.GetClusterIdStub = nil
-	fake.getClusterIdReturns = struct {
-		result1 string
-	}{result1}
-}
-
-func (fake *FakeSpectrumDataModel) GetClusterIdReturnsOnCall(i int, result1 string) {
-	fake.GetClusterIdStub = nil
-	if fake.getClusterIdReturnsOnCall == nil {
-		fake.getClusterIdReturnsOnCall = make(map[int]struct {
-			result1 string
-		})
-	}
-	fake.getClusterIdReturnsOnCall[i] = struct {
-		result1 string
 	}{result1}
 }
 
@@ -609,10 +531,6 @@ func (fake *FakeSpectrumDataModel) Invocations() map[string][][]interface{} {
 	defer fake.invocationsMutex.RUnlock()
 	fake.createVolumeTableMutex.RLock()
 	defer fake.createVolumeTableMutex.RUnlock()
-	fake.setClusterIdMutex.RLock()
-	defer fake.setClusterIdMutex.RUnlock()
-	fake.getClusterIdMutex.RLock()
-	defer fake.getClusterIdMutex.RUnlock()
 	fake.deleteVolumeMutex.RLock()
 	defer fake.deleteVolumeMutex.RUnlock()
 	fake.insertFilesetVolumeMutex.RLock()
