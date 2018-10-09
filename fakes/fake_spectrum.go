@@ -49,17 +49,6 @@ type FakeSpectrumScaleConnector struct {
 		result1 bool
 		result2 error
 	}
-	MountFileSystemStub        func(filesystemName string) error
-	mountFileSystemMutex       sync.RWMutex
-	mountFileSystemArgsForCall []struct {
-		filesystemName string
-	}
-	mountFileSystemReturns struct {
-		result1 error
-	}
-	mountFileSystemReturnsOnCall map[int]struct {
-		result1 error
-	}
 	ListFilesystemsStub        func() ([]string, error)
 	listFilesystemsMutex       sync.RWMutex
 	listFilesystemsArgsForCall []struct{}
@@ -320,54 +309,6 @@ func (fake *FakeSpectrumScaleConnector) IsFilesystemMountedReturnsOnCall(i int, 
 		result1 bool
 		result2 error
 	}{result1, result2}
-}
-
-func (fake *FakeSpectrumScaleConnector) MountFileSystem(filesystemName string) error {
-	fake.mountFileSystemMutex.Lock()
-	ret, specificReturn := fake.mountFileSystemReturnsOnCall[len(fake.mountFileSystemArgsForCall)]
-	fake.mountFileSystemArgsForCall = append(fake.mountFileSystemArgsForCall, struct {
-		filesystemName string
-	}{filesystemName})
-	fake.recordInvocation("MountFileSystem", []interface{}{filesystemName})
-	fake.mountFileSystemMutex.Unlock()
-	if fake.MountFileSystemStub != nil {
-		return fake.MountFileSystemStub(filesystemName)
-	}
-	if specificReturn {
-		return ret.result1
-	}
-	return fake.mountFileSystemReturns.result1
-}
-
-func (fake *FakeSpectrumScaleConnector) MountFileSystemCallCount() int {
-	fake.mountFileSystemMutex.RLock()
-	defer fake.mountFileSystemMutex.RUnlock()
-	return len(fake.mountFileSystemArgsForCall)
-}
-
-func (fake *FakeSpectrumScaleConnector) MountFileSystemArgsForCall(i int) string {
-	fake.mountFileSystemMutex.RLock()
-	defer fake.mountFileSystemMutex.RUnlock()
-	return fake.mountFileSystemArgsForCall[i].filesystemName
-}
-
-func (fake *FakeSpectrumScaleConnector) MountFileSystemReturns(result1 error) {
-	fake.MountFileSystemStub = nil
-	fake.mountFileSystemReturns = struct {
-		result1 error
-	}{result1}
-}
-
-func (fake *FakeSpectrumScaleConnector) MountFileSystemReturnsOnCall(i int, result1 error) {
-	fake.MountFileSystemStub = nil
-	if fake.mountFileSystemReturnsOnCall == nil {
-		fake.mountFileSystemReturnsOnCall = make(map[int]struct {
-			result1 error
-		})
-	}
-	fake.mountFileSystemReturnsOnCall[i] = struct {
-		result1 error
-	}{result1}
 }
 
 func (fake *FakeSpectrumScaleConnector) ListFilesystems() ([]string, error) {
@@ -1022,8 +963,6 @@ func (fake *FakeSpectrumScaleConnector) Invocations() map[string][][]interface{}
 	defer fake.getClusterIdMutex.RUnlock()
 	fake.isFilesystemMountedMutex.RLock()
 	defer fake.isFilesystemMountedMutex.RUnlock()
-	fake.mountFileSystemMutex.RLock()
-	defer fake.mountFileSystemMutex.RUnlock()
 	fake.listFilesystemsMutex.RLock()
 	defer fake.listFilesystemsMutex.RUnlock()
 	fake.getFilesystemMountpointMutex.RLock()

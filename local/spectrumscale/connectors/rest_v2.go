@@ -225,11 +225,6 @@ func (s *spectrumRestV2) IsFilesystemMounted(filesystemName string) (bool, error
 	return true, nil
 }
 
-func (s *spectrumRestV2) MountFileSystem(filesystemName string) error {
-	fmt.Printf("This method is not yet implemented")
-	return nil
-}
-
 func (s *spectrumRestV2) ListFilesystems() ([]string, error) {
     defer s.logger.Trace(logs.DEBUG)()
 

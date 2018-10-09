@@ -61,51 +61,16 @@ var _ = Describe("local-client", func() {
 	})
 
 	Context(".Activate", func() {
-		It("should fail when spectrum client IsFilesystemMounted errors", func() {
-			fakeSpectrumScaleConnector.IsFilesystemMountedReturns(false, fmt.Errorf("error in isFilesystemMounted"))
-			err = client.Activate(activateRequest)
-			Expect(err).To(HaveOccurred())
-			Expect(fakeSpectrumScaleConnector.IsFilesystemMountedCallCount()).To(Equal(1))
-			Expect(fakeSpectrumScaleConnector.MountFileSystemCallCount()).To(Equal(0))
-		})
-
-		It("should fail when spectrum client MountFileSystem errors", func() {
-			fakeSpectrumScaleConnector.IsFilesystemMountedReturns(false, nil)
-			fakeSpectrumScaleConnector.MountFileSystemReturns(fmt.Errorf("error in mount filesystem"))
-			err = client.Activate(activateRequest)
-			Expect(err).To(HaveOccurred())
-			Expect(fakeSpectrumScaleConnector.IsFilesystemMountedCallCount()).To(Equal(1))
-			Expect(fakeSpectrumScaleConnector.MountFileSystemCallCount()).To(Equal(1))
-		})
-
-		It("should succeed when everything is fine with no mounting", func() {
-			fakeSpectrumScaleConnector.IsFilesystemMountedReturns(true, nil)
+		It("should succeed when everything is fine", func() {
 			err = client.Activate(activateRequest)
 			Expect(err).ToNot(HaveOccurred())
-			Expect(fakeSpectrumScaleConnector.IsFilesystemMountedCallCount()).To(Equal(1))
-			Expect(fakeSpectrumScaleConnector.MountFileSystemCallCount()).To(Equal(0))
-		})
-
-		It("should succeed when everything is fine with mounting", func() {
-			fakeSpectrumScaleConnector.IsFilesystemMountedReturns(false, nil)
-			fakeSpectrumScaleConnector.MountFileSystemReturns(nil)
-			err = client.Activate(activateRequest)
-			Expect(err).ToNot(HaveOccurred())
-			Expect(fakeSpectrumScaleConnector.IsFilesystemMountedCallCount()).To(Equal(1))
-			Expect(fakeSpectrumScaleConnector.MountFileSystemCallCount()).To(Equal(1))
 		})
 		It("should succeed on subsequent activate without duplicating execution", func() {
-			fakeSpectrumScaleConnector.IsFilesystemMountedReturns(false, nil)
-			fakeSpectrumScaleConnector.MountFileSystemReturns(nil)
 			err = client.Activate(activateRequest)
 			Expect(err).ToNot(HaveOccurred())
-			Expect(fakeSpectrumScaleConnector.IsFilesystemMountedCallCount()).To(Equal(1))
-			Expect(fakeSpectrumScaleConnector.MountFileSystemCallCount()).To(Equal(1))
 
 			err = client.Activate(activateRequest)
 			Expect(err).ToNot(HaveOccurred())
-			Expect(fakeSpectrumScaleConnector.IsFilesystemMountedCallCount()).To(Equal(1))
-			Expect(fakeSpectrumScaleConnector.MountFileSystemCallCount()).To(Equal(1))
 
 		})
 
@@ -119,7 +84,6 @@ var _ = Describe("local-client", func() {
 			client, err = spectrumscale.NewSpectrumLocalClientWithConnectors(logger, fakeSpectrumScaleConnector, fakeExec, fakeConfig, fakeSpectrumDataModel)
 			Expect(err).ToNot(HaveOccurred())
 			fakeSpectrumScaleConnector.IsFilesystemMountedReturns(false, nil)
-			fakeSpectrumScaleConnector.MountFileSystemReturns(nil)
 			err = client.Activate(activateRequest)
 			Expect(err).ToNot(HaveOccurred())
 

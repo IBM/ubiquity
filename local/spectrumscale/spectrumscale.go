@@ -104,23 +104,6 @@ func (s *spectrumLocalClient) Activate(activateRequest resources.ActivateRequest
 	s.activationLock.Lock() //get a write lock to prevent others from repeating these actions
 	defer s.activationLock.Unlock()
 
-	//check if filesystem is mounted
-	mounted, err := s.connector.IsFilesystemMounted(s.config.DefaultFilesystemName)
-
-	if err != nil {
-		s.logger.Debug("", logs.Args{{"Error",err.Error()}})
-		return err
-	}
-
-	if mounted == false {
-		err = s.connector.MountFileSystem(s.config.DefaultFilesystemName)
-
-		if err != nil {
-			s.logger.Debug("", logs.Args{{"Error",err.Error()}})
-			return err
-		}
-	}
-
 	s.isActivated = true
 	return nil
 }

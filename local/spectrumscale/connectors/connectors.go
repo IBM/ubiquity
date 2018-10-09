@@ -27,7 +27,6 @@ type SpectrumScaleConnector interface {
 	GetClusterId() (string, error)
 	//Filesystem operations
 	IsFilesystemMounted(filesystemName string) (bool, error)
-	MountFileSystem(filesystemName string) error
 	ListFilesystems() ([]string, error)
 	GetFilesystemMountpoint(filesystemName string) (string, error)
 	//Fileset operations
