@@ -100,7 +100,6 @@ type RestConfig struct {
 	ManagementIP  string
 	User          string
 	Password      string
-	Hostname      string
 }
 
 type SpectrumNfsRemoteConfig struct {

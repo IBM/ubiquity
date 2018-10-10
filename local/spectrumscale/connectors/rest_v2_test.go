@@ -52,7 +52,6 @@ var _ = Describe("spectrumRestV2", func() {
 		restConfig.Port = 443
 		restConfig.User = "fakeuser"
 		restConfig.Password = "fakepassword"
-		restConfig.Hostname = "fakehostname"
 		spectrumRestV2, client, err = connectors.NewspectrumRestV2WithClient(logger, restConfig)
 		Expect(err).ToNot(HaveOccurred())
 		httpmock.ActivateNonDefault(client)

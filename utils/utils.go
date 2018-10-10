@@ -224,7 +224,6 @@ func LoadConfig() (resources.UbiquityServerConfig, error) {
 	restConfig := resources.RestConfig{}
 	restConfig.User = os.Getenv(resources.SpectrumScaleParamPrefix + "REST_USER")
 	restConfig.Password = os.Getenv(resources.SpectrumScaleParamPrefix + "REST_PASSWORD")
-	restConfig.Hostname = os.Getenv(resources.SpectrumScaleParamPrefix + "REST_HOSTNAME")
 	restConfig.ManagementIP = os.Getenv(resources.SpectrumScaleParamPrefix + "MANAGEMENT_IP")
 	spectrumscalePort, err := strconv.ParseInt(os.Getenv(resources.SpectrumScaleParamPrefix + "MANAGEMENT_PORT"), 0, 32)
 	if err != nil {
