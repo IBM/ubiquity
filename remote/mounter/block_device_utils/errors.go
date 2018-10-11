@@ -81,3 +81,11 @@ type FaultyDeviceError struct {
 func (e *FaultyDeviceError) Error() string {
 	return fmt.Sprintf("Device [%s] is in faulty state", e.Dev)
 }
+
+type DeviceNotFoundError struct {
+	Dev  string
+}
+
+func (e *DeviceNotFoundError) Error() string {
+	return fmt.Sprintf("Device [%s] is not found in multipath output", e.Dev)
+}

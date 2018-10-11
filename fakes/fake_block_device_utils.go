@@ -42,10 +42,11 @@ type FakeBlockDeviceUtils struct {
 		result1 string
 		result2 error
 	}
-	GetWwnByScsiInqStub        func(dev string) (string, error)
+	GetWwnByScsiInqStub        func(mpathOutput string, dev string) (string, error)
 	getWwnByScsiInqMutex       sync.RWMutex
 	getWwnByScsiInqArgsForCall []struct {
-		dev string
+		mpathOutput string
+		dev         string
 	}
 	getWwnByScsiInqReturns struct {
 		result1 string
@@ -314,16 +315,17 @@ func (fake *FakeBlockDeviceUtils) DiscoverReturnsOnCall(i int, result1 string, r
 	}{result1, result2}
 }
 
-func (fake *FakeBlockDeviceUtils) GetWwnByScsiInq(dev string) (string, error) {
+func (fake *FakeBlockDeviceUtils) GetWwnByScsiInq(mpathOutput string, dev string) (string, error) {
 	fake.getWwnByScsiInqMutex.Lock()
 	ret, specificReturn := fake.getWwnByScsiInqReturnsOnCall[len(fake.getWwnByScsiInqArgsForCall)]
 	fake.getWwnByScsiInqArgsForCall = append(fake.getWwnByScsiInqArgsForCall, struct {
-		dev string
-	}{dev})
-	fake.recordInvocation("GetWwnByScsiInq", []interface{}{dev})
+		mpathOutput string
+		dev         string
+	}{mpathOutput, dev})
+	fake.recordInvocation("GetWwnByScsiInq", []interface{}{mpathOutput, dev})
 	fake.getWwnByScsiInqMutex.Unlock()
 	if fake.GetWwnByScsiInqStub != nil {
-		return fake.GetWwnByScsiInqStub(dev)
+		return fake.GetWwnByScsiInqStub(mpathOutput, dev)
 	}
 	if specificReturn {
 		return ret.result1, ret.result2
@@ -337,10 +339,10 @@ func (fake *FakeBlockDeviceUtils) GetWwnByScsiInqCallCount() int {
 	return len(fake.getWwnByScsiInqArgsForCall)
 }
 
-func (fake *FakeBlockDeviceUtils) GetWwnByScsiInqArgsForCall(i int) string {
+func (fake *FakeBlockDeviceUtils) GetWwnByScsiInqArgsForCall(i int) (string, string) {
 	fake.getWwnByScsiInqMutex.RLock()
 	defer fake.getWwnByScsiInqMutex.RUnlock()
-	return fake.getWwnByScsiInqArgsForCall[i].dev
+	return fake.getWwnByScsiInqArgsForCall[i].mpathOutput, fake.getWwnByScsiInqArgsForCall[i].dev
 }
 
 func (fake *FakeBlockDeviceUtils) GetWwnByScsiInqReturns(result1 string, result2 error) {
