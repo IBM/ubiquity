@@ -46,7 +46,8 @@ var _ = Describe("spectrumRestV2", func() {
 		logger = log.New(os.Stdout, "spectrum: ", log.Lshortfile|log.LstdFlags)
 		httpmock.Activate()
 		fakeurl = "http://1.1.1.1:443"
-		restConfig.Endpoint = fakeurl
+		restConfig.ManagementIP = "1.1.1.1"
+		restConfig.Port = 443
 		restConfig.User = "fakeuser"
 		restConfig.Password = "fakepassword"
 		restConfig.Hostname = "fakehostname"

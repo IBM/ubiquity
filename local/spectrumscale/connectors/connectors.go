@@ -54,7 +54,7 @@ const (
 )
 
 func GetSpectrumScaleConnector(logger *log.Logger, config resources.SpectrumScaleConfig) (SpectrumScaleConnector, error) {
-	if config.RestConfig.Endpoint != "" {
+	if config.RestConfig.ManagementIP != "" {
 		logger.Printf("Initializing SpectrumScale REST connector\n")
 		return NewSpectrumRestV2(logger, config.RestConfig)
 	}
