@@ -100,7 +100,7 @@ func (b *blockDeviceUtils) Discover(volumeWwn string, deepDiscovery bool) (strin
 		if err != nil {
 			switch err.(type) {
 			case *FaultyDeviceError:
-				return "", b.logger.ErrorRet(err, "failed")
+				return mpath, b.logger.ErrorRet(err, "failed")
 			default:
 				b.logger.Error("Failed to run multipath command while executing sg_inq.", logs.Args{{"err", err}})
 			}
