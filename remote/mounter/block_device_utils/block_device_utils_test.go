@@ -431,6 +431,29 @@ mpathhb (36001738cfc9035eb0000000000cea###) dm-3 ##,##
 			Expect(cmd).To(Equal("sg_inq"))
 			Expect(args).To(Equal([]string{"-p", "0x83", dev}))
 		})
+		It("should return error if device is faulty", func() {
+			dev := "mpathhe"
+			mpath := `mpathhe (36001738cfc9035eb0000000000cea5f6) dm-3 IBM     ,2810XIV
+							size=19G features='1 queue_if_no_path' hwhandler='0' wp=rw
+							-+- policy='service-time 0' prio=1 status=active
+							|- 33:0:0:1 sdb 8:16 fault faulty running
+							- 34:0:0:1 sdc 8:32 fault faulty running`
+			_, err := bdUtils.GetWwnByScsiInq(mpath, dev)
+			Expect(err).To(HaveOccurred())
+			Expect(err).To(Equal(&block_device_utils.FaultyDeviceError{dev}))
+			Expect(fakeExec.ExecuteWithTimeoutCallCount()).To(Equal(0))
+		})
+		It("should not return an error if check for faulty device failed", func() {
+			dev := "mpath"
+			mpath := `mpathhe (36001738cfc9035eb0000000000cea5f6) dm-3 IBM     ,2810XIV
+							size=19G features='1 queue_if_no_path' hwhandler='0' wp=rw
+							-+- policy='service-time 0' prio=1 status=active
+							|- 33:0:0:1 sdb 8:16 fault faulty running
+							- 34:0:0:1 sdc 8:32 fault faulty running`
+			_, err := bdUtils.GetWwnByScsiInq(mpath, dev)
+			Expect(err).To(HaveOccurred())
+			Expect(fakeExec.ExecuteWithTimeoutCallCount()).To(Equal(1))
+		})
 	})
 
 	Context(".Cleanup", func() {
