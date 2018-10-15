@@ -102,7 +102,7 @@ func (b *blockDeviceUtils) Discover(volumeWwn string, deepDiscovery bool) (strin
 			case *FaultyDeviceError:
 				return "", b.logger.ErrorRet(err, "failed")
 			default:
-				b.logger.Error("Failed to run multipath command while executing sg_inq.", logs.Args{{"err", merr}})
+				b.logger.Error("Failed to run multipath command while executing sg_inq.", logs.Args{{"err", err}})
 			}
 
 			return "", b.logger.ErrorRet(&CommandExecuteError{"sg_inq", err}, "failed")
@@ -194,8 +194,7 @@ func (b *blockDeviceUtils) GetWwnByScsiInq(mpathOutput string, dev string) (stri
 	if err := b.exec.IsExecutable(sgInqCmd); err != nil {
 		return "", b.logger.ErrorRet(&commandNotFoundError{sgInqCmd, err}, "failed")
 	}
-
-	err, isFaulty := isDeviceFaulty(mpathOutput, dev, b.logger)
+	isFaulty, err := isDeviceFaulty(mpathOutput, dev, b.logger)
 	if err != nil {
 		// we should not get here since we get the device from the multipath output so there is not reason for it to be missing
 		// but in case something weird occurs we need to continue to not hurt the current flow.

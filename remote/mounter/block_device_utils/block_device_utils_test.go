@@ -19,17 +19,17 @@ package block_device_utils_test
 import (
 	"errors"
 	"fmt"
+	"github.com/IBM/ubiquity/fakes"
 	"github.com/IBM/ubiquity/remote/mounter/block_device_utils"
 	"github.com/IBM/ubiquity/utils"
-	"github.com/IBM/ubiquity/fakes"
 
+	"context"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"io/ioutil"
+	"os/exec"
 	"strings"
 	"testing"
-	"context"
-	"os/exec"
 )
 
 var _ = Describe("block_device_utils_test", func() {
@@ -204,9 +204,9 @@ var _ = Describe("block_device_utils_test", func() {
 							|- 33:0:0:1 sdb 8:16 active ready running
 							- 34:0:0:1 sdc 8:32 active ready running`
 			fakeExec.ExecuteWithTimeoutReturnsOnCall(0, []byte(mpathOutput), nil)
-			returnError :=  &exec.ExitError{}
+			returnError := &exec.ExitError{}
 			//this execute with timeout makes the GetWwnByScsiInq to return an error
-			fakeExec.ExecuteWithTimeoutReturnsOnCall(1, []byte(""),returnError)
+			fakeExec.ExecuteWithTimeoutReturnsOnCall(1, []byte(""), returnError)
 			_, err := bdUtils.Discover(volumeId, true)
 			Expect(err).To(HaveOccurred())
 			Expect(err).To(Equal(&block_device_utils.VolumeNotFoundError{volumeId}))
@@ -221,13 +221,13 @@ var _ = Describe("block_device_utils_test", func() {
 							  |- 36:0:0:2 sdg 8:96 failed faulty running
 							  - 37:0:0:2 sde 8:64 failed faulty running`, device, volumeId)
 			fakeExec.ExecuteWithTimeoutReturnsOnCall(0, []byte(mpathOutput), nil)
-			returnError :=  &exec.ExitError{}
+			returnError := &exec.ExitError{}
 			//this execute with timeout makes the GetWwnByScsiInq to return an error
-			fakeExec.ExecuteWithTimeoutReturnsOnCall(2, []byte(""),returnError)
+			fakeExec.ExecuteWithTimeoutReturnsOnCall(2, []byte(""), returnError)
 			fakeExec.ExecuteReturns([]byte(mpathOutput), nil)
 			_, err := bdUtils.Discover(volumeId, true)
 			Expect(err).To(HaveOccurred())
-			Expect(err).To(Equal(&block_device_utils.FaultyDeviceError{device}))	
+			Expect(err).To(Equal(&block_device_utils.FaultyDeviceError{fmt.Sprintf("/dev/mapper/%s", device)}))
 		})
 		It("should return command execution error if device is not faulty.", func() {
 			volumeId := "6001738cfc9035ea0000000000796463"
@@ -239,14 +239,14 @@ var _ = Describe("block_device_utils_test", func() {
 							  |- 36:0:0:2 sdg 8:96 active ready running
 							  - 37:0:0:2 sde 8:64 active ready running`, device, volumeId)
 			fakeExec.ExecuteWithTimeoutReturnsOnCall(0, []byte(mpathOutput), nil)
-			returnError :=  &exec.ExitError{}
+			returnError := &exec.ExitError{}
 			//this execute with timeout makes the GetWwnByScsiInq to return an error
-			fakeExec.ExecuteWithTimeoutReturnsOnCall(2, []byte(""),returnError)
+			fakeExec.ExecuteWithTimeoutReturnsOnCall(2, []byte(""), returnError)
 			fakeExec.ExecuteReturns([]byte(mpathOutput), nil)
 			_, err := bdUtils.Discover(volumeId, true)
 			Expect(err).To(HaveOccurred())
 			_, ok := err.(*block_device_utils.CommandExecuteError)
-			Expect(ok).To(BeTrue())	
+			Expect(ok).To(BeTrue())
 		})
 	})
 	Context(".DiscoverBySgInq", func() {
@@ -274,11 +274,11 @@ var _ = Describe("block_device_utils_test", func() {
 			_, cmd, _ := fakeExec.ExecuteWithTimeoutArgsForCall(0)
 			Expect(cmd).To(Equal("sg_inq"))
 		})
-		
+
 		It("should return the 3rd mpath device mpathhg", func() {
 			volWwn := "0x6001738cfc9035eb0000000000cea5f6"
 			expectedWwn := strings.TrimPrefix(volWwn, "0x")
-			mpathOutput := fmt.Sprint(`mpathhe (36001738cfc9035eb0000000000cerwr) dm-3 IBM     ,2810XIV
+			mpathOutput := fmt.Sprintf(`mpathhe (36001738cfc9035eb0000000000cerwr) dm-3 IBM     ,2810XIV
 							size=19G features='1 queue_if_no_path' hwhandler='0' wp=rw
 							-+- policy='service-time 0' prio=1 status=active
 							|- 32:0:0:1 sdb 8:16 fault faulty running
@@ -292,7 +292,7 @@ mpathhg (3%s) dm-3 IBM     ,2810XIV
 							size=19G features='1 queue_if_no_path' hwhandler='0' wp=rw
 							-+- policy='service-time 0' prio=1 status=active
 							|- 33:0:0:1 sdb 8:16 active ready running
-							- 34:0:0:1 sdc 8:32 active ready running`,expectedWwn )
+							- 34:0:0:1 sdc 8:32 active ready running`, expectedWwn)
 			inqResult := fmt.Sprintf(`VPD INQUIRY: Device Identification page
 							Designation descriptor number 1, descriptor length: 20
 							designator_type: NAA,  code_set: Binary
@@ -301,14 +301,15 @@ mpathhg (3%s) dm-3 IBM     ,2810XIV
 							Vendor Specific Identifier: 0xcfc9035eb
 							Vendor Specific Identifier Extension: 0xcea5f6
 							[%s]`, volWwn)
-			fakeExec.ExecuteWithTimeoutReturnsOnCall(0 ,nil , cmdErr)
-			fakeExec.ExecuteWithTimeoutReturnsOnCall(1 ,nil , cmdErr)
-			fakeExec.ExecuteWithTimeoutReturnsOnCall(2 ,[]byte(fmt.Sprintf("%s", inqResult)) , nil)
+
+			fmt.Println(mpathOutput)
+			// the first call to sg_inq will only be on a non faulty device!
+			fakeExec.ExecuteWithTimeoutReturnsOnCall(0, []byte(fmt.Sprintf("%s", inqResult)), nil)
 			dev, err := bdUtils.DiscoverBySgInq(mpathOutput, expectedWwn)
 			Expect(dev).To(Equal("mpathhg"))
 			Expect(err).ToNot(HaveOccurred())
-			Expect(fakeExec.ExecuteWithTimeoutCallCount()).To(Equal(3))
-			_, cmd, _ := fakeExec.ExecuteWithTimeoutArgsForCall(2)
+			Expect(fakeExec.ExecuteWithTimeoutCallCount()).To(Equal(1))
+			_, cmd, _ := fakeExec.ExecuteWithTimeoutArgsForCall(0)
 			Expect(cmd).To(Equal("sg_inq"))
 		})
 
@@ -356,9 +357,9 @@ mpathhb (36001738cfc9035eb0000000000cea###) dm-3 ##,##
 							|- 33:0:0:1 sdb 8:16 active ready running
 							- 34:0:0:1 sdc 8:32 active ready running`
 			wwn := "wwn"
-			returnError :=  &exec.ExitError{}
+			returnError := &exec.ExitError{}
 			//this execute with timeout makes the GetWwnByScsiInq to return an error
-			fakeExec.ExecuteWithTimeoutReturns([]byte(""),returnError)
+			fakeExec.ExecuteWithTimeoutReturns([]byte(""), returnError)
 			_, err := bdUtils.DiscoverBySgInq(mpathOutput, wwn)
 			Expect(err).To(HaveOccurred())
 			Expect(err).To(Equal(&block_device_utils.VolumeNotFoundError{wwn}))
@@ -368,7 +369,7 @@ mpathhb (36001738cfc9035eb0000000000cea###) dm-3 ##,##
 		It("GetWwnByScsiInq fails if sg_inq command fails", func() {
 			dev := "dev"
 			fakeExec.ExecuteWithTimeoutReturns([]byte{}, cmdErr)
-			_, err := bdUtils.GetWwnByScsiInq(dev)
+			_, err := bdUtils.GetWwnByScsiInq("", dev)
 			Expect(err).To(HaveOccurred())
 		})
 		It("should return wwn for mpath device", func() {
@@ -383,7 +384,7 @@ mpathhb (36001738cfc9035eb0000000000cea###) dm-3 ##,##
 							Vendor Specific Identifier Extension: 0xcea5f6
 							[%s]`, expecedWwn)
 			fakeExec.ExecuteWithTimeoutReturns([]byte(fmt.Sprintf("%s", result)), nil)
-			wwn, err := bdUtils.GetWwnByScsiInq(dev)
+			wwn, err := bdUtils.GetWwnByScsiInq("", dev)
 			Expect(err).ToNot(HaveOccurred())
 			Expect(wwn).To(Equal(strings.TrimPrefix(expecedWwn, "0x")))
 			Expect(fakeExec.ExecuteWithTimeoutCallCount()).To(Equal(1))
@@ -403,7 +404,7 @@ mpathhb (36001738cfc9035eb0000000000cea###) dm-3 ##,##
                                                         Vendor Specific Extension Identifier: 0xcea5f6
                                                         [%s]`, expecedWwn)
 			fakeExec.ExecuteWithTimeoutReturns([]byte(fmt.Sprintf("%s", result)), nil)
-			wwn, err := bdUtils.GetWwnByScsiInq(dev)
+			wwn, err := bdUtils.GetWwnByScsiInq("", dev)
 			Expect(err).ToNot(HaveOccurred())
 			Expect(wwn).To(Equal(strings.TrimPrefix(expecedWwn, "0x")))
 			Expect(fakeExec.ExecuteWithTimeoutCallCount()).To(Equal(1))
@@ -423,7 +424,7 @@ mpathhb (36001738cfc9035eb0000000000cea###) dm-3 ##,##
 							Vendor Specific Identifier Extension: 0xcea5f6
 							[%s]`, expecedWwn)
 			fakeExec.ExecuteWithTimeoutReturns([]byte(fmt.Sprintf("%s", result)), nil)
-			_, err := bdUtils.GetWwnByScsiInq(dev)
+			_, err := bdUtils.GetWwnByScsiInq("", dev)
 			Expect(err).To(HaveOccurred())
 			Expect(fakeExec.ExecuteWithTimeoutCallCount()).To(Equal(1))
 			_, cmd, args := fakeExec.ExecuteWithTimeoutArgsForCall(0)
@@ -733,7 +734,7 @@ wrong format on /ubiquity/mpoint type ext4 (rw,relatime,data=ordered)
 /XXX/mpoint on /ubiquity/mpoint type ext4 (rw,relatime,data=ordered)
 /dev/mapper/yyy on /ubiquity/yyy type ext4 (rw,relatime,data=ordered)
 `
-			fakeExec.ExecuteWithTimeoutReturnsOnCall(0, nil, cmdErr)                         // the umount command should fail
+			fakeExec.ExecuteWithTimeoutReturnsOnCall(0, nil, cmdErr)              // the umount command should fail
 			fakeExec.ExecuteWithTimeoutReturnsOnCall(1, []byte(mountOutput), nil) // mount for isMounted
 			err = bdUtils.UmountFs(mpoint, "6001738CFC9035EA0000000000795164")
 			Expect(err).To(Not(HaveOccurred()))
