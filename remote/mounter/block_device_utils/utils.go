@@ -26,11 +26,16 @@ import (
 func checkIsFaulty(mpath string, logger logs.Logger) bool {
 	re := regexp.MustCompile("(\\d)+:(\\d)+:(\\d)+:(\\d)+.*[failed|active]+.*")
 	paths := re.FindAllString(mpath, -1)
+	if len(paths) == 0 {
+		logger.Warning("No paths were found for mpath device. assuming the device is faulty")
+		return true
+	}
 	logger.Debug(fmt.Sprintf("Device paths are : [%s]", paths))
 	isFaulty := true
+	activeRe := regexp.MustCompile("active.*ready.*running.*")
 	for _, path := range paths {
 		logger.Debug(fmt.Sprintf("path : [%s] contains faulty? %t", path, strings.Contains(path, "faulty")))
-		if !strings.Contains(path, "faulty") {
+		if activeRe.MatchString(path) {
 			isFaulty = false
 			break
 		}
