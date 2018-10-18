@@ -26,9 +26,7 @@ func (m *mounterFactory) GetMounterPerBackend(backend string, legacyLogger *log.
 	defer m.logger.Trace(logs.DEBUG)()
 
 	if backend == resources.SpectrumScale {
-		return NewSpectrumScaleMounter(legacyLogger), nil
-	} else if backend == resources.SoftlayerNFS || backend == resources.SpectrumScaleNFS {
-		return NewNfsMounter(legacyLogger), nil
+		return NewSpectrumScaleMounter(), nil
 	} else if backend == resources.SCBE {
 		return NewScbeMounter(pluginConfig.ScbeRemoteConfig), nil
 	} else {

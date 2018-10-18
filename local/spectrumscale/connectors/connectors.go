@@ -17,8 +17,7 @@
 package connectors
 
 import (
-	"log"
-
+	"github.com/IBM/ubiquity/utils/logs"
 	"github.com/IBM/ubiquity/resources"
 )
 
@@ -28,7 +27,6 @@ type SpectrumScaleConnector interface {
 	GetClusterId() (string, error)
 	//Filesystem operations
 	IsFilesystemMounted(filesystemName string) (bool, error)
-	MountFileSystem(filesystemName string) error
 	ListFilesystems() ([]string, error)
 	GetFilesystemMountpoint(filesystemName string) (string, error)
 	//Fileset operations
@@ -42,29 +40,17 @@ type SpectrumScaleConnector interface {
 	//TODO modify quota from string to Capacity (see kubernetes)
 	ListFilesetQuota(filesystemName string, filesetName string) (string, error)
 	SetFilesetQuota(filesystemName string, filesetName string, quota string) error
-	ExportNfs(volumeMountpoint string, clientConfig string) error
-	UnexportNfs(volumeMountpoint string) error
 }
 
 const (
 	UserSpecifiedFilesetType string = "fileset-type"
 	UserSpecifiedInodeLimit  string = "inode-limit"
 	UserSpecifiedUid         string = "uid"
-	UserSpecifiedGid         string = "gid"
+	UserSpecifiedGid	 string = "gid"
 )
 
-func GetSpectrumScaleConnector(logger *log.Logger, config resources.SpectrumScaleConfig) (SpectrumScaleConnector, error) {
-	if config.RestConfig.ManagementIP != "" {
-		logger.Printf("Initializing SpectrumScale REST connector\n")
-		return NewSpectrumRestV2(logger, config.RestConfig)
-	}
-	if config.SshConfig.User != "" && config.SshConfig.Host != "" {
-		if config.SshConfig.Port == "" || config.SshConfig.Port == "0" {
-			config.SshConfig.Port = "22"
-		}
-		logger.Printf("Initializing SpectrumScale SSH connector with sshConfig: %+v\n", config.SshConfig)
-		return NewSpectrumSSH(logger, config.SshConfig)
-	}
-	logger.Println("Initializing SpectrumScale MMCLI Connector")
-	return NewSpectrumMMCLI(logger)
+func GetSpectrumScaleConnector(logger logs.Logger, config resources.SpectrumScaleConfig) (SpectrumScaleConnector, error) {
+	defer logger.Trace(logs.DEBUG)()
+	logger.Debug("Initializing SpectrumScale REST connector\n")
+	return NewSpectrumRestV2(logger, config.RestConfig)
 }
