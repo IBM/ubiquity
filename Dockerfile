@@ -7,8 +7,8 @@ COPY . .
 RUN CGO_ENABLED=1 GOOS=linux go build -tags netgo -v -a --ldflags '-w -linkmode external -extldflags "-static"' -installsuffix cgo -o ubiquity main.go
 
 
-FROM alpine:3.7
-RUN apk --no-cache add ca-certificates=20171114-r0 openssl=1.0.2o-r1
+FROM alpine:3.8
+RUN apk --no-cache add ca-certificates=20171114-r3 openssl=1.0.2p-r0
 WORKDIR /root/
 COPY --from=0 /go/src/github.com/IBM/ubiquity/ubiquity .
 COPY --from=0 /go/src/github.com/IBM/ubiquity/LICENSE .
