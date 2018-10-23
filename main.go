@@ -54,7 +54,6 @@ func main() {
 	defer utils.InitUbiquityServerLogger()()
 	
 	logger := logs.GetLogger()
-	oldLogger := utils.SetupOldLogger("ubiquity")
 
 	executor := utils.NewExecutor()
 	ubiquityConfigPath, err := utils.SetupConfigDirectory(executor, config.ConfigPath)
@@ -77,7 +76,7 @@ func main() {
 
 	defer database.Initialize()()
 
-	clients, err := local.GetLocalClients(oldLogger, config)
+	clients, err := local.GetLocalClients(logger, config)
 	if err != nil {
 		panic(err)
 	}

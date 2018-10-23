@@ -24,16 +24,29 @@ import (
 	"github.com/IBM/ubiquity/resources"
 )
 
-type FakeSpectrumDataModel struct {
-	CreateVolumeTableStub        func() error
-	createVolumeTableMutex       sync.RWMutex
-	createVolumeTableArgsForCall []struct{}
-	createVolumeTableReturns     struct {
-		result1 error
+type FakeSpectrumDataModelWrapper struct {
+	GetDbNameStub        func() string
+	getDbNameMutex       sync.RWMutex
+	getDbNameArgsForCall []struct{}
+	getDbNameReturns     struct {
+		result1 string
 	}
-	createVolumeTableReturnsOnCall map[int]struct {
-		result1 error
+	getDbNameReturnsOnCall map[int]struct {
+		result1 string
 	}
+
+
+	IsDbVolumeStub        func(name string) bool
+	isDbVolumeMutex       sync.RWMutex
+	isDbVolumeArgsForCall []struct{name string}
+	isDbVolumeReturns     struct {
+		result1 bool
+	}
+
+	isDbVolumeReturnsOnCall map[int]struct {
+		result1 bool
+	}
+
 	DeleteVolumeStub        func(name string) error
 	deleteVolumeMutex       sync.RWMutex
 	deleteVolumeArgsForCall []struct {
@@ -58,22 +71,6 @@ type FakeSpectrumDataModel struct {
 		result1 error
 	}
 	insertFilesetVolumeReturnsOnCall map[int]struct {
-		result1 error
-	}
-	InsertLightweightVolumeStub        func(fileset, directory, volumeName string, filesystem string, isPreexisting bool, opts map[string]interface{}) error
-	insertLightweightVolumeMutex       sync.RWMutex
-	insertLightweightVolumeArgsForCall []struct {
-		fileset       string
-		directory     string
-		volumeName    string
-		filesystem    string
-		isPreexisting bool
-		opts          map[string]interface{}
-	}
-	insertLightweightVolumeReturns struct {
-		result1 error
-	}
-	insertLightweightVolumeReturnsOnCall map[int]struct {
 		result1 error
 	}
 	InsertFilesetQuotaVolumeStub        func(fileset, quota, volumeName string, filesystem string, isPreexisting bool, opts map[string]interface{}) error
@@ -118,63 +115,105 @@ type FakeSpectrumDataModel struct {
 		result1 []resources.Volume
 		result2 error
 	}
-	UpdateVolumeMountpointStub        func(name string, mountpoint string) error
-	updateVolumeMountpointMutex       sync.RWMutex
-	updateVolumeMountpointArgsForCall []struct {
-		name       string
-		mountpoint string
-	}
-	updateVolumeMountpointReturns struct {
-		result1 error
-	}
-	updateVolumeMountpointReturnsOnCall map[int]struct {
-		result1 error
-	}
+    UpdateDatabaseVolumeStub        func(newVolume *spectrumscale.SpectrumScaleVolume)
+    updateDatabaseVolumeMutex       sync.RWMutex
+    updateDatabaseVolumeArgsForCall []struct {
+        newVolume *spectrumscale.SpectrumScaleVolume
+    }
+
+
+
 	invocations      map[string][][]interface{}
 	invocationsMutex sync.RWMutex
 }
 
-func (fake *FakeSpectrumDataModel) CreateVolumeTable() error {
-	fake.createVolumeTableMutex.Lock()
-	ret, specificReturn := fake.createVolumeTableReturnsOnCall[len(fake.createVolumeTableArgsForCall)]
-	fake.createVolumeTableArgsForCall = append(fake.createVolumeTableArgsForCall, struct{}{})
-	fake.recordInvocation("CreateVolumeTable", []interface{}{})
-	fake.createVolumeTableMutex.Unlock()
-	if fake.CreateVolumeTableStub != nil {
-		return fake.CreateVolumeTableStub()
+func (fake *FakeSpectrumDataModelWrapper) GetDbName() string {
+	fake.getDbNameMutex.Lock()
+	ret, specificReturn := fake.getDbNameReturnsOnCall[len(fake.getDbNameArgsForCall)]
+	fake.getDbNameArgsForCall = append(fake.getDbNameArgsForCall, struct{}{})
+	fake.recordInvocation("GetDbName", []interface{}{})
+	fake.getDbNameMutex.Unlock()
+	if fake.GetDbNameStub != nil {
+		return fake.GetDbNameStub()
 	}
 	if specificReturn {
 		return ret.result1
 	}
-	return fake.createVolumeTableReturns.result1
+	return fake.getDbNameReturns.result1
 }
 
-func (fake *FakeSpectrumDataModel) CreateVolumeTableCallCount() int {
-	fake.createVolumeTableMutex.RLock()
-	defer fake.createVolumeTableMutex.RUnlock()
-	return len(fake.createVolumeTableArgsForCall)
+func (fake *FakeSpectrumDataModelWrapper) GetDbNameCallCount() int {
+	fake.getDbNameMutex.RLock()
+	defer fake.getDbNameMutex.RUnlock()
+	return len(fake.getDbNameArgsForCall)
 }
 
-func (fake *FakeSpectrumDataModel) CreateVolumeTableReturns(result1 error) {
-	fake.CreateVolumeTableStub = nil
-	fake.createVolumeTableReturns = struct {
-		result1 error
+func (fake *FakeSpectrumDataModelWrapper) GetDbNameReturns(result1 string) {
+	fake.GetDbNameStub = nil
+	fake.getDbNameReturns = struct {
+		result1 string
 	}{result1}
 }
 
-func (fake *FakeSpectrumDataModel) CreateVolumeTableReturnsOnCall(i int, result1 error) {
-	fake.CreateVolumeTableStub = nil
-	if fake.createVolumeTableReturnsOnCall == nil {
-		fake.createVolumeTableReturnsOnCall = make(map[int]struct {
-			result1 error
+func (fake *FakeSpectrumDataModelWrapper) GetDbNameReturnsOnCall(i int, result1 string) {
+	fake.GetDbNameStub = nil
+	if fake.getDbNameReturnsOnCall == nil {
+		fake.getDbNameReturnsOnCall = make(map[int]struct {
+			result1 string
 		})
 	}
-	fake.createVolumeTableReturnsOnCall[i] = struct {
-		result1 error
+	fake.getDbNameReturnsOnCall[i] = struct {
+		result1 string
 	}{result1}
 }
 
-func (fake *FakeSpectrumDataModel) DeleteVolume(name string) error {
+
+func (fake *FakeSpectrumDataModelWrapper) IsDbVolume(name string) bool {
+	fake.isDbVolumeMutex.Lock()
+	ret, specificReturn := fake.isDbVolumeReturnsOnCall[len(fake.isDbVolumeArgsForCall)]
+	fake.isDbVolumeArgsForCall = append(fake.isDbVolumeArgsForCall, struct{ 
+		name string
+	 }{name})
+
+
+
+	fake.recordInvocation("IsDbVolume", []interface{}{})
+	fake.isDbVolumeMutex.Unlock()
+	if fake.IsDbVolumeStub != nil {
+		return fake.IsDbVolumeStub(name)
+	}
+	if specificReturn {
+		return ret.result1
+	}
+	return fake.isDbVolumeReturns.result1
+}
+
+func (fake *FakeSpectrumDataModelWrapper) IsDbVolumeCallCount() int {
+	fake.isDbVolumeMutex.RLock()
+	defer fake.isDbVolumeMutex.RUnlock()
+	return len(fake.isDbVolumeArgsForCall)
+}
+
+func (fake *FakeSpectrumDataModelWrapper) IsDbVolumeReturns(result1 bool) {
+	fake.IsDbVolumeStub = nil
+	fake.isDbVolumeReturns = struct {
+		result1 bool
+	}{result1}
+}
+
+func (fake *FakeSpectrumDataModelWrapper) IsDbVolumeReturnsOnCall(i int, result1 bool) {
+	fake.IsDbVolumeStub = nil
+	if fake.isDbVolumeReturnsOnCall == nil {
+		fake.isDbVolumeReturnsOnCall = make(map[int]struct {
+			result1 bool
+		})
+	}
+	fake.isDbVolumeReturnsOnCall[i] = struct {
+		result1 bool
+	}{result1}
+}
+
+func (fake *FakeSpectrumDataModelWrapper) DeleteVolume(name string) error {
 	fake.deleteVolumeMutex.Lock()
 	ret, specificReturn := fake.deleteVolumeReturnsOnCall[len(fake.deleteVolumeArgsForCall)]
 	fake.deleteVolumeArgsForCall = append(fake.deleteVolumeArgsForCall, struct {
@@ -191,26 +230,26 @@ func (fake *FakeSpectrumDataModel) DeleteVolume(name string) error {
 	return fake.deleteVolumeReturns.result1
 }
 
-func (fake *FakeSpectrumDataModel) DeleteVolumeCallCount() int {
+func (fake *FakeSpectrumDataModelWrapper) DeleteVolumeCallCount() int {
 	fake.deleteVolumeMutex.RLock()
 	defer fake.deleteVolumeMutex.RUnlock()
 	return len(fake.deleteVolumeArgsForCall)
 }
 
-func (fake *FakeSpectrumDataModel) DeleteVolumeArgsForCall(i int) string {
+func (fake *FakeSpectrumDataModelWrapper) DeleteVolumeArgsForCall(i int) string {
 	fake.deleteVolumeMutex.RLock()
 	defer fake.deleteVolumeMutex.RUnlock()
 	return fake.deleteVolumeArgsForCall[i].name
 }
 
-func (fake *FakeSpectrumDataModel) DeleteVolumeReturns(result1 error) {
+func (fake *FakeSpectrumDataModelWrapper) DeleteVolumeReturns(result1 error) {
 	fake.DeleteVolumeStub = nil
 	fake.deleteVolumeReturns = struct {
 		result1 error
 	}{result1}
 }
 
-func (fake *FakeSpectrumDataModel) DeleteVolumeReturnsOnCall(i int, result1 error) {
+func (fake *FakeSpectrumDataModelWrapper) DeleteVolumeReturnsOnCall(i int, result1 error) {
 	fake.DeleteVolumeStub = nil
 	if fake.deleteVolumeReturnsOnCall == nil {
 		fake.deleteVolumeReturnsOnCall = make(map[int]struct {
@@ -222,7 +261,7 @@ func (fake *FakeSpectrumDataModel) DeleteVolumeReturnsOnCall(i int, result1 erro
 	}{result1}
 }
 
-func (fake *FakeSpectrumDataModel) InsertFilesetVolume(fileset string, volumeName string, filesystem string, isPreexisting bool, opts map[string]interface{}) error {
+func (fake *FakeSpectrumDataModelWrapper) InsertFilesetVolume(fileset string, volumeName string, filesystem string, isPreexisting bool, opts map[string]interface{}) error {
 	fake.insertFilesetVolumeMutex.Lock()
 	ret, specificReturn := fake.insertFilesetVolumeReturnsOnCall[len(fake.insertFilesetVolumeArgsForCall)]
 	fake.insertFilesetVolumeArgsForCall = append(fake.insertFilesetVolumeArgsForCall, struct {
@@ -243,26 +282,26 @@ func (fake *FakeSpectrumDataModel) InsertFilesetVolume(fileset string, volumeNam
 	return fake.insertFilesetVolumeReturns.result1
 }
 
-func (fake *FakeSpectrumDataModel) InsertFilesetVolumeCallCount() int {
+func (fake *FakeSpectrumDataModelWrapper) InsertFilesetVolumeCallCount() int {
 	fake.insertFilesetVolumeMutex.RLock()
 	defer fake.insertFilesetVolumeMutex.RUnlock()
 	return len(fake.insertFilesetVolumeArgsForCall)
 }
 
-func (fake *FakeSpectrumDataModel) InsertFilesetVolumeArgsForCall(i int) (string, string, string, bool, map[string]interface{}) {
+func (fake *FakeSpectrumDataModelWrapper) InsertFilesetVolumeArgsForCall(i int) (string, string, string, bool, map[string]interface{}) {
 	fake.insertFilesetVolumeMutex.RLock()
 	defer fake.insertFilesetVolumeMutex.RUnlock()
 	return fake.insertFilesetVolumeArgsForCall[i].fileset, fake.insertFilesetVolumeArgsForCall[i].volumeName, fake.insertFilesetVolumeArgsForCall[i].filesystem, fake.insertFilesetVolumeArgsForCall[i].isPreexisting, fake.insertFilesetVolumeArgsForCall[i].opts
 }
 
-func (fake *FakeSpectrumDataModel) InsertFilesetVolumeReturns(result1 error) {
+func (fake *FakeSpectrumDataModelWrapper) InsertFilesetVolumeReturns(result1 error) {
 	fake.InsertFilesetVolumeStub = nil
 	fake.insertFilesetVolumeReturns = struct {
 		result1 error
 	}{result1}
 }
 
-func (fake *FakeSpectrumDataModel) InsertFilesetVolumeReturnsOnCall(i int, result1 error) {
+func (fake *FakeSpectrumDataModelWrapper) InsertFilesetVolumeReturnsOnCall(i int, result1 error) {
 	fake.InsertFilesetVolumeStub = nil
 	if fake.insertFilesetVolumeReturnsOnCall == nil {
 		fake.insertFilesetVolumeReturnsOnCall = make(map[int]struct {
@@ -274,60 +313,7 @@ func (fake *FakeSpectrumDataModel) InsertFilesetVolumeReturnsOnCall(i int, resul
 	}{result1}
 }
 
-func (fake *FakeSpectrumDataModel) InsertLightweightVolume(fileset string, directory string, volumeName string, filesystem string, isPreexisting bool, opts map[string]interface{}) error {
-	fake.insertLightweightVolumeMutex.Lock()
-	ret, specificReturn := fake.insertLightweightVolumeReturnsOnCall[len(fake.insertLightweightVolumeArgsForCall)]
-	fake.insertLightweightVolumeArgsForCall = append(fake.insertLightweightVolumeArgsForCall, struct {
-		fileset       string
-		directory     string
-		volumeName    string
-		filesystem    string
-		isPreexisting bool
-		opts          map[string]interface{}
-	}{fileset, directory, volumeName, filesystem, isPreexisting, opts})
-	fake.recordInvocation("InsertLightweightVolume", []interface{}{fileset, directory, volumeName, filesystem, isPreexisting, opts})
-	fake.insertLightweightVolumeMutex.Unlock()
-	if fake.InsertLightweightVolumeStub != nil {
-		return fake.InsertLightweightVolumeStub(fileset, directory, volumeName, filesystem, isPreexisting, opts)
-	}
-	if specificReturn {
-		return ret.result1
-	}
-	return fake.insertLightweightVolumeReturns.result1
-}
-
-func (fake *FakeSpectrumDataModel) InsertLightweightVolumeCallCount() int {
-	fake.insertLightweightVolumeMutex.RLock()
-	defer fake.insertLightweightVolumeMutex.RUnlock()
-	return len(fake.insertLightweightVolumeArgsForCall)
-}
-
-func (fake *FakeSpectrumDataModel) InsertLightweightVolumeArgsForCall(i int) (string, string, string, string, bool, map[string]interface{}) {
-	fake.insertLightweightVolumeMutex.RLock()
-	defer fake.insertLightweightVolumeMutex.RUnlock()
-	return fake.insertLightweightVolumeArgsForCall[i].fileset, fake.insertLightweightVolumeArgsForCall[i].directory, fake.insertLightweightVolumeArgsForCall[i].volumeName, fake.insertLightweightVolumeArgsForCall[i].filesystem, fake.insertLightweightVolumeArgsForCall[i].isPreexisting, fake.insertLightweightVolumeArgsForCall[i].opts
-}
-
-func (fake *FakeSpectrumDataModel) InsertLightweightVolumeReturns(result1 error) {
-	fake.InsertLightweightVolumeStub = nil
-	fake.insertLightweightVolumeReturns = struct {
-		result1 error
-	}{result1}
-}
-
-func (fake *FakeSpectrumDataModel) InsertLightweightVolumeReturnsOnCall(i int, result1 error) {
-	fake.InsertLightweightVolumeStub = nil
-	if fake.insertLightweightVolumeReturnsOnCall == nil {
-		fake.insertLightweightVolumeReturnsOnCall = make(map[int]struct {
-			result1 error
-		})
-	}
-	fake.insertLightweightVolumeReturnsOnCall[i] = struct {
-		result1 error
-	}{result1}
-}
-
-func (fake *FakeSpectrumDataModel) InsertFilesetQuotaVolume(fileset string, quota string, volumeName string, filesystem string, isPreexisting bool, opts map[string]interface{}) error {
+func (fake *FakeSpectrumDataModelWrapper) InsertFilesetQuotaVolume(fileset string, quota string, volumeName string, filesystem string, isPreexisting bool, opts map[string]interface{}) error {
 	fake.insertFilesetQuotaVolumeMutex.Lock()
 	ret, specificReturn := fake.insertFilesetQuotaVolumeReturnsOnCall[len(fake.insertFilesetQuotaVolumeArgsForCall)]
 	fake.insertFilesetQuotaVolumeArgsForCall = append(fake.insertFilesetQuotaVolumeArgsForCall, struct {
@@ -349,26 +335,26 @@ func (fake *FakeSpectrumDataModel) InsertFilesetQuotaVolume(fileset string, quot
 	return fake.insertFilesetQuotaVolumeReturns.result1
 }
 
-func (fake *FakeSpectrumDataModel) InsertFilesetQuotaVolumeCallCount() int {
+func (fake *FakeSpectrumDataModelWrapper) InsertFilesetQuotaVolumeCallCount() int {
 	fake.insertFilesetQuotaVolumeMutex.RLock()
 	defer fake.insertFilesetQuotaVolumeMutex.RUnlock()
 	return len(fake.insertFilesetQuotaVolumeArgsForCall)
 }
 
-func (fake *FakeSpectrumDataModel) InsertFilesetQuotaVolumeArgsForCall(i int) (string, string, string, string, bool, map[string]interface{}) {
+func (fake *FakeSpectrumDataModelWrapper) InsertFilesetQuotaVolumeArgsForCall(i int) (string, string, string, string, bool, map[string]interface{}) {
 	fake.insertFilesetQuotaVolumeMutex.RLock()
 	defer fake.insertFilesetQuotaVolumeMutex.RUnlock()
 	return fake.insertFilesetQuotaVolumeArgsForCall[i].fileset, fake.insertFilesetQuotaVolumeArgsForCall[i].quota, fake.insertFilesetQuotaVolumeArgsForCall[i].volumeName, fake.insertFilesetQuotaVolumeArgsForCall[i].filesystem, fake.insertFilesetQuotaVolumeArgsForCall[i].isPreexisting, fake.insertFilesetQuotaVolumeArgsForCall[i].opts
 }
 
-func (fake *FakeSpectrumDataModel) InsertFilesetQuotaVolumeReturns(result1 error) {
+func (fake *FakeSpectrumDataModelWrapper) InsertFilesetQuotaVolumeReturns(result1 error) {
 	fake.InsertFilesetQuotaVolumeStub = nil
 	fake.insertFilesetQuotaVolumeReturns = struct {
 		result1 error
 	}{result1}
 }
 
-func (fake *FakeSpectrumDataModel) InsertFilesetQuotaVolumeReturnsOnCall(i int, result1 error) {
+func (fake *FakeSpectrumDataModelWrapper) InsertFilesetQuotaVolumeReturnsOnCall(i int, result1 error) {
 	fake.InsertFilesetQuotaVolumeStub = nil
 	if fake.insertFilesetQuotaVolumeReturnsOnCall == nil {
 		fake.insertFilesetQuotaVolumeReturnsOnCall = make(map[int]struct {
@@ -380,7 +366,7 @@ func (fake *FakeSpectrumDataModel) InsertFilesetQuotaVolumeReturnsOnCall(i int, 
 	}{result1}
 }
 
-func (fake *FakeSpectrumDataModel) GetVolume(name string) (spectrumscale.SpectrumScaleVolume, bool, error) {
+func (fake *FakeSpectrumDataModelWrapper) GetVolume(name string) (spectrumscale.SpectrumScaleVolume, bool, error) {
 	fake.getVolumeMutex.Lock()
 	ret, specificReturn := fake.getVolumeReturnsOnCall[len(fake.getVolumeArgsForCall)]
 	fake.getVolumeArgsForCall = append(fake.getVolumeArgsForCall, struct {
@@ -397,19 +383,19 @@ func (fake *FakeSpectrumDataModel) GetVolume(name string) (spectrumscale.Spectru
 	return fake.getVolumeReturns.result1, fake.getVolumeReturns.result2, fake.getVolumeReturns.result3
 }
 
-func (fake *FakeSpectrumDataModel) GetVolumeCallCount() int {
+func (fake *FakeSpectrumDataModelWrapper) GetVolumeCallCount() int {
 	fake.getVolumeMutex.RLock()
 	defer fake.getVolumeMutex.RUnlock()
 	return len(fake.getVolumeArgsForCall)
 }
 
-func (fake *FakeSpectrumDataModel) GetVolumeArgsForCall(i int) string {
+func (fake *FakeSpectrumDataModelWrapper) GetVolumeArgsForCall(i int) string {
 	fake.getVolumeMutex.RLock()
 	defer fake.getVolumeMutex.RUnlock()
 	return fake.getVolumeArgsForCall[i].name
 }
 
-func (fake *FakeSpectrumDataModel) GetVolumeReturns(result1 spectrumscale.SpectrumScaleVolume, result2 bool, result3 error) {
+func (fake *FakeSpectrumDataModelWrapper) GetVolumeReturns(result1 spectrumscale.SpectrumScaleVolume, result2 bool, result3 error) {
 	fake.GetVolumeStub = nil
 	fake.getVolumeReturns = struct {
 		result1 spectrumscale.SpectrumScaleVolume
@@ -418,7 +404,7 @@ func (fake *FakeSpectrumDataModel) GetVolumeReturns(result1 spectrumscale.Spectr
 	}{result1, result2, result3}
 }
 
-func (fake *FakeSpectrumDataModel) GetVolumeReturnsOnCall(i int, result1 spectrumscale.SpectrumScaleVolume, result2 bool, result3 error) {
+func (fake *FakeSpectrumDataModelWrapper) GetVolumeReturnsOnCall(i int, result1 spectrumscale.SpectrumScaleVolume, result2 bool, result3 error) {
 	fake.GetVolumeStub = nil
 	if fake.getVolumeReturnsOnCall == nil {
 		fake.getVolumeReturnsOnCall = make(map[int]struct {
@@ -434,7 +420,7 @@ func (fake *FakeSpectrumDataModel) GetVolumeReturnsOnCall(i int, result1 spectru
 	}{result1, result2, result3}
 }
 
-func (fake *FakeSpectrumDataModel) ListVolumes() ([]resources.Volume, error) {
+func (fake *FakeSpectrumDataModelWrapper) ListVolumes() ([]resources.Volume, error) {
 	fake.listVolumesMutex.Lock()
 	ret, specificReturn := fake.listVolumesReturnsOnCall[len(fake.listVolumesArgsForCall)]
 	fake.listVolumesArgsForCall = append(fake.listVolumesArgsForCall, struct{}{})
@@ -449,13 +435,13 @@ func (fake *FakeSpectrumDataModel) ListVolumes() ([]resources.Volume, error) {
 	return fake.listVolumesReturns.result1, fake.listVolumesReturns.result2
 }
 
-func (fake *FakeSpectrumDataModel) ListVolumesCallCount() int {
+func (fake *FakeSpectrumDataModelWrapper) ListVolumesCallCount() int {
 	fake.listVolumesMutex.RLock()
 	defer fake.listVolumesMutex.RUnlock()
 	return len(fake.listVolumesArgsForCall)
 }
 
-func (fake *FakeSpectrumDataModel) ListVolumesReturns(result1 []resources.Volume, result2 error) {
+func (fake *FakeSpectrumDataModelWrapper) ListVolumesReturns(result1 []resources.Volume, result2 error) {
 	fake.ListVolumesStub = nil
 	fake.listVolumesReturns = struct {
 		result1 []resources.Volume
@@ -463,7 +449,7 @@ func (fake *FakeSpectrumDataModel) ListVolumesReturns(result1 []resources.Volume
 	}{result1, result2}
 }
 
-func (fake *FakeSpectrumDataModel) ListVolumesReturnsOnCall(i int, result1 []resources.Volume, result2 error) {
+func (fake *FakeSpectrumDataModelWrapper) ListVolumesReturnsOnCall(i int, result1 []resources.Volume, result2 error) {
 	fake.ListVolumesStub = nil
 	if fake.listVolumesReturnsOnCall == nil {
 		fake.listVolumesReturnsOnCall = make(map[int]struct {
@@ -477,78 +463,53 @@ func (fake *FakeSpectrumDataModel) ListVolumesReturnsOnCall(i int, result1 []res
 	}{result1, result2}
 }
 
-func (fake *FakeSpectrumDataModel) UpdateVolumeMountpoint(name string, mountpoint string) error {
-	fake.updateVolumeMountpointMutex.Lock()
-	ret, specificReturn := fake.updateVolumeMountpointReturnsOnCall[len(fake.updateVolumeMountpointArgsForCall)]
-	fake.updateVolumeMountpointArgsForCall = append(fake.updateVolumeMountpointArgsForCall, struct {
-		name       string
-		mountpoint string
-	}{name, mountpoint})
-	fake.recordInvocation("UpdateVolumeMountpoint", []interface{}{name, mountpoint})
-	fake.updateVolumeMountpointMutex.Unlock()
-	if fake.UpdateVolumeMountpointStub != nil {
-		return fake.UpdateVolumeMountpointStub(name, mountpoint)
-	}
-	if specificReturn {
-		return ret.result1
-	}
-	return fake.updateVolumeMountpointReturns.result1
+func (fake *FakeSpectrumDataModelWrapper) UpdateDatabaseVolume(newVolume *spectrumscale.SpectrumScaleVolume) {
+    fake.updateDatabaseVolumeMutex.Lock()
+    fake.updateDatabaseVolumeArgsForCall = append(fake.updateDatabaseVolumeArgsForCall, struct {
+        newVolume *spectrumscale.SpectrumScaleVolume
+    }{newVolume})
+    fake.recordInvocation("UpdateDatabaseVolume", []interface{}{newVolume})
+    fake.updateDatabaseVolumeMutex.Unlock()
+    if fake.UpdateDatabaseVolumeStub != nil {
+        fake.UpdateDatabaseVolumeStub(newVolume)
+    }
 }
 
-func (fake *FakeSpectrumDataModel) UpdateVolumeMountpointCallCount() int {
-	fake.updateVolumeMountpointMutex.RLock()
-	defer fake.updateVolumeMountpointMutex.RUnlock()
-	return len(fake.updateVolumeMountpointArgsForCall)
+func (fake *FakeSpectrumDataModelWrapper) UpdateDatabaseVolumeCallCount() int {
+    fake.updateDatabaseVolumeMutex.RLock()
+    defer fake.updateDatabaseVolumeMutex.RUnlock()
+    return len(fake.updateDatabaseVolumeArgsForCall)
 }
 
-func (fake *FakeSpectrumDataModel) UpdateVolumeMountpointArgsForCall(i int) (string, string) {
-	fake.updateVolumeMountpointMutex.RLock()
-	defer fake.updateVolumeMountpointMutex.RUnlock()
-	return fake.updateVolumeMountpointArgsForCall[i].name, fake.updateVolumeMountpointArgsForCall[i].mountpoint
+func (fake *FakeSpectrumDataModelWrapper) UpdateDatabaseVolumeArgsForCall(i int) *spectrumscale.SpectrumScaleVolume {
+    fake.updateDatabaseVolumeMutex.RLock()
+    defer fake.updateDatabaseVolumeMutex.RUnlock()
+    return fake.updateDatabaseVolumeArgsForCall[i].newVolume
 }
 
-func (fake *FakeSpectrumDataModel) UpdateVolumeMountpointReturns(result1 error) {
-	fake.UpdateVolumeMountpointStub = nil
-	fake.updateVolumeMountpointReturns = struct {
-		result1 error
-	}{result1}
-}
-
-func (fake *FakeSpectrumDataModel) UpdateVolumeMountpointReturnsOnCall(i int, result1 error) {
-	fake.UpdateVolumeMountpointStub = nil
-	if fake.updateVolumeMountpointReturnsOnCall == nil {
-		fake.updateVolumeMountpointReturnsOnCall = make(map[int]struct {
-			result1 error
-		})
-	}
-	fake.updateVolumeMountpointReturnsOnCall[i] = struct {
-		result1 error
-	}{result1}
-}
-
-func (fake *FakeSpectrumDataModel) Invocations() map[string][][]interface{} {
+func (fake *FakeSpectrumDataModelWrapper) Invocations() map[string][][]interface{} {
 	fake.invocationsMutex.RLock()
 	defer fake.invocationsMutex.RUnlock()
-	fake.createVolumeTableMutex.RLock()
-	defer fake.createVolumeTableMutex.RUnlock()
 	fake.deleteVolumeMutex.RLock()
 	defer fake.deleteVolumeMutex.RUnlock()
 	fake.insertFilesetVolumeMutex.RLock()
 	defer fake.insertFilesetVolumeMutex.RUnlock()
-	fake.insertLightweightVolumeMutex.RLock()
-	defer fake.insertLightweightVolumeMutex.RUnlock()
 	fake.insertFilesetQuotaVolumeMutex.RLock()
 	defer fake.insertFilesetQuotaVolumeMutex.RUnlock()
 	fake.getVolumeMutex.RLock()
 	defer fake.getVolumeMutex.RUnlock()
 	fake.listVolumesMutex.RLock()
 	defer fake.listVolumesMutex.RUnlock()
-	fake.updateVolumeMountpointMutex.RLock()
-	defer fake.updateVolumeMountpointMutex.RUnlock()
+    fake.updateDatabaseVolumeMutex.RLock()
+    defer fake.updateDatabaseVolumeMutex.RUnlock()
+    fake.getDbNameMutex.RLock()
+    defer fake.getDbNameMutex.RUnlock()
+    fake.isDbVolumeMutex.RLock()
+    defer fake.isDbVolumeMutex.RUnlock()
 	return fake.invocations
 }
 
-func (fake *FakeSpectrumDataModel) recordInvocation(key string, args []interface{}) {
+func (fake *FakeSpectrumDataModelWrapper) recordInvocation(key string, args []interface{}) {
 	fake.invocationsMutex.Lock()
 	defer fake.invocationsMutex.Unlock()
 	if fake.invocations == nil {

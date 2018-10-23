@@ -44,7 +44,6 @@ type UbiquityServerConfig struct {
 type SpectrumScaleConfig struct {
 	DefaultFilesystemName string
 	NfsServerAddr         string
-	SshConfig             SshConfig
 	RestConfig            RestConfig
 	ForceDelete           bool
 }
@@ -87,6 +86,8 @@ const DefaultScbeSslMode = SslModeVerifyFull
 const DefaultPluginsSslMode = SslModeVerifyFull
 const SpectrumscaleDefaultPort = 443                              // the default port for SPECTRUM SCALE management
 const SpectrumScaleParamPrefix = "SPECTRUMSCALE_"
+const KeySpectrumScaleSslMode = SpectrumScaleParamPrefix + "SSL_MODE"
+const DefaultSpectrumScaleSslMode = SslModeVerifyFull
 
 type SshConfig struct {
 	User string
@@ -99,7 +100,6 @@ type RestConfig struct {
 	ManagementIP  string
 	User          string
 	Password      string
-	Hostname      string
 }
 
 type SpectrumNfsRemoteConfig struct {
@@ -177,6 +177,17 @@ type VolAlreadyExistsError struct {
 func (e *VolAlreadyExistsError) Error() string {
 	return fmt.Sprintf("Volume [%s] already exists.", e.VolName)
 }
+
+type BackendInitializationError struct {
+	BackendName	string
+	Err		    error
+}
+
+func (e *BackendInitializationError) Error() string {
+	return fmt.Sprintf("Error while initializing %s client:[%s]", e.BackendName, e.Err.Error())
+}
+
+const ClientInitializationErrorStr = "Check backend configuration - SpectrumScale ManagementIP or SpectrumConnect managmentIP is mandatory in the ubiqutiy-configmap."
 
 //go:generate counterfeiter -o ../fakes/fake_mounter.go . Mounter
 
