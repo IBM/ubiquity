@@ -102,7 +102,7 @@ func (b *blockDeviceUtils) Discover(volumeWwn string, deepDiscovery bool) (strin
 			case *FaultyDeviceError:
 				return mpath, b.logger.ErrorRet(err, "failed")
 			default:
-				b.logger.Error("Failed to run multipath command while executing sg_inq.", logs.Args{{"err", err}})
+				b.logger.Error("Failed to run sg_inq on multipath device.", logs.Args{{"err", err}, {"mpaht", mpath}})
 			}
 
 			return "", b.logger.ErrorRet(&CommandExecuteError{"sg_inq", err}, "failed")
@@ -201,7 +201,7 @@ func (b *blockDeviceUtils) GetWwnByScsiInq(mpathOutput string, dev string) (stri
 		b.logger.Warning("an error occured while trying to check if device is faulty.", logs.Args{{"err", err}, {"device", dev}})
 	}
 	if isFaulty {
-		return "", b.logger.ErrorRet(&FaultyDeviceError{dev}, "Device is faulty. sg_inq will not run on a faulty device.")
+		return "", b.logger.ErrorRet(&FaultyDeviceError{dev}, fmt.Sprintf("The device [%s] is faulty. Therefore skipping sg_inq check on this device", dev))
 	}
 
 	args := []string{"-p", "0x83", dev}

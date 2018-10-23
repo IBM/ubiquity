@@ -82,10 +82,10 @@ func (e *FaultyDeviceError) Error() string {
 	return fmt.Sprintf("Device [%s] is in faulty state", e.Dev)
 }
 
-type DeviceNotFoundError struct {
+type MultipathDeviceNotFoundError struct {
 	Dev  string
 }
 
-func (e *DeviceNotFoundError) Error() string {
+func (e *MultipathDeviceNotFoundError) Error() string {
 	return fmt.Sprintf("Device [%s] is not found in multipath output", e.Dev)
 }

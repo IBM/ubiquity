@@ -443,7 +443,7 @@ mpathhb (36001738cfc9035eb0000000000cea###) dm-3 ##,##
 			Expect(err).To(Equal(&block_device_utils.FaultyDeviceError{dev}))
 			Expect(fakeExec.ExecuteWithTimeoutCallCount()).To(Equal(0))
 		})
-		It("should not return an error if check for faulty device failed", func() {
+		It("should return an error if check for faulty device failed", func() {
 			dev := "mpath"
 			mpath := `mpathhe (36001738cfc9035eb0000000000cea5f6) dm-3 IBM     ,2810XIV
 							size=19G features='1 queue_if_no_path' hwhandler='0' wp=rw

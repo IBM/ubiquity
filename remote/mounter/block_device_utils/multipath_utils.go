@@ -23,18 +23,21 @@ import (
 	"strings"
 )
 
-func checkIsFaulty(mpath string, logger logs.Logger) bool {
+func checkIsFaulty(mpathOutput string, logger logs.Logger) bool {
+	/* the following regex is catching the HCTL ( host|connectivity|target|lun) part of the multipath output
+	  + the first state params that can only be failed\active. - the idea is to identify the lines of the path 
+	 from the entire multipath output .*/ 
 	re := regexp.MustCompile("(\\d)+:(\\d)+:(\\d)+:(\\d)+.*[failed|active]+.*")
-	paths := re.FindAllString(mpath, -1)
+	paths := re.FindAllString(mpathOutput, -1)
 	if len(paths) == 0 {
 		logger.Warning("No paths were found for mpath device. assuming the device is faulty")
 		return true
 	}
 	logger.Debug(fmt.Sprintf("Device paths are : [%s]", paths))
 	isFaulty := true
-	activeRe := regexp.MustCompile("active.*ready.*running.*")
+	// this regex will find all the actual active paths.  
+	activeRe := regexp.MustCompile("active.+ready.+running.*")
 	for _, path := range paths {
-		logger.Debug(fmt.Sprintf("path : [%s] contains faulty? %t", path, strings.Contains(path, "faulty")))
 		if activeRe.MatchString(path) {
 			isFaulty = false
 			break
@@ -47,7 +50,7 @@ func checkIsFaulty(mpath string, logger logs.Logger) bool {
 func findDeviceMpathOutput(deviceMultipathOutput string, device string, logger logs.Logger) (string, error) {
 	splitMpath := strings.Split(deviceMultipathOutput, "size=")
 	if len(splitMpath) < 2 {
-		return "", &DeviceNotFoundError{device} // maybe another error
+		return "", &MultipathDeviceNotFoundError{device} // maybe another error
 	}
 	logger.Debug(fmt.Sprintf("splitMpath : %s", splitMpath))
 	for i, element := range splitMpath {
@@ -83,7 +86,7 @@ func findDeviceMpathOutput(deviceMultipathOutput string, device string, logger l
 	}
 
 	logger.Debug("device is not found!")
-	return "", &DeviceNotFoundError{device}
+	return "", &MultipathDeviceNotFoundError{device}
 
 }
 
