@@ -19,9 +19,10 @@ package scbe
 import (
 	"encoding/json"
 	"fmt"
+	"strconv"
+
 	"github.com/IBM/ubiquity/resources"
 	"github.com/IBM/ubiquity/utils/logs"
-	"strconv"
 )
 
 //go:generate counterfeiter -o ../fakes/fake_scbe_rest_client.go . ScbeRestClient
@@ -32,7 +33,7 @@ type ScbeRestClient interface {
 	DeleteVolume(wwn string) error
 	MapVolume(wwn string, host string) (ScbeResponseMapping, error)
 	UnmapVolume(wwn string, host string) error
-	GetVolMapping(wwn string) (string, error)
+	GetVolMapping(wwn string) (ScbeVolumeMapInfo, error)
 	ServiceExist(serviceName string) (bool, error)
 }
 
@@ -186,10 +187,11 @@ func (s *scbeRestClient) UnmapVolume(wwn string, host string) error {
 	return nil
 }
 
-func (s *scbeRestClient) GetVolMapping(wwn string) (string, error) {
+func (s *scbeRestClient) GetVolMapping(wwn string) (ScbeVolumeMapInfo, error) {
 	defer s.logger.Trace(logs.DEBUG)()
 	var err error
 	var host string
+	var lunNumber int
 
 	payload := map[string]string{}
 	payload["volume"] = wwn
@@ -197,32 +199,35 @@ func (s *scbeRestClient) GetVolMapping(wwn string) (string, error) {
 
 	var mappings []ScbeResponseMapping
 	if err = s.client.Get(UrlScbeResourceMapping, payload, HTTP_SUCCEED, &mappings); err != nil {
-		return "", s.logger.ErrorRet(err, "client.Get failed")
+		return ScbeVolumeMapInfo{}, s.logger.ErrorRet(err, "client.Get failed")
 	}
 	s.logger.Debug("", logs.Args{{"mappings", mappings}})
 
 	if len(mappings) > 1 {
-		return "", s.logger.ErrorRet(&InvalidMappingsForVolume{wwn}, "failed")
+		return ScbeVolumeMapInfo{}, s.logger.ErrorRet(&InvalidMappingsForVolume{wwn}, "failed")
 	}
 
 	if len(mappings) == 1 {
+		lunNumber = mappings[0].LunNumber
 		var hostResponse ScbeResponseHost
 		hostUrl := fmt.Sprintf("%s/%s", UrlScbeResourceHost, strconv.Itoa(mappings[0].Host))
 		err := s.client.Get(hostUrl, nil, -1, &hostResponse)
 		if err != nil {
-			return "", s.logger.ErrorRet(err, "client.Get failed")
+			return ScbeVolumeMapInfo{}, s.logger.ErrorRet(err, "client.Get failed")
 		}
 
 		s.logger.Debug("", logs.Args{{"hostResponse", hostResponse}})
 		host = hostResponse.Name
+	} else {
+		lunNumber = -1
 	}
 
 	if len(mappings) != 0 {
-		s.logger.Debug("volume is mapped", logs.Args{{"volume", wwn}, {"host", host}})
+		s.logger.Debug("volume is mapped", logs.Args{{"volume", wwn}, {"host", host}, {"lunNumber", lunNumber}})
 	} else {
 		s.logger.Debug("volume is not mapped", logs.Args{{"volume", wwn}})
 	}
-	return host, nil
+	return ScbeVolumeMapInfo{host, lunNumber}, nil
 }
 
 func (s *scbeRestClient) ServiceExist(serviceName string) (exist bool, err error) {

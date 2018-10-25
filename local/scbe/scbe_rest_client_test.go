@@ -20,13 +20,14 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"strconv"
+	"strings"
+
 	"github.com/IBM/ubiquity/fakes"
 	"github.com/IBM/ubiquity/local/scbe"
 	"github.com/IBM/ubiquity/resources"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
-	"strconv"
-	"strings"
 )
 
 var _ = Describe("ScbeRestClient", func() {
@@ -180,15 +181,17 @@ var _ = Describe("ScbeRestClient", func() {
 	Context(".GetVolMapping", func() {
 		It("succeed with 1 mapping found", func() {
 			fakeSimpleRestClient.GetStub = GetVolMappingStubSuccess()
-			host, err := scbeRestClient.GetVolMapping("fakeWwn1")
+			volMapInfo, err := scbeRestClient.GetVolMapping("fakeWwn1")
 			Expect(err).NotTo(HaveOccurred())
-			Expect(host).To(Equal(fakeHost))
+			Expect(volMapInfo.Host).To(Equal(fakeHost))
+			Expect(volMapInfo.LunNumber).To(Equal(fakeLunNumber))
 		})
 		It("succeed with 0 mapping found", func() {
 			fakeSimpleRestClient.GetStub = GetVolMappingStubSuccess()
-			host, err := scbeRestClient.GetVolMapping("fakeWwn0")
+			volMapInfo, err := scbeRestClient.GetVolMapping("fakeWwn0")
 			Expect(err).NotTo(HaveOccurred())
-			Expect(host).To(Equal(""))
+			Expect(volMapInfo.Host).To(Equal(""))
+			Expect(volMapInfo.LunNumber).To(Equal(-1))
 		})
 		It("fail with 2 mapping found", func() {
 			fakeSimpleRestClient.GetStub = GetVolMappingStubSuccess()
