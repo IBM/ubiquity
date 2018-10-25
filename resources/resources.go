@@ -18,6 +18,7 @@ package resources
 
 import (
 	"fmt"
+
 	"github.com/jinzhu/gorm"
 )
 
@@ -77,6 +78,7 @@ const DefaultForScbeConfigParamDefaultFilesystem = "ext4" // if customer don't m
 const PathToMountUbiquityBlockDevices = "/ubiquity/%s"    // %s is the WWN of the volume # TODO this should be moved to docker plugin side
 const OptionNameForVolumeFsType = "fstype"                // the option name of the fstype and also the key in the volumeConfig
 const ScbeKeyVolAttachToHost = "attach-to"                // the key in map for volume to host attachments
+const ScbeKeyVolAttachLunNumToHost = "LunNumber"          // the key in map for volume lun number to host attachments
 const ScbeDefaultPort = 8440                              // the default port for SCBE management
 const SslModeRequire = "require"
 const SslModeVerifyFull = "verify-full"
@@ -85,7 +87,7 @@ const KeyScbeSslMode = "SCBE_SSL_MODE"
 const DefaultDbSslMode = SslModeVerifyFull
 const DefaultScbeSslMode = SslModeVerifyFull
 const DefaultPluginsSslMode = SslModeVerifyFull
-const SpectrumscaleDefaultPort = 443                              // the default port for SPECTRUM SCALE management
+const SpectrumscaleDefaultPort = 443 // the default port for SPECTRUM SCALE management
 const SpectrumScaleParamPrefix = "SPECTRUMSCALE_"
 
 type SshConfig struct {
@@ -95,11 +97,11 @@ type SshConfig struct {
 }
 
 type RestConfig struct {
-	Port          int
-	ManagementIP  string
-	User          string
-	Password      string
-	Hostname      string
+	Port         int
+	ManagementIP string
+	User         string
+	Password     string
+	Hostname     string
 }
 
 type SpectrumNfsRemoteConfig struct {
@@ -326,6 +328,6 @@ type FlexVolumeDetachRequest struct {
 }
 
 type RequestContext struct {
-	Id string
-	ActionName	string
+	Id         string
+	ActionName string
 }
