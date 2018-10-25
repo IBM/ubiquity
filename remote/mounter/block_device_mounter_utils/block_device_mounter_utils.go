@@ -17,12 +17,13 @@
 package block_device_mounter_utils
 
 import (
-	"github.com/IBM/ubiquity/remote/mounter/block_device_utils"
-	"github.com/IBM/ubiquity/utils/logs"
-	"github.com/nightlyone/lockfile"
 	"os"
 	"path/filepath"
 	"time"
+
+	"github.com/IBM/ubiquity/remote/mounter/block_device_utils"
+	"github.com/IBM/ubiquity/utils/logs"
+	"github.com/nightlyone/lockfile"
 )
 
 const (
@@ -152,7 +153,7 @@ func (b *blockDeviceMounterUtils) UnmountDeviceFlow(devicePath string, volumeWwn
 // 2. SCSI rescan
 // 3. multipathing rescan
 // return error if one of the steps fail
-func (b *blockDeviceMounterUtils) RescanAll(withISCSI bool, wwn string, rescanForCleanUp bool) error {
+func (b *blockDeviceMounterUtils) RescanAll(withISCSI bool, wwn string, rescanForCleanUp bool, Lun0 bool) error {
 	defer b.logger.Trace(logs.INFO, logs.Args{{"withISCSI", withISCSI}})
 
 	// locking for concurrent rescans and reduce rescans if no need
@@ -189,8 +190,14 @@ func (b *blockDeviceMounterUtils) RescanAll(withISCSI bool, wwn string, rescanFo
 			return b.logger.ErrorRet(err, "Rescan failed", logs.Args{{"protocol", block_device_utils.ISCSI}})
 		}
 	}
-	if err := b.blockDeviceUtils.Rescan(block_device_utils.SCSI); err != nil {
-		return b.logger.ErrorRet(err, "Rescan failed", logs.Args{{"protocol", block_device_utils.SCSI}})
+	if Lun0 {
+		if err := b.blockDeviceUtils.RescanSCSILun0(); err != nil {
+			return b.logger.ErrorRet(err, "Rescan failed for FC Lun0 in the second time", logs.Args{{"protocol", block_device_utils.SCSI}})
+		}
+	} else {
+		if err := b.blockDeviceUtils.Rescan(block_device_utils.SCSI); err != nil {
+			return b.logger.ErrorRet(err, "Rescan failed", logs.Args{{"protocol", block_device_utils.SCSI}})
+		}
 	}
 	if !rescanForCleanUp {
 		if err := b.blockDeviceUtils.ReloadMultipath(); err != nil {

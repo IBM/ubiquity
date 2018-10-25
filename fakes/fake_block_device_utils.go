@@ -19,6 +19,15 @@ type FakeBlockDeviceUtils struct {
 	rescanReturnsOnCall map[int]struct {
 		result1 error
 	}
+	RescanSCSILun0Stub        func() error
+	rescanSCSILun0Mutex       sync.RWMutex
+	rescanSCSILun0ArgsForCall []struct{}
+	rescanSCSILun0Returns     struct {
+		result1 error
+	}
+	rescanSCSILun0ReturnsOnCall map[int]struct {
+		result1 error
+	}
 	ReloadMultipathStub        func() error
 	reloadMultipathMutex       sync.RWMutex
 	reloadMultipathArgsForCall []struct{}
@@ -219,6 +228,46 @@ func (fake *FakeBlockDeviceUtils) RescanReturnsOnCall(i int, result1 error) {
 		})
 	}
 	fake.rescanReturnsOnCall[i] = struct {
+		result1 error
+	}{result1}
+}
+
+func (fake *FakeBlockDeviceUtils) RescanSCSILun0() error {
+	fake.rescanSCSILun0Mutex.Lock()
+	ret, specificReturn := fake.rescanSCSILun0ReturnsOnCall[len(fake.rescanSCSILun0ArgsForCall)]
+	fake.rescanSCSILun0ArgsForCall = append(fake.rescanSCSILun0ArgsForCall, struct{}{})
+	fake.recordInvocation("RescanSCSILun0", []interface{}{})
+	fake.rescanSCSILun0Mutex.Unlock()
+	if fake.RescanSCSILun0Stub != nil {
+		return fake.RescanSCSILun0Stub()
+	}
+	if specificReturn {
+		return ret.result1
+	}
+	return fake.rescanSCSILun0Returns.result1
+}
+
+func (fake *FakeBlockDeviceUtils) RescanSCSILun0CallCount() int {
+	fake.rescanSCSILun0Mutex.RLock()
+	defer fake.rescanSCSILun0Mutex.RUnlock()
+	return len(fake.rescanSCSILun0ArgsForCall)
+}
+
+func (fake *FakeBlockDeviceUtils) RescanSCSILun0Returns(result1 error) {
+	fake.RescanSCSILun0Stub = nil
+	fake.rescanSCSILun0Returns = struct {
+		result1 error
+	}{result1}
+}
+
+func (fake *FakeBlockDeviceUtils) RescanSCSILun0ReturnsOnCall(i int, result1 error) {
+	fake.RescanSCSILun0Stub = nil
+	if fake.rescanSCSILun0ReturnsOnCall == nil {
+		fake.rescanSCSILun0ReturnsOnCall = make(map[int]struct {
+			result1 error
+		})
+	}
+	fake.rescanSCSILun0ReturnsOnCall[i] = struct {
 		result1 error
 	}{result1}
 }
@@ -826,6 +875,8 @@ func (fake *FakeBlockDeviceUtils) Invocations() map[string][][]interface{} {
 	defer fake.invocationsMutex.RUnlock()
 	fake.rescanMutex.RLock()
 	defer fake.rescanMutex.RUnlock()
+	fake.rescanSCSILun0Mutex.RLock()
+	defer fake.rescanSCSILun0Mutex.RUnlock()
 	fake.reloadMultipathMutex.RLock()
 	defer fake.reloadMultipathMutex.RUnlock()
 	fake.discoverMutex.RLock()
