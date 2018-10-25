@@ -248,6 +248,18 @@ var _ = Describe("block_device_utils_test", func() {
 			_, ok := err.(*block_device_utils.CommandExecuteError)
 			Expect(ok).To(BeTrue())
 		})
+		It("should return faulty device error on volume with no vendor ", func() {
+			volumeId := "6001738cfc9035eb0000000000cea5f6"
+			mpathOutput := `mpatha (36001738cfc9035eb0000000000cea5f6) dm-2
+size=224G features='1 queue_if_no_path' hwhandler='0' wp=rw`
+			fakeExec.ExecuteWithTimeoutReturnsOnCall(0, []byte(mpathOutput), nil)
+			returnError :=  &exec.ExitError{}
+			//this execute with timeout makes the GetWwnByScsiInq to return an error
+			fakeExec.ExecuteWithTimeoutReturnsOnCall(1, []byte(""),returnError)
+			_, err := bdUtils.Discover(volumeId, true)
+			Expect(err).To(HaveOccurred())
+			Expect(err).To(Equal(&block_device_utils.FaultyDeviceError{fmt.Sprintf("/dev/mapper/%s", "mpatha")}))
+		})
 	})
 	Context(".DiscoverBySgInq", func() {
 		It("should return mpathhe", func() {
