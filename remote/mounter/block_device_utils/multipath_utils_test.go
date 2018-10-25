@@ -71,6 +71,13 @@ var _ = Describe("block_device_utils_test", func() {
 			isFaulty := checkIsFaulty(mapth, logs.GetLogger())
 			Expect(isFaulty).To(Equal(true))
 		})
+		It("returns true on a device with no paths + no vendor", func() {
+			mapth := `mpathhe (36001738cfc9035eb0000000000cea5f6) dm-3 ##
+							size=19G features='1 queue_if_no_path' hwhandler='0' wp=rw
+							-+- policy='service-time 0' prio=1 status=active`
+			isFaulty := checkIsFaulty(mapth, logs.GetLogger())
+			Expect(isFaulty).To(Equal(true))
+		})
 	})
 	Context(".findDeviceMpathOutput", func() {
 		Context("(red-hat)", func() {
@@ -168,7 +175,44 @@ size=19G features='1 queue_if_no_path' hwhandler='0' wp=rw
 					Expect(result).To(Equal(""))
 				})
 			})
-
+			Context("- multiple with no vendor", func() {
+				var (
+					mpathOutput string
+				)
+				BeforeEach(func() {
+					mpathOutput = `mpatha (36001738cfc9035eb0000000000d0ec0e) dm-0  ##,##
+size=19G features='1 queue_if_no_path' hwhandler='0' wp=rw
+mpathd (36001738cfc9035eb0000000000d0ec0e) dm-3 IBM     ,2810XIV
+size=19G features='1 queue_if_no_path' hwhandler='0' wp=rw
+					-+- policy='service-time 0' prio=1 status=active
+					  |- 33:0:0:1 sdb 8:16 active ready running
+					  - 34:0:0:1 sdc 8:32 active ready running
+mpathc (36001738cfc9035eb0000000000d0ec0e) dm-0  ##,##
+size=19G features='1 queue_if_no_path' hwhandler='0' wp=rw
+mpathd (36001738cfc9035eb0000000000d0ec0e) dm-0  ##,##
+size=19G features='1 queue_if_no_path' hwhandler='0' wp=rw
+`
+				})
+				It("return right mpath for faulty device with no vendor", func() {
+					output := `mpathc (36001738cfc9035eb0000000000d0ec0e) dm-0  ##,##
+size=19G features='1 queue_if_no_path' hwhandler='0' wp=rw`
+					device := "mpathc"
+					result, err := findDeviceMpathOutput(mpathOutput, device, logs.GetLogger())
+					Expect(err).ToNot(HaveOccurred())
+					Expect(result).To(Equal(output))
+				})
+				It("return right mpath for not faulty device with devices with no vendor", func() {
+					output := `mpathd (36001738cfc9035eb0000000000d0ec0e) dm-3 IBM     ,2810XIV
+size=19G features='1 queue_if_no_path' hwhandler='0' wp=rw
+					-+- policy='service-time 0' prio=1 status=active
+					  |- 33:0:0:1 sdb 8:16 active ready running
+					  - 34:0:0:1 sdc 8:32 active ready running`
+					device := "mpathd"
+					result, err := findDeviceMpathOutput(mpathOutput, device, logs.GetLogger())
+					Expect(err).ToNot(HaveOccurred())
+					Expect(result).To(Equal(output))
+				})
+			})
 		})
 		Context("(ubuntu)", func() {
 			It("return correctly for one device which exists", func() {
@@ -254,12 +298,50 @@ size=976M features='1 queue_if_no_path' hwhandler='0' wp=rw
 					Expect(err).ToNot(HaveOccurred())
 					Expect(result).To(Equal(output))
 				})
-				It("return error fif device does not exist", func() {
+				It("return error if device does not exist", func() {
 					device := "36001738cfc9035eb0000000000d0ee9e"
 					result, err := findDeviceMpathOutput(mpathOutput, device, logs.GetLogger())
 					Expect(err).To(HaveOccurred())
 					Expect(err).To(Equal(&MultipathDeviceNotFoundError{device}))
 					Expect(result).To(Equal(""))
+				})
+			})
+			Context("- multiple with no vendor", func() {
+				var (
+					mpathOutput string
+				)
+				BeforeEach(func() {
+					mpathOutput = `36001738cfc9035eb0000000000d0dda9 dm-0 ##,##
+size=19G features='1 queue_if_no_path' hwhandler='0' wp=rw
+36001738cfc9035eb0000000000d0ee9c dm-1 IBM,2810XIV
+		size=976M features='1 queue_if_no_path' hwhandler='0' wp=rw
+		-+- policy='round-robin 0' prio=1 status=active
+		  |- 5:0:0:10 sdc 8:32 active ready running
+		  - 6:0:0:10 sde 8:64 active ready running
+36001738cfc9035eb0000000000d0dda8 dm-0 ##,##
+size=19G features='1 queue_if_no_path' hwhandler='0' wp=rw 
+36001738cfc9035eb0000000000d0dda7 dm-0 ##,##
+size=19G features='1 queue_if_no_path' hwhandler='0' wp=rw 
+`
+				})
+				It("return right mpath for faulty device with no vendor", func() {
+					output := `36001738cfc9035eb0000000000d0dda8 dm-0 ##,##
+size=19G features='1 queue_if_no_path' hwhandler='0' wp=rw `
+					device := "36001738cfc9035eb0000000000d0dda8"
+					result, err := findDeviceMpathOutput(mpathOutput, device, logs.GetLogger())
+					Expect(err).ToNot(HaveOccurred())
+					Expect(result).To(Equal(output))
+				})
+				It("return right mpath for not faulty device with devices with no vendor", func() {
+					output := `36001738cfc9035eb0000000000d0ee9c dm-1 IBM,2810XIV
+size=976M features='1 queue_if_no_path' hwhandler='0' wp=rw
+		-+- policy='round-robin 0' prio=1 status=active
+		  |- 5:0:0:10 sdc 8:32 active ready running
+		  - 6:0:0:10 sde 8:64 active ready running`
+					device := "36001738cfc9035eb0000000000d0ee9c"
+					result, err := findDeviceMpathOutput(mpathOutput, device, logs.GetLogger())
+					Expect(err).ToNot(HaveOccurred())
+					Expect(result).To(Equal(output))
 				})
 			})
 		})
