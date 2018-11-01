@@ -89,11 +89,11 @@ func (b *blockDeviceUtils) RescanSCSILun0() error {
 		if err := b.exec.IsExecutable(rescanCmd); err != nil {
 			return b.logger.ErrorRet(&commandNotFoundError{rescanCmd, err}, "failed")
 		}
-		rescanPara := []string{"1", ">/sys/class/fc_host/" + host.Name() + "/issue_lip"}
+		rescanPara := []string{"\"1\"", ">/sys/class/fc_host/" + host.Name() + "/issue_lip"}
 		if _, err := b.exec.ExecuteWithTimeout(rescanIscsiTimeout, rescanCmd, rescanPara); err != nil {
 			continue
 		}
-		rescanArgs := []string{"---", ">/sys/class/scsi_host/" + host.Name() + "/scan"}
+		rescanArgs := []string{"\"---\"", ">/sys/class/scsi_host/" + host.Name() + "/scan"}
 		if _, err := b.exec.ExecuteWithTimeout(rescanIscsiTimeout, rescanCmd, rescanArgs); err != nil {
 			continue
 		}
