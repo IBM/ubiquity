@@ -104,7 +104,7 @@ func (b *blockDeviceUtils) RescanSCSILun0() error {
 		if _, err := b.exec.ExecuteWithTimeout(rescanIscsiTimeout, rescanCmd, rescanPara); err != nil {
 			continue
 		}
-		rescanArgs := []string{`"---"`, ">/sys/class/scsi_host/" + host.Name() + "/scan"}
+		rescanArgs := []string{`'- - -'`, ">/sys/class/scsi_host/" + host.Name() + "/scan"}
 		if _, err := b.exec.ExecuteWithTimeout(rescanIscsiTimeout, rescanCmd, rescanArgs); err != nil {
 			continue
 		}
