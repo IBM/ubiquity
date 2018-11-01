@@ -307,6 +307,9 @@ func (s *scbeLocalClient) RemoveVolume(removeVolumeRequest resources.RemoveVolum
 	if err = scbeRestClient.DeleteVolume(existingVolume.WWN); err != nil {
 		return s.logger.ErrorRet(err, "scbeRestClient.DeleteVolume failed")
 	}
+	
+	// REMOVE THIS!!!
+	return s.logger.ErrorRet(err, "######TRYING TO DO IDEMPOTENT ISSUE")
 
 	if err = s.dataModel.DeleteVolume(removeVolumeRequest.Name); err != nil {
 		return s.logger.ErrorRet(err, "dataModel.DeleteVolume failed")
