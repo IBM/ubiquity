@@ -18,6 +18,7 @@ package block_device_utils
 
 import (
 	"errors"
+	"fmt"
 
 	"fmt"
 	"io/ioutil"
@@ -104,8 +105,18 @@ func (b *blockDeviceUtils) RescanSCSILun0() error {
 		if _, err := b.exec.ExecuteWithTimeout(rescanIscsiTimeout, rescanCmd, rescanPara); err != nil {
 			continue
 		}
+		b.logger.Debug(fmt.Sprintf("Yixuan Command is %s", rescanCmd))
 		rescanArgs := []string{`'- - -'`, ">/sys/class/scsi_host/" + host.Name() + "/scan"}
 		if _, err := b.exec.ExecuteWithTimeout(rescanIscsiTimeout, rescanCmd, rescanArgs); err != nil {
+			continue
+		}
+		///rescanPara := []string{`"1"`, ">/sys/class/fc_host/" + host.Name() + "/issue_lip"}
+		if _, err := b.exec.Execute(rescanCmd, rescanPara); err != nil {
+			continue
+		}
+		b.logger.Debug(fmt.Sprintf("Yixuan Command is %s", rescanCmd))
+		///rescanArgs := []string{`'- - -'`, ">/sys/class/scsi_host/" + host.Name() + "/scan"}
+		if _, err := b.exec.Execute(rescanCmd, rescanArgs); err != nil {
 			continue
 		}
 	}
