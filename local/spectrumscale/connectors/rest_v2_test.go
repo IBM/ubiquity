@@ -1019,7 +1019,7 @@ var _ = Describe("spectrumRestV2", func() {
 			Expect(err).ToNot(HaveOccurred())
 		})
 
-		It("Should Pass for quota not enabled", func() {
+		It("Should Fail if quota not enabled", func() {
 			quotaResp = connectors.GetQuotaResponse_v2{}
 			quotaResp.Status.Code = 400
 			marshalledResponse, err := json.Marshal(quotaResp)
