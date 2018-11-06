@@ -98,11 +98,6 @@ func (d *scbeDataModelWrapper) DeleteVolume(name string) error {
 
 	if database.IsDatabaseVolume(name) {
 
-		// sanity
-		if d.dbVolume == nil {
-			return d.logger.ErrorRet(&resources.VolumeNotFoundError{VolName: name}, "failed")
-		}
-
 		// work with memory object
 		d.UpdateDatabaseVolume(nil)
 

@@ -291,6 +291,7 @@ func (s *scbeLocalClient) RemoveVolume(removeVolumeRequest resources.RemoveVolum
 	}
 
 	existingVolume, err := s.dataModel.GetVolume(removeVolumeRequest.Name, true)
+	// check errror is volume not found then return nil
 	if err != nil {
 		return s.logger.ErrorRet(err, "dataModel.GetVolume failed")
 	}
@@ -302,11 +303,13 @@ func (s *scbeLocalClient) RemoveVolume(removeVolumeRequest resources.RemoveVolum
 
 	if hostAttach != EmptyHost {
 		return s.logger.ErrorRet(&CannotDeleteVolWhichAttachedToHostError{removeVolumeRequest.Name, hostAttach}, "failed")
-	}
+	} 
 
-	if err = scbeRestClient.DeleteVolume(existingVolume.WWN); err != nil {
+	err = scbeRestClient.DeleteVolume(existingVolume.WWN); if err != nil {
 		return s.logger.ErrorRet(err, "scbeRestClient.DeleteVolume failed")
 	}
+	// check error return code if its 404 then continue with idempotent comment 
+	
 	
 	// REMOVE THIS!!!
 	return s.logger.ErrorRet(fmt.Errorf("some error"), "######TRYING TO DO IDEMPOTENT ISSUE")
@@ -314,6 +317,7 @@ func (s *scbeLocalClient) RemoveVolume(removeVolumeRequest resources.RemoveVolum
 	if err = s.dataModel.DeleteVolume(removeVolumeRequest.Name); err != nil {
 		return s.logger.ErrorRet(err, "dataModel.DeleteVolume failed")
 	}
+	// check if error is volume not found. if so then return nil. 
 
 	return nil
 }

@@ -216,7 +216,8 @@ func (s *scbeRestClient) GetVolMapping(wwn string) (string, error) {
 		s.logger.Debug("", logs.Args{{"hostResponse", hostResponse}})
 		host = hostResponse.Name
 	}
-
+	
+	// remove this comment if len(mappings == 0 )
 	s.logger.Debug("volume is mapped", logs.Args{{"host", host}})
 	return host, nil
 }
