@@ -79,12 +79,12 @@ var _ = Describe("local-client", func() {
 			opts map[string]interface{}
 		)
 		BeforeEach(func() {
+			fakeConfig.DefaultFilesystemName = "fake-config-filesystem"
 			client, err = spectrumscale.NewSpectrumLocalClientWithConnectors(logger, fakeSpectrumScaleConnector, fakeExec, fakeConfig, fakeSpectrumDataModel)
 			Expect(err).ToNot(HaveOccurred())
 			fakeSpectrumScaleConnector.IsFilesystemMountedReturns(false, nil)
 			err = client.Activate(activateRequest)
 			Expect(err).ToNot(HaveOccurred())
-
 			createVolumeRequest = resources.CreateVolumeRequest{Name: "fake-volume", Opts: opts}
 		})
 
@@ -102,7 +102,7 @@ var _ = Describe("local-client", func() {
 			fakeSpectrumDataModel.GetVolumeReturns(spectrumscale.SpectrumScaleVolume{}, false, nil)
 			fakeSpectrumScaleConnector.IsFilesystemMountedReturns(false, fmt.Errorf("Failed to fetch filesystem"))
 			err = client.CreateVolume(createVolumeRequest)
-			Expect(err).To(HaveOccurred())
+			Expect(err.Error()).To(Equal("Failed to check if Filesystem [fake-config-filesystem] is mounted"))
 			Expect(fakeSpectrumDataModel.GetVolumeCallCount()).To(Equal(1))
 		})
 
@@ -110,7 +110,38 @@ var _ = Describe("local-client", func() {
 			fakeSpectrumDataModel.GetVolumeReturns(spectrumscale.SpectrumScaleVolume{}, false, nil)
 			fakeSpectrumScaleConnector.IsFilesystemMountedReturns(false, nil)
 			err = client.CreateVolume(createVolumeRequest)
-			Expect(err).To(HaveOccurred())
+			Expect(err.Error()).To(Equal("SpectrumScale filesystem [fake-config-filesystem] is not mounted"))
+			Expect(fakeSpectrumDataModel.GetVolumeCallCount()).To(Equal(1))
+		})
+
+		It("should pass when filesystem (present in options) is mounted", func() {
+			fakeSpectrumDataModel.GetVolumeReturns(spectrumscale.SpectrumScaleVolume{}, false, nil)
+			fakeSpectrumScaleConnector.IsFilesystemMountedReturns(true, nil)
+			createVolumeRequest.Opts = make(map[string]interface{})
+			createVolumeRequest.Opts["filesystem"] = "fake-opt-filesystem"
+			err = client.CreateVolume(createVolumeRequest)
+			Expect(err).ToNot(HaveOccurred())
+			Expect(fakeSpectrumDataModel.GetVolumeCallCount()).To(Equal(1))
+			Expect(fakeSpectrumScaleConnector.CreateFilesetCallCount()).To(Equal(1))
+		})
+
+		It("should fail since we unable to fetch filesystem (present in options) mounted status", func() {
+			fakeSpectrumDataModel.GetVolumeReturns(spectrumscale.SpectrumScaleVolume{}, false, nil)
+			fakeSpectrumScaleConnector.IsFilesystemMountedReturns(false, fmt.Errorf("Failed to fetch filesystem"))
+			createVolumeRequest.Opts = make(map[string]interface{})
+			createVolumeRequest.Opts["filesystem"] = "fake-opt-filesystem"
+			err = client.CreateVolume(createVolumeRequest)
+			Expect(err.Error()).To(Equal("Failed to check if Filesystem [fake-opt-filesystem] is mounted"))
+			Expect(fakeSpectrumDataModel.GetVolumeCallCount()).To(Equal(1))
+		})
+
+		It("should fail since filesystem (present in options) is not mounted", func() {
+			fakeSpectrumDataModel.GetVolumeReturns(spectrumscale.SpectrumScaleVolume{}, false, nil)
+			fakeSpectrumScaleConnector.IsFilesystemMountedReturns(false, nil)
+			createVolumeRequest.Opts = make(map[string]interface{})
+			createVolumeRequest.Opts["filesystem"] = "fake-opt-filesystem"
+			err = client.CreateVolume(createVolumeRequest)
+			Expect(err.Error()).To(Equal("SpectrumScale filesystem [fake-opt-filesystem] is not mounted"))
 			Expect(fakeSpectrumDataModel.GetVolumeCallCount()).To(Equal(1))
 		})
 
@@ -192,7 +223,7 @@ var _ = Describe("local-client", func() {
 					fakeSpectrumScaleConnector.CheckIfFSQuotaEnabledReturns(fmt.Errorf("Quota not enabled"))
 					fakeSpectrumScaleConnector.IsFilesystemMountedReturns(true, nil)
 					err = client.CreateVolume(createVolumeRequest)
-					Expect(err).To(HaveOccurred())
+					Expect(err.Error()).To(Equal("Quota not enabled for Filesystem [fake-filesystem]"))
 				})
 				It("should pass since quota is enabled for filesystem", func() {
 					fakeSpectrumScaleConnector.CheckIfFSQuotaEnabledReturns(nil)

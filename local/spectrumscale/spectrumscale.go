@@ -104,15 +104,15 @@ func validateSpectrumscaleConfig(logger logs.Logger, config resources.SpectrumSc
     defer logger.Trace(logs.DEBUG)()
 
     if config.RestConfig.User == ""{
-        return logger.ErrorRet(&resources.SpectrumScaleConfigError{Errstr:"missing config " +  resources.SpectrumScaleParamPrefix + "REST_USER"}, "")
+        return logger.ErrorRet(&SpectrumScaleConfigError{ConfigParam: resources.SpectrumScaleParamPrefix + "REST_USER"}, "")
     }
 
     if config.RestConfig.Password == ""{
-        return logger.ErrorRet(&resources.SpectrumScaleConfigError{Errstr:"missing config " + resources.SpectrumScaleParamPrefix + "REST_PASSWORD"}, "")
+        return logger.ErrorRet(&SpectrumScaleConfigError{ConfigParam: resources.SpectrumScaleParamPrefix + "REST_PASSWORD"}, "")
     }
 
     if config.DefaultFilesystemName == ""{
-        return logger.ErrorRet(&resources.SpectrumScaleConfigError{Errstr:"missing config " + resources.SpectrumScaleParamPrefix + "DEFAULT_FILESYSTEM_NAME"}, "")
+        return logger.ErrorRet(&SpectrumScaleConfigError{ConfigParam: resources.SpectrumScaleParamPrefix + "DEFAULT_FILESYSTEM_NAME"}, "")
     }
     return nil
 }
@@ -125,7 +125,7 @@ func basicSpectrumscaleLocalClientValidation(spectrumScaleClient *spectrumLocalC
     spectrumScaleClient.logger.Info("Verifying the Connectivity and Credential of Spectrum Scale Cluster by getting Cluster ID of Spectrum Scale Cluster")
     clusterid, err := spectrumScaleClient.connector.GetClusterId()
     if err != nil {
-        return spectrumScaleClient.logger.ErrorRet(err, "Failed to get Spectrum Scale ClusterID")
+        return spectrumScaleClient.logger.ErrorRet(&SpectrumScaleGetClusterIdError{ErrorMsg: SpectrumScaleGetClusterIdErrorStr}, "")
     }
     spectrumScaleClient.logger.Info("Cluster ID of SpectrumScale Cluster", logs.Args{{"Cluster ID", clusterid}})
 
@@ -133,10 +133,10 @@ func basicSpectrumscaleLocalClientValidation(spectrumScaleClient *spectrumLocalC
     spectrumScaleClient.logger.Info("Check if filesystem exist and mounted", logs.Args{{"Filesystem", spectrumScaleClient.config.DefaultFilesystemName}})
     isfsmounted, err := spectrumScaleClient.connector.IsFilesystemMounted(spectrumScaleClient.config.DefaultFilesystemName)
     if err != nil {
-        return spectrumScaleClient.logger.ErrorRet(err, "Spectrum Scale filesystem does not exist", logs.Args{{"Filesystem", spectrumScaleClient.config.DefaultFilesystemName}})
+        return spectrumScaleClient.logger.ErrorRet(&SpectrumScaleFileSystemNotPresent{Filesystem: spectrumScaleClient.config.DefaultFilesystemName},"")
     }
     if ! isfsmounted {
-        return spectrumScaleClient.logger.ErrorRet(fmt.Errorf("Default filesystem [%s] is not mounted", spectrumScaleClient.config.DefaultFilesystemName),"")
+        return spectrumScaleClient.logger.ErrorRet(&SpectrumScaleFileSystemNotMounted{Filesystem: spectrumScaleClient.config.DefaultFilesystemName},"")
     }
     spectrumScaleClient.logger.Info("Spectrum Scale filesystem is mounted.", logs.Args{{"Filesystem", spectrumScaleClient.config.DefaultFilesystemName}})
 
@@ -184,10 +184,6 @@ func (s *spectrumLocalClient) CreateVolume(createVolumeRequest resources.CreateV
 	s.logger.Debug("Opts for create:", logs.Args{{"Opts", createVolumeRequest.Opts}})
 
 	if len(createVolumeRequest.Opts) == 0 {
-        err = s.checkIfFSMounted(s.config.DefaultFilesystemName)
-        if err != nil {
-            return err
-        }
         return s.createFilesetVolume(s.config.DefaultFilesystemName, createVolumeRequest.Name, createVolumeRequest.Opts)
 	}
 	s.logger.Debug("Trying to determine type for request")
@@ -212,10 +208,6 @@ func (s *spectrumLocalClient) CreateVolume(createVolumeRequest resources.CreateV
 
 	if userSpecifiedType == TypeFileset {
 		quota, quotaSpecified := createVolumeRequest.Opts[Quota]
-        err = s.checkIfFSMounted(filesystem)
-        if err != nil {
-            return err
-        }
         if quotaSpecified {
             return s.createFilesetQuotaVolume(filesystem, createVolumeRequest.Name, quota.(string), createVolumeRequest.Opts)
         }
@@ -338,6 +330,11 @@ func (s *spectrumLocalClient) createFilesetVolume(filesystem, name string, opts 
 	var dbVolerr error
 	var err error
 
+    err = s.checkIfFSMounted(filesystem)
+    if err != nil {
+        return err
+    }
+
 	isDbVolume := s.dataModel.IsDbVolume(name)
 	if isDbVolume {
         // Check if fileset is present
@@ -369,9 +366,14 @@ func (s *spectrumLocalClient) createFilesetQuotaVolume(filesystem, name, quota s
     var dbVolerr error
 	var err error
 
+    err = s.checkIfFSMounted(filesystem)
+    if err != nil {
+        return err
+    }
+
     err = s.connector.CheckIfFSQuotaEnabled(filesystem)
     if err != nil {
-        return s.logger.ErrorRet(err, "Quota not enabled for Filesystem " , logs.Args{{"Filesystem", filesystem}})
+        return s.logger.ErrorRet(&SpectrumScaleQuotaNotEnabledError{Filesystem: filesystem}, "")
     }
     if s.dataModel.IsDbVolume(name) {
     //Check if fileset is present
@@ -501,11 +503,11 @@ func (s *spectrumLocalClient) checkIfFSMounted(filesystem string) error {
 
     isfsmounted, err := s.connector.IsFilesystemMounted(filesystem)
     if err != nil {
-        return s.logger.ErrorRet(err, "Failed to check if Filesystem is mounted ", logs.Args{{"Filesystem", filesystem}})
+        return s.logger.ErrorRet(&SpectrumScaleFileSystemMountError{Filesystem: filesystem},"")
     }
 
     if !isfsmounted {
-        return s.logger.ErrorRet(fmt.Errorf("Filesystem %s not mounted", filesystem),"")
+        return s.logger.ErrorRet(&SpectrumScaleFileSystemNotMounted{Filesystem: filesystem},"")
     }
     return nil
 }

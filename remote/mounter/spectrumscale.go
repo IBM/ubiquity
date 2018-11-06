@@ -32,6 +32,7 @@ func NewSpectrumScaleMounter() resources.Mounter {
 }
 
 func (s *spectrumScaleMounter) Mount(mountRequest resources.MountRequest) (string, error) {
+	defer s.logger.Trace(logs.DEBUG)()
 	return mountRequest.Mountpoint, nil
 }
 
