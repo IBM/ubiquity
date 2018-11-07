@@ -48,6 +48,9 @@ const (
 
 	IsPreexisting string = "isPreexisting"
 
+    SpectrumScaleConfigUser = "REST_USER"
+    SpectrumScaleConfigPassword = "REST_PASSWORD"
+    SpectrumScaleConfigFilesystem = "DEFAULT_FILESYSTEM_NAME"
 )
 
 func NewSpectrumLocalClient(config resources.UbiquityServerConfig) (resources.StorageClient, error) {
@@ -104,15 +107,15 @@ func validateSpectrumscaleConfig(logger logs.Logger, config resources.SpectrumSc
     defer logger.Trace(logs.DEBUG)()
 
     if config.RestConfig.User == ""{
-        return logger.ErrorRet(&SpectrumScaleConfigError{ConfigParam: resources.SpectrumScaleParamPrefix + resources.SpectrumScaleConfigUser }, "")
+        return logger.ErrorRet(&SpectrumScaleConfigError{ConfigParam: resources.SpectrumScaleParamPrefix + SpectrumScaleConfigUser }, "")
     }
 
     if config.RestConfig.Password == ""{
-        return logger.ErrorRet(&SpectrumScaleConfigError{ConfigParam: resources.SpectrumScaleParamPrefix + resources.SpectrumScaleConfigPassword}, "")
+        return logger.ErrorRet(&SpectrumScaleConfigError{ConfigParam: resources.SpectrumScaleParamPrefix + SpectrumScaleConfigPassword}, "")
     }
 
     if config.DefaultFilesystemName == ""{
-        return logger.ErrorRet(&SpectrumScaleConfigError{ConfigParam: resources.SpectrumScaleParamPrefix + resources.SpectrumScaleConfigFilesystem}, "")
+        return logger.ErrorRet(&SpectrumScaleConfigError{ConfigParam: resources.SpectrumScaleParamPrefix + SpectrumScaleConfigFilesystem}, "")
     }
     return nil
 }

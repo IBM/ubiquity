@@ -88,9 +88,6 @@ const SpectrumscaleDefaultPort = 443                              // the default
 const SpectrumScaleParamPrefix = "SPECTRUMSCALE_"
 const KeySpectrumScaleSslMode = SpectrumScaleParamPrefix + "SSL_MODE"
 const DefaultSpectrumScaleSslMode = SslModeVerifyFull
-const SpectrumScaleConfigUser = "REST_USER"
-const SpectrumScaleConfigPassword = "REST_PASSWORD"
-const SpectrumScaleConfigFilesystem = "DEFAULT_FILESYSTEM_NAME"
 
 type SshConfig struct {
 	User string
