@@ -320,7 +320,7 @@ func (s *scbeLocalClient) RemoveVolume(removeVolumeRequest resources.RemoveVolum
 	if err != nil {
 		switch err.(type) {
 			case *BadHttpStatusCodeError:
-				if err.httpStatusCode == 404{
+				if err.(*BadHttpStatusCodeError).httpStatusCode == 404{
 					s.logger.Warning("Idempotent issue encountered: volume was not found in DB during remove request.",logs.Args{{"volume", removeVolumeRequest.Name}} )
 					return nil	
 					
