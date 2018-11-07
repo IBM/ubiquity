@@ -314,9 +314,11 @@ func (s *scbeLocalClient) RemoveVolume(removeVolumeRequest resources.RemoveVolum
 
 	err = scbeRestClient.DeleteVolume(existingVolume.WWN); 
 	
-	s.logger.Info(fmt.Sprintf("####err : %s, type : %s", err, reflect.TypeOf(err))
+	s.logger.Info(fmt.Sprintf("####err : %s, type : %s", err, reflect.TypeOf(err)))
 	if err != nil {
-		if strings.Contains(err.Error(), resources.VolumeNotFoundError)
+		if strings.Contains(err.Error(), resources.VolumeNotFoundErrorMsg){
+			s.logger.Info("HERERER")
+		}
 		return s.logger.ErrorRet(err, "scbeRestClient.DeleteVolume failed")
 	}
 	
