@@ -104,15 +104,15 @@ func validateSpectrumscaleConfig(logger logs.Logger, config resources.SpectrumSc
     defer logger.Trace(logs.DEBUG)()
 
     if config.RestConfig.User == ""{
-        return logger.ErrorRet(&SpectrumScaleConfigError{ConfigParam: resources.SpectrumScaleParamPrefix + "REST_USER"}, "")
+        return logger.ErrorRet(&SpectrumScaleConfigError{ConfigParam: resources.SpectrumScaleParamPrefix + resources.SpectrumScaleConfigUser }, "")
     }
 
     if config.RestConfig.Password == ""{
-        return logger.ErrorRet(&SpectrumScaleConfigError{ConfigParam: resources.SpectrumScaleParamPrefix + "REST_PASSWORD"}, "")
+        return logger.ErrorRet(&SpectrumScaleConfigError{ConfigParam: resources.SpectrumScaleParamPrefix + resources.SpectrumScaleConfigPassword}, "")
     }
 
     if config.DefaultFilesystemName == ""{
-        return logger.ErrorRet(&SpectrumScaleConfigError{ConfigParam: resources.SpectrumScaleParamPrefix + "DEFAULT_FILESYSTEM_NAME"}, "")
+        return logger.ErrorRet(&SpectrumScaleConfigError{ConfigParam: resources.SpectrumScaleParamPrefix + resources.SpectrumScaleConfigFilesystem}, "")
     }
     return nil
 }
