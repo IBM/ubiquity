@@ -26,6 +26,7 @@ import (
 	"strconv"
 	"strings"
 	"sync"
+	"reflect"
 )
 
 type scbeLocalClient struct {
@@ -291,12 +292,18 @@ func (s *scbeLocalClient) RemoveVolume(removeVolumeRequest resources.RemoveVolum
 	}
 
 	existingVolume, err := s.dataModel.GetVolume(removeVolumeRequest.Name, true)
-	// check errror is volume not found then return nil
 	if err != nil {
-		return s.logger.ErrorRet(err, "dataModel.GetVolume failed")
+		switch err.(type) {
+			case *resources.VolumeNotFoundError:
+				s.logger.Warning("Idempotent issue encountered: volume was not found in DB during remove request.",logs.Args{{"volume", removeVolumeRequest.Name}} )
+				return nil
+			default:
+				return s.logger.ErrorRet(err, "dataModel.GetVolume failed")
+			}
 	}
 
 	hostAttach, err := scbeRestClient.GetVolMapping(existingVolume.WWN)
+	// get vol mapping will not reutrn an error but an empty host in case the vol does no exist so no idempotent issue here.
 	if err != nil {
 		return s.logger.ErrorRet(err, "scbeRestClient.GetVolMapping failed")
 	}
@@ -305,19 +312,21 @@ func (s *scbeLocalClient) RemoveVolume(removeVolumeRequest resources.RemoveVolum
 		return s.logger.ErrorRet(&CannotDeleteVolWhichAttachedToHostError{removeVolumeRequest.Name, hostAttach}, "failed")
 	} 
 
-	err = scbeRestClient.DeleteVolume(existingVolume.WWN); if err != nil {
+	err = scbeRestClient.DeleteVolume(existingVolume.WWN); 
+	
+	s.logger.Info(fmt.Sprintf("####err : %s, type : %s", err, reflect.TypeOf(err))
+	if err != nil {
+		if strings.Contains(err.Error(), resources.VolumeNotFoundError)
 		return s.logger.ErrorRet(err, "scbeRestClient.DeleteVolume failed")
 	}
-	// check error return code if its 404 then continue with idempotent comment 
 	
 	
-	// REMOVE THIS!!!
-	return s.logger.ErrorRet(fmt.Errorf("some error"), "######TRYING TO DO IDEMPOTENT ISSUE")
+	// TODO: check error return code if its 404 then continue with idempotent comment 
 
 	if err = s.dataModel.DeleteVolume(removeVolumeRequest.Name); err != nil {
 		return s.logger.ErrorRet(err, "dataModel.DeleteVolume failed")
 	}
-	// check if error is volume not found. if so then return nil. 
+	// TODO: check if error is volume not found. if so then return nil. 
 
 	return nil
 }
