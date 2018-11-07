@@ -517,10 +517,11 @@ func (s *spectrumRestV2) SetFilesetQuota(filesystemName string, filesetName stri
 
 func (s *spectrumRestV2)  CheckIfFSQuotaEnabled(filesystemName string) error {
     defer s.logger.Trace(logs.DEBUG)()
+
     checkQuotaURL := utils.FormatURL(s.endpoint, fmt.Sprintf("scalemgmt/v2/filesystems/%s/quotas", filesystemName))
     QuotaResponse := GetQuotaResponse_v2{}
 
-    s.logger.Debug("Check Quota URL", logs.Args{{"checkQuotaURL", checkQuotaURL}}
+    s.logger.Debug("Check Quota URL", logs.Args{{"checkQuotaURL", checkQuotaURL}})
 
     err := s.doHTTP(checkQuotaURL, "GET", &QuotaResponse, nil)
     if err != nil {
