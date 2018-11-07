@@ -17,7 +17,6 @@
 package mounter
 
 import (
-	"fmt"
 	"github.com/IBM/ubiquity/utils/logs"
 	"github.com/IBM/ubiquity/resources"
 	"github.com/IBM/ubiquity/utils"
@@ -33,20 +32,6 @@ func NewSpectrumScaleMounter() resources.Mounter {
 }
 
 func (s *spectrumScaleMounter) Mount(mountRequest resources.MountRequest) (string, error) {
-
-	isPreexisting, isPreexistingSpecified := mountRequest.VolumeConfig["isPreexisting"]
-	if isPreexistingSpecified && isPreexisting.(bool) == false {
-		uid, uidSpecified := mountRequest.VolumeConfig["uid"]
-		gid, gidSpecified := mountRequest.VolumeConfig["gid"]
-
-		if uidSpecified || gidSpecified {
-			args := []string{fmt.Sprintf("%s:%s", uid, gid), mountRequest.Mountpoint}
-			_, err := s.executor.Execute("chown", args)
-			if err != nil {
-			    return "", s.logger.ErrorRet(err, "Failed to change permissions of mountpoint", logs.Args{{"mountpoint", mountRequest.Mountpoint}})
-			}
-		}
-	}
 	return mountRequest.Mountpoint, nil
 }
 

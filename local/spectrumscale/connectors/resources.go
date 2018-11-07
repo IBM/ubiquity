@@ -550,3 +550,8 @@ type CreateFilesetRequest struct {
 	AfmRPO                       int    `json:"afmRPO,omitempty"`
 	AfmShowHomeSnapshots         string `json:"afmShowHomeSnapshots,omitempty"`
 }
+
+const (
+    UserSpecifiedUID string = "uid"
+    UserSpecifiedGID string = "gid"
+)

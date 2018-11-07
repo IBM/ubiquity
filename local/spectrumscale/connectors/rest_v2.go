@@ -272,7 +272,7 @@ func (s *spectrumRestV2) CreateFileset(filesystemName string, filesetName string
 
 	filesetreq := CreateFilesetRequest{}
 	filesetreq.FilesetName = filesetName
-	filesetreq.Comment = "fileset for container volume"
+    filesetreq.Comment = "fileset created by IBM Storage Enabler for Containers"
 
 	filesetType, filesetTypeSpecified := opts[UserSpecifiedFilesetType]
 	inodeLimit, inodeLimitSpecified := opts[UserSpecifiedInodeLimit]
@@ -285,6 +285,15 @@ func (s *spectrumRestV2) CreateFileset(filesystemName string, filesetName string
 			filesetreq.MaxNumInodes = inodeLimit.(string)
 			filesetreq.AllocInodes = inodeLimit.(string)
 		}
+	}
+
+    uid, uidSpecified := opts[UserSpecifiedUID]
+    gid, gidSpecified := opts[UserSpecifiedGID]
+
+	if uidSpecified && gidSpecified {
+		filesetreq.Owner = fmt.Sprintf("%s:%s", uid, gid)
+	} else if uidSpecified {
+		filesetreq.Owner = fmt.Sprintf("%s", uid)
 	}
 
 	s.logger.Debug("filesetreq ", logs.Args{{"filesetreq", filesetreq}})
@@ -504,6 +513,20 @@ func (s *spectrumRestV2) SetFilesetQuota(filesystemName string, filesetName stri
 		return fmt.Errorf("Unable to set quota for fileset %v:%v. Please refer Ubiquity server logs for more details", filesetName, err)
 	}
 	return nil
+}
+
+func (s *spectrumRestV2)  CheckIfFSQuotaEnabled(filesystemName string) error {
+    defer s.logger.Trace(logs.DEBUG)()
+    checkQuotaURL := utils.FormatURL(s.endpoint, fmt.Sprintf("scalemgmt/v2/filesystems/%s/quotas", filesystemName))
+    QuotaResponse := GetQuotaResponse_v2{}
+
+    s.logger.Debug("Check Quota URL", logs.Args{{"checkQuotaURL", checkQuotaURL}}
+
+    err := s.doHTTP(checkQuotaURL, "GET", &QuotaResponse, nil)
+    if err != nil {
+        return s.logger.ErrorRet(err, "Quota not enabled for Filesystem", logs.Args{{"Filesystem",filesystemName}})
+    }
+    return nil
 }
 
 func (s *spectrumRestV2) ListFilesetQuota(filesystemName string, filesetName string) (string, error) {

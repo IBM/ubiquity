@@ -187,6 +187,14 @@ func (e *BackendInitializationError) Error() string {
 	return fmt.Sprintf("Error while initializing %s client:[%s]", e.BackendName, e.Err.Error())
 }
 
+type SpectrumScaleConfigError struct {
+    Errstr	string
+}
+
+func (e *SpectrumScaleConfigError) Error() string {
+    return fmt.Sprintf("Spectrum Scale backend configuration error: %s", e.Errstr)
+}
+
 const ClientInitializationErrorStr = "Check backend configuration - SpectrumScale ManagementIP or SpectrumConnect managmentIP is mandatory in the ubiqutiy-configmap."
 
 //go:generate counterfeiter -o ../fakes/fake_mounter.go . Mounter

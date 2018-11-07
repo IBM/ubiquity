@@ -996,6 +996,44 @@ var _ = Describe("spectrumRestV2", func() {
 		})
 	})
 
+	Context(".CheckIfFSQuotaEnabled", func() {
+		var (
+			quotaResp	connectors.GetQuotaResponse_v2
+			registerurl	string
+		)
+		BeforeEach(func() {
+			registerurl = fakeurl + "/scalemgmt/v2/filesystems/" + filesystem + "/quotas"
+		})
+
+		It("Should Pass for quota enabled", func() {
+			quotaResp = connectors.GetQuotaResponse_v2{}
+			quotaResp.Status.Code = 200
+			marshalledResponse, err := json.Marshal(quotaResp)
+			Expect(err).ToNot(HaveOccurred())
+			httpmock.RegisterResponder(
+				"GET",
+				registerurl,
+				httpmock.NewStringResponder(200, string(marshalledResponse)),
+			)
+			err = spectrumRestV2.CheckIfFSQuotaEnabled(filesystem)
+			Expect(err).ToNot(HaveOccurred())
+		})
+
+		It("Should Pass for quota not enabled", func() {
+			quotaResp = connectors.GetQuotaResponse_v2{}
+			quotaResp.Status.Code = 400
+			marshalledResponse, err := json.Marshal(quotaResp)
+			Expect(err).ToNot(HaveOccurred())
+			httpmock.RegisterResponder(
+				"GET",
+				registerurl,
+				httpmock.NewStringResponder(400, string(marshalledResponse)),
+			)
+			err = spectrumRestV2.CheckIfFSQuotaEnabled(filesystem)
+			Expect(err).To(HaveOccurred())
+		})
+	})
+
 	Context(".ListFilesetQuota", func() {
 		var (
 			getFilesetquota connectors.GetQuotaResponse_v2
