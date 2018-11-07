@@ -129,9 +129,15 @@ func (h *StorageApiHandler) RemoveVolume() http.HandlerFunc {
 
 		backend, err := h.getBackend(removeVolumeRequest.Name)
 		if err != nil {
-			h.logger.Error("error-backend-not-found-for-volume", logs.Args{{"name", removeVolumeRequest.Name}})
-			utils.WriteResponse(w, http.StatusNotFound, &resources.GenericResponse{Err: err.Error()})
-			return
+			switch err.(type) {
+				case *resources.VolumeNotFoundError:
+					b.logger.Warning("Idempotent issue encountered : volume does not exist in remove command.", logs.Args{{"volume", removeVolumeRequest.Name}})
+					return utils.WriteResponse(w, http.StatusOK, nil)
+				default:
+					h.logger.Error("error-backend-not-found-for-volume", logs.Args{{"name", removeVolumeRequest.Name}})
+					utils.WriteResponse(w, http.StatusNotFound, &resources.GenericResponse{Err: err.Error()})
+					return
+			}
 		}
 
 		h.locker.WriteLock(removeVolumeRequest.Name)
