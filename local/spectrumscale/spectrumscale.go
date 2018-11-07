@@ -497,7 +497,7 @@ func determineTypeFromRequest(logger logs.Logger, opts map[string]interface{}) (
 }
 
 func (s *spectrumLocalClient) checkIfFSMounted(filesystem string) error {
-    defer logger.Trace(logs.DEBUG)()
+    defer s.logger.Trace(logs.DEBUG)()
 
     isfsmounted, err := s.connector.IsFilesystemMounted(filesystem)
     if err != nil {
