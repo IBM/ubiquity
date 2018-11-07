@@ -97,7 +97,7 @@ func (b *blockDeviceUtils) RescanSCSILun0() error {
 		*/
 		b.logger.Debug(fmt.Sprintf("Yixuan Command is %s", rescanCmd))
 		//rescanArgs := []string{`'- - -'`, ">/sys/class/scsi_host/" + host.Name() + "/scan"}
-		rescanArgs := []string{"-a", ">/sys/class/scsi_host/" + host.Name() + "/scan"}
+		rescanArgs := []string{"-a", "/sys/class/scsi_host/" + host.Name() + "/scan"}
 		if _, err := b.exec.ExecuteWithTimeout(rescanIscsiTimeout, rescanCmd, rescanArgs); err != nil {
 			continue
 		}
