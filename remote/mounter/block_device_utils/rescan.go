@@ -18,7 +18,6 @@ package block_device_utils
 
 import (
 	"errors"
-	"fmt"
 
 	"fmt"
 	"io/ioutil"
@@ -97,7 +96,7 @@ func (b *blockDeviceUtils) RescanSCSILun0() error {
 	}
 
 	for _, host := range hostInfos {
-		rescanCmd := "tee"
+		/*rescanCmd := "tee"
 		if err := b.exec.IsExecutable(rescanCmd); err != nil {
 			return b.logger.ErrorRet(&commandNotFoundError{rescanCmd, err}, "failed")
 		}
@@ -106,10 +105,14 @@ func (b *blockDeviceUtils) RescanSCSILun0() error {
 			continue
 		}
 		*/
-		b.logger.Debug(fmt.Sprintf("Yixuan Command is %s", rescanCmd))
+		///b.logger.Debug(fmt.Sprintf("Yixuan Command is %s", rescanCmd))
 		//rescanArgs := []string{`'- - -'`, ">/sys/class/scsi_host/" + host.Name() + "/scan"}
-		rescanArgs := []string{"-a", "/sys/class/scsi_host/" + host.Name() + "/scan"}
+		/*rescanArgs := []string{"-a", "/sys/class/scsi_host/" + host.Name() + "/scan"}
 		if _, err := b.exec.ExecuteWithTimeout(rescanIscsiTimeout, rescanCmd, rescanArgs); err != nil {
+			continue
+		}*/
+		filename := "/sys/class/scsi_host/" + host.Name() + "/scan"
+		if err := ioutil.WriteFile(filename, []byte("- - -"), 0777); err != nil {
 			continue
 		}
 	}
