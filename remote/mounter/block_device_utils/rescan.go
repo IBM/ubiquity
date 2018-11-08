@@ -85,23 +85,13 @@ func (b *blockDeviceUtils) RescanSCSILun0() error {
 	}
 
 	for _, host := range hostInfos {
-		/*rescanCmd := "tee"
-		if err := b.exec.IsExecutable(rescanCmd); err != nil {
-			return b.logger.ErrorRet(&commandNotFoundError{rescanCmd, err}, "failed")
-		}
-		/*rescanPara := []string{"1", ">/sys/class/fc_host/" + host.Name() + "/issue_lip"}
-		if _, err := b.exec.ExecuteWithTimeout(rescanIscsiTimeout, rescanCmd, rescanPara); err != nil {
+		b.logger.Debug("scan the host", logs.Args{{"name: ", host.Name()}})
+		fcHostFile := "/sys/class/fc_host/" + host.Name() + "/issue_lip"
+		if err := ioutil.WriteFile(fcHostFile, []byte("1"), 0666); err != nil {
 			continue
 		}
-		*/
-		///b.logger.Debug(fmt.Sprintf("Yixuan Command is %s", rescanCmd))
-		//rescanArgs := []string{`'- - -'`, ">/sys/class/scsi_host/" + host.Name() + "/scan"}
-		/*rescanArgs := []string{"-a", "/sys/class/scsi_host/" + host.Name() + "/scan"}
-		if _, err := b.exec.ExecuteWithTimeout(rescanIscsiTimeout, rescanCmd, rescanArgs); err != nil {
-			continue
-		}*/
 		filename := "/sys/class/scsi_host/" + host.Name() + "/scan"
-		if err := ioutil.WriteFile(filename, []byte("- - -"), 0777); err != nil {
+		if err := ioutil.WriteFile(filename, []byte("- - -"), 0666); err != nil {
 			continue
 		}
 	}

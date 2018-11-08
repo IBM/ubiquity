@@ -101,8 +101,6 @@ func (e *executor) ExecuteWithTimeout(mSeconds int, command string, args []strin
 		return nil, ctx.Err()
 	}
 
-	e.logger.Debug(fmt.Sprintf("Yixuan Command is %s", command))
-	e.logger.Debug(fmt.Sprintf("Yixuan whole Command is %v", cmd))
 	// If there's no context error, we know the command completed (or errored).
 	e.logger.Debug(fmt.Sprintf("Output from command: %s", string(out)))
 	if err != nil {
