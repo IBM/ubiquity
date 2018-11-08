@@ -73,6 +73,10 @@ var _ = Describe("ScbeDataModelWrapper test", func() {
                 scbeVolume, err = dataModelWrapper.GetVolume(volumeNameDb, false)
                 Expect(err).To(Not(HaveOccurred()))
             })
+            It("succeed if db volume does not exist", func() {
+				err = dataModelWrapper.DeleteVolume(volumeNameDb)
+                Expect(err).To(Not(HaveOccurred()))
+            })
         })
         Context("UpdateDatabaseVolume", func() {
             It("succeed", func() {

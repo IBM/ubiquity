@@ -26,7 +26,6 @@ import (
 	"strconv"
 	"strings"
 	"sync"
-	"reflect"
 )
 
 type scbeLocalClient struct {
@@ -294,49 +293,52 @@ func (s *scbeLocalClient) RemoveVolume(removeVolumeRequest resources.RemoveVolum
 	existingVolume, err := s.dataModel.GetVolume(removeVolumeRequest.Name, true)
 	if err != nil {
 		switch err.(type) {
-			case *resources.VolumeNotFoundError:
-				s.logger.Warning("Idempotent issue encountered: volume was not found in DB during remove request.",logs.Args{{"volume", removeVolumeRequest.Name}} )
-				return nil
-			default:
-				return s.logger.ErrorRet(err, "dataModel.GetVolume failed")
-			}
+		case *resources.VolumeNotFoundError:
+			s.logger.Warning("Idempotent issue encountered: volume was not found in DB during remove request.", logs.Args{{"volume", removeVolumeRequest.Name}})
+			return nil
+		default:
+			return s.logger.ErrorRet(err, "dataModel.GetVolume failed")
+		}
 	}
 
 	hostAttach, err := scbeRestClient.GetVolMapping(existingVolume.WWN)
-	// get vol mapping will not reutrn an error but an empty host in case the vol does no exist so no idempotent issue here.
+	// get vol mapping will not return an error but an empty host in case the vol does no exist so no idempotent issue here.
 	if err != nil {
 		return s.logger.ErrorRet(err, "scbeRestClient.GetVolMapping failed")
 	}
 
 	if hostAttach != EmptyHost {
 		return s.logger.ErrorRet(&CannotDeleteVolWhichAttachedToHostError{removeVolumeRequest.Name, hostAttach}, "failed")
-	} 
+	}
 
-	err = scbeRestClient.DeleteVolume(existingVolume.WWN); 
-	
-	s.logger.Info(fmt.Sprintf("####err : %s, type : %s", err, reflect.TypeOf(err)))
-	//scbe.BadHttpStatusCodeError
-	// - there are two options 1 : scb is aware the volume is deleted : we get 404. 
+	err = scbeRestClient.DeleteVolume(existingVolume.WWN)
 	if err != nil {
 		switch err.(type) {
-			case *BadHttpStatusCodeError:
-				if err.(*BadHttpStatusCodeError).httpStatusCode == 404{
-					s.logger.Warning("Idempotent issue encountered: volume was not found in DB during remove request.",logs.Args{{"volume", removeVolumeRequest.Name}} )
-					return nil	
-					
-				} else{
-					return s.logger.ErrorRet(err, "scbeRestClient.DeleteVolume failed")			
-				}
-				
-			default:
-				return s.logger.ErrorRet(err, "scbeRestClient.DeleteVolume failed")
-		}
-	} 
+		case *BadHttpStatusCodeError:
+			if err.(*BadHttpStatusCodeError).HttpStatusCode == 404 {
+				s.logger.Warning("Idempotent issue encountered: volume was not found in SC during remove request.", logs.Args{{"volume", removeVolumeRequest.Name}})
+				return nil
 
-	if err = s.dataModel.DeleteVolume(removeVolumeRequest.Name); err != nil {
-		return s.logger.ErrorRet(err, "dataModel.DeleteVolume failed")
+			} else {
+				return s.logger.ErrorRet(err, "scbeRestClient.DeleteVolume failed")
+			}
+
+		default:
+			return s.logger.ErrorRet(err, "scbeRestClient.DeleteVolume failed")
+		}
 	}
-	// TODO: check if error is volume not found. if so then return nil. 
+
+	err = s.dataModel.DeleteVolume(removeVolumeRequest.Name)
+	if err != nil {
+		switch err.(type) {
+		case *resources.VolumeNotFoundError:
+			s.logger.Warning("Idempotent issue encountered: volume was not found in DB during remove request.", logs.Args{{"volume", removeVolumeRequest.Name}})
+			return nil
+		default:
+			return s.logger.ErrorRet(err, "dataModel.DeleteVolume failed")
+		}
+
+	}
 
 	return nil
 }
