@@ -96,7 +96,11 @@ func (d *scbeDataModelWrapper) DeleteVolume(name string) error {
 	defer d.logger.Trace(logs.DEBUG)()
 	var err error
 
+	
 	if database.IsDatabaseVolume(name) {
+		if d.dbVolume == nil {
+			d.logger.Warning("Idempotent issue encountered - db volume is nil. continuing with deletion flow")
+		}
 
 		// work with memory object
 		d.UpdateDatabaseVolume(nil)
