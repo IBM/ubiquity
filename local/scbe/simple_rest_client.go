@@ -170,11 +170,11 @@ func (s *simpleRestClient) genericActionInternal(actionName string, resource_url
 	s.logger.Debug(actionName+" "+url, logs.Args{{"data", httpDataStr}})
 	if response.StatusCode != exitStatus {
 		return s.logger.ErrorRet(&BadHttpStatusCodeError{
-			httpStatusCode:         response.StatusCode,
-			httpExpectedStatusCode: exitStatus,
-			httpDataStr:            httpDataStr,
-			httpAction:             actionName,
-			httpUrl:                url,
+			HttpStatusCode:         response.StatusCode,
+			HttpExpectedStatusCode: exitStatus,
+			HttpDataStr:            httpDataStr,
+			HttpAction:             actionName,
+			HttpUrl:                url,
 		}, "failed")
 	}
 

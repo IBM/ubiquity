@@ -616,6 +616,30 @@ var _ = Describe("scbeLocalClient", func() {
 			Expect(fakeScbeRestClient.DeleteVolumeCallCount()).To(Equal(1))
 			Expect(fakeScbeDataModel.DeleteVolumeCallCount()).To(Equal(1))
 		})
+		It("should succeed if getvolume returns volume not found", func() {
+			fakeScbeDataModel.GetVolumeReturns(scbe.ScbeVolume{}, &resources.VolumeNotFoundError{VolName: "vol1"})
+			err := client.RemoveVolume(fakeRemoveRequest)
+			Expect(err).To(Not(HaveOccurred()))
+		})
+		It("should succeed if delete volume retunr 404 error from SC", func() {
+			fakeScbeDataModel.GetVolumeReturns(scbe.ScbeVolume{}, nil)
+			fakeScbeRestClient.DeleteVolumeReturns(&scbe.BadHttpStatusCodeError{HttpStatusCode : 404})
+			err := client.RemoveVolume(fakeRemoveRequest)
+			Expect(err).To(Not(HaveOccurred()))
+			Expect(fakeScbeDataModel.GetVolumeCallCount()).To(Equal(1))
+			Expect(fakeScbeRestClient.DeleteVolumeCallCount()).To(Equal(1))
+		})
+		It("should succeed if delete volume from db retuns that volume does not exists.", func() {
+			fakeScbeDataModel.GetVolumeReturns(scbe.ScbeVolume{}, nil)
+			fakeScbeRestClient.DeleteVolumeReturns(nil)
+			fakeScbeDataModel.DeleteVolumeReturns(&resources.VolumeNotFoundError{fakeRemoveRequest.Name})
+			
+			err := client.RemoveVolume(fakeRemoveRequest)
+			Expect(err).To(Not(HaveOccurred()))
+			Expect(fakeScbeDataModel.GetVolumeCallCount()).To(Equal(1))
+			Expect(fakeScbeRestClient.DeleteVolumeCallCount()).To(Equal(1))
+			Expect(fakeScbeDataModel.DeleteVolumeCallCount()).To(Equal(1))
+		})
 	})
 
 })
