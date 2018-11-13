@@ -64,7 +64,7 @@ func (s *scbeMounter) Mount(mountRequest resources.MountRequest) (string, error)
 	if err != nil {
 		// Known issue: UB-1103 in https://www.ibm.com/support/knowledgecenter/SS6JWS_3.4.0/RN/sc_rn_knownissues.html
 		// For DS8k and Storwize Lun0, "rescan-scsi-bus.sh -r" cannot discover the LUN0, need to use rescanLun0 instead
-		s.logger.Debug("volumeConfig: ", logs.Args{{"volumeConfig: ", mountRequest.VolumeConfig}})
+		s.logger.Info("volumeConfig: ", logs.Args{{"volumeConfig: ", mountRequest.VolumeConfig}})
 		_, ok := err.(*block_device_utils.VolumeNotFoundError)
 		if isLun0(mountRequest) && ok {
 			s.logger.Debug("It is the first lun of DS8K or Storwize, will try to rescan lun0")
@@ -73,7 +73,7 @@ func (s *scbeMounter) Mount(mountRequest resources.MountRequest) (string, error)
 			}
 			devicePath, err = s.blockDeviceMounterUtils.Discover(volumeWWN, true)
 			if err != nil {
-				return "", s.logger.ErrorRet(err, "Discover failed after rescan lun0 for the second time", logs.Args{{"volumeWWN", volumeWWN}})
+				return "", s.logger.ErrorRet(err, "Discover failed after run rescan and also additional rescan with special lun0 scanning", logs.Args{{"volumeWWN", volumeWWN}})
 			}
 		} else {
 			return "", s.logger.ErrorRet(err, "Discover failed", logs.Args{{"volumeWWN", volumeWWN}})

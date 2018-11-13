@@ -189,10 +189,14 @@ func (b *blockDeviceMounterUtils) RescanAll(wwn string, rescanForCleanUp bool, L
 	if err := b.blockDeviceUtils.Rescan(block_device_utils.ISCSI); err != nil {
 		return b.logger.ErrorRet(err, "ISCSI Rescan failed", logs.Args{{"protocol", block_device_utils.ISCSI}})
 	}
+<<<<<<< HEAD
 
 	if Lun0 {
+=======
+	if extraLunZeroScanning {
+>>>>>>> fixed some comments
 		if err := b.blockDeviceUtils.RescanSCSILun0(); err != nil {
-			return b.logger.ErrorRet(err, "Rescan failed for FC Lun0 in the second time", logs.Args{{"protocol", block_device_utils.SCSI}})
+			return b.logger.ErrorRet(err, "Rescan failed for FC Lun0", logs.Args{{"protocol", block_device_utils.SCSI}})
 		}
 	} else {
 		if err := b.blockDeviceUtils.Rescan(block_device_utils.SCSI); err != nil {

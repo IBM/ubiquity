@@ -308,9 +308,8 @@ func (s *scbeLocalClient) RemoveVolume(removeVolumeRequest resources.RemoveVolum
 		return s.logger.ErrorRet(err, "scbeRestClient.GetVolMapping failed")
 	}
 
-	hostAttach := volMapInfo.Host
-	if hostAttach != EmptyHost {
-		return s.logger.ErrorRet(&CannotDeleteVolWhichAttachedToHostError{removeVolumeRequest.Name, hostAttach}, "failed")
+	if volMapInfo.Host != EmptyHost {
+		return s.logger.ErrorRet(&CannotDeleteVolWhichAttachedToHostError{removeVolumeRequest.Name, volMapInfo.Host}, "failed")
 	}
 
 	err = scbeRestClient.DeleteVolume(existingVolume.WWN)
@@ -458,7 +457,7 @@ func (s *scbeLocalClient) Attach(attachRequest resources.AttachRequest) (string,
 	// Lock will ensure no other caller attach a volume from the same host concurrently, Prevent SCBE race condition on get next available lun ID
 	s.locker.WriteLock(attachRequest.Host)
 	s.logger.Debug("Attaching", logs.Args{{"volume", existingVolume}})
-	if _, err := scbeRestClient.MapVolume(existingVolume.WWN, attachRequest.Host); err != nil {
+	if _, err = scbeRestClient.MapVolume(existingVolume.WWN, attachRequest.Host); err != nil {
 		s.locker.WriteUnlock(attachRequest.Host)
 		return "", s.logger.ErrorRet(err, "scbeRestClient.MapVolume failed")
 	}

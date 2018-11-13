@@ -98,11 +98,13 @@ func (b *blockDeviceUtils) RescanSCSILun0() error {
 	for _, host := range hostInfos {
 		b.logger.Debug("scan the host", logs.Args{{"name: ", host.Name()}})
 		fcHostFile := "/sys/class/fc_host/" + host.Name() + "/issue_lip"
-		if err := ioutil.WriteFile(fcHostFile, []byte("1"), 0666); err != nil {
+		if err := ioutil.WriteFile(fcHostFile, []byte("1"), 0200); err != nil {
+			b.logger.Debug("Write issue_lip failed", logs.Args{{"host name: ", host.Name()}})
 			continue
 		}
 		filename := "/sys/class/scsi_host/" + host.Name() + "/scan"
-		if err := ioutil.WriteFile(filename, []byte("- - -"), 0666); err != nil {
+		if err := ioutil.WriteFile(filename, []byte("- - -"), 0200); err != nil {
+			b.logger.Debug("Write file scan failed", logs.Args{{"host name: ", host.Name()}})
 			continue
 		}
 	}
