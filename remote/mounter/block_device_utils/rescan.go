@@ -20,6 +20,8 @@ import (
 	"errors"
 
 	"github.com/IBM/ubiquity/utils/logs"
+	"reflect"
+	"fmt"
 )
 
 const rescanIscsiTimeout = 1 * 60 * 1000
@@ -42,10 +44,12 @@ func (b *blockDeviceUtils) RescanISCSI() error {
 	defer b.logger.Trace(logs.DEBUG)()
 	rescanCmd := "iscsiadm"
 	if err := b.exec.IsExecutable(rescanCmd); err != nil {
-		return b.logger.ErrorRet(&commandNotFoundError{rescanCmd, err}, "failed")
+		b.logger.Debug("No iscisadm installed skipping ISCSI rescan")
+		return nil
 	}
 	args := []string{"-m", "session", "--rescan"}
 	if _, err := b.exec.ExecuteWithTimeout(rescanIscsiTimeout, rescanCmd, args); err != nil {
+		b.logger.Info(fmt.Sprintf("###err : %s, err_type : %s ", err, reflect.TypeOf(err)))
 		return b.logger.ErrorRet(&CommandExecuteError{rescanCmd, err}, "failed")
 	}
 	return nil
