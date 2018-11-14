@@ -48,8 +48,8 @@ func (b *blockDeviceUtils) RescanISCSI() error {
 		return nil
 	}
 	args := []string{"-m", "session", "--rescan"}
-	if _, err := b.exec.ExecuteWithTimeout(rescanIscsiTimeout, rescanCmd, args); err != nil {
-		b.logger.Info(fmt.Sprintf("###err : %s, err_type : %s ", err, reflect.TypeOf(err)))
+	if out, err := b.exec.ExecuteWithTimeout(rescanIscsiTimeout, rescanCmd, args); err != nil {
+		b.logger.Info(fmt.Sprintf("###err : %s, err_type : %s . out : %s", err, reflect.TypeOf(err), out))
 		return b.logger.ErrorRet(&CommandExecuteError{rescanCmd, err}, "failed")
 	}
 	return nil
