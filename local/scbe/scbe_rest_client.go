@@ -54,6 +54,7 @@ const (
 	UrlScbeResourceMapping   = "mappings"
 	UrlScbeResourceHost      = "hosts"
 	DefaultSizeUnit          = "gb"
+	LunNumberNoMapping       = -1
 )
 
 func NewScbeRestClient(conInfo resources.ConnectionInfo) (ScbeRestClient, error) {
@@ -219,7 +220,7 @@ func (s *scbeRestClient) GetVolMapping(wwn string) (ScbeVolumeMapInfo, error) {
 		s.logger.Debug("", logs.Args{{"hostResponse", hostResponse}})
 		host = hostResponse.Name
 	} else {
-		lunNumber = -1
+		lunNumber = LunNumberNoMapping
 	}
 
 	s.logger.Debug("volume is mapped", logs.Args{{"host", host}, {"lunNumber", lunNumber}})
