@@ -20,8 +20,7 @@ import (
 	"errors"
 
 	"github.com/IBM/ubiquity/utils/logs"
-	"reflect"
-	"fmt"
+
 )
 
 const rescanIscsiTimeout = 1 * 60 * 1000
