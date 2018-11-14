@@ -47,7 +47,7 @@ func (b *blockDeviceUtils) RescanISCSI() error {
 		return nil
 	}
 	args := []string{"-m", "session", "--rescan"}
-	if _, err = b.exec.ExecuteWithTimeout(rescanIscsiTimeout, rescanCmd, args); err != nil {
+	if _, err := b.exec.ExecuteWithTimeout(rescanIscsiTimeout, rescanCmd, args); err != nil {
 		if b.IsExitStatusCode(err, 21){ 
 			// error code 21 : ISCSI_ERR_NO_OBJS_FOUND - no records/targets/sessions/portals found to execute operation on. 
 			b.logger.Warning("No active iscsi session exists. if iscsi connection was expected please check the connectivity of this node.")
