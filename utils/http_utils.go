@@ -28,6 +28,7 @@ import (
 	"github.com/IBM/ubiquity/resources"
 	"github.com/IBM/ubiquity/utils/logs"
 	"github.com/gorilla/mux"
+	"reflect"
 )
 
 func ExtractErrorResponse(response *http.Response) error {
@@ -106,8 +107,12 @@ func HttpExecute(httpClient *http.Client, requestType string, requestURL string,
 		err = fmt.Errorf("Error in creating request %#v", err)
 		return nil, logger.ErrorRet(err, "failed")
 	}
-
-	return httpClient.Do(request)
+	
+	err :=  httpClient.Do(request)
+	if err != nil {
+		logger.Info(fmt.Sprintf("###err : %s , error tyoe : %s ", err, reflect.TypeOf(err)))
+	}
+	return err
 }
 
 func WriteResponse(w http.ResponseWriter, code int, object interface{}) {
