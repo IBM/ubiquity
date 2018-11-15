@@ -19,9 +19,10 @@ package scbe
 import (
 	"encoding/json"
 	"fmt"
+	"strconv"
+
 	"github.com/IBM/ubiquity/resources"
 	"github.com/IBM/ubiquity/utils/logs"
-	"strconv"
 )
 
 //go:generate counterfeiter -o ../fakes/fake_scbe_rest_client.go . ScbeRestClient
@@ -52,7 +53,7 @@ const (
 	UrlScbeResourceVolume    = "volumes"
 	UrlScbeResourceMapping   = "mappings"
 	UrlScbeResourceHost      = "hosts"
-	DefaultSizeUnit          = "gb"
+	DefaultSizeUnit          = "gib"
 )
 
 func NewScbeRestClient(conInfo resources.ConnectionInfo) (ScbeRestClient, error) {
