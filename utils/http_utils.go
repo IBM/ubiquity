@@ -108,11 +108,11 @@ func HttpExecute(httpClient *http.Client, requestType string, requestURL string,
 		return nil, logger.ErrorRet(err, "failed")
 	}
 	
-	err :=  httpClient.Do(request)
+	response, err :=  httpClient.Do(request)
 	if err != nil {
-		logger.Info(fmt.Sprintf("###err : %s , error tyoe : %s ", err, reflect.TypeOf(err)))
+		logger.Info(fmt.Sprintf("###err : %s , error type : %s ", err, reflect.TypeOf(err)))
 	}
-	return err
+	return response, err
 }
 
 func WriteResponse(w http.ResponseWriter, code int, object interface{}) {
