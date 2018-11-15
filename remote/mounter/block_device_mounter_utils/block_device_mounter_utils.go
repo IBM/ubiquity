@@ -186,11 +186,11 @@ func (b *blockDeviceMounterUtils) RescanAll(wwn string, rescanForCleanUp bool) e
 	// Do the rescans operations
 	// in case of FC : if no iscsiadm on the machine or no session login - this will log a warning not fail!
 	if err := b.blockDeviceUtils.Rescan(block_device_utils.ISCSI); err != nil {
-		return b.logger.ErrorRet(err, "Rescan failed", logs.Args{{"protocol", block_device_utils.ISCSI}})
+		return b.logger.ErrorRet(err, "ISCSI Rescan failed", logs.Args{{"protocol", block_device_utils.ISCSI}})
 	}
 	
 	if err := b.blockDeviceUtils.Rescan(block_device_utils.SCSI); err != nil {
-		return b.logger.ErrorRet(err, "Rescan failed", logs.Args{{"protocol", block_device_utils.SCSI}})
+		return b.logger.ErrorRet(err, "OS Rescan failed", logs.Args{{"protocol", block_device_utils.SCSI}})
 	}
 	if !rescanForCleanUp {
 		if err := b.blockDeviceUtils.ReloadMultipath(); err != nil {

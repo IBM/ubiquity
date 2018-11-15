@@ -89,3 +89,7 @@ type MultipathDeviceNotFoundError struct {
 func (e *MultipathDeviceNotFoundError) Error() string {
 	return fmt.Sprintf("Device [%s] is not found in multipath output", e.Dev)
 }
+
+const NoIscsiadmCommnadWarningMessage = `No active iscsi session exists. if iscsi connection was expected please do iscsi 
+			login from the host to the storage target as mentioned in the user guide. If iscsi logging is missing
+			 you may see error in the flex pod about cannot discover the device.`
