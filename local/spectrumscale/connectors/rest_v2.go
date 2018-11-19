@@ -96,7 +96,7 @@ func (s *spectrumRestV2) waitForJobCompletion(statusCode int, jobID uint64) erro
     defer s.logger.Trace(logs.DEBUG)()
 
 	if s.checkAsynchronousJob(statusCode) {
-		jobURL := utils.FormatURL(s.endpoint, fmt.Sprintf("scalemgmt/v2/jobs?filter=jobId=%d&fields=:all:", jobID))
+		jobURL := utils.FormatURL(s.endpoint, fmt.Sprintf("scalemgmt/v2/jobs/%d?fields=:all:", jobID))
 		s.logger.Debug("Job URL: ", logs.Args{{"jobUrl", jobURL}})
 		err := s.AsyncJobCompletion(jobURL)
 		if err != nil {
@@ -548,7 +548,7 @@ func (s *spectrumRestV2) ListFilesetQuota(filesystemName string, filesetName str
 	if len(listQuotaResponse.Quotas) > 0 {
 		return fmt.Sprintf("%dK", listQuotaResponse.Quotas[0].BlockQuota), nil
 	} else {
-		return "", fmt.Errorf("Unable to fetch quota information %v. Please refer Ubiquity server logs for more details", filesystemName)
+		return "", fmt.Errorf("Unable to fetch quota information for fileset %v in filesystem %v. Please refer Ubiquity server logs for more details", filesetName, filesystemName)
 	}
 }
 

@@ -234,13 +234,40 @@ var _ = Describe("local-client", func() {
 				})
 			})
 
+
+			Context(".WithQuotaIsPreexistingtrue", func() {
+				BeforeEach(func() {
+					opts["isPreexisting"] = "true"
+					opts["quota"] = "1gb"
+					createVolumeRequest = resources.CreateVolumeRequest{Name: "fake-fileset", Opts: opts}
+				})
+
+				It("should fail when spectrum client fails to check fileset link status", func() {
+					fakeSpectrumScaleConnector.IsFilesystemMountedReturns(true, nil)
+					fakeSpectrumScaleConnector.IsFilesetLinkedReturns(false, fmt.Errorf("Failed to get link status"))
+					fakeSpectrumScaleConnector.ListFilesetQuotaReturns("2gb", nil)
+					err = client.CreateVolume(createVolumeRequest)
+					Expect(err).To(HaveOccurred())
+				})
+
+				It("should fail when fileset is not linked ", func() {
+					fakeSpectrumScaleConnector.IsFilesystemMountedReturns(true, nil)
+					fakeSpectrumScaleConnector.IsFilesetLinkedReturns(false, nil)
+					fakeSpectrumScaleConnector.ListFilesetQuotaReturns("2gb", nil)
+					err = client.CreateVolume(createVolumeRequest)
+					Expect(err).To(HaveOccurred())
+				})
+			})
+
 			Context(".WithNoQuota", func() {
 				BeforeEach(func() {
 					createVolumeRequest = resources.CreateVolumeRequest{Name: "fake-fileset", Opts: opts}
 				})
 
 				It("should fail when spectrum client fails to list fileset quota", func() {
+					opts["isPreexisting"] = "true"
 					fakeSpectrumScaleConnector.ListFilesetReturns(resources.Volume{}, fmt.Errorf("error in list fileset"))
+					fakeSpectrumScaleConnector.IsFilesystemMountedReturns(true, nil)
 					err = client.CreateVolume(createVolumeRequest)
 					Expect(err).To(HaveOccurred())
 					Expect(err.Error()).To(Equal("error in list fileset"))
@@ -250,6 +277,7 @@ var _ = Describe("local-client", func() {
 					fakeVolume := resources.Volume{Name: "fake-fileset", Mountpoint: "fake-mountpoint"}
 					fakeSpectrumScaleConnector.ListFilesetReturns(fakeVolume, nil)
 					fakeSpectrumDataModel.InsertFilesetVolumeReturns(fmt.Errorf("error inserting filesetvolume"))
+					fakeSpectrumScaleConnector.IsFilesystemMountedReturns(true, nil)
 					err = client.CreateVolume(createVolumeRequest)
 					Expect(err).To(HaveOccurred())
 					Expect(err.Error()).To(Equal("error inserting filesetvolume"))
@@ -258,6 +286,7 @@ var _ = Describe("local-client", func() {
 				It("should succeed when parameters are well specified", func() {
 					fakeVolume := resources.Volume{Name: "fake-fileset", Mountpoint: "fake-mountpoint"}
 					fakeSpectrumScaleConnector.ListFilesetReturns(fakeVolume, nil)
+					fakeSpectrumScaleConnector.IsFilesystemMountedReturns(true, nil)
 					fakeSpectrumDataModel.InsertFilesetVolumeReturns(nil)
 					err = client.CreateVolume(createVolumeRequest)
 					Expect(err).ToNot(HaveOccurred())
@@ -272,7 +301,9 @@ var _ = Describe("local-client", func() {
 					createVolumeRequest = resources.CreateVolumeRequest{Name: "fake-fileset", Opts: opts}
 				})
 				It("should fail when spectrum client fails to list fileset quota", func() {
+					opts["isPreexisting"] = "true"
 					fakeSpectrumScaleConnector.ListFilesetQuotaReturns("", fmt.Errorf("error in list quota"))
+					fakeSpectrumScaleConnector.IsFilesystemMountedReturns(true, nil)
 					err = client.CreateVolume(createVolumeRequest)
 					Expect(err).To(HaveOccurred())
 					Expect(err.Error()).To(Equal("error in list quota"))
@@ -280,6 +311,7 @@ var _ = Describe("local-client", func() {
 				})
 				It("should pass since user specified quota is less than spectrumscale fileset quota", func() {
 					fakeSpectrumScaleConnector.ListFilesetQuotaReturns("2gb", nil)
+					fakeSpectrumScaleConnector.IsFilesystemMountedReturns(true, nil)
 					err = client.CreateVolume(createVolumeRequest)
 					Expect(err).ToNot(HaveOccurred())
 					Expect(fakeSpectrumDataModel.InsertFilesetQuotaVolumeCallCount()).To(Equal(1))
@@ -288,6 +320,7 @@ var _ = Describe("local-client", func() {
 				It("should fail when dbClient fails to insert Fileset quota volume", func() {
 					fakeSpectrumScaleConnector.ListFilesetQuotaReturns("1gb", nil)
 					fakeSpectrumDataModel.InsertFilesetQuotaVolumeReturns(fmt.Errorf("error inserting filesetquotavolume"))
+					fakeSpectrumScaleConnector.IsFilesystemMountedReturns(true, nil)
 					err = client.CreateVolume(createVolumeRequest)
 					Expect(err).To(HaveOccurred())
 					Expect(err.Error()).To(Equal("error inserting filesetquotavolume"))
@@ -296,9 +329,9 @@ var _ = Describe("local-client", func() {
 				It("should succeed when the options are well specified", func() {
 					fakeSpectrumScaleConnector.ListFilesetQuotaReturns("1gb", nil)
 					fakeSpectrumDataModel.InsertFilesetQuotaVolumeReturns(nil)
+					fakeSpectrumScaleConnector.IsFilesystemMountedReturns(true, nil)
 					err = client.CreateVolume(createVolumeRequest)
 					Expect(err).ToNot(HaveOccurred())
-					Expect(fakeSpectrumScaleConnector.ListFilesetQuotaCallCount()).To(Equal(1))
 					Expect(fakeSpectrumDataModel.InsertFilesetQuotaVolumeCallCount()).To(Equal(1))
 				})
 
