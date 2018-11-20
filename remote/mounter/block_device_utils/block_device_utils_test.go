@@ -19,17 +19,20 @@ package block_device_utils_test
 import (
 	"errors"
 	"fmt"
+
 	"github.com/IBM/ubiquity/fakes"
 	"github.com/IBM/ubiquity/remote/mounter/block_device_utils"
 	"github.com/IBM/ubiquity/utils"
 
 	"context"
-	. "github.com/onsi/ginkgo"
-	. "github.com/onsi/gomega"
 	"io/ioutil"
+	"os"
 	"os/exec"
 	"strings"
 	"testing"
+
+	. "github.com/onsi/ginkgo"
+	. "github.com/onsi/gomega"
 )
 
 var _ = Describe("block_device_utils_test", func() {
@@ -93,6 +96,18 @@ var _ = Describe("block_device_utils_test", func() {
 		It("Rescan fails if unknown protocol", func() {
 			err = bdUtils.Rescan(2)
 			Expect(err).To(HaveOccurred())
+		})
+		It("Rescan SCSI lun0", func() {
+			dir, _ := ioutil.TempDir("", "")
+			os.Mkdir(dir+"/host33", os.ModePerm)
+			os.Mkdir(dir+"/host34", os.ModePerm)
+			block_device_utils.FcHostDir = dir + "/"
+			block_device_utils.ScsiHostDir = dir + "/"
+			err = bdUtils.RescanSCSILun0()
+			Expect(err).ToNot(HaveOccurred())
+			os.RemoveAll(dir)
+			block_device_utils.FcHostDir = "/sys/class/fc_host/"
+			block_device_utils.ScsiHostDir = "/sys/class/scsi_host/"
 		})
 	})
 	Context(".ReloadMultipath", func() {
@@ -253,9 +268,9 @@ var _ = Describe("block_device_utils_test", func() {
 			mpathOutput := `mpatha (36001738cfc9035eb0000000000cea5f6) dm-2
 size=224G features='1 queue_if_no_path' hwhandler='0' wp=rw`
 			fakeExec.ExecuteWithTimeoutReturnsOnCall(0, []byte(mpathOutput), nil)
-			returnError :=  &exec.ExitError{}
+			returnError := &exec.ExitError{}
 			//this execute with timeout makes the GetWwnByScsiInq to return an error
-			fakeExec.ExecuteWithTimeoutReturnsOnCall(1, []byte(""),returnError)
+			fakeExec.ExecuteWithTimeoutReturnsOnCall(1, []byte(""), returnError)
 			_, err := bdUtils.Discover(volumeId, true)
 			Expect(err).To(HaveOccurred())
 			Expect(err).To(Equal(&block_device_utils.FaultyDeviceError{fmt.Sprintf("/dev/mapper/%s", "mpatha")}))

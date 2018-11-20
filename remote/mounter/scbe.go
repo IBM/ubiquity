@@ -65,11 +65,12 @@ func (s *scbeMounter) Mount(mountRequest resources.MountRequest) (string, error)
 	devicePath, err := s.blockDeviceMounterUtils.Discover(volumeWWN, true)
 	if err != nil {
 		// Known issue: UB-1103 in https://www.ibm.com/support/knowledgecenter/SS6JWS_3.4.0/RN/sc_rn_knownissues.html
+		// XIV doesn't using Lun Number 0, We don't care the storage type here.
 		// For DS8k and Storwize Lun0, "rescan-scsi-bus.sh -r" cannot discover the LUN0, need to use rescanLun0 instead
 		s.logger.Info("volumeConfig: ", logs.Args{{"volumeConfig: ", mountRequest.VolumeConfig}})
 		_, ok := err.(*block_device_utils.VolumeNotFoundError)
 		if ok && isLun0(mountRequest) {
-			s.logger.Debug("It is the first lun of DS8K or Storwize, will try to rescan lun0.")
+			s.logger.Info("It is the first lun of DS8K or Storwize, will try to rescan lun0.")
 			if err := s.blockDeviceMounterUtils.RescanAll(!s.config.SkipRescanISCSI, volumeWWN, false, true); err != nil {
 				return "", s.logger.ErrorRet(err, "Rescan lun0 failed", logs.Args{{"volumeWWN", volumeWWN}})
 			}
