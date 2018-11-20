@@ -63,6 +63,7 @@ func (s *scbeMounter) Mount(mountRequest resources.MountRequest) (string, error)
 	devicePath, err := s.blockDeviceMounterUtils.Discover(volumeWWN, true)
 	if err != nil {
 		// Known issue: UB-1103 in https://www.ibm.com/support/knowledgecenter/SS6JWS_3.4.0/RN/sc_rn_knownissues.html
+		// XIV doesn't using Lun Number 0, We don't care the storage type here.
 		// For DS8k and Storwize Lun0, "rescan-scsi-bus.sh -r" cannot discover the LUN0, need to use rescanLun0 instead
 		s.logger.Info("volumeConfig: ", logs.Args{{"volumeConfig: ", mountRequest.VolumeConfig}})
 		_, ok := err.(*block_device_utils.VolumeNotFoundError)

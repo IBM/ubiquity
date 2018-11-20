@@ -20,6 +20,7 @@ const (
 	fakeUsedCapacity     = 2040
 	fakeDS8kStoragetType = "2107"
 	fakeV7kStorageType   = "2076"
+	fakeA9kStorageType   = "2810"
 	fakeProfile          = "gold"
 )
 
@@ -49,6 +50,9 @@ var _ = Describe("scbe_mounter_test", func() {
 		mountRequestForDS8kLun3 = resources.MountRequest{Mountpoint: "test_mountpointDS8k", VolumeConfig: map[string]interface{}{"Name": "u_vol", "PhysicalCapacity": fakePhysicalCapacity,
 			"Profile": fakeProfile, "StorageType": fakeDS8kStoragetType, "UsedCapacity": fakeUsedCapacity, "Wwn": "wwn", "attach-to": "node1",
 			"LogicalCapacity": fakeLogicalCapacity, "PoolName": "pool", "StorageName": "IBM.2107", "fstype": "ext4"}}
+		mountRequestForA9kLun3 = resources.MountRequest{Mountpoint: "test_mountpointA9k", VolumeConfig: map[string]interface{}{"Name": "u_vol", "PhysicalCapacity": fakePhysicalCapacity,
+			"Profile": fakeProfile, "StorageType": fakeA9kStorageType, "UsedCapacity": fakeUsedCapacity, "Wwn": "wwn", "attach-to": "node1",
+			"LogicalCapacity": fakeLogicalCapacity, "PoolName": "pool", "StorageName": "IBM.2810", "fstype": "ext4"}}
 	)
 
 	BeforeEach(func() {
@@ -193,6 +197,12 @@ var _ = Describe("scbe_mounter_test", func() {
 			fakeBdUtils.DiscoverReturns("", callErr)
 			fakeBdUtils.RescanAllReturnsOnCall(0, nil)
 			_, err := scbeMounter.Mount(mountRequestForDS8kLun3)
+			Expect(err).To(HaveOccurred())
+		})
+		It("should fail to discover ds8k with lun3 if no lunNumber", func() {
+			fakeBdUtils.DiscoverReturns("", callErr)
+			fakeBdUtils.RescanAllReturnsOnCall(0, nil)
+			_, err := scbeMounter.Mount(mountRequestForA9kLun3)
 			Expect(err).To(HaveOccurred())
 		})
 	})

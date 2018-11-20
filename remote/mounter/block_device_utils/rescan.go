@@ -27,7 +27,9 @@ import (
 
 const rescanIscsiTimeout = 1 * 60 * 1000
 const rescanScsiTimeout = 2 * 60 * 1000
-const fcHostDirectory = "/sys/class/fc_host/"
+
+var FcHostDir = "/sys/class/fc_host/"
+var ScsiHostDir = "/sys/class/scsi_host/"
 
 func (b *blockDeviceUtils) Rescan(protocol Protocol) error {
 	defer b.logger.Trace(logs.DEBUG)()
@@ -87,24 +89,25 @@ func (b *blockDeviceUtils) RescanSCSI() error {
 
 func (b *blockDeviceUtils) RescanSCSILun0() error {
 	defer b.logger.Trace(logs.DEBUG)()
-	hostInfos, err := ioutil.ReadDir(fcHostDirectory)
+	hostInfos, err := ioutil.ReadDir(FcHostDir)
 	if err != nil {
-		return b.logger.ErrorRet(err, "Getting fc_host failed.", logs.Args{{"fcHostDirectory", fcHostDirectory}})
+		return b.logger.ErrorRet(err, "Getting fc_host failed.", logs.Args{{"FcHostDir", FcHostDir}})
 	}
 	if len(hostInfos) == 0 {
-		return b.logger.ErrorRet(err, "There is no fc_host found.", logs.Args{{"fcHostDirectory", fcHostDirectory}})
+		return b.logger.ErrorRet(err, "There is no fc_host found.", logs.Args{{"FcHostDir", FcHostDir}})
 	}
 
 	for _, host := range hostInfos {
 		b.logger.Debug("scan the host", logs.Args{{"name: ", host.Name()}})
-		fcHostFile := "/sys/class/fc_host/" + host.Name() + "/issue_lip"
+		fcHostFile := FcHostDir + host.Name() + "/issue_lip"
 		if err := ioutil.WriteFile(fcHostFile, []byte("1"), 0200); err != nil {
-			b.logger.Debug("Write issue_lip failed", logs.Args{{"host name: ", host.Name()}})
+			b.logger.Debug("Write issue_lip failed", logs.Args{{"err", err}})
 			continue
 		}
-		filename := "/sys/class/scsi_host/" + host.Name() + "/scan"
+		filename := ScsiHostDir + host.Name() + "/scan"
+		b.logger.Debug("ScsiHostDir", logs.Args{{"ScsiHostDir", ScsiHostDir}})
 		if err := ioutil.WriteFile(filename, []byte("- - -"), 0200); err != nil {
-			b.logger.Debug("Write file scan failed", logs.Args{{"host name: ", host.Name()}})
+			b.logger.Debug("Write file scan failed", logs.Args{{"err", err}})
 			continue
 		}
 	}
