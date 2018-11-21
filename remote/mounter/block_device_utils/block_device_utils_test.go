@@ -62,11 +62,10 @@ var _ = Describe("block_device_utils_test", func() {
 			Expect(cmd).To(Equal("rescan-scsi-bus"))
 			Expect(args).To(Equal([]string{"-r"}))
 		})
-		It("Rescan ISCSI fails if iscsiadm command missing", func() {
+		It("Rescan ISCSI does not fail if iscsiadm command missing", func() {
 			fakeExec.IsExecutableReturns(cmdErr)
 			err = bdUtils.Rescan(block_device_utils.ISCSI)
-			Expect(err).To(HaveOccurred())
-			Expect(err.Error()).To(MatchRegexp(cmdErr.Error()))
+			Expect(err).To(Not(HaveOccurred()))
 			Expect(fakeExec.ExecuteCallCount()).To(Equal(0))
 			Expect(fakeExec.IsExecutableCallCount()).To(Equal(1))
 			Expect(fakeExec.IsExecutableArgsForCall(0)).To(Equal("iscsiadm"))

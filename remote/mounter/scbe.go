@@ -30,25 +30,23 @@ type scbeMounter struct {
 	logger                  logs.Logger
 	blockDeviceMounterUtils block_device_mounter_utils.BlockDeviceMounterUtils
 	exec                    utils.Executor
-	config                  resources.ScbeRemoteConfig
 }
 
-func newScbMounter(scbeRemoteConfig resources.ScbeRemoteConfig, blockDeviceMounterUtils block_device_mounter_utils.BlockDeviceMounterUtils, executer utils.Executor) resources.Mounter{
+func newScbMounter( blockDeviceMounterUtils block_device_mounter_utils.BlockDeviceMounterUtils, executer utils.Executor) resources.Mounter{
 	return &scbeMounter{
 		logger:                  logs.GetLogger(),
 		blockDeviceMounterUtils: blockDeviceMounterUtils,
 		exec:  executer,
-		config: scbeRemoteConfig,
 	}
 }
 
-func NewScbeMounter(scbeRemoteConfig resources.ScbeRemoteConfig) resources.Mounter {
+func NewScbeMounter() resources.Mounter {
 	blockDeviceMounterUtils := block_device_mounter_utils.NewBlockDeviceMounterUtils()
-	return newScbMounter(scbeRemoteConfig, blockDeviceMounterUtils, utils.NewExecutor())
+	return newScbMounter(blockDeviceMounterUtils, utils.NewExecutor())
 }
 
-func NewScbeMounterWithExecuter(scbeRemoteConfig resources.ScbeRemoteConfig, blockDeviceMounterUtils block_device_mounter_utils.BlockDeviceMounterUtils, executer utils.Executor) resources.Mounter {
-	return newScbMounter(scbeRemoteConfig, blockDeviceMounterUtils, executer)
+func NewScbeMounterWithExecuter(blockDeviceMounterUtils block_device_mounter_utils.BlockDeviceMounterUtils, executer utils.Executor) resources.Mounter {
+	return newScbMounter(blockDeviceMounterUtils, executer)
 }
 
 
@@ -56,8 +54,8 @@ func (s *scbeMounter) Mount(mountRequest resources.MountRequest) (string, error)
 	defer s.logger.Trace(logs.DEBUG)()
 	volumeWWN := mountRequest.VolumeConfig["Wwn"].(string)
 
-	// Rescan OS
-	if err := s.blockDeviceMounterUtils.RescanAll(!s.config.SkipRescanISCSI, volumeWWN, false); err != nil {
+	// Rescan OS 
+	if err := s.blockDeviceMounterUtils.RescanAll(volumeWWN, false); err != nil {
 		return "", s.logger.ErrorRet(err, "RescanAll failed")
 	}
 
@@ -149,7 +147,7 @@ func (s *scbeMounter) ActionAfterDetach(request resources.AfterDetachRequest) er
 	volumeWWN := request.VolumeConfig["Wwn"].(string)
 
 	// Rescan OS
-	if err := s.blockDeviceMounterUtils.RescanAll(!s.config.SkipRescanISCSI, volumeWWN, true); err != nil {
+	if err := s.blockDeviceMounterUtils.RescanAll(volumeWWN, true); err != nil {
 		return s.logger.ErrorRet(err, "RescanAll failed")
 	}
 	return nil

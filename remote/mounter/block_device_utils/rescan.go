@@ -20,6 +20,8 @@ import (
 	"errors"
 
 	"github.com/IBM/ubiquity/utils/logs"
+	"fmt"
+
 )
 
 const rescanIscsiTimeout = 1 * 60 * 1000
@@ -42,11 +44,21 @@ func (b *blockDeviceUtils) RescanISCSI() error {
 	defer b.logger.Trace(logs.DEBUG)()
 	rescanCmd := "iscsiadm"
 	if err := b.exec.IsExecutable(rescanCmd); err != nil {
-		return b.logger.ErrorRet(&commandNotFoundError{rescanCmd, err}, "failed")
+		b.logger.Debug("No iscisadm installed skipping ISCSI rescan")
+		return nil
 	}
+	
 	args := []string{"-m", "session", "--rescan"}
+	
 	if _, err := b.exec.ExecuteWithTimeout(rescanIscsiTimeout, rescanCmd, args); err != nil {
-		return b.logger.ErrorRet(&CommandExecuteError{rescanCmd, err}, "failed")
+		if b.IsExitStatusCode(err, 21){ 
+			// error code 21 : ISCSI_ERR_NO_OBJS_FOUND - no records/targets/sessions/portals found to execute operation on. 
+			b.logger.Warning(NoIscsiadmCommnadWarningMessage, logs.Args{{"command", fmt.Sprintf("[%s %s]", rescanCmd, args)}})
+			return nil
+			
+		}  else{
+			return b.logger.ErrorRet(&CommandExecuteError{rescanCmd, err}, "failed")
+		}
 	}
 	return nil
 }
