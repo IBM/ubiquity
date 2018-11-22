@@ -64,6 +64,7 @@ type FakeBlockDeviceMounterUtils struct {
 	invocationsMutex sync.RWMutex
 }
 
+<<<<<<< HEAD
 func (fake *FakeBlockDeviceMounterUtils) RescanAll(wwn string, rescanForCleanUp bool, extraLunZeroScanning bool) error {
 	fake.rescanAllMutex.Lock()
 	ret, specificReturn := fake.rescanAllReturnsOnCall[len(fake.rescanAllArgsForCall)]
@@ -76,6 +77,21 @@ func (fake *FakeBlockDeviceMounterUtils) RescanAll(wwn string, rescanForCleanUp 
 	fake.rescanAllMutex.Unlock()
 	if fake.RescanAllStub != nil {
 		return fake.RescanAllStub(wwn, rescanForCleanUp, extraLunZeroScanning)
+=======
+func (fake *FakeBlockDeviceMounterUtils) RescanAll(withISCSI bool, wwn string, rescanForCleanUp bool, Lun0 bool) error {
+	fake.rescanAllMutex.Lock()
+	ret, specificReturn := fake.rescanAllReturnsOnCall[len(fake.rescanAllArgsForCall)]
+	fake.rescanAllArgsForCall = append(fake.rescanAllArgsForCall, struct {
+		withISCSI        bool
+		wwn              string
+		rescanForCleanUp bool
+		Lun0             bool
+	}{withISCSI, wwn, rescanForCleanUp, Lun0})
+	fake.recordInvocation("RescanAll", []interface{}{withISCSI, wwn, rescanForCleanUp, Lun0})
+	fake.rescanAllMutex.Unlock()
+	if fake.RescanAllStub != nil {
+		return fake.RescanAllStub(withISCSI, wwn, rescanForCleanUp, Lun0)
+>>>>>>> 2d63329b841b15f5adfdb7f139a6b9ec595269aa
 	}
 	if specificReturn {
 		return ret.result1
@@ -89,10 +105,17 @@ func (fake *FakeBlockDeviceMounterUtils) RescanAllCallCount() int {
 	return len(fake.rescanAllArgsForCall)
 }
 
+<<<<<<< HEAD
 func (fake *FakeBlockDeviceMounterUtils) RescanAllArgsForCall(i int) (string, bool, bool) {
 	fake.rescanAllMutex.RLock()
 	defer fake.rescanAllMutex.RUnlock()
 	return fake.rescanAllArgsForCall[i].wwn, fake.rescanAllArgsForCall[i].rescanForCleanUp, fake.rescanAllArgsForCall[i].extraLunZeroScanning
+=======
+func (fake *FakeBlockDeviceMounterUtils) RescanAllArgsForCall(i int) (bool, string, bool, bool) {
+	fake.rescanAllMutex.RLock()
+	defer fake.rescanAllMutex.RUnlock()
+	return fake.rescanAllArgsForCall[i].withISCSI, fake.rescanAllArgsForCall[i].wwn, fake.rescanAllArgsForCall[i].rescanForCleanUp, fake.rescanAllArgsForCall[i].Lun0
+>>>>>>> 2d63329b841b15f5adfdb7f139a6b9ec595269aa
 }
 
 func (fake *FakeBlockDeviceMounterUtils) RescanAllReturns(result1 error) {

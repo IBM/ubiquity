@@ -262,7 +262,6 @@ var _ = Describe("block_device_mounter_utils_test", func() {
 			protocol = fakeBlockDeviceUtils.RescanArgsForCall(1)
 			Expect(protocol).To(Equal(block_device_utils.SCSI))
 			Expect(fakeBlockDeviceUtils.ReloadMultipathCallCount()).To(Equal(1))
-
 		})
 	})
 	Context(".UnmountDeviceFlow", func() {
