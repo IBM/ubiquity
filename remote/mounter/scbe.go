@@ -67,10 +67,10 @@ func (s *scbeMounter) Mount(mountRequest resources.MountRequest) (string, error)
 		// For DS8k and Storwize Lun0, "rescan-scsi-bus.sh -r" cannot discover the LUN0, need to use rescanLun0 instead
 		s.logger.Info("volumeConfig: ", logs.Args{{"volumeConfig: ", mountRequest.VolumeConfig}})
 		_, ok := err.(*block_device_utils.VolumeNotFoundError)
-		if isLun0(mountRequest) && ok {
+		if ok && isLun0(mountRequest) {
 			s.logger.Debug("It is the first lun of DS8K or Storwize, will try to rescan lun0")
 			if err := s.blockDeviceMounterUtils.RescanAll(volumeWWN, false, true); err != nil {
-				return "", s.logger.ErrorRet(err, "RescanAll Targets failed", logs.Args{{"volumeWWN", volumeWWN}})
+				return "", s.logger.ErrorRet(err, "Rescan lun0 failed", logs.Args{{"volumeWWN", volumeWWN}})
 			}
 			devicePath, err = s.blockDeviceMounterUtils.Discover(volumeWWN, true)
 			if err != nil {

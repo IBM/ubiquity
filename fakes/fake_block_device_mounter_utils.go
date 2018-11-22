@@ -8,12 +8,12 @@ import (
 )
 
 type FakeBlockDeviceMounterUtils struct {
-	RescanAllStub        func(wwn string, rescanForCleanUp bool, Lun0 bool) error
+	RescanAllStub        func(wwn string, rescanForCleanUp bool, extraLunZeroScanning bool) error
 	rescanAllMutex       sync.RWMutex
 	rescanAllArgsForCall []struct {
-		wwn              string
-		rescanForCleanUp bool
-		Lun0             bool
+		wwn                  string
+		rescanForCleanUp     bool
+		extraLunZeroScanning bool
 	}
 	rescanAllReturns struct {
 		result1 error
@@ -64,18 +64,18 @@ type FakeBlockDeviceMounterUtils struct {
 	invocationsMutex sync.RWMutex
 }
 
-func (fake *FakeBlockDeviceMounterUtils) RescanAll(wwn string, rescanForCleanUp bool, Lun0 bool) error {
+func (fake *FakeBlockDeviceMounterUtils) RescanAll(wwn string, rescanForCleanUp bool, extraLunZeroScanning bool) error {
 	fake.rescanAllMutex.Lock()
 	ret, specificReturn := fake.rescanAllReturnsOnCall[len(fake.rescanAllArgsForCall)]
 	fake.rescanAllArgsForCall = append(fake.rescanAllArgsForCall, struct {
-		wwn              string
-		rescanForCleanUp bool
-		Lun0             bool
-	}{wwn, rescanForCleanUp, Lun0})
-	fake.recordInvocation("RescanAll", []interface{}{wwn, rescanForCleanUp, Lun0})
+		wwn                  string
+		rescanForCleanUp     bool
+		extraLunZeroScanning bool
+	}{wwn, rescanForCleanUp, extraLunZeroScanning})
+	fake.recordInvocation("RescanAll", []interface{}{wwn, rescanForCleanUp, extraLunZeroScanning})
 	fake.rescanAllMutex.Unlock()
 	if fake.RescanAllStub != nil {
-		return fake.RescanAllStub(wwn, rescanForCleanUp, Lun0)
+		return fake.RescanAllStub(wwn, rescanForCleanUp, extraLunZeroScanning)
 	}
 	if specificReturn {
 		return ret.result1
@@ -92,7 +92,7 @@ func (fake *FakeBlockDeviceMounterUtils) RescanAllCallCount() int {
 func (fake *FakeBlockDeviceMounterUtils) RescanAllArgsForCall(i int) (string, bool, bool) {
 	fake.rescanAllMutex.RLock()
 	defer fake.rescanAllMutex.RUnlock()
-	return fake.rescanAllArgsForCall[i].wwn, fake.rescanAllArgsForCall[i].rescanForCleanUp, fake.rescanAllArgsForCall[i].Lun0
+	return fake.rescanAllArgsForCall[i].wwn, fake.rescanAllArgsForCall[i].rescanForCleanUp, fake.rescanAllArgsForCall[i].extraLunZeroScanning
 }
 
 func (fake *FakeBlockDeviceMounterUtils) RescanAllReturns(result1 error) {

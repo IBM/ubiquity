@@ -153,7 +153,7 @@ func (b *blockDeviceMounterUtils) UnmountDeviceFlow(devicePath string, volumeWwn
 // 2. SCSI rescan
 // 3. multipathing rescan
 // return error if one of the steps fail
-func (b *blockDeviceMounterUtils) RescanAll(wwn string, rescanForCleanUp bool, Lun0 bool) error {
+func (b *blockDeviceMounterUtils) RescanAll(wwn string, rescanForCleanUp bool, extraLunZeroScanning bool) error {
 	defer b.logger.Trace(logs.INFO)
 
 	// locking for concurrent rescans and reduce rescans if no need
@@ -189,12 +189,7 @@ func (b *blockDeviceMounterUtils) RescanAll(wwn string, rescanForCleanUp bool, L
 	if err := b.blockDeviceUtils.Rescan(block_device_utils.ISCSI); err != nil {
 		return b.logger.ErrorRet(err, "ISCSI Rescan failed", logs.Args{{"protocol", block_device_utils.ISCSI}})
 	}
-<<<<<<< HEAD
-
-	if Lun0 {
-=======
 	if extraLunZeroScanning {
->>>>>>> fixed some comments
 		if err := b.blockDeviceUtils.RescanSCSILun0(); err != nil {
 			return b.logger.ErrorRet(err, "Rescan failed for FC Lun0", logs.Args{{"protocol", block_device_utils.SCSI}})
 		}

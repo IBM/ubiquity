@@ -199,7 +199,7 @@ var _ = Describe("scbe_mounter_test", func() {
 			_, err := scbeMounter.Mount(mountRequestForDS8kLun3)
 			Expect(err).To(HaveOccurred())
 		})
-		It("should fail to discover ds8k with lun3 if no lunNumber", func() {
+		It("should fail to discover A9k with lun3 if no lunNumber", func() {
 			fakeBdUtils.DiscoverReturns("", callErr)
 			fakeBdUtils.RescanAllReturnsOnCall(0, nil)
 			_, err := scbeMounter.Mount(mountRequestForA9kLun3)

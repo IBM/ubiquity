@@ -102,7 +102,6 @@ func (b *blockDeviceUtils) RescanSCSILun0() error {
 		fcHostFile := FcHostDir + host.Name() + "/issue_lip"
 		if err := ioutil.WriteFile(fcHostFile, []byte("1"), 0200); err != nil {
 			b.logger.Debug("Write issue_lip failed", logs.Args{{"err", err}})
-			continue
 		}
 		filename := ScsiHostDir + host.Name() + "/scan"
 		b.logger.Debug("ScsiHostDir", logs.Args{{"ScsiHostDir", ScsiHostDir}})
