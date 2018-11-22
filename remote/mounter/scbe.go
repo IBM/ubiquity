@@ -33,19 +33,11 @@ type scbeMounter struct {
 	exec                    utils.Executor
 }
 
-<<<<<<< HEAD
 func newScbMounter(blockDeviceMounterUtils block_device_mounter_utils.BlockDeviceMounterUtils, executer utils.Executor) resources.Mounter {
-=======
-func newScbMounter(scbeRemoteConfig resources.ScbeRemoteConfig, blockDeviceMounterUtils block_device_mounter_utils.BlockDeviceMounterUtils, executer utils.Executor) resources.Mounter {
->>>>>>> 2d63329b841b15f5adfdb7f139a6b9ec595269aa
 	return &scbeMounter{
 		logger:                  logs.GetLogger(),
 		blockDeviceMounterUtils: blockDeviceMounterUtils,
 		exec:                    executer,
-<<<<<<< HEAD
-=======
-		config:                  scbeRemoteConfig,
->>>>>>> 2d63329b841b15f5adfdb7f139a6b9ec595269aa
 	}
 }
 
@@ -63,11 +55,7 @@ func (s *scbeMounter) Mount(mountRequest resources.MountRequest) (string, error)
 	volumeWWN := mountRequest.VolumeConfig["Wwn"].(string)
 
 	// Rescan OS
-<<<<<<< HEAD
 	if err := s.blockDeviceMounterUtils.RescanAll(volumeWWN, false, false); err != nil {
-=======
-	if err := s.blockDeviceMounterUtils.RescanAll(!s.config.SkipRescanISCSI, volumeWWN, false, false); err != nil {
->>>>>>> 2d63329b841b15f5adfdb7f139a6b9ec595269aa
 		return "", s.logger.ErrorRet(err, "RescanAll failed")
 	}
 
@@ -80,13 +68,8 @@ func (s *scbeMounter) Mount(mountRequest resources.MountRequest) (string, error)
 		s.logger.Info("volumeConfig: ", logs.Args{{"volumeConfig: ", mountRequest.VolumeConfig}})
 		_, ok := err.(*block_device_utils.VolumeNotFoundError)
 		if ok && isLun0(mountRequest) {
-<<<<<<< HEAD
-			s.logger.Debug("It is the first lun of DS8K or Storwize, will try to rescan lun0")
+			s.logger.Info("It is the first lun of DS8K or Storwize, will try to rescan lun0")
 			if err := s.blockDeviceMounterUtils.RescanAll(volumeWWN, false, true); err != nil {
-=======
-			s.logger.Info("It is the first lun of DS8K or Storwize, will try to rescan lun0.")
-			if err := s.blockDeviceMounterUtils.RescanAll(!s.config.SkipRescanISCSI, volumeWWN, false, true); err != nil {
->>>>>>> 2d63329b841b15f5adfdb7f139a6b9ec595269aa
 				return "", s.logger.ErrorRet(err, "Rescan lun0 failed", logs.Args{{"volumeWWN", volumeWWN}})
 			}
 			devicePath, err = s.blockDeviceMounterUtils.Discover(volumeWWN, true)

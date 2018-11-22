@@ -23,8 +23,6 @@ import (
 	"io/ioutil"
 
 	"github.com/IBM/ubiquity/utils/logs"
-
-	"io/ioutil"
 )
 
 const rescanIscsiTimeout = 1 * 60 * 1000
