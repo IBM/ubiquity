@@ -110,7 +110,8 @@ func HttpExecute(httpClient *http.Client, requestType string, requestURL string,
 	
 	response, err :=  httpClient.Do(request)
 	if err != nil {
-		logger.Info(fmt.Sprintf("###err : %s , error type : %s ", err, reflect.TypeOf(err)))
+		logger.Info("##############$$$$$$$$$$$$$$$$")
+		logger.Info(fmt.Sprintf("###err : %s , error type : %s ", err.Error(), reflect.TypeOf(err)))
 	}
 	return response, err
 }
