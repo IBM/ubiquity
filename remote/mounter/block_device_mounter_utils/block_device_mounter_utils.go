@@ -152,8 +152,8 @@ func (b *blockDeviceMounterUtils) UnmountDeviceFlow(devicePath string, volumeWwn
 // 2. SCSI rescan
 // 3. multipathing rescan
 // return error if one of the steps fail
-func (b *blockDeviceMounterUtils) RescanAll(withISCSI bool, wwn string, rescanForCleanUp bool) error {
-	defer b.logger.Trace(logs.INFO, logs.Args{{"withISCSI", withISCSI}})
+func (b *blockDeviceMounterUtils) RescanAll(wwn string, rescanForCleanUp bool) error {
+	defer b.logger.Trace(logs.INFO)
 
 	// locking for concurrent rescans and reduce rescans if no need
 	b.logger.Debug("Ask for rescanLock for volumeWWN", logs.Args{{"volumeWWN", wwn}})
@@ -184,13 +184,13 @@ func (b *blockDeviceMounterUtils) RescanAll(withISCSI bool, wwn string, rescanFo
 	// TODO : if rescanForCleanUp we need to check if block device is not longer exist and if so skip the rescan!
 
 	// Do the rescans operations
-	if withISCSI {
-		if err := b.blockDeviceUtils.Rescan(block_device_utils.ISCSI); err != nil {
-			return b.logger.ErrorRet(err, "Rescan failed", logs.Args{{"protocol", block_device_utils.ISCSI}})
-		}
+	// in case of FC : if no iscsiadm on the machine or no session login - this will log a warning not fail!
+	if err := b.blockDeviceUtils.Rescan(block_device_utils.ISCSI); err != nil {
+		return b.logger.ErrorRet(err, "ISCSI Rescan failed", logs.Args{{"protocol", block_device_utils.ISCSI}})
 	}
+	
 	if err := b.blockDeviceUtils.Rescan(block_device_utils.SCSI); err != nil {
-		return b.logger.ErrorRet(err, "Rescan failed", logs.Args{{"protocol", block_device_utils.SCSI}})
+		return b.logger.ErrorRet(err, "OS Rescan failed", logs.Args{{"protocol", block_device_utils.SCSI}})
 	}
 	if !rescanForCleanUp {
 		if err := b.blockDeviceUtils.ReloadMultipath(); err != nil {

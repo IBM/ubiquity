@@ -117,7 +117,6 @@ type UbiquityPluginConfig struct {
 	LogRotateMaxSize        int
 	UbiquityServer          UbiquityServerConnectionInfo
 	SpectrumNfsRemoteConfig SpectrumNfsRemoteConfig
-	ScbeRemoteConfig        ScbeRemoteConfig
 	Backends                []string
 	LogLevel                string
 	CredentialInfo          CredentialInfo
@@ -133,10 +132,6 @@ type UbiquityDockerPluginConfig struct {
 type UbiquityServerConnectionInfo struct {
 	Address string
 	Port    int
-}
-
-type ScbeRemoteConfig struct {
-	SkipRescanISCSI bool
 }
 
 type UbiquityPluginSslConfig struct {
