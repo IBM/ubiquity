@@ -122,14 +122,15 @@ func HttpExecute(httpClient *http.Client, requestType string, requestURL string,
 				logger.Error("opError")
 				if sysErr, ok := opError.Err.(*os.SyscallError); ok {
 					logger.Error(fmt.Sprintf("errno : %s , ok : %s ", sysErr, ok))
-					logger.Error(fmt.Sprintf("syscall.ECONNREFUSED  %s ", syscall.ECONNREFUSED))
+					
 					logger.Error(fmt.Sprintf("errno.syscall: %s ", sysErr.Syscall))
-					logger.Error(fmt.Sprintf("is permission errno?? : %s ", os.IsPermission(sysErr)))
-					logger.Error(fmt.Sprintf("is permission err?? : %s ", os.IsPermission(err)))
-					logger.Error(fmt.Sprintf("is permission urlError?? : %s ", os.IsPermission(urlError)))
+					logger.Error(fmt.Sprintf("is IsTimeout errno?? : %s ", os.IsTimeout(sysErr)))
+					logger.Error(fmt.Sprintf("is IsTimeout err?? : %s ", os.IsTimeout(err)))
+					logger.Error(fmt.Sprintf("is IsTimeout urlError?? : %s ", os.IsTimeout(urlError)))
 					logger.Error(fmt.Sprintf("type of errno.Err:: %s ", reflect.TypeOf(sysErr.Err)))
 					errno1, _ := sysErr.Err.(syscall.Errno)
-					logger.Error(fmt.Sprintf("errno.Err equals syscall:: %s ", errno1 == syscall.ECONNREFUSED))
+					logger.Error(fmt.Sprintf("syscall.ECONNREFUSED  %s ", syscall.ECONNREFUSED))
+					logger.Error(fmt.Sprintf("errno.Err equals syscall:: %s   |||||| errno : %s  ", errno1 == syscall.ECONNREFUSED, errno1))
 					
 					if errno, ok := sysErr.Err.(syscall.Errno); ok && errno == syscall.ECONNREFUSED {
 						logger.Error("Failed to start ubiqutiy-k8s-provisioner due to network connection issue to ubiqutiy pod")
