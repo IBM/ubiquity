@@ -31,7 +31,6 @@ import (
 	"net"
 	"net/url"
 	"os"
-	"reflect"
 	"syscall"
 )
 
