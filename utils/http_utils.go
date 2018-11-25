@@ -28,9 +28,9 @@ import (
 	"github.com/IBM/ubiquity/resources"
 	"github.com/IBM/ubiquity/utils/logs"
 	"github.com/gorilla/mux"
-	"reflect"
-	"net/url"
 	"net"
+	"net/url"
+	"syscall"
 )
 
 func ExtractErrorResponse(response *http.Response) error {
@@ -109,24 +109,19 @@ func HttpExecute(httpClient *http.Client, requestType string, requestURL string,
 		err = fmt.Errorf("Error in creating request %#v", err)
 		return nil, logger.ErrorRet(err, "failed")
 	}
-	
-	response, err :=  httpClient.Do(request)
+
+	response, err := httpClient.Do(request)
+
 	if err != nil {
-		switch err.(type) {
-	        case *url.Error:
-		        switch err.(type) {
-		        	case *net.OpError:
-				        logger.Info("123##############$$$$$$$$$$$$$$$$")
-						logger.Info(fmt.Sprintf("###err : %s , error type : %s ", err.(*net.OpError).Err.Error(), reflect.TypeOf(err.(*net.OpError).Err)))
-					default:
-						return response, err   
-		        }
-		        
-	        default:
-				return response, err        
+		if urlError, ok := err.(*url.Error); ok {
+			if opError, ok := urlError.Err.(*net.OpError); ok {
+				if errno, ok := opError.Err.(syscall.Errno); ok && errno == syscall.ECONNREFUSED {
+					logger.Error("Failed to start ubiqutiy-k8s-provisioner due to network connection issue to ubiqutiy pod")
+				}
+			}
 		}
-		
 	}
+
 	return response, err
 }
 
