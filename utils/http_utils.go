@@ -30,9 +30,9 @@ import (
 	"github.com/gorilla/mux"
 	"net"
 	"net/url"
-	"syscall"
 	"reflect"
 	"os"
+	"syscall"
 )
 
 func ExtractErrorResponse(response *http.Response) error {
@@ -120,7 +120,7 @@ func HttpExecute(httpClient *http.Client, requestType string, requestURL string,
 			logger.Error("urlError")
 			if opError, ok := urlError.Err.(*net.OpError); ok {
 				logger.Error("opError")
-				errno, ok := opError.Err.(os.SyscallError)
+				errno, ok := opError.Err.(*os.SyscallError)
 				logger.Error(fmt.Sprintf("errno : %s , ok : %s ", errno, ok))
 				logger.Error(fmt.Sprintf("syscall.ECONNREFUSED  %s ", syscall.ECONNREFUSED))
 				logger.Error(fmt.Sprintf("errno.syscall: %s ", errno.Syscall))
