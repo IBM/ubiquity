@@ -29,6 +29,7 @@ import (
 	"github.com/IBM/ubiquity/utils/logs"
 	"github.com/gorilla/mux"
 	"reflect"
+	"net/url"
 )
 
 func ExtractErrorResponse(response *http.Response) error {
@@ -110,8 +111,14 @@ func HttpExecute(httpClient *http.Client, requestType string, requestURL string,
 	
 	response, err :=  httpClient.Do(request)
 	if err != nil {
-		logger.Info("##############$$$$$$$$$$$$$$$$")
-		logger.Info(fmt.Sprintf("###err : %s , error type : %s ", err.Error(), reflect.TypeOf(err)))
+		switch err.(type) {
+	        case *url.Error:
+		        logger.Info("##############$$$$$$$$$$$$$$$$")
+				logger.Info(fmt.Sprintf("###err : %s , error type : %s ", err.(*url.Error).Err.Error(), reflect.TypeOf(err.(*url.Error).Err)))
+	        default:
+				return response, err        
+		}
+		
 	}
 	return response, err
 }
