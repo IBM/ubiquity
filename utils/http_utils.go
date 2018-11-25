@@ -32,6 +32,7 @@ import (
 	"net/url"
 	"syscall"
 	"reflect"
+	"os"
 )
 
 func ExtractErrorResponse(response *http.Response) error {
@@ -119,10 +120,14 @@ func HttpExecute(httpClient *http.Client, requestType string, requestURL string,
 			logger.Error("urlError")
 			if opError, ok := urlError.Err.(*net.OpError); ok {
 				logger.Error("opError")
-				errno, ok := opError.Err.(syscall.Errno)
+				errno, ok := opError.Err.(os.SyscallError)
 				logger.Error(fmt.Sprintf("errno : %s , ok : %s ", errno, ok))
 				logger.Error(fmt.Sprintf("syscall.ECONNREFUSED  %s ", syscall.ECONNREFUSED))
-				logger.Error(fmt.Sprintf("type: %s ", reflect.TypeOf(opError.Err)))
+				logger.Error(fmt.Sprintf("errno.syscall: %s ", errno.Syscall))
+				logger.Error(fmt.Sprintf("is permission errno?? : %s ", os.IsPermission(errno)))
+				logger.Error(fmt.Sprintf("is permission err?? : %s ", os.IsPermission(err)))
+				logger.Error(fmt.Sprintf("is permission urlError?? : %s ", os.IsPermission(urlError)))
+				logger.Error(fmt.Sprintf("type of errno.Err:: %s ", reflect.TypeOf(errno.Err)))
 				
 				if errno, ok := opError.Err.(syscall.Errno); ok && errno == syscall.ECONNREFUSED {
 					logger.Error("Failed to start ubiqutiy-k8s-provisioner due to network connection issue to ubiqutiy pod")
