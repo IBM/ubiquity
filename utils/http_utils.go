@@ -124,9 +124,9 @@ func HttpExecute(httpClient *http.Client, requestType string, requestURL string,
 					logger.Error(fmt.Sprintf("errno : %s , ok : %s ", sysErr, ok))
 					
 					logger.Error(fmt.Sprintf("errno.syscall: %s ", sysErr.Syscall))
-					logger.Error(fmt.Sprintf("is IsTimeout errno?? : %s ", os.IsTimeout(sysErr)))
-					logger.Error(fmt.Sprintf("is IsTimeout err?? : %s ", os.IsTimeout(err)))
-					logger.Error(fmt.Sprintf("is IsTimeout urlError?? : %s ", os.IsTimeout(urlError)))
+//					logger.Error(fmt.Sprintf("is IsTimeout errno?? : %s ", os.IsTimeout(sysErr)))
+//					logger.Error(fmt.Sprintf("is IsTimeout err?? : %s ", os.IsTimeout(err)))
+//					logger.Error(fmt.Sprintf("is IsTimeout urlError?? : %s ", os.IsTimeout(urlError)))
 					logger.Error(fmt.Sprintf("type of errno.Err:: %s ", reflect.TypeOf(sysErr.Err)))
 					errno1, _ := sysErr.Err.(syscall.Errno)
 					logger.Error(fmt.Sprintf("syscall.ECONNREFUSED  %s ", syscall.ECONNREFUSED))
