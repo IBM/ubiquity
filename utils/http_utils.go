@@ -129,10 +129,10 @@ func HttpExecute(httpClient *http.Client, requestType string, requestURL string,
 //					logger.Error(fmt.Sprintf("is IsTimeout urlError?? : %s ", os.IsTimeout(urlError)))
 					logger.Error(fmt.Sprintf("type of errno.Err:: %s ", reflect.TypeOf(sysErr.Err)))
 					errno1, _ := sysErr.Err.(syscall.Errno)
-					logger.Error(fmt.Sprintf("syscall.ECONNREFUSED  %s ", syscall.ECONNREFUSED))
-					logger.Error(fmt.Sprintf("errno.Err equals syscall:: %s   |||||| errno : %s  ", errno1 == syscall.ECONNREFUSED, errno1))
+					logger.Error(fmt.Sprintf("syscall.ETIMEDOUT  %s ", syscall.ETIMEDOUT))
+					logger.Error(fmt.Sprintf("errno.Err equals syscall:: %s   |||||| errno : %s  ", errno1 == syscall.E, errno1))
 					
-					if errno, ok := sysErr.Err.(syscall.Errno); ok && errno == syscall.ECONNREFUSED {
+					if errno, ok := sysErr.Err.(syscall.Errno); ok && errno == syscall.ETIMEDOUT {
 						logger.Error("Failed to start ubiqutiy-k8s-provisioner due to network connection issue to ubiqutiy pod")
 					}
 				}
