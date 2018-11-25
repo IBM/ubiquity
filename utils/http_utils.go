@@ -30,6 +30,7 @@ import (
 	"github.com/gorilla/mux"
 	"reflect"
 	"net/url"
+	"net"
 )
 
 func ExtractErrorResponse(response *http.Response) error {
@@ -113,8 +114,14 @@ func HttpExecute(httpClient *http.Client, requestType string, requestURL string,
 	if err != nil {
 		switch err.(type) {
 	        case *url.Error:
-		        logger.Info("##############$$$$$$$$$$$$$$$$")
-				logger.Info(fmt.Sprintf("###err : %s , error type : %s ", err.(*url.Error).Err.Error(), reflect.TypeOf(err.(*url.Error).Err)))
+		        switch err.(type) {
+		        	case *net.OpError:
+				        logger.Info("123##############$$$$$$$$$$$$$$$$")
+						logger.Info(fmt.Sprintf("###err : %s , error type : %s ", err.(*net.OpError).Err.Error(), reflect.TypeOf(err.(*net.OpError).Err)))
+					default:
+						return response, err   
+		        }
+		        
 	        default:
 				return response, err        
 		}
