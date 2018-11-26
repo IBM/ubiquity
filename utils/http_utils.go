@@ -113,18 +113,6 @@ func HttpExecute(httpClient *http.Client, requestType string, requestURL string,
 
 	response, err := httpClient.Do(request)
 
-	if err != nil {
-		if urlError, ok := err.(*url.Error); ok {
-			if opError, ok := urlError.Err.(*net.OpError); ok {
-				if sysErr, ok := opError.Err.(*os.SyscallError); ok {
-					if errno, ok := sysErr.Err.(syscall.Errno); ok && errno == syscall.ETIMEDOUT {
-						logger.Error("Failed to start ubiqutiy-k8s-provisioner due to network connection issue to ubiqutiy pod")
-					}
-				}
-			}
-		}
-	}
-
 	return response, err
 }
 
