@@ -22,7 +22,7 @@ Currently, the following storage systems use Ubiquity:
    
 * IBM Spectrum Scale
 
-   The IBM Spectrum Scale file storage is supported for Kubernetes. Ubiquity communicates with Spectrum Scale system directly via Spectrum Scale REST API v2.
+   The IBM Spectrum Scale file storage is supported for Kubernetes. Ubiquity communicates with IBM Spectrum Scale system directly via IBM Spectrum Scale management API v2.
 
 The code is provided as is, without warranty. Any issue will be handled on a best-effort basis.
 
