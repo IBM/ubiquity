@@ -195,7 +195,7 @@ func (s *spectrumLocalClient) CreateVolume(createVolumeRequest resources.CreateV
 		return s.logger.ErrorRet(err, "Error determining type")
 	}
 	s.logger.Debug("Volume type requested", logs.Args{{"userSpecifiedType",userSpecifiedType}})
-	isExistingVolume, filesystem, existingFileset, err := s.validateAndParseParams(s.logger, createVolumeRequest.Opts)
+	isExistingVolume, filesystem, existingFileset, err := s.validateAndParseParams(s.logger, createVolumeRequest.Opts, createVolumeRequest.Name)
 	if err != nil {
 		return s.logger.ErrorRet(err, "Error in validate params")
 	}
@@ -461,6 +461,18 @@ func (s *spectrumLocalClient) updateDBWithExistingFilesetQuota(filesystem, name,
 		return s.logger.ErrorRet(err, "ListFilesetQuota failed",logs.Args{{"filesystem", filesystem}, {"Fileset", userSpecifiedFileset}})
 	}
 
+// We need to make sure fileset is linked for existing fileset case, else we will fail while mounting.
+
+    isFilesetLinked, err := s.connector.IsFilesetLinked(filesystem, userSpecifiedFileset)
+
+    if err != nil {
+        return s.logger.ErrorRet(&SpectrumScaleFileSetLinkError{Filesystem: filesystem, Fileset: userSpecifiedFileset}, "")
+    }
+
+	if !isFilesetLinked {
+		return s.logger.ErrorRet(&SpectrumScaleFileSetNotLinkError{Filesystem: filesystem, Fileset: userSpecifiedFileset}, "")
+	}
+
 	s.logger.Debug("For REST connector converting quotas to bytes")
     filesetQuotaBytes, err := utils.ConvertToBytes(s.logger, filesetQuota)
 	if err != nil {
@@ -515,10 +527,10 @@ func (s *spectrumLocalClient) checkIfFSMounted(filesystem string) error {
     return nil
 }
 
-func (s *spectrumLocalClient) validateAndParseParams(logger logs.Logger, opts map[string]interface{}) (bool, string, string, error) {
+func (s *spectrumLocalClient) validateAndParseParams(logger logs.Logger, opts map[string]interface{}, volumeName string) (bool, string, string, error) {
     defer s.logger.Trace(logs.DEBUG)()
 
-	existingFileset, existingFilesetSpecified := opts[TypeFileset]
+	IsPreexistingPresentVal, IsPreexistingSpecified := opts[IsPreexisting]
 	filesystem, filesystemSpecified := opts[Filesystem]
 	_, uidSpecified := opts[UserSpecifiedUID]
 	_, gidSpecified := opts[UserSpecifiedGID]
@@ -529,18 +541,18 @@ func (s *spectrumLocalClient) validateAndParseParams(logger logs.Logger, opts ma
 	}
 
 	if uidSpecified && gidSpecified {
-		if existingFilesetSpecified{
+		if IsPreexistingSpecified{
 			return true, "", "", s.logger.ErrorRet(fmt.Errorf("uid/gid cannot be specified along with existing fileset"), "")
 		}
 	}
 
-	if (userSpecifiedType == TypeFileset && existingFilesetSpecified){
+	if (userSpecifiedType == TypeFileset && (IsPreexistingSpecified && (IsPreexistingPresentVal == "true"))) {
 		if filesystemSpecified == false {
 			logger.Debug("'filesystem' is a required opt for using existing volumes")
-			return true, filesystem.(string), existingFileset.(string), s.logger.ErrorRet(fmt.Errorf("'filesystem' is a required opt for using existing volumes"), "")
+			return true, filesystem.(string), volumeName, s.logger.ErrorRet(fmt.Errorf("'filesystem' is a required opt for using existing volumes"), "")
 		}
-		logger.Debug("Valid: existing FILESET")
-		return true, filesystem.(string), existingFileset.(string), nil
+		logger.Debug("isPreexisting was specified", logs.Args{{"Filesystem:", filesystem.(string)}, {"Fileset:", volumeName}, {"isPreexisting:", IsPreexistingPresentVal}})
+		return true, filesystem.(string), volumeName, nil
 
 	} else if filesystemSpecified == false {
 		return false, s.config.DefaultFilesystemName, "", nil
