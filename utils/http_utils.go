@@ -28,10 +28,6 @@ import (
 	"github.com/IBM/ubiquity/resources"
 	"github.com/IBM/ubiquity/utils/logs"
 	"github.com/gorilla/mux"
-	"net"
-	"net/url"
-	"os"
-	"syscall"
 )
 
 func ExtractErrorResponse(response *http.Response) error {
