@@ -94,6 +94,7 @@ func (b *blockDeviceUtils) RescanSCSILun0() error {
 		return b.logger.ErrorRet(err, "Getting fc_host failed.", logs.Args{{"FcHostDir", FcHostDir}})
 	}
 	if len(hostInfos) == 0 {
+		err := fmt.Errorf("There is no fc_host found, please check the fc host.")
 		return b.logger.ErrorRet(err, "There is no fc_host found.", logs.Args{{"FcHostDir", FcHostDir}})
 	}
 
