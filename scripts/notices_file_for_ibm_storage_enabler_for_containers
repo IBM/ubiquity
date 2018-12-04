@@ -9,7 +9,6 @@ IBM Storage Enabler for Containers Version 2.0
 IBM Storage Kubernetes FlexVolume Version 2.0
 IBM Storage Kubernetes Dynamic Provisioner Version 2.0
 IBM Storage Enabler for Containers DB Version 2.0
-IBM Storage Enabler for Containers Helm Utils Version 2.0
 
 ===========================================================================
 Section 1 - TERMS AND CONDITIONS FOR SEPARATELY LICENSED CODE
@@ -10724,7 +10723,6 @@ END Mozilla Public License, Version 2.0
 =====================================================================
 END OF NOTICES AND INFORMATION FOR IBM Storage Enabler for
 Containers, Kubermetes FlexVolume, Kubermetes Dynamic
-Provisioner, Enabler for Containers DB, and Enabler for
-Containers Helm Utils Version 2.0 
+Provisioner, and Enabler for Containers DB Version 2.0 
 =====================================================================
 
