@@ -49,6 +49,8 @@ type Executor interface { // basic host dependent functions
 	GetGlobFiles(file_pattern string) (matches []string, err error)
 	IsSameFile(file1 os.FileInfo, file2 os.FileInfo) bool
 	IsDirEmpty(dir string) (bool, error)
+	GetDeviceForFileStat(os.FileInfo) uint64
+
 }
 
 type executor struct {
@@ -179,4 +181,8 @@ func (e *executor) IsDirEmpty(dir string) (bool, error) {
 	}
 
 	return len(files) == 0, nil
+}
+
+func (e *executor) GetDeviceForFileStat(fileStat os.FileInfo) uint64{
+	return fileStat.Sys().(*syscall.Stat_t).Dev
 }
