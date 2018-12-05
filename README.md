@@ -13,7 +13,7 @@ Ubiquity supports the Kubernetes and Docker frameworks, using the following plug
 - [Ubiquity plugin for Kubernetes](https://github.com/IBM/ubiquity-k8s) (Dynamic Provisioner and FlexVolume)
 - [Ubiquity Docker volume plugin](https://github.com/IBM/ubiquity-docker-plugin), for testing only.
 
-The IBM official solution for Kubernetes, based on the Ubiquity project, is referred to as IBM Storage Enabler for Containers. You can download the installation package and its documentation from [IBM Fix Central TODO get the new location](https://www.ibm.com/support/fixcentral/swg/selectFixes?parent=Software%2Bdefined%2Bstorage&product=ibm/StorageSoftware/IBM+Spectrum+Connect&release=All&platform=Linux&function=all).
+The IBM official solution for Kubernetes, based on the Ubiquity project, is referred to as IBM Storage Enabler for Containers. You can download the installation package and its documentation from [IBM Fix Central](http://www.ibm.com/support/fixcentral/swg/quickorder?parent=Software%20defined%20storage&product=ibm/StorageSoftware/IBM+Storage+Enabler+for+Containers&release=All&platform=All&function=all&source=fc).
 
 Ubiquity supports the following storage systems:
 * IBM block storage.
