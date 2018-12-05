@@ -13,19 +13,19 @@ export PGSSL_PRIVATE_DIR="`dirname $UBIQUITY_DB_CERT_PRIVATE`"
 export PGSSL_PUBLIC_DIR="`dirname $UBIQUITY_DB_CERT_PUBLIC`"
 
 if [ "$1" = 'postgres' ] && [ "$(id -u)" = '0' ]; then
-    if [ ! -e "$UBIQUITY_DB_CERT_PUBLIC" -a ! -e "$UBIQUITY_DB_CERT_PRIVATE" ]; then
-        echo "Creating SSL directory $PGSSL_PRIVATE_DIR and setting ownership to user postgres ..."
-        mkdir -p $PGSSL_PRIVATE_DIR
-        chown postgres $PGSSL_PRIVATE_DIR
-        chmod 700 $PGSSL_PRIVATE_DIR
+    echo "Creating SSL directory $PGSSL_PRIVATE_DIR and setting ownership to user postgres ..."
+    mkdir -p $PGSSL_PRIVATE_DIR
+    chown postgres $PGSSL_PRIVATE_DIR
+    chmod 700 $PGSSL_PRIVATE_DIR
 
-        if [ "$PGSSL_PUBLIC_DIR" != "$PGSSL_PRIVATE_DIR" ]; then
-            echo "Creating SSL directory $PGSSL_PUBLIC_DIR and setting ownership to user postgres ..."
-            mkdir -p $PGSSL_PUBLIC_DIR
-            chown postgres $PGSSL_PUBLIC_DIR
-            chmod 700 $PGSSL_PUBLIC_DIR
-        fi
+    if [ "$PGSSL_PUBLIC_DIR" != "$PGSSL_PRIVATE_DIR" ]; then
+        echo "Creating SSL directory $PGSSL_PUBLIC_DIR and setting ownership to user postgres ..."
+        mkdir -p $PGSSL_PUBLIC_DIR
+        chown postgres $PGSSL_PUBLIC_DIR
+        chmod 700 $PGSSL_PUBLIC_DIR
+    fi
 
+    if [ ! -e "$UBIQUITY_DB_PROVIDED_CERT_PUBLIC" -a ! -e "$UBIQUITY_DB_PROVIDED_CERT_PRIVATE" ]; then
         echo "Generateing SSL private and public keys..."
 
         if [ -z "$POSTGRES_EMAIL" ]; then
@@ -49,8 +49,11 @@ if [ "$1" = 'postgres' ] && [ "$(id -u)" = '0' ]; then
         chown postgres $UBIQUITY_DB_CERT_PUBLIC
         chmod 600 $UBIQUITY_DB_CERT_PUBLIC
         echo "Creating default SSL key and certificate for postgres - done!"
-    elif [ -e "$UBIQUITY_DB_CERT_PUBLIC" -a -e "$UBIQUITY_DB_CERT_PRIVATE" ]; then
-        echo "Ubiquity will be using the provided certificate files : [$UBIQUITY_DB_CERT_PUBLIC] and [$UBIQUITY_DB_CERT_PRIVATE]"
+    elif [ -e "$UBIQUITY_DB_PROVIDED_CERT_PUBLIC" -a -e "$UBIQUITY_DB_PROVIDED_CERT_PRIVATE" ]; then
+        echo "Ubiquity will be using the provided certificate files : [$UBIQUITY_DB_PROVIDED_CERT_PUBLIC] and [$UBIQUITY_DB_PROVIDED_CERT_PRIVATE]"
+        echo "Copying provided files to the ssl private directory..."
+        cp $UBIQUITY_DB_PROVIDED_CERT_PRIVATE $UBIQUITY_DB_CERT_PRIVATE
+        cp $UBIQUITY_DB_PROVIDED_CERT_PUBLIC $UBIQUITY_DB_CERT_PUBLIC
         echo "Make sure the permissions of the certificates are ok..."
         chown postgres $UBIQUITY_DB_CERT_PRIVATE
         chmod 600 $UBIQUITY_DB_CERT_PRIVATE
@@ -58,7 +61,7 @@ if [ "$1" = 'postgres' ] && [ "$(id -u)" = '0' ]; then
         chmod 600 $UBIQUITY_DB_CERT_PUBLIC
         ls -l $UBIQUITY_DB_CERT_PRIVATE $UBIQUITY_DB_CERT_PUBLIC
     else
-        echo "Error: one of the certificate files is missing : [$UBIQUITY_DB_CERT_PUBLIC] and [$UBIQUITY_DB_CERT_PRIVATE]"
+        echo "Error: one of the certificate files is missing : [$UBIQUITY_DB_PROVIDED_CERT_PUBLIC] and [$UBIQUITY_DB_PROVIDED_CERT_PRIVATE]"
         exit 2
     fi
 fi
