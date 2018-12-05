@@ -121,7 +121,7 @@ func (s *scbeMounter) Unmount(unmountRequest resources.UnmountRequest) error {
 			s.logger.Warning("Idempotent issue encountered: volume not found. skipping UnmountDeviceFlow ", logs.Args{{"volumeWWN", volumeWWN}})
 			skipUnmountFlow = true
 		case *block_device_utils.FaultyDeviceError:
-			s.logger.Warning("Idempotent issue encountered: mpath device is faulty. continuing with UnmountDeviceFlow", logs.Args{{"device", devicePath}})
+			s.logger.Warning("Idempotent issue encountered: mpath device is faulty. continuing with UnmountDeviceFlow", logs.Args{{"device", devicePath}, {"volumeWWN", volumeWWN}})
 		default:
 			return s.logger.ErrorRet(err, "Discover failed", logs.Args{{"volumeWWN", volumeWWN}})
 		}
