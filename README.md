@@ -18,7 +18,7 @@ The IBM official solution for Kubernetes, based on the Ubiquity project, is refe
 Ubiquity supports the following storage systems:
 * IBM block storage.
 
-    IBM block storage is supported for Kubernetes via IBM Spectrum Connect. Ubiquity communicates with the IBM storage systems through Spectrum Connect. Spectrum Connect creates a storage profile (for example, gold, silver or bronze) and makes it available for Kubernetes.
+   IBM block storage is supported for Kubernetes via IBM Spectrum Connect. Ubiquity communicates with the IBM storage systems through Spectrum Connect. Spectrum Connect creates a storage profile (for example, gold, silver or bronze) and makes it available for Kubernetes.
    
 * IBM Spectrum Scale
 
