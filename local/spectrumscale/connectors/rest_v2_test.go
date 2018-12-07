@@ -227,7 +227,7 @@ var _ = Describe("spectrumRestV2", func() {
 			createFilesetResp.Jobs = make([]connectors.Job, 1)
 			createFilesetResp.Jobs[0].JobID = 1234
 			registerurl = fakeurl + "/scalemgmt/v2/filesystems/" + filesystem + "/filesets"
-			joburl = fakeurl + "/scalemgmt/v2/jobs?filter=jobId=1234&fields=:all:"
+			joburl = fakeurl + "/scalemgmt/v2/jobs/1234"
 
 		})
 		It("Should pass while creating a fileset", func() {
@@ -352,7 +352,7 @@ var _ = Describe("spectrumRestV2", func() {
 			deleteFilesetResp.Jobs[0].JobID = 1234
 			registerurl = fakeurl + "/scalemgmt/v2/filesystems/" + filesystem + "/filesets/" + fileset
 
-			joburl = fakeurl + "/scalemgmt/v2/jobs?filter=jobId=1234&fields=:all:"
+			joburl = fakeurl + "/scalemgmt/v2/jobs/1234?fields=:all:"
 
 		})
 		It("Should pass while deleting a fileset", func() {
@@ -456,7 +456,7 @@ var _ = Describe("spectrumRestV2", func() {
 			linkFilesetResp.Jobs = make([]connectors.Job, 1)
 			linkFilesetResp.Jobs[0].JobID = 1234
 			registerurl = fakeurl + "/scalemgmt/v2/filesystems/" + filesystem + "/filesets/" + fileset + "/link"
-			joburl = fakeurl + "/scalemgmt/v2/jobs?filter=jobId=1234&fields=:all:"
+			joburl = fakeurl + "/scalemgmt/v2/jobs/1234?fields=:all:"
 			registerFSurl = fakeurl + "/scalemgmt/v2/filesystems/" + filesystem
 			getfilesysResp = connectors.GetFilesystemResponse_v2{}
 			getfilesysResp.FileSystems = make([]connectors.FileSystem_v2, 1)
@@ -595,7 +595,7 @@ var _ = Describe("spectrumRestV2", func() {
 			unlinkFilesetResp.Jobs = make([]connectors.Job, 1)
 			unlinkFilesetResp.Jobs[0].JobID = 1234
 			registerurl = fakeurl + "/scalemgmt/v2/filesystems/" + filesystem + "/filesets/" + fileset + "/link?force=True"
-			joburl = fakeurl + "/scalemgmt/v2/jobs?filter=jobId=1234&fields=:all:"
+			joburl = fakeurl + "/scalemgmt/v2/jobs/1234?fields=:all:"
 
 		})
 		It("should pass while deleting a fileset", func() {
@@ -906,7 +906,7 @@ var _ = Describe("spectrumRestV2", func() {
 			setFilesetResp.Jobs = make([]connectors.Job, 1)
 			setFilesetResp.Jobs[0].JobID = 1234
 			registerurl = fakeurl + "/scalemgmt/v2/filesystems/" + filesystem + "/quotas"
-			joburl = fakeurl + "/scalemgmt/v2/jobs?filter=jobId=1234&fields=:all:"
+			joburl = fakeurl + "/scalemgmt/v2/jobs/1234?fields=:all:"
 
 		})
 		It("Should pass while creating a fileset", func() {

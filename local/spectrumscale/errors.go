@@ -69,3 +69,25 @@ type SpectrumScaleFileSystemMountError struct {
 func (e *SpectrumScaleFileSystemMountError) Error() string {
 	return fmt.Sprintf("Failed to check if Filesystem [%s] is mounted", e.Filesystem)
 }
+
+type SpectrumScaleFileSetLinkError struct {
+	Filesystem string
+	Fileset    string
+}
+
+func (e * SpectrumScaleFileSetLinkError) Error() string {
+	return fmt.Sprintf("Failed to check Fileset [%s] Link Status, present in Filesystem [%s]", e.Fileset, e.Filesystem)
+}
+
+type SpectrumScaleFileSetNotLinkError struct {
+	Filesystem string
+	Fileset    string
+}
+
+func (e * SpectrumScaleFileSetNotLinkError) Error() string {
+	return fmt.Sprintf("Fileset [%s] present in Filesystem [%s] is not Linked", e.Fileset, e.Filesystem)
+}
+
+
+
+

@@ -19,13 +19,17 @@ package block_device_utils
 import (
 	"errors"
 
-	"github.com/IBM/ubiquity/utils/logs"
 	"fmt"
+	"io/ioutil"
 
+	"github.com/IBM/ubiquity/utils/logs"
 )
 
 const rescanIscsiTimeout = 1 * 60 * 1000
 const rescanScsiTimeout = 2 * 60 * 1000
+
+var FcHostDir = "/sys/class/fc_host/"
+var ScsiHostDir = "/sys/class/scsi_host/"
 
 func (b *blockDeviceUtils) Rescan(protocol Protocol) error {
 	defer b.logger.Trace(logs.DEBUG)()
@@ -47,16 +51,16 @@ func (b *blockDeviceUtils) RescanISCSI() error {
 		b.logger.Debug("No iscisadm installed skipping ISCSI rescan")
 		return nil
 	}
-	
+
 	args := []string{"-m", "session", "--rescan"}
-	
+
 	if _, err := b.exec.ExecuteWithTimeout(rescanIscsiTimeout, rescanCmd, args); err != nil {
-		if b.IsExitStatusCode(err, 21){ 
-			// error code 21 : ISCSI_ERR_NO_OBJS_FOUND - no records/targets/sessions/portals found to execute operation on. 
+		if b.IsExitStatusCode(err, 21) {
+			// error code 21 : ISCSI_ERR_NO_OBJS_FOUND - no records/targets/sessions/portals found to execute operation on.
 			b.logger.Warning(NoIscsiadmCommnadWarningMessage, logs.Args{{"command", fmt.Sprintf("[%s %s]", rescanCmd, args)}})
 			return nil
-			
-		}  else{
+
+		} else {
 			return b.logger.ErrorRet(&CommandExecuteError{rescanCmd, err}, "failed")
 		}
 	}
@@ -79,6 +83,33 @@ func (b *blockDeviceUtils) RescanSCSI() error {
 	args := []string{"-r"} // TODO should use -r only in clean up
 	if _, err := b.exec.ExecuteWithTimeout(rescanScsiTimeout, rescanCmd, args); err != nil {
 		return b.logger.ErrorRet(&CommandExecuteError{rescanCmd, err}, "failed")
+	}
+	return nil
+}
+
+func (b *blockDeviceUtils) RescanSCSILun0() error {
+	defer b.logger.Trace(logs.DEBUG)()
+	hostInfos, err := ioutil.ReadDir(FcHostDir)
+	if err != nil {
+		return b.logger.ErrorRet(err, "Getting fc_host failed.", logs.Args{{"FcHostDir", FcHostDir}})
+	}
+	if len(hostInfos) == 0 {
+		err := fmt.Errorf("There is no fc_host found, please check the fc host.")
+		return b.logger.ErrorRet(err, "There is no fc_host found.", logs.Args{{"FcHostDir", FcHostDir}})
+	}
+
+	for _, host := range hostInfos {
+		b.logger.Debug("scan the host", logs.Args{{"name: ", host.Name()}})
+		fcHostFile := FcHostDir + host.Name() + "/issue_lip"
+		if err := ioutil.WriteFile(fcHostFile, []byte("1"), 0200); err != nil {
+			b.logger.Debug("Write issue_lip failed", logs.Args{{"err", err}})
+		}
+		filename := ScsiHostDir + host.Name() + "/scan"
+		b.logger.Debug("ScsiHostDir", logs.Args{{"ScsiHostDir", ScsiHostDir}})
+		if err := ioutil.WriteFile(filename, []byte("- - -"), 0200); err != nil {
+			b.logger.Debug("Write file scan failed", logs.Args{{"err", err}})
+			continue
+		}
 	}
 	return nil
 }

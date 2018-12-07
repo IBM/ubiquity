@@ -19,13 +19,14 @@ package scbe
 import (
 	"encoding/json"
 	"fmt"
+	"strconv"
+	"strings"
+	"sync"
+
 	"github.com/IBM/ubiquity/database"
 	"github.com/IBM/ubiquity/resources"
 	"github.com/IBM/ubiquity/utils"
 	"github.com/IBM/ubiquity/utils/logs"
-	"strconv"
-	"strings"
-	"sync"
 )
 
 type scbeLocalClient struct {
@@ -47,7 +48,7 @@ const (
 	ComposeVolumeName        = volumeNamePrefix + "%s_%s" // e.g u_instance1_volName
 	MaxVolumeNameLength      = 63                         // IBM block storage max volume name cannot exceed this length
 
-	GetVolumeConfigExtraParams = 2 // number of extra params added to the VolumeConfig beyond the scbe volume struct
+	GetVolumeConfigExtraParams = 3 // number of extra params added to the VolumeConfig beyond the scbe volume struct
 )
 
 var (
@@ -301,14 +302,14 @@ func (s *scbeLocalClient) RemoveVolume(removeVolumeRequest resources.RemoveVolum
 		}
 	}
 
-	hostAttach, err := scbeRestClient.GetVolMapping(existingVolume.WWN)
+	volMapInfo, err := scbeRestClient.GetVolMapping(existingVolume.WWN)
 	// get vol mapping will not return an error but an empty host in case the vol does no exist so no idempotent issue here.
 	if err != nil {
 		return s.logger.ErrorRet(err, "scbeRestClient.GetVolMapping failed")
 	}
 
-	if hostAttach != EmptyHost {
-		return s.logger.ErrorRet(&CannotDeleteVolWhichAttachedToHostError{removeVolumeRequest.Name, hostAttach}, "failed")
+	if volMapInfo.Host != EmptyHost {
+		return s.logger.ErrorRet(&CannotDeleteVolWhichAttachedToHostError{removeVolumeRequest.Name, volMapInfo.Host}, "failed")
 	}
 
 	err = scbeRestClient.DeleteVolume(existingVolume.WWN)
@@ -405,12 +406,13 @@ func (s *scbeLocalClient) GetVolumeConfig(getVolumeConfigRequest resources.GetVo
 	volConfig[resources.OptionNameForVolumeFsType] = scbeVolume.FSType
 
 	// The ubiquity remote will use this extra info to determine is-attached
-	hostAttach, err := scbeRestClient.GetVolMapping(scbeVolume.WWN)
+	volMapInfo, err := scbeRestClient.GetVolMapping(scbeVolume.WWN)
 	if err != nil {
 		return nil, s.logger.ErrorRet(err, "scbeRestClient.GetVolMapping failed")
 	}
 
-	volConfig[resources.ScbeKeyVolAttachToHost] = hostAttach
+	volConfig[resources.ScbeKeyVolAttachToHost] = volMapInfo.Host
+	volConfig[resources.ScbeKeyVolAttachLunNumToHost] = volMapInfo.LunNumber
 
 	return volConfig, nil
 }
@@ -438,11 +440,11 @@ func (s *scbeLocalClient) Attach(attachRequest resources.AttachRequest) (string,
 		return "", s.logger.ErrorRet(err, "dataModel.GetVolume failed")
 	}
 
-	hostAttach, err := scbeRestClient.GetVolMapping(existingVolume.WWN)
+	volMapInfo, err := scbeRestClient.GetVolMapping(existingVolume.WWN)
 	if err != nil {
 		return "", s.logger.ErrorRet(err, "scbeRestClient.GetVolMapping failed")
 	}
-
+	hostAttach := volMapInfo.Host
 	if hostAttach == attachRequest.Host {
 		// if already map to the given host then just ignore and succeed to attach
 		s.logger.Info("Volume already attached, skip backend attach", logs.Args{{"volume", attachRequest.Name}, {"host", attachRequest.Host}})
@@ -480,11 +482,12 @@ func (s *scbeLocalClient) Detach(detachRequest resources.DetachRequest) (err err
 		return s.logger.ErrorRet(err, "dataModel.GetVolume failed")
 	}
 
-	hostAttach, err := scbeRestClient.GetVolMapping(existingVolume.WWN)
+	volMapInfo, err := scbeRestClient.GetVolMapping(existingVolume.WWN)
 	if err != nil {
 		return s.logger.ErrorRet(err, "scbeRestClient.GetVolMapping failed")
 	}
 
+	hostAttach := volMapInfo.Host
 	if hostAttach == EmptyHost {
 		s.logger.Warning("Volume is already detached from host.", logs.Args{{"volume", existingVolume.WWN}})
 		return nil
