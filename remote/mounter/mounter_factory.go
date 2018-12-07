@@ -28,7 +28,7 @@ func (m *mounterFactory) GetMounterPerBackend(backend string, legacyLogger *log.
 	if backend == resources.SpectrumScale {
 		return NewSpectrumScaleMounter(), nil
 	} else if backend == resources.SCBE {
-		return NewScbeMounter(pluginConfig.ScbeRemoteConfig), nil
+		return NewScbeMounter(), nil
 	} else {
 		return nil, &NoMounterForVolumeError{backend}
 	}
