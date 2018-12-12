@@ -104,8 +104,8 @@ func (l *locker) updateStats(name string) {
 	defer l.logger.Trace(logs.DEBUG, logs.Args{{"lockName", name}})()
 
 	l.statsLock.Lock()
-	defer l.cleanup()
 	defer l.statsLock.Unlock()
+	defer l.cleanup()
 	if stat, exists := l.stats[name]; exists {
 		stat = time.Now()
 		l.stats[name] = stat
