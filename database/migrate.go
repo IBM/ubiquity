@@ -18,33 +18,35 @@ package database
 
 import (
 	"fmt"
+	"sync"
 	"github.com/IBM/ubiquity/utils/logs"
 )
 
-var migrations = make(map[string]interface{})
+var migrations = new(sync.Map)
 
 func RegisterMigration(obj interface{}) {
 	defer logs.GetLogger().Trace(logs.DEBUG)()
-
-	migrations[fmt.Sprintf("%v", obj)] = obj
+	migrations.Store(fmt.Sprintf("%v", obj), obj)
 }
 
 func UnregisterAllMigrations() {
 	defer logs.GetLogger().Trace(logs.DEBUG)()
-
-	migrations = make(map[string]interface{})
+	migrations = new(sync.Map)
 }
 
 func doMigrations(connection Connection) error {
 	defer logs.GetLogger().Trace(logs.DEBUG)()
 
 	logger := logs.GetLogger()
-	for k, v := range migrations {
+
+	migrations.Range(func(k, v interface{}) bool {
 		logger.Info("migrating", logs.Args{{"migration", k}})
 		if err := connection.GetDb().AutoMigrate(v).Error; err != nil {
 			logger.ErrorRet(err, "failed")
 		}
-		delete(migrations, k)
-	}
+		migrations.Delete(k)
+		return true
+	})
+
 	return nil
 }
