@@ -53,7 +53,7 @@ const (
 	UrlScbeResourceVolume    = "volumes"
 	UrlScbeResourceMapping   = "mappings"
 	UrlScbeResourceHost      = "hosts"
-	DefaultSizeUnit          = "gb"
+	DefaultSizeUnit          = "gib"
 	LunNumberNoMapping       = -1
 )
 
