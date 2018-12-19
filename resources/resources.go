@@ -18,6 +18,7 @@ package resources
 
 import (
 	"fmt"
+
 	"github.com/jinzhu/gorm"
 )
 
@@ -44,7 +45,6 @@ type UbiquityServerConfig struct {
 type SpectrumScaleConfig struct {
 	DefaultFilesystemName string
 	NfsServerAddr         string
-	SshConfig             SshConfig
 	RestConfig            RestConfig
 	ForceDelete           bool
 }
@@ -77,6 +77,7 @@ const DefaultForScbeConfigParamDefaultFilesystem = "ext4" // if customer don't m
 const PathToMountUbiquityBlockDevices = "/ubiquity/%s"    // %s is the WWN of the volume # TODO this should be moved to docker plugin side
 const OptionNameForVolumeFsType = "fstype"                // the option name of the fstype and also the key in the volumeConfig
 const ScbeKeyVolAttachToHost = "attach-to"                // the key in map for volume to host attachments
+const ScbeKeyVolAttachLunNumToHost = "LunNumber"          // the key in map for volume lun number to host attachments
 const ScbeDefaultPort = 8440                              // the default port for SCBE management
 const SslModeRequire = "require"
 const SslModeVerifyFull = "verify-full"
@@ -85,6 +86,10 @@ const KeyScbeSslMode = "SCBE_SSL_MODE"
 const DefaultDbSslMode = SslModeVerifyFull
 const DefaultScbeSslMode = SslModeVerifyFull
 const DefaultPluginsSslMode = SslModeVerifyFull
+const SpectrumscaleDefaultPort = 443 // the default port for SPECTRUM SCALE management
+const SpectrumScaleParamPrefix = "SPECTRUMSCALE_"
+const KeySpectrumScaleSslMode = SpectrumScaleParamPrefix + "SSL_MODE"
+const DefaultSpectrumScaleSslMode = SslModeVerifyFull
 
 type SshConfig struct {
 	User string
@@ -93,10 +98,11 @@ type SshConfig struct {
 }
 
 type RestConfig struct {
-	Endpoint string
-	User     string
-	Password string
-	Hostname string
+	Port         int
+	ManagementIP string
+	User         string
+	Password     string
+	Hostname     string
 }
 
 type SpectrumNfsRemoteConfig struct {
@@ -114,7 +120,6 @@ type UbiquityPluginConfig struct {
 	LogRotateMaxSize        int
 	UbiquityServer          UbiquityServerConnectionInfo
 	SpectrumNfsRemoteConfig SpectrumNfsRemoteConfig
-	ScbeRemoteConfig        ScbeRemoteConfig
 	Backends                []string
 	LogLevel                string
 	CredentialInfo          CredentialInfo
@@ -130,10 +135,6 @@ type UbiquityDockerPluginConfig struct {
 type UbiquityServerConnectionInfo struct {
 	Address string
 	Port    int
-}
-
-type ScbeRemoteConfig struct {
-	SkipRescanISCSI bool
 }
 
 type UbiquityPluginSslConfig struct {
@@ -174,6 +175,17 @@ type VolAlreadyExistsError struct {
 func (e *VolAlreadyExistsError) Error() string {
 	return fmt.Sprintf("Volume [%s] already exists.", e.VolName)
 }
+
+type BackendInitializationError struct {
+	BackendName string
+	Err         error
+}
+
+func (e *BackendInitializationError) Error() string {
+	return fmt.Sprintf("Error while initializing %s client:[%s]", e.BackendName, e.Err.Error())
+}
+
+const ClientInitializationErrorStr = "Check backend configuration - SpectrumScale ManagementIP or SpectrumConnect managmentIP is mandatory in the ubiqutiy-configmap."
 
 //go:generate counterfeiter -o ../fakes/fake_mounter.go . Mounter
 
@@ -323,6 +335,6 @@ type FlexVolumeDetachRequest struct {
 }
 
 type RequestContext struct {
-	Id string
-	ActionName	string
+	Id         string
+	ActionName string
 }

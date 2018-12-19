@@ -49,17 +49,6 @@ type FakeSpectrumScaleConnector struct {
 		result1 bool
 		result2 error
 	}
-	MountFileSystemStub        func(filesystemName string) error
-	mountFileSystemMutex       sync.RWMutex
-	mountFileSystemArgsForCall []struct {
-		filesystemName string
-	}
-	mountFileSystemReturns struct {
-		result1 error
-	}
-	mountFileSystemReturnsOnCall map[int]struct {
-		result1 error
-	}
 	ListFilesystemsStub        func() ([]string, error)
 	listFilesystemsMutex       sync.RWMutex
 	listFilesystemsArgsForCall []struct{}
@@ -174,20 +163,34 @@ type FakeSpectrumScaleConnector struct {
 		result1 bool
 		result2 error
 	}
-	ListFilesetQuotaStub        func(filesystemName string, filesetName string) (string, error)
-	listFilesetQuotaMutex       sync.RWMutex
-	listFilesetQuotaArgsForCall []struct {
-		filesystemName string
-		filesetName    string
-	}
-	listFilesetQuotaReturns struct {
-		result1 string
-		result2 error
-	}
-	listFilesetQuotaReturnsOnCall map[int]struct {
-		result1 string
-		result2 error
-	}
+
+    CheckIfFSQuotaEnabledStub        func(filesystemName string) (error)
+    checkIfFSQuotaEnabledMutex       sync.RWMutex
+    checkIfFSQuotaEnabledArgsForCall []struct {
+        filesystemName string
+    }
+    checkIfFSQuotaEnabledReturns struct {
+        result1 error
+    }
+    checkIfFSQuotaEnabledReturnsOnCall map[int]struct {
+        result1 error
+    }
+
+    ListFilesetQuotaStub        func(filesystemName string, filesetName string) (string, error)
+    listFilesetQuotaMutex       sync.RWMutex
+    listFilesetQuotaArgsForCall []struct {
+        filesystemName string
+        filesetName    string
+    }
+    listFilesetQuotaReturns struct {
+        result1 string
+        result2 error
+    }
+    listFilesetQuotaReturnsOnCall map[int]struct {
+        result1 string
+        result2 error
+    }
+
 	SetFilesetQuotaStub        func(filesystemName string, filesetName string, quota string) error
 	setFilesetQuotaMutex       sync.RWMutex
 	setFilesetQuotaArgsForCall []struct {
@@ -320,54 +323,6 @@ func (fake *FakeSpectrumScaleConnector) IsFilesystemMountedReturnsOnCall(i int, 
 		result1 bool
 		result2 error
 	}{result1, result2}
-}
-
-func (fake *FakeSpectrumScaleConnector) MountFileSystem(filesystemName string) error {
-	fake.mountFileSystemMutex.Lock()
-	ret, specificReturn := fake.mountFileSystemReturnsOnCall[len(fake.mountFileSystemArgsForCall)]
-	fake.mountFileSystemArgsForCall = append(fake.mountFileSystemArgsForCall, struct {
-		filesystemName string
-	}{filesystemName})
-	fake.recordInvocation("MountFileSystem", []interface{}{filesystemName})
-	fake.mountFileSystemMutex.Unlock()
-	if fake.MountFileSystemStub != nil {
-		return fake.MountFileSystemStub(filesystemName)
-	}
-	if specificReturn {
-		return ret.result1
-	}
-	return fake.mountFileSystemReturns.result1
-}
-
-func (fake *FakeSpectrumScaleConnector) MountFileSystemCallCount() int {
-	fake.mountFileSystemMutex.RLock()
-	defer fake.mountFileSystemMutex.RUnlock()
-	return len(fake.mountFileSystemArgsForCall)
-}
-
-func (fake *FakeSpectrumScaleConnector) MountFileSystemArgsForCall(i int) string {
-	fake.mountFileSystemMutex.RLock()
-	defer fake.mountFileSystemMutex.RUnlock()
-	return fake.mountFileSystemArgsForCall[i].filesystemName
-}
-
-func (fake *FakeSpectrumScaleConnector) MountFileSystemReturns(result1 error) {
-	fake.MountFileSystemStub = nil
-	fake.mountFileSystemReturns = struct {
-		result1 error
-	}{result1}
-}
-
-func (fake *FakeSpectrumScaleConnector) MountFileSystemReturnsOnCall(i int, result1 error) {
-	fake.MountFileSystemStub = nil
-	if fake.mountFileSystemReturnsOnCall == nil {
-		fake.mountFileSystemReturnsOnCall = make(map[int]struct {
-			result1 error
-		})
-	}
-	fake.mountFileSystemReturnsOnCall[i] = struct {
-		result1 error
-	}{result1}
 }
 
 func (fake *FakeSpectrumScaleConnector) ListFilesystems() ([]string, error) {
@@ -816,56 +771,105 @@ func (fake *FakeSpectrumScaleConnector) IsFilesetLinkedReturnsOnCall(i int, resu
 	}{result1, result2}
 }
 
-func (fake *FakeSpectrumScaleConnector) ListFilesetQuota(filesystemName string, filesetName string) (string, error) {
-	fake.listFilesetQuotaMutex.Lock()
-	ret, specificReturn := fake.listFilesetQuotaReturnsOnCall[len(fake.listFilesetQuotaArgsForCall)]
-	fake.listFilesetQuotaArgsForCall = append(fake.listFilesetQuotaArgsForCall, struct {
+func (fake *FakeSpectrumScaleConnector) CheckIfFSQuotaEnabled(filesystemName string) (error) {
+	fake.checkIfFSQuotaEnabledMutex.Lock()
+	ret, specificReturn := fake.checkIfFSQuotaEnabledReturnsOnCall[len(fake.checkIfFSQuotaEnabledArgsForCall)]
+	fake.checkIfFSQuotaEnabledArgsForCall = append(fake.checkIfFSQuotaEnabledArgsForCall, struct {
 		filesystemName string
-		filesetName    string
-	}{filesystemName, filesetName})
-	fake.recordInvocation("ListFilesetQuota", []interface{}{filesystemName, filesetName})
-	fake.listFilesetQuotaMutex.Unlock()
-	if fake.ListFilesetQuotaStub != nil {
-		return fake.ListFilesetQuotaStub(filesystemName, filesetName)
+	}{filesystemName})
+	fake.recordInvocation("CheckIfFSQuotaEnabled", []interface{}{filesystemName})
+	fake.checkIfFSQuotaEnabledMutex.Unlock()
+	if fake.CheckIfFSQuotaEnabledStub != nil {
+		return fake.CheckIfFSQuotaEnabledStub(filesystemName)
 	}
 	if specificReturn {
-		return ret.result1, ret.result2
+		return ret.result1
 	}
-	return fake.listFilesetQuotaReturns.result1, fake.listFilesetQuotaReturns.result2
+	return fake.checkIfFSQuotaEnabledReturns.result1
+}
+
+func (fake *FakeSpectrumScaleConnector) CheckIfFSQuotaEnabledCallCount() int {
+	fake.checkIfFSQuotaEnabledMutex.RLock()
+	defer fake.checkIfFSQuotaEnabledMutex.RUnlock()
+	return len(fake.checkIfFSQuotaEnabledArgsForCall)
+}
+
+func (fake *FakeSpectrumScaleConnector) CheckIfFSQuotaEnabledArgsForCall(i int) (string) {
+	fake.checkIfFSQuotaEnabledMutex.RLock()
+	defer fake.checkIfFSQuotaEnabledMutex.RUnlock()
+	return fake.checkIfFSQuotaEnabledArgsForCall[i].filesystemName
+}
+
+func (fake *FakeSpectrumScaleConnector) CheckIfFSQuotaEnabledReturns(result1 error) {
+	fake.CheckIfFSQuotaEnabledStub = nil
+	fake.checkIfFSQuotaEnabledReturns = struct {
+		result1 error
+	}{result1}
+}
+
+func (fake *FakeSpectrumScaleConnector) CheckIfFSQuotaEnabledReturnsOnCall(i int, result1 error) {
+	fake.CheckIfFSQuotaEnabledStub = nil
+	if fake.checkIfFSQuotaEnabledReturnsOnCall == nil {
+		fake.checkIfFSQuotaEnabledReturnsOnCall = make(map[int]struct {
+			result1 error
+		})
+	}
+	fake.checkIfFSQuotaEnabledReturnsOnCall[i] = struct {
+		result1 error
+	}{result1}
+}
+
+
+func (fake *FakeSpectrumScaleConnector) ListFilesetQuota(filesystemName string, filesetName string) (string, error) {
+    fake.listFilesetQuotaMutex.Lock()
+    ret, specificReturn := fake.listFilesetQuotaReturnsOnCall[len(fake.listFilesetQuotaArgsForCall)]
+    fake.listFilesetQuotaArgsForCall = append(fake.listFilesetQuotaArgsForCall, struct {
+        filesystemName string
+        filesetName    string
+    }{filesystemName, filesetName})
+    fake.recordInvocation("ListFilesetQuota", []interface{}{filesystemName, filesetName})
+    fake.listFilesetQuotaMutex.Unlock()
+    if fake.ListFilesetQuotaStub != nil {
+        return fake.ListFilesetQuotaStub(filesystemName, filesetName)
+    }
+    if specificReturn {
+        return ret.result1, ret.result2
+    }
+    return fake.listFilesetQuotaReturns.result1, fake.listFilesetQuotaReturns.result2
 }
 
 func (fake *FakeSpectrumScaleConnector) ListFilesetQuotaCallCount() int {
-	fake.listFilesetQuotaMutex.RLock()
-	defer fake.listFilesetQuotaMutex.RUnlock()
-	return len(fake.listFilesetQuotaArgsForCall)
+    fake.listFilesetQuotaMutex.RLock()
+    defer fake.listFilesetQuotaMutex.RUnlock()
+    return len(fake.listFilesetQuotaArgsForCall)
 }
 
 func (fake *FakeSpectrumScaleConnector) ListFilesetQuotaArgsForCall(i int) (string, string) {
-	fake.listFilesetQuotaMutex.RLock()
-	defer fake.listFilesetQuotaMutex.RUnlock()
-	return fake.listFilesetQuotaArgsForCall[i].filesystemName, fake.listFilesetQuotaArgsForCall[i].filesetName
+    fake.listFilesetQuotaMutex.RLock()
+    defer fake.listFilesetQuotaMutex.RUnlock()
+    return fake.listFilesetQuotaArgsForCall[i].filesystemName, fake.listFilesetQuotaArgsForCall[i].filesetName
 }
 
 func (fake *FakeSpectrumScaleConnector) ListFilesetQuotaReturns(result1 string, result2 error) {
-	fake.ListFilesetQuotaStub = nil
-	fake.listFilesetQuotaReturns = struct {
-		result1 string
-		result2 error
-	}{result1, result2}
+    fake.ListFilesetQuotaStub = nil
+    fake.listFilesetQuotaReturns = struct {
+        result1 string
+        result2 error
+    }{result1, result2}
 }
 
 func (fake *FakeSpectrumScaleConnector) ListFilesetQuotaReturnsOnCall(i int, result1 string, result2 error) {
-	fake.ListFilesetQuotaStub = nil
-	if fake.listFilesetQuotaReturnsOnCall == nil {
-		fake.listFilesetQuotaReturnsOnCall = make(map[int]struct {
-			result1 string
-			result2 error
-		})
-	}
-	fake.listFilesetQuotaReturnsOnCall[i] = struct {
-		result1 string
-		result2 error
-	}{result1, result2}
+    fake.ListFilesetQuotaStub = nil
+    if fake.listFilesetQuotaReturnsOnCall == nil {
+        fake.listFilesetQuotaReturnsOnCall = make(map[int]struct {
+            result1 string
+            result2 error
+        })
+    }
+    fake.listFilesetQuotaReturnsOnCall[i] = struct {
+        result1 string
+        result2 error
+    }{result1, result2}
 }
 
 func (fake *FakeSpectrumScaleConnector) SetFilesetQuota(filesystemName string, filesetName string, quota string) error {
@@ -1022,8 +1026,6 @@ func (fake *FakeSpectrumScaleConnector) Invocations() map[string][][]interface{}
 	defer fake.getClusterIdMutex.RUnlock()
 	fake.isFilesystemMountedMutex.RLock()
 	defer fake.isFilesystemMountedMutex.RUnlock()
-	fake.mountFileSystemMutex.RLock()
-	defer fake.mountFileSystemMutex.RUnlock()
 	fake.listFilesystemsMutex.RLock()
 	defer fake.listFilesystemsMutex.RUnlock()
 	fake.getFilesystemMountpointMutex.RLock()
@@ -1046,6 +1048,8 @@ func (fake *FakeSpectrumScaleConnector) Invocations() map[string][][]interface{}
 	defer fake.listFilesetQuotaMutex.RUnlock()
 	fake.setFilesetQuotaMutex.RLock()
 	defer fake.setFilesetQuotaMutex.RUnlock()
+	fake.checkIfFSQuotaEnabledMutex.RLock()
+	defer fake.checkIfFSQuotaEnabledMutex.RUnlock()
 	fake.exportNfsMutex.RLock()
 	defer fake.exportNfsMutex.RUnlock()
 	fake.unexportNfsMutex.RLock()

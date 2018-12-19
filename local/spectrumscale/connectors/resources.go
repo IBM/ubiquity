@@ -309,6 +309,18 @@ type GetFilesystemResponse_v2 struct {
 	Paging      Pages           `json:"paging,omitempty"`
 }
 
+type OwnerInfo struct {
+  User  string  `json:user,omitempty"`
+  UID   int     `json:uid,omitempty"`
+  Group string  `json:group,omitempty"`
+  GID   int     `json:gid,omitempty"`
+}
+
+type OwnerResp_v2 struct {
+  Status Status    `json:"status,omitempty"`
+  Owner  OwnerInfo `json:"owner,omitempty"`
+}
+
 type BlockInfo struct {
 	Pools               string `json:"pools,omitempty"`
 	Disks               string `json:"disks,omitempty"`
@@ -467,7 +479,7 @@ type FilesetConfig_v2 struct {
 type GetQuotaResponse_v2 struct {
 	Quotas []Quota_v2 `json:"quotas,omitempty"`
 	Status Status     `json:"status,omitempty"`
-	Paging string     `json:"paging,omitempty"`
+	Paging Pages      `json:"paging,omitempty"`
 }
 
 type Quota_v2 struct {
@@ -538,3 +550,8 @@ type CreateFilesetRequest struct {
 	AfmRPO                       int    `json:"afmRPO,omitempty"`
 	AfmShowHomeSnapshots         string `json:"afmShowHomeSnapshots,omitempty"`
 }
+
+const (
+    UserSpecifiedUID string = "uid"
+    UserSpecifiedGID string = "gid"
+)

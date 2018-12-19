@@ -215,6 +215,30 @@ type FakeExecutor struct {
 	isSameFileReturnsOnCall map[int]struct {
 		result1 bool
 	}
+	IsDirEmptyStub        func(dir string) (bool, error)
+	isDirEmptyMutex       sync.RWMutex
+	isDirEmptyArgsForCall []struct {
+		dir string
+	}
+	isDirEmptyReturns struct {
+		result1 bool
+		result2 error
+	}
+	isDirEmptyReturnsOnCall map[int]struct {
+		result1 bool
+		result2 error
+	}
+	GetDeviceForFileStatStub        func(os.FileInfo) uint64
+	getDeviceForFileStatMutex       sync.RWMutex
+	getDeviceForFileStatArgsForCall []struct {
+		arg1 os.FileInfo
+	}
+	getDeviceForFileStatReturns struct {
+		result1 uint64
+	}
+	getDeviceForFileStatReturnsOnCall map[int]struct {
+		result1 uint64
+	}
 	invocations      map[string][][]interface{}
 	invocationsMutex sync.RWMutex
 }
@@ -1065,6 +1089,105 @@ func (fake *FakeExecutor) IsSameFileReturnsOnCall(i int, result1 bool) {
 	}{result1}
 }
 
+func (fake *FakeExecutor) IsDirEmpty(dir string) (bool, error) {
+	fake.isDirEmptyMutex.Lock()
+	ret, specificReturn := fake.isDirEmptyReturnsOnCall[len(fake.isDirEmptyArgsForCall)]
+	fake.isDirEmptyArgsForCall = append(fake.isDirEmptyArgsForCall, struct {
+		dir string
+	}{dir})
+	fake.recordInvocation("IsDirEmpty", []interface{}{dir})
+	fake.isDirEmptyMutex.Unlock()
+	if fake.IsDirEmptyStub != nil {
+		return fake.IsDirEmptyStub(dir)
+	}
+	if specificReturn {
+		return ret.result1, ret.result2
+	}
+	return fake.isDirEmptyReturns.result1, fake.isDirEmptyReturns.result2
+}
+
+func (fake *FakeExecutor) IsDirEmptyCallCount() int {
+	fake.isDirEmptyMutex.RLock()
+	defer fake.isDirEmptyMutex.RUnlock()
+	return len(fake.isDirEmptyArgsForCall)
+}
+
+func (fake *FakeExecutor) IsDirEmptyArgsForCall(i int) string {
+	fake.isDirEmptyMutex.RLock()
+	defer fake.isDirEmptyMutex.RUnlock()
+	return fake.isDirEmptyArgsForCall[i].dir
+}
+
+func (fake *FakeExecutor) IsDirEmptyReturns(result1 bool, result2 error) {
+	fake.IsDirEmptyStub = nil
+	fake.isDirEmptyReturns = struct {
+		result1 bool
+		result2 error
+	}{result1, result2}
+}
+
+func (fake *FakeExecutor) IsDirEmptyReturnsOnCall(i int, result1 bool, result2 error) {
+	fake.IsDirEmptyStub = nil
+	if fake.isDirEmptyReturnsOnCall == nil {
+		fake.isDirEmptyReturnsOnCall = make(map[int]struct {
+			result1 bool
+			result2 error
+		})
+	}
+	fake.isDirEmptyReturnsOnCall[i] = struct {
+		result1 bool
+		result2 error
+	}{result1, result2}
+}
+
+func (fake *FakeExecutor) GetDeviceForFileStat(arg1 os.FileInfo) uint64 {
+	fake.getDeviceForFileStatMutex.Lock()
+	ret, specificReturn := fake.getDeviceForFileStatReturnsOnCall[len(fake.getDeviceForFileStatArgsForCall)]
+	fake.getDeviceForFileStatArgsForCall = append(fake.getDeviceForFileStatArgsForCall, struct {
+		arg1 os.FileInfo
+	}{arg1})
+	fake.recordInvocation("GetDeviceForFileStat", []interface{}{arg1})
+	fake.getDeviceForFileStatMutex.Unlock()
+	if fake.GetDeviceForFileStatStub != nil {
+		return fake.GetDeviceForFileStatStub(arg1)
+	}
+	if specificReturn {
+		return ret.result1
+	}
+	return fake.getDeviceForFileStatReturns.result1
+}
+
+func (fake *FakeExecutor) GetDeviceForFileStatCallCount() int {
+	fake.getDeviceForFileStatMutex.RLock()
+	defer fake.getDeviceForFileStatMutex.RUnlock()
+	return len(fake.getDeviceForFileStatArgsForCall)
+}
+
+func (fake *FakeExecutor) GetDeviceForFileStatArgsForCall(i int) os.FileInfo {
+	fake.getDeviceForFileStatMutex.RLock()
+	defer fake.getDeviceForFileStatMutex.RUnlock()
+	return fake.getDeviceForFileStatArgsForCall[i].arg1
+}
+
+func (fake *FakeExecutor) GetDeviceForFileStatReturns(result1 uint64) {
+	fake.GetDeviceForFileStatStub = nil
+	fake.getDeviceForFileStatReturns = struct {
+		result1 uint64
+	}{result1}
+}
+
+func (fake *FakeExecutor) GetDeviceForFileStatReturnsOnCall(i int, result1 uint64) {
+	fake.GetDeviceForFileStatStub = nil
+	if fake.getDeviceForFileStatReturnsOnCall == nil {
+		fake.getDeviceForFileStatReturnsOnCall = make(map[int]struct {
+			result1 uint64
+		})
+	}
+	fake.getDeviceForFileStatReturnsOnCall[i] = struct {
+		result1 uint64
+	}{result1}
+}
+
 func (fake *FakeExecutor) Invocations() map[string][][]interface{} {
 	fake.invocationsMutex.RLock()
 	defer fake.invocationsMutex.RUnlock()
@@ -1102,6 +1225,10 @@ func (fake *FakeExecutor) Invocations() map[string][][]interface{} {
 	defer fake.getGlobFilesMutex.RUnlock()
 	fake.isSameFileMutex.RLock()
 	defer fake.isSameFileMutex.RUnlock()
+	fake.isDirEmptyMutex.RLock()
+	defer fake.isDirEmptyMutex.RUnlock()
+	fake.getDeviceForFileStatMutex.RLock()
+	defer fake.getDeviceForFileStatMutex.RUnlock()
 	copiedInvocations := map[string][][]interface{}{}
 	for key, value := range fake.invocations {
 		copiedInvocations[key] = value

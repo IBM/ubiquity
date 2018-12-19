@@ -19,13 +19,14 @@ package block_device_mounter_utils_test
 import (
 	"errors"
 	"fmt"
+	"testing"
+
 	"github.com/IBM/ubiquity/fakes"
 	"github.com/IBM/ubiquity/remote/mounter/block_device_mounter_utils"
 	"github.com/IBM/ubiquity/remote/mounter/block_device_utils"
 	"github.com/IBM/ubiquity/utils"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
-	"testing"
 )
 
 var _ = Describe("block_device_mounter_utils_test", func() {
@@ -192,14 +193,14 @@ var _ = Describe("block_device_mounter_utils_test", func() {
 	Context(".RescanAll", func() {
 		It("should succeed to skip rescan we try to rescan(for discover) a wwn that is already descovered", func() {
 			fakeBlockDeviceUtils.DiscoverReturns("wwn", nil)
-			err = blockDeviceMounterUtils.RescanAll(true, "wwn", false)
+			err = blockDeviceMounterUtils.RescanAll("wwn", false, false)
 			Expect(err).NotTo(HaveOccurred())
 			Expect(fakeBlockDeviceUtils.RescanCallCount()).To(Equal(0))
 		})
 		It("should fail if iscsi rescan fail", func() {
 			fakeBlockDeviceUtils.RescanReturnsOnCall(0, callErr)
 			fakeBlockDeviceUtils.DiscoverReturns("", fmt.Errorf("device not exist yet"))
-			err = blockDeviceMounterUtils.RescanAll(true, "wwn", false)
+			err = blockDeviceMounterUtils.RescanAll("wwn", false, false)
 			Expect(err).To(HaveOccurred())
 			Expect(err).To(MatchError(callErr))
 			Expect(fakeBlockDeviceUtils.RescanCallCount()).To(Equal(1))
@@ -210,7 +211,7 @@ var _ = Describe("block_device_mounter_utils_test", func() {
 			fakeBlockDeviceUtils.RescanReturnsOnCall(0, nil)
 			fakeBlockDeviceUtils.RescanReturnsOnCall(1, callErr)
 			fakeBlockDeviceUtils.DiscoverReturns("", fmt.Errorf("device not exist yet"))
-			err = blockDeviceMounterUtils.RescanAll(true, "wwn", false)
+			err = blockDeviceMounterUtils.RescanAll("wwn", false, false)
 			Expect(err).To(HaveOccurred())
 			Expect(err).To(MatchError(callErr))
 			Expect(fakeBlockDeviceUtils.RescanCallCount()).To(Equal(2))
@@ -223,7 +224,7 @@ var _ = Describe("block_device_mounter_utils_test", func() {
 			fakeBlockDeviceUtils.RescanReturnsOnCall(0, nil)
 			fakeBlockDeviceUtils.RescanReturnsOnCall(1, callErr)
 			fakeBlockDeviceUtils.DiscoverReturns("", fmt.Errorf("device not exist yet"))
-			err = blockDeviceMounterUtils.RescanAll(true, "wwn", true)
+			err = blockDeviceMounterUtils.RescanAll("wwn", true, false)
 			Expect(err).To(HaveOccurred())
 			Expect(err).To(MatchError(callErr))
 			Expect(fakeBlockDeviceUtils.RescanCallCount()).To(Equal(2))
@@ -237,7 +238,7 @@ var _ = Describe("block_device_mounter_utils_test", func() {
 			fakeBlockDeviceUtils.RescanReturnsOnCall(1, nil)
 			fakeBlockDeviceUtils.ReloadMultipathReturns(callErr)
 			fakeBlockDeviceUtils.DiscoverReturns("", fmt.Errorf("device not exist yet"))
-			err = blockDeviceMounterUtils.RescanAll(true, "wwn", false)
+			err = blockDeviceMounterUtils.RescanAll("wwn", false, false)
 			Expect(err).To(HaveOccurred())
 			Expect(err).To(MatchError(callErr))
 			Expect(fakeBlockDeviceUtils.RescanCallCount()).To(Equal(2))
@@ -253,23 +254,12 @@ var _ = Describe("block_device_mounter_utils_test", func() {
 			fakeBlockDeviceUtils.RescanReturnsOnCall(1, nil)
 			fakeBlockDeviceUtils.ReloadMultipathReturns(nil)
 			fakeBlockDeviceUtils.DiscoverReturns("", fmt.Errorf("device not exist yet"))
-			err = blockDeviceMounterUtils.RescanAll(true, "wwn", false)
+			err = blockDeviceMounterUtils.RescanAll("wwn", false, false)
 			Expect(err).NotTo(HaveOccurred())
 			Expect(fakeBlockDeviceUtils.RescanCallCount()).To(Equal(2))
 			protocol := fakeBlockDeviceUtils.RescanArgsForCall(0)
 			Expect(protocol).To(Equal(block_device_utils.ISCSI))
 			protocol = fakeBlockDeviceUtils.RescanArgsForCall(1)
-			Expect(protocol).To(Equal(block_device_utils.SCSI))
-			Expect(fakeBlockDeviceUtils.ReloadMultipathCallCount()).To(Equal(1))
-		})
-		It("should succeed to rescall all (no iscsi call)", func() {
-			fakeBlockDeviceUtils.RescanReturnsOnCall(0, nil)
-			fakeBlockDeviceUtils.ReloadMultipathReturns(nil)
-			fakeBlockDeviceUtils.DiscoverReturns("", fmt.Errorf("device not exist yet"))
-			err = blockDeviceMounterUtils.RescanAll(false, "wwn", false)
-			Expect(err).NotTo(HaveOccurred())
-			Expect(fakeBlockDeviceUtils.RescanCallCount()).To(Equal(1))
-			protocol := fakeBlockDeviceUtils.RescanArgsForCall(0)
 			Expect(protocol).To(Equal(block_device_utils.SCSI))
 			Expect(fakeBlockDeviceUtils.ReloadMultipathCallCount()).To(Equal(1))
 		})
@@ -280,6 +270,15 @@ var _ = Describe("block_device_mounter_utils_test", func() {
 			err = blockDeviceMounterUtils.UnmountDeviceFlow("fake_device", "6001738CFC9035EA0000000000795164")
 			Expect(err).To(HaveOccurred())
 			Expect(err).To(MatchError(callErr))
+		})
+		It("should fail if dmsetup failed", func() {
+			fakeBlockDeviceUtils.SetDmsetupReturns(callErr)
+			fakeBlockDeviceUtils.UmountFsReturns(nil)
+			err = blockDeviceMounterUtils.UnmountDeviceFlow("fake_device", "6001738CFC9035EA0000000000795164")
+			Expect(err).To(HaveOccurred())
+			Expect(err).To(MatchError(callErr))
+			Expect(fakeBlockDeviceUtils.SetDmsetupCallCount()).To(Equal(1))
+			Expect(fakeBlockDeviceUtils.UmountFsCallCount()).To(Equal(0))
 		})
 		It("should fail if Cleanup failed", func() {
 			fakeBlockDeviceUtils.UmountFsReturns(nil)
@@ -299,8 +298,8 @@ var _ = Describe("block_device_mounter_utils_test", func() {
 	})
 })
 
-func TestGetBlockDeviceUtils(t *testing.T) {
+func TestGetBlockDeviceMounterUtils(t *testing.T) {
 	RegisterFailHandler(Fail)
 	defer utils.InitUbiquityServerTestLogger()()
-	RunSpecs(t, "BlockDeviceUtils Test Suite")
+	RunSpecs(t, "BlockDeviceMounterUtils Test Suite")
 }

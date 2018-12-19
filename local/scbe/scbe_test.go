@@ -19,13 +19,14 @@ package scbe_test
 import (
 	"errors"
 	"fmt"
+	"reflect"
+	"strings"
+
 	"github.com/IBM/ubiquity/fakes"
 	"github.com/IBM/ubiquity/local/scbe"
 	"github.com/IBM/ubiquity/resources"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
-	"reflect"
-	"strings"
 )
 
 const (
@@ -34,12 +35,14 @@ const (
 	fakeHost2          = "fakehost2"
 	fakeError          = "error"
 	fakeVol            = "fakevol"
+	fakeLunNumber      = 0
 )
 
 var (
 	fakeAttachRequest = resources.AttachRequest{Name: fakeVol, Host: fakeHost}
 	fakeDetachRequest = resources.DetachRequest{Name: fakeVol, Host: fakeHost}
 	fakeRemoveRequest = resources.RemoveVolumeRequest{Name: fakeVol}
+	fakeVolMapInfo    = scbe.ScbeVolumeMapInfo{fakeHost, fakeLunNumber}
 )
 
 var _ = Describe("scbeLocalClient init", func() {
@@ -507,7 +510,7 @@ var _ = Describe("scbeLocalClient", func() {
 		})
 		It("should fail to detach the volume if MapVolume failed", func() {
 			fakeScbeDataModel.GetVolumeReturns(scbe.ScbeVolume{}, nil)
-			fakeScbeRestClient.GetVolMappingReturns(fakeHost, nil)
+			fakeScbeRestClient.GetVolMappingReturns(fakeVolMapInfo, nil)
 			fakeScbeRestClient.UnmapVolumeReturns(fakeErr)
 			err := client.Detach(fakeDetachRequest)
 			Expect(err).To(HaveOccurred())
@@ -527,7 +530,7 @@ var _ = Describe("scbeLocalClient", func() {
 			}
 			fakeScbeDataModel.GetVolumeReturns(scbe.ScbeVolume{WWN: "wwn", FSType: "ext4"}, nil)
 			fakeScbeRestClient.GetVolumesReturns(volumes, nil)
-			fakeScbeRestClient.GetVolMappingReturns(fakeHost, nil)
+			fakeScbeRestClient.GetVolMappingReturns(fakeVolMapInfo, nil)
 			volConfig, err := client.GetVolumeConfig(resources.GetVolumeConfigRequest{Name: "name"})
 			Expect(err).To(Not(HaveOccurred()))
 			Expect(len(volConfig)).To(Equal(val.Type().NumField() + scbe.GetVolumeConfigExtraParams))
@@ -539,7 +542,7 @@ var _ = Describe("scbeLocalClient", func() {
 			Expect(attachTo).To(Equal(fakeHost))
 
 			for k, v := range volConfig {
-				if k == resources.OptionNameForVolumeFsType || k == resources.ScbeKeyVolAttachToHost {
+				if k == resources.OptionNameForVolumeFsType || k == resources.ScbeKeyVolAttachToHost || k == resources.ScbeKeyVolAttachLunNumToHost {
 					continue
 				}
 				Expect(k).To(Not(Equal("")))
@@ -613,6 +616,30 @@ var _ = Describe("scbeLocalClient", func() {
 			fakeScbeDataModel.DeleteVolumeReturns(nil)
 			err := client.RemoveVolume(fakeRemoveRequest)
 			Expect(err).NotTo(HaveOccurred())
+			Expect(fakeScbeRestClient.DeleteVolumeCallCount()).To(Equal(1))
+			Expect(fakeScbeDataModel.DeleteVolumeCallCount()).To(Equal(1))
+		})
+		It("should succeed if getvolume returns volume not found", func() {
+			fakeScbeDataModel.GetVolumeReturns(scbe.ScbeVolume{}, &resources.VolumeNotFoundError{VolName: "vol1"})
+			err := client.RemoveVolume(fakeRemoveRequest)
+			Expect(err).To(Not(HaveOccurred()))
+		})
+		It("should succeed if delete volume retunr 404 error from SC", func() {
+			fakeScbeDataModel.GetVolumeReturns(scbe.ScbeVolume{}, nil)
+			fakeScbeRestClient.DeleteVolumeReturns(&scbe.BadHttpStatusCodeError{HttpStatusCode : 404})
+			err := client.RemoveVolume(fakeRemoveRequest)
+			Expect(err).To(Not(HaveOccurred()))
+			Expect(fakeScbeDataModel.GetVolumeCallCount()).To(Equal(1))
+			Expect(fakeScbeRestClient.DeleteVolumeCallCount()).To(Equal(1))
+		})
+		It("should succeed if delete volume from db retuns that volume does not exists.", func() {
+			fakeScbeDataModel.GetVolumeReturns(scbe.ScbeVolume{}, nil)
+			fakeScbeRestClient.DeleteVolumeReturns(nil)
+			fakeScbeDataModel.DeleteVolumeReturns(&resources.VolumeNotFoundError{fakeRemoveRequest.Name})
+			
+			err := client.RemoveVolume(fakeRemoveRequest)
+			Expect(err).To(Not(HaveOccurred()))
+			Expect(fakeScbeDataModel.GetVolumeCallCount()).To(Equal(1))
 			Expect(fakeScbeRestClient.DeleteVolumeCallCount()).To(Equal(1))
 			Expect(fakeScbeDataModel.DeleteVolumeCallCount()).To(Equal(1))
 		})

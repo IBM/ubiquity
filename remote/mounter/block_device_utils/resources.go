@@ -26,9 +26,10 @@ const (
 //go:generate counterfeiter -o ../fakes/fake_block_device_utils.go . BlockDeviceUtils
 type BlockDeviceUtils interface {
 	Rescan(protocol Protocol) error
+	RescanSCSILun0() error
 	ReloadMultipath() error
 	Discover(volumeWwn string, deepDiscovery bool) (string, error)
-	GetWwnByScsiInq(dev string) (string, error)
+	GetWwnByScsiInq(mpathOutput string, dev string) (string, error)
 	DiscoverBySgInq(mpathOutput string, volumeWwn string) (string, error)
 	Cleanup(mpath string) error
 	CheckFs(mpath string) (bool, error)
@@ -37,4 +38,5 @@ type BlockDeviceUtils interface {
 	UmountFs(mpoint string, volumeWwn string) error
 	IsDeviceMounted(devPath string) (bool, []string, error)
 	IsDirAMountPoint(dirPath string) (bool, []string, error)
+	SetDmsetup(mpath string) error
 }

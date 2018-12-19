@@ -19,23 +19,38 @@ package local
 import (
 	"fmt"
 	"github.com/IBM/ubiquity/local/scbe"
+	"github.com/IBM/ubiquity/local/spectrumscale"
 	"github.com/IBM/ubiquity/resources"
-	"log"
+	"github.com/IBM/ubiquity/utils/logs"
 )
 
-func GetLocalClients(logger *log.Logger, config resources.UbiquityServerConfig) (map[string]resources.StorageClient, error) {
+var NewScbeLocalClient = scbe.NewScbeLocalClient
+var NewSpectrumLocalClient = spectrumscale.NewSpectrumLocalClient
+
+func GetLocalClients(logger logs.Logger, config resources.UbiquityServerConfig) (map[string]resources.StorageClient, error) {
 	// TODO need to refactor and load all the existing clients automatically (instead of hardcore each one here)
 	clients := make(map[string]resources.StorageClient)
-	ScbeClient, err := scbe.NewScbeLocalClient(config.ScbeConfig)
-	if err != nil {
-		logger.Printf("Not enough params to initialize '%s' client", resources.SCBE)
-	} else {
-		clients[resources.SCBE] = ScbeClient
+	if (config.ScbeConfig.ConnectionInfo.ManagementIP != "") {
+		ScbeClient, err := NewScbeLocalClient(config.ScbeConfig)
+	  	if err != nil {
+			return nil, &resources.BackendInitializationError{BackendName: resources.SCBE, Err: err}
+	  	} else {
+			clients[resources.SCBE] = ScbeClient
+		}
+	}
+
+	if (config.SpectrumScaleConfig.RestConfig.ManagementIP != "") {
+		spectrumClient, err := NewSpectrumLocalClient(config)
+		if err != nil {
+			return nil, &resources.BackendInitializationError{BackendName: resources.SpectrumScale, Err: err}
+		} else {
+			clients[resources.SpectrumScale] = spectrumClient
+		}
 	}
 
 	if len(clients) == 0 {
-		log.Fatal("No client can be initialized....please check config file")
-		return nil, fmt.Errorf("No client can be initialized....please check config file")
+		logger.Debug("No client can be initialized. Please check ubiquity-configmap parameters")
+		return nil, logger.ErrorRet(fmt.Errorf(resources.ClientInitializationErrorStr), "failed")
 	}
 	return clients, nil
 }

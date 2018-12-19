@@ -20,11 +20,14 @@ import (
 	"bytes"
 	"context"
 	"fmt"
-	"github.com/IBM/ubiquity/utils/logs"
+	"io/ioutil"
 	"os"
 	"os/exec"
 	"path/filepath"
 	"time"
+	"syscall"
+
+	"github.com/IBM/ubiquity/utils/logs"
 )
 
 //go:generate counterfeiter -o ../fakes/fake_executor.go . Executor
@@ -45,8 +48,10 @@ type Executor interface { // basic host dependent functions
 	Symlink(target string, slink string) error
 	IsSlink(fInfo os.FileInfo) bool
 	GetGlobFiles(file_pattern string) (matches []string, err error)
-	IsSameFile(file1  os.FileInfo, file2 os.FileInfo) bool
-	
+	IsSameFile(file1 os.FileInfo, file2 os.FileInfo) bool
+	IsDirEmpty(dir string) (bool, error)
+	GetDeviceForFileStat(os.FileInfo) uint64
+
 }
 
 type executor struct {
@@ -102,7 +107,7 @@ func (e *executor) ExecuteWithTimeout(mSeconds int, command string, args []strin
 	// If there's no context error, we know the command completed (or errored).
 	e.logger.Debug(fmt.Sprintf("Output from command: %s", string(out)))
 	if err != nil {
-		e.logger.Debug(fmt.Sprintf("Non-zero exit code:", err))
+		e.logger.Debug(fmt.Sprintf("Non-zero exit code: %s", err))
 	}
 
 	return out, err
@@ -162,9 +167,23 @@ func (e *executor) Symlink(target string, slink string) error {
 	return os.Symlink(target, slink)
 }
 
-func (e *executor)	GetGlobFiles(file_pattern string) (matches []string, err error){
+func (e *executor) GetGlobFiles(file_pattern string) (matches []string, err error) {
 	return filepath.Glob(file_pattern)
 }
-func (e *executor) IsSameFile(file1 os.FileInfo, file2 os.FileInfo) bool{
+func (e *executor) IsSameFile(file1 os.FileInfo, file2 os.FileInfo) bool {
 	return os.SameFile(file1, file2)
+}
+
+func (e *executor) IsDirEmpty(dir string) (bool, error) {
+	files, err := ioutil.ReadDir(dir)
+	e.logger.Debug("the files", logs.Args{{"files", files}})
+	if err != nil {
+		return false, err
+	}
+
+	return len(files) == 0, nil
+}
+
+func (e *executor) GetDeviceForFileStat(fileStat os.FileInfo) uint64{
+	return fileStat.Sys().(*syscall.Stat_t).Dev
 }

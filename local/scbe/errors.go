@@ -208,20 +208,20 @@ func (e *VolumeNotFoundOnArrayError) Error() string {
 }
 
 type BadHttpStatusCodeError struct {
-	httpStatusCode         int
-	httpExpectedStatusCode int
-	httpDataStr            string
-	httpAction             string
-	httpUrl                string
+	HttpStatusCode         int
+	HttpExpectedStatusCode int
+	HttpDataStr            string
+	HttpAction             string
+	HttpUrl                string
 }
 
 func (e *BadHttpStatusCodeError) Error() string {
 	return fmt.Sprintf(
 		ScName+" unexpected HTTP status code. HTTP response detail: 'status code'=[%d], 'expected status code'=[%d], 'data'=[%s], 'action'=[%s], 'url'=[%s].",
-		e.httpStatusCode,
-		e.httpExpectedStatusCode,
-		e.httpDataStr,
-		e.httpAction,
-		e.httpUrl,
+		e.HttpStatusCode,
+		e.HttpExpectedStatusCode,
+		e.HttpDataStr,
+		e.HttpAction,
+		e.HttpUrl,
 	)
 }

@@ -18,53 +18,67 @@ package mounter
 
 import (
 	"fmt"
+	"os"
+
 	"github.com/IBM/ubiquity/remote/mounter/block_device_mounter_utils"
 	"github.com/IBM/ubiquity/remote/mounter/block_device_utils"
 	"github.com/IBM/ubiquity/resources"
 	"github.com/IBM/ubiquity/utils"
 	"github.com/IBM/ubiquity/utils/logs"
-	"os"
 )
 
 type scbeMounter struct {
 	logger                  logs.Logger
 	blockDeviceMounterUtils block_device_mounter_utils.BlockDeviceMounterUtils
 	exec                    utils.Executor
-	config                  resources.ScbeRemoteConfig
 }
 
-func newScbMounter(scbeRemoteConfig resources.ScbeRemoteConfig, blockDeviceMounterUtils block_device_mounter_utils.BlockDeviceMounterUtils, executer utils.Executor) resources.Mounter{
+func newScbMounter(blockDeviceMounterUtils block_device_mounter_utils.BlockDeviceMounterUtils, executer utils.Executor) resources.Mounter {
 	return &scbeMounter{
 		logger:                  logs.GetLogger(),
 		blockDeviceMounterUtils: blockDeviceMounterUtils,
-		exec:  executer,
-		config: scbeRemoteConfig,
+		exec:                    executer,
 	}
 }
 
-func NewScbeMounter(scbeRemoteConfig resources.ScbeRemoteConfig) resources.Mounter {
+func NewScbeMounter() resources.Mounter {
 	blockDeviceMounterUtils := block_device_mounter_utils.NewBlockDeviceMounterUtils()
-	return newScbMounter(scbeRemoteConfig, blockDeviceMounterUtils, utils.NewExecutor())
+	return newScbMounter(blockDeviceMounterUtils, utils.NewExecutor())
 }
 
-func NewScbeMounterWithExecuter(scbeRemoteConfig resources.ScbeRemoteConfig, blockDeviceMounterUtils block_device_mounter_utils.BlockDeviceMounterUtils, executer utils.Executor) resources.Mounter {
-	return newScbMounter(scbeRemoteConfig, blockDeviceMounterUtils, executer)
+func NewScbeMounterWithExecuter(blockDeviceMounterUtils block_device_mounter_utils.BlockDeviceMounterUtils, executer utils.Executor) resources.Mounter {
+	return newScbMounter(blockDeviceMounterUtils, executer)
 }
-
 
 func (s *scbeMounter) Mount(mountRequest resources.MountRequest) (string, error) {
 	defer s.logger.Trace(logs.DEBUG)()
 	volumeWWN := mountRequest.VolumeConfig["Wwn"].(string)
 
 	// Rescan OS
-	if err := s.blockDeviceMounterUtils.RescanAll(!s.config.SkipRescanISCSI, volumeWWN, false); err != nil {
+	if err := s.blockDeviceMounterUtils.RescanAll(volumeWWN, false, false); err != nil {
 		return "", s.logger.ErrorRet(err, "RescanAll failed")
 	}
 
 	// Discover device
 	devicePath, err := s.blockDeviceMounterUtils.Discover(volumeWWN, true)
 	if err != nil {
-		return "", s.logger.ErrorRet(err, "Discover failed", logs.Args{{"volumeWWN", volumeWWN}})
+		// Known issue: UB-1103 in https://www.ibm.com/support/knowledgecenter/SS6JWS_3.4.0/RN/sc_rn_knownissues.html
+		// XIV doesn't using Lun Number 0, We don't care the storage type here.
+		// For DS8k and Storwize Lun0, "rescan-scsi-bus.sh -r" cannot discover the LUN0, need to use rescanLun0 instead
+		s.logger.Info("volumeConfig: ", logs.Args{{"volumeConfig: ", mountRequest.VolumeConfig}})
+		_, ok := err.(*block_device_utils.VolumeNotFoundError)
+		if ok && isLun0(mountRequest) {
+			s.logger.Info("It is the first lun of DS8K or Storwize, will try to rescan lun0")
+			if err := s.blockDeviceMounterUtils.RescanAll(volumeWWN, false, true); err != nil {
+				return "", s.logger.ErrorRet(err, "Rescan lun0 failed", logs.Args{{"volumeWWN", volumeWWN}})
+			}
+			devicePath, err = s.blockDeviceMounterUtils.Discover(volumeWWN, true)
+			if err != nil {
+				return "", s.logger.ErrorRet(err, "Discover failed after run rescan and also additional rescan with special lun0 scanning", logs.Args{{"volumeWWN", volumeWWN}})
+			}
+		} else {
+			return "", s.logger.ErrorRet(err, "Discover failed", logs.Args{{"volumeWWN", volumeWWN}})
+		}
 	}
 
 	// Create mount point if needed   // TODO consider to move it inside the util
@@ -103,27 +117,39 @@ func (s *scbeMounter) Unmount(unmountRequest resources.UnmountRequest) error {
 	devicePath, err := s.blockDeviceMounterUtils.Discover(volumeWWN, true)
 	if err != nil {
 		switch err.(type) {
-	        case *block_device_utils.VolumeNotFoundError:
-	            s.logger.Warning("Idempotent issue encountered: volume not found. skipping UnmountDeviceFlow ",logs.Args{{"volumeWWN", volumeWWN}} )
-				skipUnmountFlow = true	
-	        default:
-	            return s.logger.ErrorRet(err, "Discover failed", logs.Args{{"volumeWWN", volumeWWN}})
-        }
+		case *block_device_utils.VolumeNotFoundError:
+			s.logger.Warning("Idempotent issue encountered: volume not found. skipping UnmountDeviceFlow ", logs.Args{{"volumeWWN", volumeWWN}})
+			skipUnmountFlow = true
+		case *block_device_utils.FaultyDeviceError:
+			s.logger.Warning("Idempotent issue encountered: mpath device is faulty. continuing with UnmountDeviceFlow", logs.Args{{"device", devicePath}, {"volumeWWN", volumeWWN}})
+		default:
+			return s.logger.ErrorRet(err, "Discover failed", logs.Args{{"volumeWWN", volumeWWN}})
+		}
 	}
-	if !skipUnmountFlow{
+
+	if !skipUnmountFlow {
 		if err := s.blockDeviceMounterUtils.UnmountDeviceFlow(devicePath, volumeWWN); err != nil {
 			return s.logger.ErrorRet(err, "UnmountDeviceFlow failed", logs.Args{{"devicePath", devicePath}})
 		}
 	}
-	
+
 	s.logger.Info("Delete mountpoint directory if exist", logs.Args{{"mountpoint", mountpoint}})
 	// TODO move this part to the util
 	if _, err := s.exec.Stat(mountpoint); err == nil {
+		s.logger.Debug("Checking if mountpoint is empty and can be deleted", logs.Args{{"mountpoint", mountpoint}})
+		emptyDir, err := s.exec.IsDirEmpty(mountpoint)
+		if err != nil {
+			return s.logger.ErrorRet(err, "Getting number of files failed.", logs.Args{{"mountpoint", mountpoint}})
+		}
+		if emptyDir != true {
+			return s.logger.ErrorRet(&DirecotryIsNotEmptyError{mountpoint}, "Directory is not empty and cannot be removed.", logs.Args{{"mountpoint", mountpoint}})
+		}
+
 		if err := s.exec.RemoveAll(mountpoint); err != nil { // TODO its enough to do Remove without All.
 			return s.logger.ErrorRet(err, "RemoveAll failed", logs.Args{{"mountpoint", mountpoint}})
 		}
-	} else{
-		if os.IsNotExist(err){
+	} else {
+		if os.IsNotExist(err) {
 			s.logger.Warning("Idempotent issue encountered: mountpoint directory does not exist.", logs.Args{{"mountpoint", mountpoint}})
 		}
 	}
@@ -137,8 +163,19 @@ func (s *scbeMounter) ActionAfterDetach(request resources.AfterDetachRequest) er
 	volumeWWN := request.VolumeConfig["Wwn"].(string)
 
 	// Rescan OS
-	if err := s.blockDeviceMounterUtils.RescanAll(!s.config.SkipRescanISCSI, volumeWWN, true); err != nil {
+	if err := s.blockDeviceMounterUtils.RescanAll(volumeWWN, true, false); err != nil {
 		return s.logger.ErrorRet(err, "RescanAll failed")
 	}
 	return nil
+}
+
+func isLun0(mountRequest resources.MountRequest) bool {
+	lunNumber, ok := mountRequest.VolumeConfig[resources.ScbeKeyVolAttachLunNumToHost]
+	if !ok {
+		return false
+	}
+	if int(lunNumber.(float64)) == 0 {
+		return true
+	}
+	return false
 }

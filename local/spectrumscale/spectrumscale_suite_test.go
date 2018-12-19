@@ -19,11 +19,12 @@ package spectrumscale_test
 import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
-
+	"github.com/IBM/ubiquity/utils"
 	"testing"
 )
 
 func TestSpectrum(t *testing.T) {
 	RegisterFailHandler(Fail)
+	defer utils.InitUbiquityServerTestLogger()()
 	RunSpecs(t, "Spectrum Test Suite")
 }

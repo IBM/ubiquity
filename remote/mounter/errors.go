@@ -27,3 +27,11 @@ type NoMounterForVolumeError struct {
 func (e *NoMounterForVolumeError) Error() string {
 	return fmt.Sprintf("Mounter not found for backend: %s", e.mounter)
 }
+
+type DirecotryIsNotEmptyError struct {
+	Dir string	
+}
+
+func (e *DirecotryIsNotEmptyError) Error() string {
+	return fmt.Sprintf("Directory [%s] is not empty.", e.Dir)
+}
