@@ -1,4 +1,5 @@
 set -x
+set -e
 export PATH=$PATH:/usr/local/go/bin:$WORKSPACE/work/bin
 
 pwd
