@@ -21,11 +21,13 @@
 package remote
 
 import (
+	"net/http"
+	"reflect"
+	"time"
+
 	"github.com/IBM/ubiquity/resources"
 	"github.com/IBM/ubiquity/utils"
 	"github.com/IBM/ubiquity/utils/logs"
-	"net/http"
-	"reflect"
 )
 
 type remoteClient struct {
@@ -46,7 +48,20 @@ func (s *remoteClient) Activate(activateRequest resources.ActivateRequest) error
 	// call remote activate
 	activateURL := utils.FormatURL(s.storageApiURL, "activate")
 	activateRequest.CredentialInfo = s.config.CredentialInfo
-	response, err := utils.HttpExecute(s.httpClient, "POST", activateURL, activateRequest, activateRequest.Context)
+
+	clientWithShortTimeout := new(http.Client)
+	*clientWithShortTimeout = *s.httpClient
+	clientWithShortTimeout.Timeout = time.Second * 2
+
+	var err error
+	var response *http.Response
+	// retry 30 times in case the ubiquity server is not ready yet
+	for i := 30; i > 0; i-- {
+		response, err = utils.HttpExecute(clientWithShortTimeout, "POST", activateURL, activateRequest, activateRequest.Context)
+		if err == nil {
+			break
+		}
+	}
 	if err != nil {
 		return s.logger.ErrorRet(err, "utils.HttpExecute failed")
 	}

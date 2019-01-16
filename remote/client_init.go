@@ -20,14 +20,16 @@ import (
 	"crypto/tls"
 	"crypto/x509"
 	"fmt"
-	"github.com/IBM/ubiquity/resources"
-	"github.com/IBM/ubiquity/utils"
-	"github.com/IBM/ubiquity/utils/logs"
 	"io/ioutil"
 	"log"
 	"net/http"
 	"os"
 	"strings"
+	"time"
+
+	"github.com/IBM/ubiquity/resources"
+	"github.com/IBM/ubiquity/utils"
+	"github.com/IBM/ubiquity/utils/logs"
 )
 
 const KeyUseSsl = "UBIQUITY_PLUGIN_USE_SSL"
@@ -66,7 +68,9 @@ func (s *remoteClient) initialize() error {
 
 	protocol := s.getProtocol()
 	s.storageApiURL = fmt.Sprintf(storageAPIURL, protocol, s.config.UbiquityServer.Address, s.config.UbiquityServer.Port)
-	s.httpClient = &http.Client{}
+	s.httpClient = &http.Client{
+		Timeout: time.Second * 10,
+	}
 	verifyFileCA := os.Getenv(KeyVerifyCA)
 	sslMode := strings.ToLower(os.Getenv(resources.KeySslMode))
 	if sslMode == "" {
