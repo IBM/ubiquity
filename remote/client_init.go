@@ -69,7 +69,7 @@ func (s *remoteClient) initialize() error {
 	protocol := s.getProtocol()
 	s.storageApiURL = fmt.Sprintf(storageAPIURL, protocol, s.config.UbiquityServer.Address, s.config.UbiquityServer.Port)
 	s.httpClient = &http.Client{
-		Timeout: time.Second * 10,
+		Timeout: time.Second * 30,
 	}
 	verifyFileCA := os.Getenv(KeyVerifyCA)
 	sslMode := strings.ToLower(os.Getenv(resources.KeySslMode))
