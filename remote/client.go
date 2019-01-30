@@ -51,12 +51,12 @@ func (s *remoteClient) Activate(activateRequest resources.ActivateRequest) error
 
 	clientWithShortTimeout := new(http.Client)
 	*clientWithShortTimeout = *s.httpClient
-	clientWithShortTimeout.Timeout = time.Second * 2
+	clientWithShortTimeout.Timeout = time.Second * 5
 
 	var err error
 	var response *http.Response
-	// retry 30 times in case the ubiquity server is not ready yet
-	for i := 30; i > 0; i-- {
+	// retry 15 times in case the ubiquity server is not ready yet
+	for i := 15; i > 0; i-- {
 		response, err = utils.HttpExecute(clientWithShortTimeout, "POST", activateURL, activateRequest, activateRequest.Context)
 		if err == nil {
 			break
