@@ -17,14 +17,18 @@ type blockDeviceUtils struct {
 }
 
 func NewBlockDeviceUtils() BlockDeviceUtils {
-	return newBlockDeviceUtils(utils.NewExecutor())
+	return newBlockDeviceUtils(utils.NewExecutor(), nil)
 }
 
 func NewBlockDeviceUtilsWithExecutor(executor utils.Executor) BlockDeviceUtils {
-	return newBlockDeviceUtils(executor)
+	return newBlockDeviceUtils(executor, nil)
 }
 
-func newBlockDeviceUtils(executor utils.Executor) BlockDeviceUtils {
+func NewBlockDeviceUtilsWithExecutorAndConnector(executor utils.Executor, fcConnector initiator.Connector) BlockDeviceUtils {
+	return newBlockDeviceUtils(executor, fcConnector)
+}
+
+func newBlockDeviceUtils(executor utils.Executor, fcConnector initiator.Connector) BlockDeviceUtils {
 	logger := logs.GetLogger()
 
 	// Prepare regex that going to be used in unmount interface
@@ -34,7 +38,8 @@ func newBlockDeviceUtils(executor utils.Executor) BlockDeviceUtils {
 		panic("failed prepare Already unmount regex")
 	}
 
-	fcConnector := connectors.NewFibreChannelConnectorWithExecutorAndLogger(executor, logger)
-
+	if fcConnector == nil {
+		fcConnector = connectors.NewFibreChannelConnectorWithExecutorAndLogger(executor, logger)
+	}
 	return &blockDeviceUtils{logger: logger, exec: executor, regExAlreadyMounted: regex, fcConnector: fcConnector}
 }

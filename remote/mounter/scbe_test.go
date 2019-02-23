@@ -184,6 +184,14 @@ var _ = Describe("scbe_mounter_test", func() {
 			Expect(err).To(HaveOccurred())
 		})
 	})
+	Context("ActionAfterDetach", func() {
+		It("should call DisconnectAll ", func() {
+			req := resources.AfterDetachRequest{VolumeConfig: map[string]interface{}{"Wwn": "wwn", "LunNumber": 1}}
+			err := scbeMounter.ActionAfterDetach(req)
+			Expect(err).NotTo(HaveOccurred())
+			Expect(fakeBdUtils.DisconnectAllCallCount()).To(Equal(1))
+		})
+	})
 })
 
 func TestSCBEMounter(t *testing.T) {

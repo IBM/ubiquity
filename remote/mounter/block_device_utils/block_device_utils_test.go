@@ -37,16 +37,18 @@ import (
 
 var _ = Describe("block_device_utils_test", func() {
 	var (
-		fakeExec *fakes.FakeExecutor
-		bdUtils  block_device_utils.BlockDeviceUtils
-		err      error
-		cmdErr   error = errors.New("command error")
+		fakeExec        *fakes.FakeExecutor
+		fakeFcConnector *fakes.FakeConnector
+		bdUtils         block_device_utils.BlockDeviceUtils
+		err             error
+		cmdErr          error = errors.New("command error")
 	)
 	volumeMountProperties := &resources.VolumeMountProperties{WWN: "wwn", LunNumber: 1}
 
 	BeforeEach(func() {
 		fakeExec = new(fakes.FakeExecutor)
-		bdUtils = block_device_utils.NewBlockDeviceUtilsWithExecutor(fakeExec)
+		fakeFcConnector = new(fakes.FakeConnector)
+		bdUtils = block_device_utils.NewBlockDeviceUtilsWithExecutorAndConnector(fakeExec, fakeFcConnector)
 	})
 
 	Context(".Rescan", func() {
@@ -58,8 +60,7 @@ var _ = Describe("block_device_utils_test", func() {
 			Expect(cmd).To(Equal("iscsiadm"))
 			Expect(args).To(Equal([]string{"-m", "session", "--rescan"}))
 		})
-		It("Rescan SCSI calls 'sudo rescan-scsi-bus -r'", func() {
-			//
+		It(`Rescan SCSI calls fcConnector.ConnectVolume`, func() {
 			fakeExec.ExecuteWithTimeoutReturns([]byte(volumeMountProperties.WWN), nil)
 			err = bdUtils.Rescan(block_device_utils.SCSI, volumeMountProperties)
 			Expect(err).ToNot(HaveOccurred())
@@ -68,6 +69,7 @@ var _ = Describe("block_device_utils_test", func() {
 			// check the existence of the new volume after rescan using multipath -ll
 			Expect(cmd).To(Equal("multipath"))
 			Expect(args).To(Equal([]string{"-ll"}))
+			Expect(fakeFcConnector.ConnectVolumeCallCount()).To(Equal(1))
 		})
 		It("Rescan ISCSI does not fail if iscsiadm command missing", func() {
 			fakeExec.IsExecutableReturns(cmdErr)
@@ -85,6 +87,21 @@ var _ = Describe("block_device_utils_test", func() {
 		It("Rescan fails if unknown protocol", func() {
 			err = bdUtils.Rescan(2, volumeMountProperties)
 			Expect(err).To(HaveOccurred())
+		})
+	})
+	Context(".Disconnect", func() {
+		It("Disconnect ISCSI calls 'sudo iscsiadm -m session --rescan'", func() {
+			err = bdUtils.Disconnect(block_device_utils.ISCSI, volumeMountProperties)
+			Expect(err).ToNot(HaveOccurred())
+			Expect(fakeExec.ExecuteWithTimeoutCallCount()).To(Equal(1))
+			_, cmd, args := fakeExec.ExecuteWithTimeoutArgsForCall(0)
+			Expect(cmd).To(Equal("iscsiadm"))
+			Expect(args).To(Equal([]string{"-m", "session", "--rescan"}))
+		})
+		It(`Disconnect SCSI calls fcConnector.DisconnectVolume`, func() {
+			err = bdUtils.Disconnect(block_device_utils.SCSI, volumeMountProperties)
+			Expect(err).ToNot(HaveOccurred())
+			Expect(fakeFcConnector.DisconnectVolumeCallCount()).To(Equal(1))
 		})
 	})
 	Context(".ReloadMultipath", func() {
