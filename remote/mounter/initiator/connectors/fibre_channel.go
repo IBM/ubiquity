@@ -36,7 +36,7 @@ func newFibreChannelConnectorWithExecutorAndLogger(executor utils.Executor, logg
 	return &fibreChannelConnector{logger: logger, exec: executor, linuxfc: linuxfc}
 }
 
-// RemoveSCSIDevice removes a scsi device based upon /dev/sdX name.
+// ConnectVolume attach the volume to host by rescaning all the active FC HBAs.
 func (c *fibreChannelConnector) ConnectVolume(volumeMountProperties *resources.VolumeMountProperties) error {
 	hbas := c.linuxfc.GetHBAs()
 
@@ -48,10 +48,10 @@ func (c *fibreChannelConnector) ConnectVolume(volumeMountProperties *resources.V
 	return c.linuxfc.RescanHosts(hbas, volumeMountProperties)
 }
 
-// RemoveSCSIDevice removes a scsi device based upon /dev/sdX name.
+// DisconnectVolume removes a volume from host by echo "1" to all scsi device's /delete
 func (c *fibreChannelConnector) DisconnectVolume(volumeMountProperties *resources.VolumeMountProperties) error {
 	devices := []string{}
-	paths := c.findPathsFromMultipathTopology(volumeMountProperties)
+	paths := c.findPathsFromMultipathOutpot(volumeMountProperties)
 	for _, path := range paths {
 		device := fmt.Sprintf("/dev/%s", path)
 		devices = append(devices, device)
@@ -71,7 +71,7 @@ func (c *fibreChannelConnector) removeDevices(devices []string) error {
 }
 
 // TODO: it is not a good idea to find device paths in this way, try to improve it.
-func (c *fibreChannelConnector) findPathsFromMultipathTopology(volumeMountProperties *resources.VolumeMountProperties) []string {
+func (c *fibreChannelConnector) findPathsFromMultipathOutpot(volumeMountProperties *resources.VolumeMountProperties) []string {
 	multipath := "multipath"
 	if err := c.exec.IsExecutable(multipath); err != nil {
 		c.logger.Warning("No multipath installed.")
@@ -92,14 +92,14 @@ generatePathsFromMultipathOutput analysises the output of command "multipath -ll
 and generates a list of path.
 
 A sample output is:
-  |- 0:0:4:1076248592 sda 8:0   active ready running
-  |- 0:0:5:1076248592 sdb 8:16  active ready running
-  |- 0:0:6:1076248592 sdc 8:32  active ready running
-  |- 0:0:7:1076248592 sdd 8:48  active ready running
-  |- 1:0:4:1076248592 sde 8:64  active ready running
-  |- 1:0:5:1076248592 sdf 8:80  active ready running
-  |- 1:0:6:1076248592 sdg 8:96  active ready running
-  `- 1:0:7:1076248592 sdh 8:112 active ready running
+  |- 0:0:4:255 sda 8:0   active ready running
+  |- 0:0:5:255 sdb 8:16  active ready running
+  |- 0:0:6:255 sdc 8:32  active ready running
+  |- 0:0:7:255 sdd 8:48  active ready running
+  |- 1:0:4:255 sde 8:64  active ready running
+  |- 1:0:5:255 sdf 8:80  active ready running
+  |- 1:0:6:255 sdg 8:96  active ready running
+  `- 1:0:7:255 sdh 8:112 active ready running
 */
 func generatePathsFromMultipathOutput(out []byte) []string {
 	lines := strings.Split(string(out), "\n")

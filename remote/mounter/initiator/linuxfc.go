@@ -55,7 +55,7 @@ func (lfc *linuxFibreChannel) getHBAChannelScsiTarget(volumeMountProperties *res
 	return fmt.Sprintf("- - %d", volumeMountProperties.LunNumber)
 }
 
-// getHBAs return all the FC HBAs in the system
+// GetHBAs return all the FC HBAs in the system
 func (lfc *linuxFibreChannel) GetHBAs() []string {
 	if !lfc.hasFCSupport() {
 		return []string{}
