@@ -54,21 +54,20 @@ func (b *blockDeviceUtils) ReloadMultipath() error {
 	return nil
 }
 
-func (b *blockDeviceUtils) Discover(volumeWwn string, deepDiscovery bool) (string, error) {
-	defer b.logger.Trace(logs.DEBUG, logs.Args{{"volumeWwn", volumeWwn}, {"deepDiscovery", deepDiscovery}})()
+func (b *blockDeviceUtils) getMultipathOutputAndDeviceUid(volumeWwn string) ([]byte, string, error) {
 	if err := b.exec.IsExecutable(multipathCmd); err != nil {
-		return "", b.logger.ErrorRet(&commandNotFoundError{multipathCmd, err}, "failed")
+		return []byte{}, "", b.logger.ErrorRet(&commandNotFoundError{multipathCmd, err}, "failed")
 	}
 	args := []string{"-ll"}
 	outputBytes, err := b.exec.ExecuteWithTimeout(DiscoverTimeout, multipathCmd, args)
 	if err != nil {
-		return "", b.logger.ErrorRet(&CommandExecuteError{multipathCmd, err}, "failed")
+		return []byte{}, "", b.logger.ErrorRet(&CommandExecuteError{multipathCmd, err}, "failed")
 	}
 	scanner := bufio.NewScanner(strings.NewReader(string(outputBytes[:])))
 	pattern := "(?i)" + volumeWwn
 	regex, err := regexp.Compile(pattern)
 	if err != nil {
-		return "", b.logger.ErrorRet(err, "failed")
+		return []byte{}, "", b.logger.ErrorRet(err, "failed")
 	}
 	dev := ""
 	for scanner.Scan() {
@@ -77,6 +76,17 @@ func (b *blockDeviceUtils) Discover(volumeWwn string, deepDiscovery bool) (strin
 			break
 		}
 	}
+	return outputBytes, dev, nil
+}
+
+func (b *blockDeviceUtils) Discover(volumeWwn string, deepDiscovery bool) (string, error) {
+	defer b.logger.Trace(logs.DEBUG, logs.Args{{"volumeWwn", volumeWwn}, {"deepDiscovery", deepDiscovery}})()
+
+	outputBytes, dev, err := b.getMultipathOutputAndDeviceUid(volumeWwn)
+	if err != nil {
+		return "", err
+	}
+
 	mpath := ""
 	if dev == "" {
 		if !deepDiscovery {

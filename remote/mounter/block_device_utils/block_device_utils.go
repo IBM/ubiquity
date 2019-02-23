@@ -1,15 +1,19 @@
 package block_device_utils
 
 import (
+	"regexp"
+
+	"github.com/IBM/ubiquity/remote/mounter/initiator"
+	"github.com/IBM/ubiquity/remote/mounter/initiator/connectors"
 	"github.com/IBM/ubiquity/utils"
 	"github.com/IBM/ubiquity/utils/logs"
-	"regexp"
 )
 
 type blockDeviceUtils struct {
 	logger              logs.Logger
 	exec                utils.Executor
 	regExAlreadyMounted *regexp.Regexp
+	fcConnector         initiator.Connector
 }
 
 func NewBlockDeviceUtils() BlockDeviceUtils {
@@ -30,5 +34,7 @@ func newBlockDeviceUtils(executor utils.Executor) BlockDeviceUtils {
 		panic("failed prepare Already unmount regex")
 	}
 
-	return &blockDeviceUtils{logger: logger, exec: executor, regExAlreadyMounted: regex}
+	fcConnector := connectors.NewFibreChannelConnectorWithExecutorAndLogger(executor, logger)
+
+	return &blockDeviceUtils{logger: logger, exec: executor, regExAlreadyMounted: regex, fcConnector: fcConnector}
 }

@@ -22,6 +22,7 @@ import (
 	"time"
 
 	"github.com/IBM/ubiquity/remote/mounter/block_device_utils"
+	"github.com/IBM/ubiquity/resources"
 	"github.com/IBM/ubiquity/utils/logs"
 	"github.com/nightlyone/lockfile"
 )
@@ -153,8 +154,10 @@ func (b *blockDeviceMounterUtils) UnmountDeviceFlow(devicePath string, volumeWwn
 // 2. SCSI rescan
 // 3. multipathing rescan
 // return error if one of the steps fail
-func (b *blockDeviceMounterUtils) RescanAll(wwn string, rescanForCleanUp bool, extraLunZeroScanning bool) error {
+func (b *blockDeviceMounterUtils) RescanAll(volumeMountProperties *resources.VolumeMountProperties) error {
 	defer b.logger.Trace(logs.INFO)
+
+	wwn := volumeMountProperties.WWN
 
 	// locking for concurrent rescans and reduce rescans if no need
 	b.logger.Debug("Ask for rescanLock for volumeWWN", logs.Args{{"volumeWWN", wwn}})
@@ -170,38 +173,40 @@ func (b *blockDeviceMounterUtils) RescanAll(wwn string, rescanForCleanUp bool, e
 	defer b.rescanFlock.Unlock()
 	defer b.logger.Debug("Released rescanLock for volumeWWN", logs.Args{{"volumeWWN", wwn}})
 
-	if !rescanForCleanUp {
-		// Only when run rescan for new device, try to check if its already exist to reduce rescans
-		device, _ := b.Discover(wwn, false) // no deep discovery
+	// Only when run rescan for new device, try to check if its already exist to reduce rescans
+	device, _ := b.Discover(wwn, false) // no deep discovery
 
-		if device != "" {
-			// if need rescan for discover new device but the new device is already exist then skip the rescan
-			b.logger.Debug(
-				"Skip rescan, because there is already multiple device for volumeWWN",
-				logs.Args{{"volumeWWN", wwn}, {"multiple", device}})
-			return nil
-		}
+	if device != "" {
+		// if need rescan for discover new device but the new device is already exist then skip the rescan
+		b.logger.Debug(
+			"Skip rescan, because there is already multiple device for volumeWWN",
+			logs.Args{{"volumeWWN", wwn}, {"multiple", device}})
+		return nil
 	}
-	// TODO : if rescanForCleanUp we need to check if block device is not longer exist and if so skip the rescan!
 
 	// Do the rescans operations
 	// in case of FC : if no iscsiadm on the machine or no session login - this will log a warning not fail!
-	if err := b.blockDeviceUtils.Rescan(block_device_utils.ISCSI); err != nil {
+	if err := b.blockDeviceUtils.Rescan(block_device_utils.ISCSI, volumeMountProperties); err != nil {
 		return b.logger.ErrorRet(err, "ISCSI Rescan failed", logs.Args{{"protocol", block_device_utils.ISCSI}})
 	}
-	if extraLunZeroScanning {
-		if err := b.blockDeviceUtils.RescanSCSILun0(); err != nil {
-			return b.logger.ErrorRet(err, "Rescan failed for FC Lun0", logs.Args{{"protocol", block_device_utils.SCSI}})
-		}
-	} else {
-		if err := b.blockDeviceUtils.Rescan(block_device_utils.SCSI); err != nil {
-			return b.logger.ErrorRet(err, "OS Rescan failed", logs.Args{{"protocol", block_device_utils.SCSI}})
-		}
+
+	if err := b.blockDeviceUtils.Rescan(block_device_utils.SCSI, volumeMountProperties); err != nil {
+		return b.logger.ErrorRet(err, "OS Rescan failed", logs.Args{{"protocol", block_device_utils.SCSI}})
 	}
-	if !rescanForCleanUp {
-		if err := b.blockDeviceUtils.ReloadMultipath(); err != nil {
-			return b.logger.ErrorRet(err, "ReloadMultipath failed")
-		}
+	if err := b.blockDeviceUtils.ReloadMultipath(); err != nil {
+		return b.logger.ErrorRet(err, "ReloadMultipath failed")
+	}
+	return nil
+}
+
+func (b *blockDeviceMounterUtils) DisconnectAll(volumeMountProperties *resources.VolumeMountProperties) error {
+	// in case of FC : if no iscsiadm on the machine or no session login - this will log a warning not fail!
+	if err := b.blockDeviceUtils.Disconnect(block_device_utils.ISCSI, volumeMountProperties); err != nil {
+		return b.logger.ErrorRet(err, "ISCSI Disconnect failed", logs.Args{{"protocol", block_device_utils.ISCSI}})
+	}
+
+	if err := b.blockDeviceUtils.Disconnect(block_device_utils.SCSI, volumeMountProperties); err != nil {
+		return b.logger.ErrorRet(err, "OS Disconnect failed", logs.Args{{"protocol", block_device_utils.SCSI}})
 	}
 	return nil
 }

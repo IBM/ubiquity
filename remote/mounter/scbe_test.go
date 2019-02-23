@@ -32,21 +32,15 @@ var _ = Describe("scbe_mounter_test", func() {
 
 		callErr error = &block_device_utils.VolumeNotFoundError{"wwn"}
 
-		mountRequestForDS8kLun0 = resources.MountRequest{Mountpoint: "test_mountpointDS8k", VolumeConfig: map[string]interface{}{"Name": "u_vol", "PhysicalCapacity": fakePhysicalCapacity,
-			"Profile": fakeProfile, "StorageType": fakeDS8kStoragetType, "UsedCapacity": fakeUsedCapacity, "Wwn": "wwn", "attach-to": "xnode1",
-			"LogicalCapacity": fakeLogicalCapacity, "LunNumber": float64(0), "PoolName": "pool", "StorageName": "IBM.2107", "fstype": "ext4"}}
-		mountRequestForSVCLun0 = resources.MountRequest{Mountpoint: "test_mountpointSVC", VolumeConfig: map[string]interface{}{"Name": "u_vol", "PhysicalCapacity": fakePhysicalCapacity,
-			"Profile": fakeProfile, "StorageType": fakeV7kStorageType, "UsedCapacity": fakeUsedCapacity, "Wwn": "wwn", "attach-to": "node1",
-			"LogicalCapacity": fakeLogicalCapacity, "LunNumber": float64(0), "PoolName": "pool", "StorageName": "IBM.2706", "fstype": "ext4"}}
 		mountRequestForDS8kLun1 = resources.MountRequest{Mountpoint: "test_mountpointDS8k", VolumeConfig: map[string]interface{}{"Name": "u_vol", "PhysicalCapacity": fakePhysicalCapacity,
 			"Profile": fakeProfile, "StorageType": fakeDS8kStoragetType, "UsedCapacity": fakeUsedCapacity, "Wwn": "wwn", "attach-to": "node1",
-			"LogicalCapacity": fakeLogicalCapacity, "LunNumber": float64(1), "PoolName": "pool", "StorageName": "IBM.2107", "fstype": "ext4"}}
+			"LogicalCapacity": fakeLogicalCapacity, "LunNumber": 1, "PoolName": "pool", "StorageName": "IBM.2107", "fstype": "ext4"}}
 		mountRequestForSVCLun1 = resources.MountRequest{Mountpoint: "test_mountpointSVC", VolumeConfig: map[string]interface{}{"Name": "u_vol", "PhysicalCapacity": fakePhysicalCapacity,
 			"Profile": fakeProfile, "StorageType": fakeV7kStorageType, "UsedCapacity": fakeUsedCapacity, "Wwn": "wwn", "attach-to": "node1",
-			"LogicalCapacity": fakeLogicalCapacity, "LunNumber": float64(1), "PoolName": "pool", "StorageName": "IBM.2706", "fstype": "ext4"}}
+			"LogicalCapacity": fakeLogicalCapacity, "LunNumber": 1, "PoolName": "pool", "StorageName": "IBM.2706", "fstype": "ext4"}}
 		mountRequestForDS8kLun2 = resources.MountRequest{Mountpoint: "test_mountpointDS8k", VolumeConfig: map[string]interface{}{"Name": "u_vol", "PhysicalCapacity": fakePhysicalCapacity,
 			"Profile": fakeProfile, "UsedCapacity": fakeUsedCapacity, "Wwn": "wwn", "attach-to": "node1",
-			"LogicalCapacity": fakeLogicalCapacity, "LunNumber": float64(1), "PoolName": "pool", "StorageName": "IBM.2107", "fstype": "ext4"}}
+			"LogicalCapacity": fakeLogicalCapacity, "LunNumber": 1, "PoolName": "pool", "StorageName": "IBM.2107", "fstype": "ext4"}}
 		mountRequestForDS8kLun3 = resources.MountRequest{Mountpoint: "test_mountpointDS8k", VolumeConfig: map[string]interface{}{"Name": "u_vol", "PhysicalCapacity": fakePhysicalCapacity,
 			"Profile": fakeProfile, "StorageType": fakeDS8kStoragetType, "UsedCapacity": fakeUsedCapacity, "Wwn": "wwn", "attach-to": "node1",
 			"LogicalCapacity": fakeLogicalCapacity, "PoolName": "pool", "StorageName": "IBM.2107", "fstype": "ext4"}}
@@ -159,22 +153,6 @@ var _ = Describe("scbe_mounter_test", func() {
 		})
 	})
 	Context("Mount", func() {
-		It("should success to discover ds8k with lun0", func() {
-			fakeBdUtils.DiscoverReturnsOnCall(0, "", callErr)
-			fakeBdUtils.DiscoverReturnsOnCall(1, "wwn", nil)
-			fakeBdUtils.RescanAllReturnsOnCall(0, nil)
-			fakeBdUtils.RescanAllReturnsOnCall(1, nil)
-			_, err := scbeMounter.Mount(mountRequestForDS8kLun0)
-			Expect(err).ToNot(HaveOccurred())
-		})
-		It("should success to discover svc with lun0", func() {
-			fakeBdUtils.DiscoverReturnsOnCall(0, "wwn", nil)
-			fakeBdUtils.DiscoverReturnsOnCall(1, "wwn", nil)
-			fakeBdUtils.RescanAllReturnsOnCall(0, nil)
-			fakeBdUtils.RescanAllReturnsOnCall(1, nil)
-			_, err := scbeMounter.Mount(mountRequestForSVCLun0)
-			Expect(err).ToNot(HaveOccurred())
-		})
 		It("should fail to discover ds8k with lun1 if failed to discover with '-r' ", func() {
 			fakeBdUtils.DiscoverReturns("", callErr)
 			fakeBdUtils.RescanAllReturns(nil)

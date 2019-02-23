@@ -16,6 +16,10 @@
 
 package block_device_utils
 
+import (
+	"github.com/IBM/ubiquity/resources"
+)
+
 type Protocol int
 
 const (
@@ -23,10 +27,10 @@ const (
 	ISCSI
 )
 
-//go:generate counterfeiter -o ../fakes/fake_block_device_utils.go . BlockDeviceUtils
+//go:generate counterfeiter -o ../../../fakes/fake_block_device_utils.go . BlockDeviceUtils
 type BlockDeviceUtils interface {
-	Rescan(protocol Protocol) error
-	RescanSCSILun0() error
+	Rescan(protocol Protocol, volumes *resources.VolumeMountProperties) error
+	Disconnect(protocol Protocol, volumes *resources.VolumeMountProperties) error
 	ReloadMultipath() error
 	Discover(volumeWwn string, deepDiscovery bool) (string, error)
 	GetWwnByScsiInq(mpathOutput string, dev string) (string, error)

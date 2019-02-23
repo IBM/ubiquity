@@ -23,18 +23,19 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/IBM/ubiquity/resources"
-	"github.com/IBM/ubiquity/utils"
-	"github.com/IBM/ubiquity/utils/logs"
 	"io/ioutil"
 	"net/http"
 	"os"
 	"strings"
 	"sync"
+
+	"github.com/IBM/ubiquity/resources"
+	"github.com/IBM/ubiquity/utils"
+	"github.com/IBM/ubiquity/utils/logs"
 )
 
 // SimpleRestClient is an interface that wrapper the http requests to provide easy REST API operations,
-//go:generate counterfeiter -o ../fakes/fake_simple_rest_client.go . SimpleRestClient
+//go:generate counterfeiter -o ../../fakes/fake_simple_rest_client.go . SimpleRestClient
 type SimpleRestClient interface {
 	// Authenticate the server, prepare headers and save the token
 	Login() error

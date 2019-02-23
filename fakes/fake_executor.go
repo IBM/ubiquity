@@ -9,11 +9,24 @@ import (
 )
 
 type FakeExecutor struct {
-	ExecuteStub        func(command string, args []string) ([]byte, error)
+	EvalSymlinksStub        func(string) (string, error)
+	evalSymlinksMutex       sync.RWMutex
+	evalSymlinksArgsForCall []struct {
+		arg1 string
+	}
+	evalSymlinksReturns struct {
+		result1 string
+		result2 error
+	}
+	evalSymlinksReturnsOnCall map[int]struct {
+		result1 string
+		result2 error
+	}
+	ExecuteStub        func(string, []string) ([]byte, error)
 	executeMutex       sync.RWMutex
 	executeArgsForCall []struct {
-		command string
-		args    []string
+		arg1 string
+		arg2 []string
 	}
 	executeReturns struct {
 		result1 []byte
@@ -23,16 +36,136 @@ type FakeExecutor struct {
 		result1 []byte
 		result2 error
 	}
-	StatStub        func(string) (os.FileInfo, error)
-	statMutex       sync.RWMutex
-	statArgsForCall []struct {
+	ExecuteWithTimeoutStub        func(int, string, []string) ([]byte, error)
+	executeWithTimeoutMutex       sync.RWMutex
+	executeWithTimeoutArgsForCall []struct {
+		arg1 int
+		arg2 string
+		arg3 []string
+	}
+	executeWithTimeoutReturns struct {
+		result1 []byte
+		result2 error
+	}
+	executeWithTimeoutReturnsOnCall map[int]struct {
+		result1 []byte
+		result2 error
+	}
+	GetDeviceForFileStatStub        func(os.FileInfo) uint64
+	getDeviceForFileStatMutex       sync.RWMutex
+	getDeviceForFileStatArgsForCall []struct {
+		arg1 os.FileInfo
+	}
+	getDeviceForFileStatReturns struct {
+		result1 uint64
+	}
+	getDeviceForFileStatReturnsOnCall map[int]struct {
+		result1 uint64
+	}
+	GetGlobFilesStub        func(string) ([]string, error)
+	getGlobFilesMutex       sync.RWMutex
+	getGlobFilesArgsForCall []struct {
 		arg1 string
 	}
-	statReturns struct {
+	getGlobFilesReturns struct {
+		result1 []string
+		result2 error
+	}
+	getGlobFilesReturnsOnCall map[int]struct {
+		result1 []string
+		result2 error
+	}
+	HostnameStub        func() (string, error)
+	hostnameMutex       sync.RWMutex
+	hostnameArgsForCall []struct {
+	}
+	hostnameReturns struct {
+		result1 string
+		result2 error
+	}
+	hostnameReturnsOnCall map[int]struct {
+		result1 string
+		result2 error
+	}
+	IsDirStub        func(os.FileInfo) bool
+	isDirMutex       sync.RWMutex
+	isDirArgsForCall []struct {
+		arg1 os.FileInfo
+	}
+	isDirReturns struct {
+		result1 bool
+	}
+	isDirReturnsOnCall map[int]struct {
+		result1 bool
+	}
+	IsDirEmptyStub        func(string) (bool, error)
+	isDirEmptyMutex       sync.RWMutex
+	isDirEmptyArgsForCall []struct {
+		arg1 string
+	}
+	isDirEmptyReturns struct {
+		result1 bool
+		result2 error
+	}
+	isDirEmptyReturnsOnCall map[int]struct {
+		result1 bool
+		result2 error
+	}
+	IsExecutableStub        func(string) error
+	isExecutableMutex       sync.RWMutex
+	isExecutableArgsForCall []struct {
+		arg1 string
+	}
+	isExecutableReturns struct {
+		result1 error
+	}
+	isExecutableReturnsOnCall map[int]struct {
+		result1 error
+	}
+	IsNotExistStub        func(error) bool
+	isNotExistMutex       sync.RWMutex
+	isNotExistArgsForCall []struct {
+		arg1 error
+	}
+	isNotExistReturns struct {
+		result1 bool
+	}
+	isNotExistReturnsOnCall map[int]struct {
+		result1 bool
+	}
+	IsSameFileStub        func(os.FileInfo, os.FileInfo) bool
+	isSameFileMutex       sync.RWMutex
+	isSameFileArgsForCall []struct {
+		arg1 os.FileInfo
+		arg2 os.FileInfo
+	}
+	isSameFileReturns struct {
+		result1 bool
+	}
+	isSameFileReturnsOnCall map[int]struct {
+		result1 bool
+	}
+	IsSlinkStub        func(os.FileInfo) bool
+	isSlinkMutex       sync.RWMutex
+	isSlinkArgsForCall []struct {
+		arg1 os.FileInfo
+	}
+	isSlinkReturns struct {
+		result1 bool
+	}
+	isSlinkReturnsOnCall map[int]struct {
+		result1 bool
+	}
+	LstatStub        func(string) (os.FileInfo, error)
+	lstatMutex       sync.RWMutex
+	lstatArgsForCall []struct {
+		arg1 string
+	}
+	lstatReturns struct {
 		result1 os.FileInfo
 		result2 error
 	}
-	statReturnsOnCall map[int]struct {
+	lstatReturnsOnCall map[int]struct {
 		result1 os.FileInfo
 		result2 error
 	}
@@ -60,17 +193,6 @@ type FakeExecutor struct {
 	mkdirAllReturnsOnCall map[int]struct {
 		result1 error
 	}
-	RemoveAllStub        func(string) error
-	removeAllMutex       sync.RWMutex
-	removeAllArgsForCall []struct {
-		arg1 string
-	}
-	removeAllReturns struct {
-		result1 error
-	}
-	removeAllReturnsOnCall map[int]struct {
-		result1 error
-	}
 	RemoveStub        func(string) error
 	removeMutex       sync.RWMutex
 	removeArgsForCall []struct {
@@ -82,96 +204,35 @@ type FakeExecutor struct {
 	removeReturnsOnCall map[int]struct {
 		result1 error
 	}
-	HostnameStub        func() (string, error)
-	hostnameMutex       sync.RWMutex
-	hostnameArgsForCall []struct{}
-	hostnameReturns     struct {
-		result1 string
-		result2 error
-	}
-	hostnameReturnsOnCall map[int]struct {
-		result1 string
-		result2 error
-	}
-	IsExecutableStub        func(string) error
-	isExecutableMutex       sync.RWMutex
-	isExecutableArgsForCall []struct {
+	RemoveAllStub        func(string) error
+	removeAllMutex       sync.RWMutex
+	removeAllArgsForCall []struct {
 		arg1 string
 	}
-	isExecutableReturns struct {
+	removeAllReturns struct {
 		result1 error
 	}
-	isExecutableReturnsOnCall map[int]struct {
+	removeAllReturnsOnCall map[int]struct {
 		result1 error
 	}
-	IsNotExistStub        func(error) bool
-	isNotExistMutex       sync.RWMutex
-	isNotExistArgsForCall []struct {
-		arg1 error
+	StatStub        func(string) (os.FileInfo, error)
+	statMutex       sync.RWMutex
+	statArgsForCall []struct {
+		arg1 string
 	}
-	isNotExistReturns struct {
-		result1 bool
-	}
-	isNotExistReturnsOnCall map[int]struct {
-		result1 bool
-	}
-	EvalSymlinksStub        func(path string) (string, error)
-	evalSymlinksMutex       sync.RWMutex
-	evalSymlinksArgsForCall []struct {
-		path string
-	}
-	evalSymlinksReturns struct {
-		result1 string
-		result2 error
-	}
-	evalSymlinksReturnsOnCall map[int]struct {
-		result1 string
-		result2 error
-	}
-	ExecuteWithTimeoutStub        func(mSeconds int, command string, args []string) ([]byte, error)
-	executeWithTimeoutMutex       sync.RWMutex
-	executeWithTimeoutArgsForCall []struct {
-		mSeconds int
-		command  string
-		args     []string
-	}
-	executeWithTimeoutReturns struct {
-		result1 []byte
-		result2 error
-	}
-	executeWithTimeoutReturnsOnCall map[int]struct {
-		result1 []byte
-		result2 error
-	}
-	LstatStub        func(path string) (os.FileInfo, error)
-	lstatMutex       sync.RWMutex
-	lstatArgsForCall []struct {
-		path string
-	}
-	lstatReturns struct {
+	statReturns struct {
 		result1 os.FileInfo
 		result2 error
 	}
-	lstatReturnsOnCall map[int]struct {
+	statReturnsOnCall map[int]struct {
 		result1 os.FileInfo
 		result2 error
 	}
-	IsDirStub        func(fInfo os.FileInfo) bool
-	isDirMutex       sync.RWMutex
-	isDirArgsForCall []struct {
-		fInfo os.FileInfo
-	}
-	isDirReturns struct {
-		result1 bool
-	}
-	isDirReturnsOnCall map[int]struct {
-		result1 bool
-	}
-	SymlinkStub        func(target string, slink string) error
+	SymlinkStub        func(string, string) error
 	symlinkMutex       sync.RWMutex
 	symlinkArgsForCall []struct {
-		target string
-		slink  string
+		arg1 string
+		arg2 string
 	}
 	symlinkReturns struct {
 		result1 error
@@ -179,91 +240,95 @@ type FakeExecutor struct {
 	symlinkReturnsOnCall map[int]struct {
 		result1 error
 	}
-	IsSlinkStub        func(fInfo os.FileInfo) bool
-	isSlinkMutex       sync.RWMutex
-	isSlinkArgsForCall []struct {
-		fInfo os.FileInfo
-	}
-	isSlinkReturns struct {
-		result1 bool
-	}
-	isSlinkReturnsOnCall map[int]struct {
-		result1 bool
-	}
-	GetGlobFilesStub        func(file_pattern string) (matches []string, err error)
-	getGlobFilesMutex       sync.RWMutex
-	getGlobFilesArgsForCall []struct {
-		file_pattern string
-	}
-	getGlobFilesReturns struct {
-		result1 []string
-		result2 error
-	}
-	getGlobFilesReturnsOnCall map[int]struct {
-		result1 []string
-		result2 error
-	}
-	IsSameFileStub        func(file1 os.FileInfo, file2 os.FileInfo) bool
-	isSameFileMutex       sync.RWMutex
-	isSameFileArgsForCall []struct {
-		file1 os.FileInfo
-		file2 os.FileInfo
-	}
-	isSameFileReturns struct {
-		result1 bool
-	}
-	isSameFileReturnsOnCall map[int]struct {
-		result1 bool
-	}
-	IsDirEmptyStub        func(dir string) (bool, error)
-	isDirEmptyMutex       sync.RWMutex
-	isDirEmptyArgsForCall []struct {
-		dir string
-	}
-	isDirEmptyReturns struct {
-		result1 bool
-		result2 error
-	}
-	isDirEmptyReturnsOnCall map[int]struct {
-		result1 bool
-		result2 error
-	}
-	GetDeviceForFileStatStub        func(os.FileInfo) uint64
-	getDeviceForFileStatMutex       sync.RWMutex
-	getDeviceForFileStatArgsForCall []struct {
-		arg1 os.FileInfo
-	}
-	getDeviceForFileStatReturns struct {
-		result1 uint64
-	}
-	getDeviceForFileStatReturnsOnCall map[int]struct {
-		result1 uint64
-	}
 	invocations      map[string][][]interface{}
 	invocationsMutex sync.RWMutex
 }
 
-func (fake *FakeExecutor) Execute(command string, args []string) ([]byte, error) {
-	var argsCopy []string
-	if args != nil {
-		argsCopy = make([]string, len(args))
-		copy(argsCopy, args)
-	}
-	fake.executeMutex.Lock()
-	ret, specificReturn := fake.executeReturnsOnCall[len(fake.executeArgsForCall)]
-	fake.executeArgsForCall = append(fake.executeArgsForCall, struct {
-		command string
-		args    []string
-	}{command, argsCopy})
-	fake.recordInvocation("Execute", []interface{}{command, argsCopy})
-	fake.executeMutex.Unlock()
-	if fake.ExecuteStub != nil {
-		return fake.ExecuteStub(command, args)
+func (fake *FakeExecutor) EvalSymlinks(arg1 string) (string, error) {
+	fake.evalSymlinksMutex.Lock()
+	ret, specificReturn := fake.evalSymlinksReturnsOnCall[len(fake.evalSymlinksArgsForCall)]
+	fake.evalSymlinksArgsForCall = append(fake.evalSymlinksArgsForCall, struct {
+		arg1 string
+	}{arg1})
+	fake.recordInvocation("EvalSymlinks", []interface{}{arg1})
+	fake.evalSymlinksMutex.Unlock()
+	if fake.EvalSymlinksStub != nil {
+		return fake.EvalSymlinksStub(arg1)
 	}
 	if specificReturn {
 		return ret.result1, ret.result2
 	}
-	return fake.executeReturns.result1, fake.executeReturns.result2
+	fakeReturns := fake.evalSymlinksReturns
+	return fakeReturns.result1, fakeReturns.result2
+}
+
+func (fake *FakeExecutor) EvalSymlinksCallCount() int {
+	fake.evalSymlinksMutex.RLock()
+	defer fake.evalSymlinksMutex.RUnlock()
+	return len(fake.evalSymlinksArgsForCall)
+}
+
+func (fake *FakeExecutor) EvalSymlinksCalls(stub func(string) (string, error)) {
+	fake.evalSymlinksMutex.Lock()
+	defer fake.evalSymlinksMutex.Unlock()
+	fake.EvalSymlinksStub = stub
+}
+
+func (fake *FakeExecutor) EvalSymlinksArgsForCall(i int) string {
+	fake.evalSymlinksMutex.RLock()
+	defer fake.evalSymlinksMutex.RUnlock()
+	argsForCall := fake.evalSymlinksArgsForCall[i]
+	return argsForCall.arg1
+}
+
+func (fake *FakeExecutor) EvalSymlinksReturns(result1 string, result2 error) {
+	fake.evalSymlinksMutex.Lock()
+	defer fake.evalSymlinksMutex.Unlock()
+	fake.EvalSymlinksStub = nil
+	fake.evalSymlinksReturns = struct {
+		result1 string
+		result2 error
+	}{result1, result2}
+}
+
+func (fake *FakeExecutor) EvalSymlinksReturnsOnCall(i int, result1 string, result2 error) {
+	fake.evalSymlinksMutex.Lock()
+	defer fake.evalSymlinksMutex.Unlock()
+	fake.EvalSymlinksStub = nil
+	if fake.evalSymlinksReturnsOnCall == nil {
+		fake.evalSymlinksReturnsOnCall = make(map[int]struct {
+			result1 string
+			result2 error
+		})
+	}
+	fake.evalSymlinksReturnsOnCall[i] = struct {
+		result1 string
+		result2 error
+	}{result1, result2}
+}
+
+func (fake *FakeExecutor) Execute(arg1 string, arg2 []string) ([]byte, error) {
+	var arg2Copy []string
+	if arg2 != nil {
+		arg2Copy = make([]string, len(arg2))
+		copy(arg2Copy, arg2)
+	}
+	fake.executeMutex.Lock()
+	ret, specificReturn := fake.executeReturnsOnCall[len(fake.executeArgsForCall)]
+	fake.executeArgsForCall = append(fake.executeArgsForCall, struct {
+		arg1 string
+		arg2 []string
+	}{arg1, arg2Copy})
+	fake.recordInvocation("Execute", []interface{}{arg1, arg2Copy})
+	fake.executeMutex.Unlock()
+	if fake.ExecuteStub != nil {
+		return fake.ExecuteStub(arg1, arg2)
+	}
+	if specificReturn {
+		return ret.result1, ret.result2
+	}
+	fakeReturns := fake.executeReturns
+	return fakeReturns.result1, fakeReturns.result2
 }
 
 func (fake *FakeExecutor) ExecuteCallCount() int {
@@ -272,13 +337,22 @@ func (fake *FakeExecutor) ExecuteCallCount() int {
 	return len(fake.executeArgsForCall)
 }
 
+func (fake *FakeExecutor) ExecuteCalls(stub func(string, []string) ([]byte, error)) {
+	fake.executeMutex.Lock()
+	defer fake.executeMutex.Unlock()
+	fake.ExecuteStub = stub
+}
+
 func (fake *FakeExecutor) ExecuteArgsForCall(i int) (string, []string) {
 	fake.executeMutex.RLock()
 	defer fake.executeMutex.RUnlock()
-	return fake.executeArgsForCall[i].command, fake.executeArgsForCall[i].args
+	argsForCall := fake.executeArgsForCall[i]
+	return argsForCall.arg1, argsForCall.arg2
 }
 
 func (fake *FakeExecutor) ExecuteReturns(result1 []byte, result2 error) {
+	fake.executeMutex.Lock()
+	defer fake.executeMutex.Unlock()
 	fake.ExecuteStub = nil
 	fake.executeReturns = struct {
 		result1 []byte
@@ -287,6 +361,8 @@ func (fake *FakeExecutor) ExecuteReturns(result1 []byte, result2 error) {
 }
 
 func (fake *FakeExecutor) ExecuteReturnsOnCall(i int, result1 []byte, result2 error) {
+	fake.executeMutex.Lock()
+	defer fake.executeMutex.Unlock()
 	fake.ExecuteStub = nil
 	if fake.executeReturnsOnCall == nil {
 		fake.executeReturnsOnCall = make(map[int]struct {
@@ -300,52 +376,676 @@ func (fake *FakeExecutor) ExecuteReturnsOnCall(i int, result1 []byte, result2 er
 	}{result1, result2}
 }
 
-func (fake *FakeExecutor) Stat(arg1 string) (os.FileInfo, error) {
-	fake.statMutex.Lock()
-	ret, specificReturn := fake.statReturnsOnCall[len(fake.statArgsForCall)]
-	fake.statArgsForCall = append(fake.statArgsForCall, struct {
-		arg1 string
-	}{arg1})
-	fake.recordInvocation("Stat", []interface{}{arg1})
-	fake.statMutex.Unlock()
-	if fake.StatStub != nil {
-		return fake.StatStub(arg1)
+func (fake *FakeExecutor) ExecuteWithTimeout(arg1 int, arg2 string, arg3 []string) ([]byte, error) {
+	var arg3Copy []string
+	if arg3 != nil {
+		arg3Copy = make([]string, len(arg3))
+		copy(arg3Copy, arg3)
+	}
+	fake.executeWithTimeoutMutex.Lock()
+	ret, specificReturn := fake.executeWithTimeoutReturnsOnCall[len(fake.executeWithTimeoutArgsForCall)]
+	fake.executeWithTimeoutArgsForCall = append(fake.executeWithTimeoutArgsForCall, struct {
+		arg1 int
+		arg2 string
+		arg3 []string
+	}{arg1, arg2, arg3Copy})
+	fake.recordInvocation("ExecuteWithTimeout", []interface{}{arg1, arg2, arg3Copy})
+	fake.executeWithTimeoutMutex.Unlock()
+	if fake.ExecuteWithTimeoutStub != nil {
+		return fake.ExecuteWithTimeoutStub(arg1, arg2, arg3)
 	}
 	if specificReturn {
 		return ret.result1, ret.result2
 	}
-	return fake.statReturns.result1, fake.statReturns.result2
+	fakeReturns := fake.executeWithTimeoutReturns
+	return fakeReturns.result1, fakeReturns.result2
 }
 
-func (fake *FakeExecutor) StatCallCount() int {
-	fake.statMutex.RLock()
-	defer fake.statMutex.RUnlock()
-	return len(fake.statArgsForCall)
+func (fake *FakeExecutor) ExecuteWithTimeoutCallCount() int {
+	fake.executeWithTimeoutMutex.RLock()
+	defer fake.executeWithTimeoutMutex.RUnlock()
+	return len(fake.executeWithTimeoutArgsForCall)
 }
 
-func (fake *FakeExecutor) StatArgsForCall(i int) string {
-	fake.statMutex.RLock()
-	defer fake.statMutex.RUnlock()
-	return fake.statArgsForCall[i].arg1
+func (fake *FakeExecutor) ExecuteWithTimeoutCalls(stub func(int, string, []string) ([]byte, error)) {
+	fake.executeWithTimeoutMutex.Lock()
+	defer fake.executeWithTimeoutMutex.Unlock()
+	fake.ExecuteWithTimeoutStub = stub
 }
 
-func (fake *FakeExecutor) StatReturns(result1 os.FileInfo, result2 error) {
-	fake.StatStub = nil
-	fake.statReturns = struct {
+func (fake *FakeExecutor) ExecuteWithTimeoutArgsForCall(i int) (int, string, []string) {
+	fake.executeWithTimeoutMutex.RLock()
+	defer fake.executeWithTimeoutMutex.RUnlock()
+	argsForCall := fake.executeWithTimeoutArgsForCall[i]
+	return argsForCall.arg1, argsForCall.arg2, argsForCall.arg3
+}
+
+func (fake *FakeExecutor) ExecuteWithTimeoutReturns(result1 []byte, result2 error) {
+	fake.executeWithTimeoutMutex.Lock()
+	defer fake.executeWithTimeoutMutex.Unlock()
+	fake.ExecuteWithTimeoutStub = nil
+	fake.executeWithTimeoutReturns = struct {
+		result1 []byte
+		result2 error
+	}{result1, result2}
+}
+
+func (fake *FakeExecutor) ExecuteWithTimeoutReturnsOnCall(i int, result1 []byte, result2 error) {
+	fake.executeWithTimeoutMutex.Lock()
+	defer fake.executeWithTimeoutMutex.Unlock()
+	fake.ExecuteWithTimeoutStub = nil
+	if fake.executeWithTimeoutReturnsOnCall == nil {
+		fake.executeWithTimeoutReturnsOnCall = make(map[int]struct {
+			result1 []byte
+			result2 error
+		})
+	}
+	fake.executeWithTimeoutReturnsOnCall[i] = struct {
+		result1 []byte
+		result2 error
+	}{result1, result2}
+}
+
+func (fake *FakeExecutor) GetDeviceForFileStat(arg1 os.FileInfo) uint64 {
+	fake.getDeviceForFileStatMutex.Lock()
+	ret, specificReturn := fake.getDeviceForFileStatReturnsOnCall[len(fake.getDeviceForFileStatArgsForCall)]
+	fake.getDeviceForFileStatArgsForCall = append(fake.getDeviceForFileStatArgsForCall, struct {
+		arg1 os.FileInfo
+	}{arg1})
+	fake.recordInvocation("GetDeviceForFileStat", []interface{}{arg1})
+	fake.getDeviceForFileStatMutex.Unlock()
+	if fake.GetDeviceForFileStatStub != nil {
+		return fake.GetDeviceForFileStatStub(arg1)
+	}
+	if specificReturn {
+		return ret.result1
+	}
+	fakeReturns := fake.getDeviceForFileStatReturns
+	return fakeReturns.result1
+}
+
+func (fake *FakeExecutor) GetDeviceForFileStatCallCount() int {
+	fake.getDeviceForFileStatMutex.RLock()
+	defer fake.getDeviceForFileStatMutex.RUnlock()
+	return len(fake.getDeviceForFileStatArgsForCall)
+}
+
+func (fake *FakeExecutor) GetDeviceForFileStatCalls(stub func(os.FileInfo) uint64) {
+	fake.getDeviceForFileStatMutex.Lock()
+	defer fake.getDeviceForFileStatMutex.Unlock()
+	fake.GetDeviceForFileStatStub = stub
+}
+
+func (fake *FakeExecutor) GetDeviceForFileStatArgsForCall(i int) os.FileInfo {
+	fake.getDeviceForFileStatMutex.RLock()
+	defer fake.getDeviceForFileStatMutex.RUnlock()
+	argsForCall := fake.getDeviceForFileStatArgsForCall[i]
+	return argsForCall.arg1
+}
+
+func (fake *FakeExecutor) GetDeviceForFileStatReturns(result1 uint64) {
+	fake.getDeviceForFileStatMutex.Lock()
+	defer fake.getDeviceForFileStatMutex.Unlock()
+	fake.GetDeviceForFileStatStub = nil
+	fake.getDeviceForFileStatReturns = struct {
+		result1 uint64
+	}{result1}
+}
+
+func (fake *FakeExecutor) GetDeviceForFileStatReturnsOnCall(i int, result1 uint64) {
+	fake.getDeviceForFileStatMutex.Lock()
+	defer fake.getDeviceForFileStatMutex.Unlock()
+	fake.GetDeviceForFileStatStub = nil
+	if fake.getDeviceForFileStatReturnsOnCall == nil {
+		fake.getDeviceForFileStatReturnsOnCall = make(map[int]struct {
+			result1 uint64
+		})
+	}
+	fake.getDeviceForFileStatReturnsOnCall[i] = struct {
+		result1 uint64
+	}{result1}
+}
+
+func (fake *FakeExecutor) GetGlobFiles(arg1 string) ([]string, error) {
+	fake.getGlobFilesMutex.Lock()
+	ret, specificReturn := fake.getGlobFilesReturnsOnCall[len(fake.getGlobFilesArgsForCall)]
+	fake.getGlobFilesArgsForCall = append(fake.getGlobFilesArgsForCall, struct {
+		arg1 string
+	}{arg1})
+	fake.recordInvocation("GetGlobFiles", []interface{}{arg1})
+	fake.getGlobFilesMutex.Unlock()
+	if fake.GetGlobFilesStub != nil {
+		return fake.GetGlobFilesStub(arg1)
+	}
+	if specificReturn {
+		return ret.result1, ret.result2
+	}
+	fakeReturns := fake.getGlobFilesReturns
+	return fakeReturns.result1, fakeReturns.result2
+}
+
+func (fake *FakeExecutor) GetGlobFilesCallCount() int {
+	fake.getGlobFilesMutex.RLock()
+	defer fake.getGlobFilesMutex.RUnlock()
+	return len(fake.getGlobFilesArgsForCall)
+}
+
+func (fake *FakeExecutor) GetGlobFilesCalls(stub func(string) ([]string, error)) {
+	fake.getGlobFilesMutex.Lock()
+	defer fake.getGlobFilesMutex.Unlock()
+	fake.GetGlobFilesStub = stub
+}
+
+func (fake *FakeExecutor) GetGlobFilesArgsForCall(i int) string {
+	fake.getGlobFilesMutex.RLock()
+	defer fake.getGlobFilesMutex.RUnlock()
+	argsForCall := fake.getGlobFilesArgsForCall[i]
+	return argsForCall.arg1
+}
+
+func (fake *FakeExecutor) GetGlobFilesReturns(result1 []string, result2 error) {
+	fake.getGlobFilesMutex.Lock()
+	defer fake.getGlobFilesMutex.Unlock()
+	fake.GetGlobFilesStub = nil
+	fake.getGlobFilesReturns = struct {
+		result1 []string
+		result2 error
+	}{result1, result2}
+}
+
+func (fake *FakeExecutor) GetGlobFilesReturnsOnCall(i int, result1 []string, result2 error) {
+	fake.getGlobFilesMutex.Lock()
+	defer fake.getGlobFilesMutex.Unlock()
+	fake.GetGlobFilesStub = nil
+	if fake.getGlobFilesReturnsOnCall == nil {
+		fake.getGlobFilesReturnsOnCall = make(map[int]struct {
+			result1 []string
+			result2 error
+		})
+	}
+	fake.getGlobFilesReturnsOnCall[i] = struct {
+		result1 []string
+		result2 error
+	}{result1, result2}
+}
+
+func (fake *FakeExecutor) Hostname() (string, error) {
+	fake.hostnameMutex.Lock()
+	ret, specificReturn := fake.hostnameReturnsOnCall[len(fake.hostnameArgsForCall)]
+	fake.hostnameArgsForCall = append(fake.hostnameArgsForCall, struct {
+	}{})
+	fake.recordInvocation("Hostname", []interface{}{})
+	fake.hostnameMutex.Unlock()
+	if fake.HostnameStub != nil {
+		return fake.HostnameStub()
+	}
+	if specificReturn {
+		return ret.result1, ret.result2
+	}
+	fakeReturns := fake.hostnameReturns
+	return fakeReturns.result1, fakeReturns.result2
+}
+
+func (fake *FakeExecutor) HostnameCallCount() int {
+	fake.hostnameMutex.RLock()
+	defer fake.hostnameMutex.RUnlock()
+	return len(fake.hostnameArgsForCall)
+}
+
+func (fake *FakeExecutor) HostnameCalls(stub func() (string, error)) {
+	fake.hostnameMutex.Lock()
+	defer fake.hostnameMutex.Unlock()
+	fake.HostnameStub = stub
+}
+
+func (fake *FakeExecutor) HostnameReturns(result1 string, result2 error) {
+	fake.hostnameMutex.Lock()
+	defer fake.hostnameMutex.Unlock()
+	fake.HostnameStub = nil
+	fake.hostnameReturns = struct {
+		result1 string
+		result2 error
+	}{result1, result2}
+}
+
+func (fake *FakeExecutor) HostnameReturnsOnCall(i int, result1 string, result2 error) {
+	fake.hostnameMutex.Lock()
+	defer fake.hostnameMutex.Unlock()
+	fake.HostnameStub = nil
+	if fake.hostnameReturnsOnCall == nil {
+		fake.hostnameReturnsOnCall = make(map[int]struct {
+			result1 string
+			result2 error
+		})
+	}
+	fake.hostnameReturnsOnCall[i] = struct {
+		result1 string
+		result2 error
+	}{result1, result2}
+}
+
+func (fake *FakeExecutor) IsDir(arg1 os.FileInfo) bool {
+	fake.isDirMutex.Lock()
+	ret, specificReturn := fake.isDirReturnsOnCall[len(fake.isDirArgsForCall)]
+	fake.isDirArgsForCall = append(fake.isDirArgsForCall, struct {
+		arg1 os.FileInfo
+	}{arg1})
+	fake.recordInvocation("IsDir", []interface{}{arg1})
+	fake.isDirMutex.Unlock()
+	if fake.IsDirStub != nil {
+		return fake.IsDirStub(arg1)
+	}
+	if specificReturn {
+		return ret.result1
+	}
+	fakeReturns := fake.isDirReturns
+	return fakeReturns.result1
+}
+
+func (fake *FakeExecutor) IsDirCallCount() int {
+	fake.isDirMutex.RLock()
+	defer fake.isDirMutex.RUnlock()
+	return len(fake.isDirArgsForCall)
+}
+
+func (fake *FakeExecutor) IsDirCalls(stub func(os.FileInfo) bool) {
+	fake.isDirMutex.Lock()
+	defer fake.isDirMutex.Unlock()
+	fake.IsDirStub = stub
+}
+
+func (fake *FakeExecutor) IsDirArgsForCall(i int) os.FileInfo {
+	fake.isDirMutex.RLock()
+	defer fake.isDirMutex.RUnlock()
+	argsForCall := fake.isDirArgsForCall[i]
+	return argsForCall.arg1
+}
+
+func (fake *FakeExecutor) IsDirReturns(result1 bool) {
+	fake.isDirMutex.Lock()
+	defer fake.isDirMutex.Unlock()
+	fake.IsDirStub = nil
+	fake.isDirReturns = struct {
+		result1 bool
+	}{result1}
+}
+
+func (fake *FakeExecutor) IsDirReturnsOnCall(i int, result1 bool) {
+	fake.isDirMutex.Lock()
+	defer fake.isDirMutex.Unlock()
+	fake.IsDirStub = nil
+	if fake.isDirReturnsOnCall == nil {
+		fake.isDirReturnsOnCall = make(map[int]struct {
+			result1 bool
+		})
+	}
+	fake.isDirReturnsOnCall[i] = struct {
+		result1 bool
+	}{result1}
+}
+
+func (fake *FakeExecutor) IsDirEmpty(arg1 string) (bool, error) {
+	fake.isDirEmptyMutex.Lock()
+	ret, specificReturn := fake.isDirEmptyReturnsOnCall[len(fake.isDirEmptyArgsForCall)]
+	fake.isDirEmptyArgsForCall = append(fake.isDirEmptyArgsForCall, struct {
+		arg1 string
+	}{arg1})
+	fake.recordInvocation("IsDirEmpty", []interface{}{arg1})
+	fake.isDirEmptyMutex.Unlock()
+	if fake.IsDirEmptyStub != nil {
+		return fake.IsDirEmptyStub(arg1)
+	}
+	if specificReturn {
+		return ret.result1, ret.result2
+	}
+	fakeReturns := fake.isDirEmptyReturns
+	return fakeReturns.result1, fakeReturns.result2
+}
+
+func (fake *FakeExecutor) IsDirEmptyCallCount() int {
+	fake.isDirEmptyMutex.RLock()
+	defer fake.isDirEmptyMutex.RUnlock()
+	return len(fake.isDirEmptyArgsForCall)
+}
+
+func (fake *FakeExecutor) IsDirEmptyCalls(stub func(string) (bool, error)) {
+	fake.isDirEmptyMutex.Lock()
+	defer fake.isDirEmptyMutex.Unlock()
+	fake.IsDirEmptyStub = stub
+}
+
+func (fake *FakeExecutor) IsDirEmptyArgsForCall(i int) string {
+	fake.isDirEmptyMutex.RLock()
+	defer fake.isDirEmptyMutex.RUnlock()
+	argsForCall := fake.isDirEmptyArgsForCall[i]
+	return argsForCall.arg1
+}
+
+func (fake *FakeExecutor) IsDirEmptyReturns(result1 bool, result2 error) {
+	fake.isDirEmptyMutex.Lock()
+	defer fake.isDirEmptyMutex.Unlock()
+	fake.IsDirEmptyStub = nil
+	fake.isDirEmptyReturns = struct {
+		result1 bool
+		result2 error
+	}{result1, result2}
+}
+
+func (fake *FakeExecutor) IsDirEmptyReturnsOnCall(i int, result1 bool, result2 error) {
+	fake.isDirEmptyMutex.Lock()
+	defer fake.isDirEmptyMutex.Unlock()
+	fake.IsDirEmptyStub = nil
+	if fake.isDirEmptyReturnsOnCall == nil {
+		fake.isDirEmptyReturnsOnCall = make(map[int]struct {
+			result1 bool
+			result2 error
+		})
+	}
+	fake.isDirEmptyReturnsOnCall[i] = struct {
+		result1 bool
+		result2 error
+	}{result1, result2}
+}
+
+func (fake *FakeExecutor) IsExecutable(arg1 string) error {
+	fake.isExecutableMutex.Lock()
+	ret, specificReturn := fake.isExecutableReturnsOnCall[len(fake.isExecutableArgsForCall)]
+	fake.isExecutableArgsForCall = append(fake.isExecutableArgsForCall, struct {
+		arg1 string
+	}{arg1})
+	fake.recordInvocation("IsExecutable", []interface{}{arg1})
+	fake.isExecutableMutex.Unlock()
+	if fake.IsExecutableStub != nil {
+		return fake.IsExecutableStub(arg1)
+	}
+	if specificReturn {
+		return ret.result1
+	}
+	fakeReturns := fake.isExecutableReturns
+	return fakeReturns.result1
+}
+
+func (fake *FakeExecutor) IsExecutableCallCount() int {
+	fake.isExecutableMutex.RLock()
+	defer fake.isExecutableMutex.RUnlock()
+	return len(fake.isExecutableArgsForCall)
+}
+
+func (fake *FakeExecutor) IsExecutableCalls(stub func(string) error) {
+	fake.isExecutableMutex.Lock()
+	defer fake.isExecutableMutex.Unlock()
+	fake.IsExecutableStub = stub
+}
+
+func (fake *FakeExecutor) IsExecutableArgsForCall(i int) string {
+	fake.isExecutableMutex.RLock()
+	defer fake.isExecutableMutex.RUnlock()
+	argsForCall := fake.isExecutableArgsForCall[i]
+	return argsForCall.arg1
+}
+
+func (fake *FakeExecutor) IsExecutableReturns(result1 error) {
+	fake.isExecutableMutex.Lock()
+	defer fake.isExecutableMutex.Unlock()
+	fake.IsExecutableStub = nil
+	fake.isExecutableReturns = struct {
+		result1 error
+	}{result1}
+}
+
+func (fake *FakeExecutor) IsExecutableReturnsOnCall(i int, result1 error) {
+	fake.isExecutableMutex.Lock()
+	defer fake.isExecutableMutex.Unlock()
+	fake.IsExecutableStub = nil
+	if fake.isExecutableReturnsOnCall == nil {
+		fake.isExecutableReturnsOnCall = make(map[int]struct {
+			result1 error
+		})
+	}
+	fake.isExecutableReturnsOnCall[i] = struct {
+		result1 error
+	}{result1}
+}
+
+func (fake *FakeExecutor) IsNotExist(arg1 error) bool {
+	fake.isNotExistMutex.Lock()
+	ret, specificReturn := fake.isNotExistReturnsOnCall[len(fake.isNotExistArgsForCall)]
+	fake.isNotExistArgsForCall = append(fake.isNotExistArgsForCall, struct {
+		arg1 error
+	}{arg1})
+	fake.recordInvocation("IsNotExist", []interface{}{arg1})
+	fake.isNotExistMutex.Unlock()
+	if fake.IsNotExistStub != nil {
+		return fake.IsNotExistStub(arg1)
+	}
+	if specificReturn {
+		return ret.result1
+	}
+	fakeReturns := fake.isNotExistReturns
+	return fakeReturns.result1
+}
+
+func (fake *FakeExecutor) IsNotExistCallCount() int {
+	fake.isNotExistMutex.RLock()
+	defer fake.isNotExistMutex.RUnlock()
+	return len(fake.isNotExistArgsForCall)
+}
+
+func (fake *FakeExecutor) IsNotExistCalls(stub func(error) bool) {
+	fake.isNotExistMutex.Lock()
+	defer fake.isNotExistMutex.Unlock()
+	fake.IsNotExistStub = stub
+}
+
+func (fake *FakeExecutor) IsNotExistArgsForCall(i int) error {
+	fake.isNotExistMutex.RLock()
+	defer fake.isNotExistMutex.RUnlock()
+	argsForCall := fake.isNotExistArgsForCall[i]
+	return argsForCall.arg1
+}
+
+func (fake *FakeExecutor) IsNotExistReturns(result1 bool) {
+	fake.isNotExistMutex.Lock()
+	defer fake.isNotExistMutex.Unlock()
+	fake.IsNotExistStub = nil
+	fake.isNotExistReturns = struct {
+		result1 bool
+	}{result1}
+}
+
+func (fake *FakeExecutor) IsNotExistReturnsOnCall(i int, result1 bool) {
+	fake.isNotExistMutex.Lock()
+	defer fake.isNotExistMutex.Unlock()
+	fake.IsNotExistStub = nil
+	if fake.isNotExistReturnsOnCall == nil {
+		fake.isNotExistReturnsOnCall = make(map[int]struct {
+			result1 bool
+		})
+	}
+	fake.isNotExistReturnsOnCall[i] = struct {
+		result1 bool
+	}{result1}
+}
+
+func (fake *FakeExecutor) IsSameFile(arg1 os.FileInfo, arg2 os.FileInfo) bool {
+	fake.isSameFileMutex.Lock()
+	ret, specificReturn := fake.isSameFileReturnsOnCall[len(fake.isSameFileArgsForCall)]
+	fake.isSameFileArgsForCall = append(fake.isSameFileArgsForCall, struct {
+		arg1 os.FileInfo
+		arg2 os.FileInfo
+	}{arg1, arg2})
+	fake.recordInvocation("IsSameFile", []interface{}{arg1, arg2})
+	fake.isSameFileMutex.Unlock()
+	if fake.IsSameFileStub != nil {
+		return fake.IsSameFileStub(arg1, arg2)
+	}
+	if specificReturn {
+		return ret.result1
+	}
+	fakeReturns := fake.isSameFileReturns
+	return fakeReturns.result1
+}
+
+func (fake *FakeExecutor) IsSameFileCallCount() int {
+	fake.isSameFileMutex.RLock()
+	defer fake.isSameFileMutex.RUnlock()
+	return len(fake.isSameFileArgsForCall)
+}
+
+func (fake *FakeExecutor) IsSameFileCalls(stub func(os.FileInfo, os.FileInfo) bool) {
+	fake.isSameFileMutex.Lock()
+	defer fake.isSameFileMutex.Unlock()
+	fake.IsSameFileStub = stub
+}
+
+func (fake *FakeExecutor) IsSameFileArgsForCall(i int) (os.FileInfo, os.FileInfo) {
+	fake.isSameFileMutex.RLock()
+	defer fake.isSameFileMutex.RUnlock()
+	argsForCall := fake.isSameFileArgsForCall[i]
+	return argsForCall.arg1, argsForCall.arg2
+}
+
+func (fake *FakeExecutor) IsSameFileReturns(result1 bool) {
+	fake.isSameFileMutex.Lock()
+	defer fake.isSameFileMutex.Unlock()
+	fake.IsSameFileStub = nil
+	fake.isSameFileReturns = struct {
+		result1 bool
+	}{result1}
+}
+
+func (fake *FakeExecutor) IsSameFileReturnsOnCall(i int, result1 bool) {
+	fake.isSameFileMutex.Lock()
+	defer fake.isSameFileMutex.Unlock()
+	fake.IsSameFileStub = nil
+	if fake.isSameFileReturnsOnCall == nil {
+		fake.isSameFileReturnsOnCall = make(map[int]struct {
+			result1 bool
+		})
+	}
+	fake.isSameFileReturnsOnCall[i] = struct {
+		result1 bool
+	}{result1}
+}
+
+func (fake *FakeExecutor) IsSlink(arg1 os.FileInfo) bool {
+	fake.isSlinkMutex.Lock()
+	ret, specificReturn := fake.isSlinkReturnsOnCall[len(fake.isSlinkArgsForCall)]
+	fake.isSlinkArgsForCall = append(fake.isSlinkArgsForCall, struct {
+		arg1 os.FileInfo
+	}{arg1})
+	fake.recordInvocation("IsSlink", []interface{}{arg1})
+	fake.isSlinkMutex.Unlock()
+	if fake.IsSlinkStub != nil {
+		return fake.IsSlinkStub(arg1)
+	}
+	if specificReturn {
+		return ret.result1
+	}
+	fakeReturns := fake.isSlinkReturns
+	return fakeReturns.result1
+}
+
+func (fake *FakeExecutor) IsSlinkCallCount() int {
+	fake.isSlinkMutex.RLock()
+	defer fake.isSlinkMutex.RUnlock()
+	return len(fake.isSlinkArgsForCall)
+}
+
+func (fake *FakeExecutor) IsSlinkCalls(stub func(os.FileInfo) bool) {
+	fake.isSlinkMutex.Lock()
+	defer fake.isSlinkMutex.Unlock()
+	fake.IsSlinkStub = stub
+}
+
+func (fake *FakeExecutor) IsSlinkArgsForCall(i int) os.FileInfo {
+	fake.isSlinkMutex.RLock()
+	defer fake.isSlinkMutex.RUnlock()
+	argsForCall := fake.isSlinkArgsForCall[i]
+	return argsForCall.arg1
+}
+
+func (fake *FakeExecutor) IsSlinkReturns(result1 bool) {
+	fake.isSlinkMutex.Lock()
+	defer fake.isSlinkMutex.Unlock()
+	fake.IsSlinkStub = nil
+	fake.isSlinkReturns = struct {
+		result1 bool
+	}{result1}
+}
+
+func (fake *FakeExecutor) IsSlinkReturnsOnCall(i int, result1 bool) {
+	fake.isSlinkMutex.Lock()
+	defer fake.isSlinkMutex.Unlock()
+	fake.IsSlinkStub = nil
+	if fake.isSlinkReturnsOnCall == nil {
+		fake.isSlinkReturnsOnCall = make(map[int]struct {
+			result1 bool
+		})
+	}
+	fake.isSlinkReturnsOnCall[i] = struct {
+		result1 bool
+	}{result1}
+}
+
+func (fake *FakeExecutor) Lstat(arg1 string) (os.FileInfo, error) {
+	fake.lstatMutex.Lock()
+	ret, specificReturn := fake.lstatReturnsOnCall[len(fake.lstatArgsForCall)]
+	fake.lstatArgsForCall = append(fake.lstatArgsForCall, struct {
+		arg1 string
+	}{arg1})
+	fake.recordInvocation("Lstat", []interface{}{arg1})
+	fake.lstatMutex.Unlock()
+	if fake.LstatStub != nil {
+		return fake.LstatStub(arg1)
+	}
+	if specificReturn {
+		return ret.result1, ret.result2
+	}
+	fakeReturns := fake.lstatReturns
+	return fakeReturns.result1, fakeReturns.result2
+}
+
+func (fake *FakeExecutor) LstatCallCount() int {
+	fake.lstatMutex.RLock()
+	defer fake.lstatMutex.RUnlock()
+	return len(fake.lstatArgsForCall)
+}
+
+func (fake *FakeExecutor) LstatCalls(stub func(string) (os.FileInfo, error)) {
+	fake.lstatMutex.Lock()
+	defer fake.lstatMutex.Unlock()
+	fake.LstatStub = stub
+}
+
+func (fake *FakeExecutor) LstatArgsForCall(i int) string {
+	fake.lstatMutex.RLock()
+	defer fake.lstatMutex.RUnlock()
+	argsForCall := fake.lstatArgsForCall[i]
+	return argsForCall.arg1
+}
+
+func (fake *FakeExecutor) LstatReturns(result1 os.FileInfo, result2 error) {
+	fake.lstatMutex.Lock()
+	defer fake.lstatMutex.Unlock()
+	fake.LstatStub = nil
+	fake.lstatReturns = struct {
 		result1 os.FileInfo
 		result2 error
 	}{result1, result2}
 }
 
-func (fake *FakeExecutor) StatReturnsOnCall(i int, result1 os.FileInfo, result2 error) {
-	fake.StatStub = nil
-	if fake.statReturnsOnCall == nil {
-		fake.statReturnsOnCall = make(map[int]struct {
+func (fake *FakeExecutor) LstatReturnsOnCall(i int, result1 os.FileInfo, result2 error) {
+	fake.lstatMutex.Lock()
+	defer fake.lstatMutex.Unlock()
+	fake.LstatStub = nil
+	if fake.lstatReturnsOnCall == nil {
+		fake.lstatReturnsOnCall = make(map[int]struct {
 			result1 os.FileInfo
 			result2 error
 		})
 	}
-	fake.statReturnsOnCall[i] = struct {
+	fake.lstatReturnsOnCall[i] = struct {
 		result1 os.FileInfo
 		result2 error
 	}{result1, result2}
@@ -366,7 +1066,8 @@ func (fake *FakeExecutor) Mkdir(arg1 string, arg2 os.FileMode) error {
 	if specificReturn {
 		return ret.result1
 	}
-	return fake.mkdirReturns.result1
+	fakeReturns := fake.mkdirReturns
+	return fakeReturns.result1
 }
 
 func (fake *FakeExecutor) MkdirCallCount() int {
@@ -375,13 +1076,22 @@ func (fake *FakeExecutor) MkdirCallCount() int {
 	return len(fake.mkdirArgsForCall)
 }
 
+func (fake *FakeExecutor) MkdirCalls(stub func(string, os.FileMode) error) {
+	fake.mkdirMutex.Lock()
+	defer fake.mkdirMutex.Unlock()
+	fake.MkdirStub = stub
+}
+
 func (fake *FakeExecutor) MkdirArgsForCall(i int) (string, os.FileMode) {
 	fake.mkdirMutex.RLock()
 	defer fake.mkdirMutex.RUnlock()
-	return fake.mkdirArgsForCall[i].arg1, fake.mkdirArgsForCall[i].arg2
+	argsForCall := fake.mkdirArgsForCall[i]
+	return argsForCall.arg1, argsForCall.arg2
 }
 
 func (fake *FakeExecutor) MkdirReturns(result1 error) {
+	fake.mkdirMutex.Lock()
+	defer fake.mkdirMutex.Unlock()
 	fake.MkdirStub = nil
 	fake.mkdirReturns = struct {
 		result1 error
@@ -389,6 +1099,8 @@ func (fake *FakeExecutor) MkdirReturns(result1 error) {
 }
 
 func (fake *FakeExecutor) MkdirReturnsOnCall(i int, result1 error) {
+	fake.mkdirMutex.Lock()
+	defer fake.mkdirMutex.Unlock()
 	fake.MkdirStub = nil
 	if fake.mkdirReturnsOnCall == nil {
 		fake.mkdirReturnsOnCall = make(map[int]struct {
@@ -415,7 +1127,8 @@ func (fake *FakeExecutor) MkdirAll(arg1 string, arg2 os.FileMode) error {
 	if specificReturn {
 		return ret.result1
 	}
-	return fake.mkdirAllReturns.result1
+	fakeReturns := fake.mkdirAllReturns
+	return fakeReturns.result1
 }
 
 func (fake *FakeExecutor) MkdirAllCallCount() int {
@@ -424,13 +1137,22 @@ func (fake *FakeExecutor) MkdirAllCallCount() int {
 	return len(fake.mkdirAllArgsForCall)
 }
 
+func (fake *FakeExecutor) MkdirAllCalls(stub func(string, os.FileMode) error) {
+	fake.mkdirAllMutex.Lock()
+	defer fake.mkdirAllMutex.Unlock()
+	fake.MkdirAllStub = stub
+}
+
 func (fake *FakeExecutor) MkdirAllArgsForCall(i int) (string, os.FileMode) {
 	fake.mkdirAllMutex.RLock()
 	defer fake.mkdirAllMutex.RUnlock()
-	return fake.mkdirAllArgsForCall[i].arg1, fake.mkdirAllArgsForCall[i].arg2
+	argsForCall := fake.mkdirAllArgsForCall[i]
+	return argsForCall.arg1, argsForCall.arg2
 }
 
 func (fake *FakeExecutor) MkdirAllReturns(result1 error) {
+	fake.mkdirAllMutex.Lock()
+	defer fake.mkdirAllMutex.Unlock()
 	fake.MkdirAllStub = nil
 	fake.mkdirAllReturns = struct {
 		result1 error
@@ -438,6 +1160,8 @@ func (fake *FakeExecutor) MkdirAllReturns(result1 error) {
 }
 
 func (fake *FakeExecutor) MkdirAllReturnsOnCall(i int, result1 error) {
+	fake.mkdirAllMutex.Lock()
+	defer fake.mkdirAllMutex.Unlock()
 	fake.MkdirAllStub = nil
 	if fake.mkdirAllReturnsOnCall == nil {
 		fake.mkdirAllReturnsOnCall = make(map[int]struct {
@@ -445,54 +1169,6 @@ func (fake *FakeExecutor) MkdirAllReturnsOnCall(i int, result1 error) {
 		})
 	}
 	fake.mkdirAllReturnsOnCall[i] = struct {
-		result1 error
-	}{result1}
-}
-
-func (fake *FakeExecutor) RemoveAll(arg1 string) error {
-	fake.removeAllMutex.Lock()
-	ret, specificReturn := fake.removeAllReturnsOnCall[len(fake.removeAllArgsForCall)]
-	fake.removeAllArgsForCall = append(fake.removeAllArgsForCall, struct {
-		arg1 string
-	}{arg1})
-	fake.recordInvocation("RemoveAll", []interface{}{arg1})
-	fake.removeAllMutex.Unlock()
-	if fake.RemoveAllStub != nil {
-		return fake.RemoveAllStub(arg1)
-	}
-	if specificReturn {
-		return ret.result1
-	}
-	return fake.removeAllReturns.result1
-}
-
-func (fake *FakeExecutor) RemoveAllCallCount() int {
-	fake.removeAllMutex.RLock()
-	defer fake.removeAllMutex.RUnlock()
-	return len(fake.removeAllArgsForCall)
-}
-
-func (fake *FakeExecutor) RemoveAllArgsForCall(i int) string {
-	fake.removeAllMutex.RLock()
-	defer fake.removeAllMutex.RUnlock()
-	return fake.removeAllArgsForCall[i].arg1
-}
-
-func (fake *FakeExecutor) RemoveAllReturns(result1 error) {
-	fake.RemoveAllStub = nil
-	fake.removeAllReturns = struct {
-		result1 error
-	}{result1}
-}
-
-func (fake *FakeExecutor) RemoveAllReturnsOnCall(i int, result1 error) {
-	fake.RemoveAllStub = nil
-	if fake.removeAllReturnsOnCall == nil {
-		fake.removeAllReturnsOnCall = make(map[int]struct {
-			result1 error
-		})
-	}
-	fake.removeAllReturnsOnCall[i] = struct {
 		result1 error
 	}{result1}
 }
@@ -511,7 +1187,8 @@ func (fake *FakeExecutor) Remove(arg1 string) error {
 	if specificReturn {
 		return ret.result1
 	}
-	return fake.removeReturns.result1
+	fakeReturns := fake.removeReturns
+	return fakeReturns.result1
 }
 
 func (fake *FakeExecutor) RemoveCallCount() int {
@@ -520,13 +1197,22 @@ func (fake *FakeExecutor) RemoveCallCount() int {
 	return len(fake.removeArgsForCall)
 }
 
+func (fake *FakeExecutor) RemoveCalls(stub func(string) error) {
+	fake.removeMutex.Lock()
+	defer fake.removeMutex.Unlock()
+	fake.RemoveStub = stub
+}
+
 func (fake *FakeExecutor) RemoveArgsForCall(i int) string {
 	fake.removeMutex.RLock()
 	defer fake.removeMutex.RUnlock()
-	return fake.removeArgsForCall[i].arg1
+	argsForCall := fake.removeArgsForCall[i]
+	return argsForCall.arg1
 }
 
 func (fake *FakeExecutor) RemoveReturns(result1 error) {
+	fake.removeMutex.Lock()
+	defer fake.removeMutex.Unlock()
 	fake.RemoveStub = nil
 	fake.removeReturns = struct {
 		result1 error
@@ -534,6 +1220,8 @@ func (fake *FakeExecutor) RemoveReturns(result1 error) {
 }
 
 func (fake *FakeExecutor) RemoveReturnsOnCall(i int, result1 error) {
+	fake.removeMutex.Lock()
+	defer fake.removeMutex.Unlock()
 	fake.RemoveStub = nil
 	if fake.removeReturnsOnCall == nil {
 		fake.removeReturnsOnCall = make(map[int]struct {
@@ -545,369 +1233,146 @@ func (fake *FakeExecutor) RemoveReturnsOnCall(i int, result1 error) {
 	}{result1}
 }
 
-func (fake *FakeExecutor) Hostname() (string, error) {
-	fake.hostnameMutex.Lock()
-	ret, specificReturn := fake.hostnameReturnsOnCall[len(fake.hostnameArgsForCall)]
-	fake.hostnameArgsForCall = append(fake.hostnameArgsForCall, struct{}{})
-	fake.recordInvocation("Hostname", []interface{}{})
-	fake.hostnameMutex.Unlock()
-	if fake.HostnameStub != nil {
-		return fake.HostnameStub()
-	}
-	if specificReturn {
-		return ret.result1, ret.result2
-	}
-	return fake.hostnameReturns.result1, fake.hostnameReturns.result2
-}
-
-func (fake *FakeExecutor) HostnameCallCount() int {
-	fake.hostnameMutex.RLock()
-	defer fake.hostnameMutex.RUnlock()
-	return len(fake.hostnameArgsForCall)
-}
-
-func (fake *FakeExecutor) HostnameReturns(result1 string, result2 error) {
-	fake.HostnameStub = nil
-	fake.hostnameReturns = struct {
-		result1 string
-		result2 error
-	}{result1, result2}
-}
-
-func (fake *FakeExecutor) HostnameReturnsOnCall(i int, result1 string, result2 error) {
-	fake.HostnameStub = nil
-	if fake.hostnameReturnsOnCall == nil {
-		fake.hostnameReturnsOnCall = make(map[int]struct {
-			result1 string
-			result2 error
-		})
-	}
-	fake.hostnameReturnsOnCall[i] = struct {
-		result1 string
-		result2 error
-	}{result1, result2}
-}
-
-func (fake *FakeExecutor) IsExecutable(arg1 string) error {
-	fake.isExecutableMutex.Lock()
-	ret, specificReturn := fake.isExecutableReturnsOnCall[len(fake.isExecutableArgsForCall)]
-	fake.isExecutableArgsForCall = append(fake.isExecutableArgsForCall, struct {
+func (fake *FakeExecutor) RemoveAll(arg1 string) error {
+	fake.removeAllMutex.Lock()
+	ret, specificReturn := fake.removeAllReturnsOnCall[len(fake.removeAllArgsForCall)]
+	fake.removeAllArgsForCall = append(fake.removeAllArgsForCall, struct {
 		arg1 string
 	}{arg1})
-	fake.recordInvocation("IsExecutable", []interface{}{arg1})
-	fake.isExecutableMutex.Unlock()
-	if fake.IsExecutableStub != nil {
-		return fake.IsExecutableStub(arg1)
+	fake.recordInvocation("RemoveAll", []interface{}{arg1})
+	fake.removeAllMutex.Unlock()
+	if fake.RemoveAllStub != nil {
+		return fake.RemoveAllStub(arg1)
 	}
 	if specificReturn {
 		return ret.result1
 	}
-	return fake.isExecutableReturns.result1
+	fakeReturns := fake.removeAllReturns
+	return fakeReturns.result1
 }
 
-func (fake *FakeExecutor) IsExecutableCallCount() int {
-	fake.isExecutableMutex.RLock()
-	defer fake.isExecutableMutex.RUnlock()
-	return len(fake.isExecutableArgsForCall)
+func (fake *FakeExecutor) RemoveAllCallCount() int {
+	fake.removeAllMutex.RLock()
+	defer fake.removeAllMutex.RUnlock()
+	return len(fake.removeAllArgsForCall)
 }
 
-func (fake *FakeExecutor) IsExecutableArgsForCall(i int) string {
-	fake.isExecutableMutex.RLock()
-	defer fake.isExecutableMutex.RUnlock()
-	return fake.isExecutableArgsForCall[i].arg1
+func (fake *FakeExecutor) RemoveAllCalls(stub func(string) error) {
+	fake.removeAllMutex.Lock()
+	defer fake.removeAllMutex.Unlock()
+	fake.RemoveAllStub = stub
 }
 
-func (fake *FakeExecutor) IsExecutableReturns(result1 error) {
-	fake.IsExecutableStub = nil
-	fake.isExecutableReturns = struct {
+func (fake *FakeExecutor) RemoveAllArgsForCall(i int) string {
+	fake.removeAllMutex.RLock()
+	defer fake.removeAllMutex.RUnlock()
+	argsForCall := fake.removeAllArgsForCall[i]
+	return argsForCall.arg1
+}
+
+func (fake *FakeExecutor) RemoveAllReturns(result1 error) {
+	fake.removeAllMutex.Lock()
+	defer fake.removeAllMutex.Unlock()
+	fake.RemoveAllStub = nil
+	fake.removeAllReturns = struct {
 		result1 error
 	}{result1}
 }
 
-func (fake *FakeExecutor) IsExecutableReturnsOnCall(i int, result1 error) {
-	fake.IsExecutableStub = nil
-	if fake.isExecutableReturnsOnCall == nil {
-		fake.isExecutableReturnsOnCall = make(map[int]struct {
+func (fake *FakeExecutor) RemoveAllReturnsOnCall(i int, result1 error) {
+	fake.removeAllMutex.Lock()
+	defer fake.removeAllMutex.Unlock()
+	fake.RemoveAllStub = nil
+	if fake.removeAllReturnsOnCall == nil {
+		fake.removeAllReturnsOnCall = make(map[int]struct {
 			result1 error
 		})
 	}
-	fake.isExecutableReturnsOnCall[i] = struct {
+	fake.removeAllReturnsOnCall[i] = struct {
 		result1 error
 	}{result1}
 }
 
-func (fake *FakeExecutor) IsNotExist(arg1 error) bool {
-	fake.isNotExistMutex.Lock()
-	ret, specificReturn := fake.isNotExistReturnsOnCall[len(fake.isNotExistArgsForCall)]
-	fake.isNotExistArgsForCall = append(fake.isNotExistArgsForCall, struct {
-		arg1 error
+func (fake *FakeExecutor) Stat(arg1 string) (os.FileInfo, error) {
+	fake.statMutex.Lock()
+	ret, specificReturn := fake.statReturnsOnCall[len(fake.statArgsForCall)]
+	fake.statArgsForCall = append(fake.statArgsForCall, struct {
+		arg1 string
 	}{arg1})
-	fake.recordInvocation("IsNotExist", []interface{}{arg1})
-	fake.isNotExistMutex.Unlock()
-	if fake.IsNotExistStub != nil {
-		return fake.IsNotExistStub(arg1)
-	}
-	if specificReturn {
-		return ret.result1
-	}
-	return fake.isNotExistReturns.result1
-}
-
-func (fake *FakeExecutor) IsNotExistCallCount() int {
-	fake.isNotExistMutex.RLock()
-	defer fake.isNotExistMutex.RUnlock()
-	return len(fake.isNotExistArgsForCall)
-}
-
-func (fake *FakeExecutor) IsNotExistArgsForCall(i int) error {
-	fake.isNotExistMutex.RLock()
-	defer fake.isNotExistMutex.RUnlock()
-	return fake.isNotExistArgsForCall[i].arg1
-}
-
-func (fake *FakeExecutor) IsNotExistReturns(result1 bool) {
-	fake.IsNotExistStub = nil
-	fake.isNotExistReturns = struct {
-		result1 bool
-	}{result1}
-}
-
-func (fake *FakeExecutor) IsNotExistReturnsOnCall(i int, result1 bool) {
-	fake.IsNotExistStub = nil
-	if fake.isNotExistReturnsOnCall == nil {
-		fake.isNotExistReturnsOnCall = make(map[int]struct {
-			result1 bool
-		})
-	}
-	fake.isNotExistReturnsOnCall[i] = struct {
-		result1 bool
-	}{result1}
-}
-
-func (fake *FakeExecutor) EvalSymlinks(path string) (string, error) {
-	fake.evalSymlinksMutex.Lock()
-	ret, specificReturn := fake.evalSymlinksReturnsOnCall[len(fake.evalSymlinksArgsForCall)]
-	fake.evalSymlinksArgsForCall = append(fake.evalSymlinksArgsForCall, struct {
-		path string
-	}{path})
-	fake.recordInvocation("EvalSymlinks", []interface{}{path})
-	fake.evalSymlinksMutex.Unlock()
-	if fake.EvalSymlinksStub != nil {
-		return fake.EvalSymlinksStub(path)
+	fake.recordInvocation("Stat", []interface{}{arg1})
+	fake.statMutex.Unlock()
+	if fake.StatStub != nil {
+		return fake.StatStub(arg1)
 	}
 	if specificReturn {
 		return ret.result1, ret.result2
 	}
-	return fake.evalSymlinksReturns.result1, fake.evalSymlinksReturns.result2
+	fakeReturns := fake.statReturns
+	return fakeReturns.result1, fakeReturns.result2
 }
 
-func (fake *FakeExecutor) EvalSymlinksCallCount() int {
-	fake.evalSymlinksMutex.RLock()
-	defer fake.evalSymlinksMutex.RUnlock()
-	return len(fake.evalSymlinksArgsForCall)
+func (fake *FakeExecutor) StatCallCount() int {
+	fake.statMutex.RLock()
+	defer fake.statMutex.RUnlock()
+	return len(fake.statArgsForCall)
 }
 
-func (fake *FakeExecutor) EvalSymlinksArgsForCall(i int) string {
-	fake.evalSymlinksMutex.RLock()
-	defer fake.evalSymlinksMutex.RUnlock()
-	return fake.evalSymlinksArgsForCall[i].path
+func (fake *FakeExecutor) StatCalls(stub func(string) (os.FileInfo, error)) {
+	fake.statMutex.Lock()
+	defer fake.statMutex.Unlock()
+	fake.StatStub = stub
 }
 
-func (fake *FakeExecutor) EvalSymlinksReturns(result1 string, result2 error) {
-	fake.EvalSymlinksStub = nil
-	fake.evalSymlinksReturns = struct {
-		result1 string
-		result2 error
-	}{result1, result2}
+func (fake *FakeExecutor) StatArgsForCall(i int) string {
+	fake.statMutex.RLock()
+	defer fake.statMutex.RUnlock()
+	argsForCall := fake.statArgsForCall[i]
+	return argsForCall.arg1
 }
 
-func (fake *FakeExecutor) EvalSymlinksReturnsOnCall(i int, result1 string, result2 error) {
-	fake.EvalSymlinksStub = nil
-	if fake.evalSymlinksReturnsOnCall == nil {
-		fake.evalSymlinksReturnsOnCall = make(map[int]struct {
-			result1 string
-			result2 error
-		})
-	}
-	fake.evalSymlinksReturnsOnCall[i] = struct {
-		result1 string
-		result2 error
-	}{result1, result2}
-}
-
-func (fake *FakeExecutor) ExecuteWithTimeout(mSeconds int, command string, args []string) ([]byte, error) {
-	var argsCopy []string
-	if args != nil {
-		argsCopy = make([]string, len(args))
-		copy(argsCopy, args)
-	}
-	fake.executeWithTimeoutMutex.Lock()
-	ret, specificReturn := fake.executeWithTimeoutReturnsOnCall[len(fake.executeWithTimeoutArgsForCall)]
-	fake.executeWithTimeoutArgsForCall = append(fake.executeWithTimeoutArgsForCall, struct {
-		mSeconds int
-		command  string
-		args     []string
-	}{mSeconds, command, argsCopy})
-	fake.recordInvocation("ExecuteWithTimeout", []interface{}{mSeconds, command, argsCopy})
-	fake.executeWithTimeoutMutex.Unlock()
-	if fake.ExecuteWithTimeoutStub != nil {
-		return fake.ExecuteWithTimeoutStub(mSeconds, command, args)
-	}
-	if specificReturn {
-		return ret.result1, ret.result2
-	}
-	return fake.executeWithTimeoutReturns.result1, fake.executeWithTimeoutReturns.result2
-}
-
-func (fake *FakeExecutor) ExecuteWithTimeoutCallCount() int {
-	fake.executeWithTimeoutMutex.RLock()
-	defer fake.executeWithTimeoutMutex.RUnlock()
-	return len(fake.executeWithTimeoutArgsForCall)
-}
-
-func (fake *FakeExecutor) ExecuteWithTimeoutArgsForCall(i int) (int, string, []string) {
-	fake.executeWithTimeoutMutex.RLock()
-	defer fake.executeWithTimeoutMutex.RUnlock()
-	return fake.executeWithTimeoutArgsForCall[i].mSeconds, fake.executeWithTimeoutArgsForCall[i].command, fake.executeWithTimeoutArgsForCall[i].args
-}
-
-func (fake *FakeExecutor) ExecuteWithTimeoutReturns(result1 []byte, result2 error) {
-	fake.ExecuteWithTimeoutStub = nil
-	fake.executeWithTimeoutReturns = struct {
-		result1 []byte
-		result2 error
-	}{result1, result2}
-}
-
-func (fake *FakeExecutor) ExecuteWithTimeoutReturnsOnCall(i int, result1 []byte, result2 error) {
-	fake.ExecuteWithTimeoutStub = nil
-	if fake.executeWithTimeoutReturnsOnCall == nil {
-		fake.executeWithTimeoutReturnsOnCall = make(map[int]struct {
-			result1 []byte
-			result2 error
-		})
-	}
-	fake.executeWithTimeoutReturnsOnCall[i] = struct {
-		result1 []byte
-		result2 error
-	}{result1, result2}
-}
-
-func (fake *FakeExecutor) Lstat(path string) (os.FileInfo, error) {
-	fake.lstatMutex.Lock()
-	ret, specificReturn := fake.lstatReturnsOnCall[len(fake.lstatArgsForCall)]
-	fake.lstatArgsForCall = append(fake.lstatArgsForCall, struct {
-		path string
-	}{path})
-	fake.recordInvocation("Lstat", []interface{}{path})
-	fake.lstatMutex.Unlock()
-	if fake.LstatStub != nil {
-		return fake.LstatStub(path)
-	}
-	if specificReturn {
-		return ret.result1, ret.result2
-	}
-	return fake.lstatReturns.result1, fake.lstatReturns.result2
-}
-
-func (fake *FakeExecutor) LstatCallCount() int {
-	fake.lstatMutex.RLock()
-	defer fake.lstatMutex.RUnlock()
-	return len(fake.lstatArgsForCall)
-}
-
-func (fake *FakeExecutor) LstatArgsForCall(i int) string {
-	fake.lstatMutex.RLock()
-	defer fake.lstatMutex.RUnlock()
-	return fake.lstatArgsForCall[i].path
-}
-
-func (fake *FakeExecutor) LstatReturns(result1 os.FileInfo, result2 error) {
-	fake.LstatStub = nil
-	fake.lstatReturns = struct {
+func (fake *FakeExecutor) StatReturns(result1 os.FileInfo, result2 error) {
+	fake.statMutex.Lock()
+	defer fake.statMutex.Unlock()
+	fake.StatStub = nil
+	fake.statReturns = struct {
 		result1 os.FileInfo
 		result2 error
 	}{result1, result2}
 }
 
-func (fake *FakeExecutor) LstatReturnsOnCall(i int, result1 os.FileInfo, result2 error) {
-	fake.LstatStub = nil
-	if fake.lstatReturnsOnCall == nil {
-		fake.lstatReturnsOnCall = make(map[int]struct {
+func (fake *FakeExecutor) StatReturnsOnCall(i int, result1 os.FileInfo, result2 error) {
+	fake.statMutex.Lock()
+	defer fake.statMutex.Unlock()
+	fake.StatStub = nil
+	if fake.statReturnsOnCall == nil {
+		fake.statReturnsOnCall = make(map[int]struct {
 			result1 os.FileInfo
 			result2 error
 		})
 	}
-	fake.lstatReturnsOnCall[i] = struct {
+	fake.statReturnsOnCall[i] = struct {
 		result1 os.FileInfo
 		result2 error
 	}{result1, result2}
 }
 
-func (fake *FakeExecutor) IsDir(fInfo os.FileInfo) bool {
-	fake.isDirMutex.Lock()
-	ret, specificReturn := fake.isDirReturnsOnCall[len(fake.isDirArgsForCall)]
-	fake.isDirArgsForCall = append(fake.isDirArgsForCall, struct {
-		fInfo os.FileInfo
-	}{fInfo})
-	fake.recordInvocation("IsDir", []interface{}{fInfo})
-	fake.isDirMutex.Unlock()
-	if fake.IsDirStub != nil {
-		return fake.IsDirStub(fInfo)
-	}
-	if specificReturn {
-		return ret.result1
-	}
-	return fake.isDirReturns.result1
-}
-
-func (fake *FakeExecutor) IsDirCallCount() int {
-	fake.isDirMutex.RLock()
-	defer fake.isDirMutex.RUnlock()
-	return len(fake.isDirArgsForCall)
-}
-
-func (fake *FakeExecutor) IsDirArgsForCall(i int) os.FileInfo {
-	fake.isDirMutex.RLock()
-	defer fake.isDirMutex.RUnlock()
-	return fake.isDirArgsForCall[i].fInfo
-}
-
-func (fake *FakeExecutor) IsDirReturns(result1 bool) {
-	fake.IsDirStub = nil
-	fake.isDirReturns = struct {
-		result1 bool
-	}{result1}
-}
-
-func (fake *FakeExecutor) IsDirReturnsOnCall(i int, result1 bool) {
-	fake.IsDirStub = nil
-	if fake.isDirReturnsOnCall == nil {
-		fake.isDirReturnsOnCall = make(map[int]struct {
-			result1 bool
-		})
-	}
-	fake.isDirReturnsOnCall[i] = struct {
-		result1 bool
-	}{result1}
-}
-
-func (fake *FakeExecutor) Symlink(target string, slink string) error {
+func (fake *FakeExecutor) Symlink(arg1 string, arg2 string) error {
 	fake.symlinkMutex.Lock()
 	ret, specificReturn := fake.symlinkReturnsOnCall[len(fake.symlinkArgsForCall)]
 	fake.symlinkArgsForCall = append(fake.symlinkArgsForCall, struct {
-		target string
-		slink  string
-	}{target, slink})
-	fake.recordInvocation("Symlink", []interface{}{target, slink})
+		arg1 string
+		arg2 string
+	}{arg1, arg2})
+	fake.recordInvocation("Symlink", []interface{}{arg1, arg2})
 	fake.symlinkMutex.Unlock()
 	if fake.SymlinkStub != nil {
-		return fake.SymlinkStub(target, slink)
+		return fake.SymlinkStub(arg1, arg2)
 	}
 	if specificReturn {
 		return ret.result1
 	}
-	return fake.symlinkReturns.result1
+	fakeReturns := fake.symlinkReturns
+	return fakeReturns.result1
 }
 
 func (fake *FakeExecutor) SymlinkCallCount() int {
@@ -916,13 +1381,22 @@ func (fake *FakeExecutor) SymlinkCallCount() int {
 	return len(fake.symlinkArgsForCall)
 }
 
+func (fake *FakeExecutor) SymlinkCalls(stub func(string, string) error) {
+	fake.symlinkMutex.Lock()
+	defer fake.symlinkMutex.Unlock()
+	fake.SymlinkStub = stub
+}
+
 func (fake *FakeExecutor) SymlinkArgsForCall(i int) (string, string) {
 	fake.symlinkMutex.RLock()
 	defer fake.symlinkMutex.RUnlock()
-	return fake.symlinkArgsForCall[i].target, fake.symlinkArgsForCall[i].slink
+	argsForCall := fake.symlinkArgsForCall[i]
+	return argsForCall.arg1, argsForCall.arg2
 }
 
 func (fake *FakeExecutor) SymlinkReturns(result1 error) {
+	fake.symlinkMutex.Lock()
+	defer fake.symlinkMutex.Unlock()
 	fake.SymlinkStub = nil
 	fake.symlinkReturns = struct {
 		result1 error
@@ -930,6 +1404,8 @@ func (fake *FakeExecutor) SymlinkReturns(result1 error) {
 }
 
 func (fake *FakeExecutor) SymlinkReturnsOnCall(i int, result1 error) {
+	fake.symlinkMutex.Lock()
+	defer fake.symlinkMutex.Unlock()
 	fake.SymlinkStub = nil
 	if fake.symlinkReturnsOnCall == nil {
 		fake.symlinkReturnsOnCall = make(map[int]struct {
@@ -941,294 +1417,47 @@ func (fake *FakeExecutor) SymlinkReturnsOnCall(i int, result1 error) {
 	}{result1}
 }
 
-func (fake *FakeExecutor) IsSlink(fInfo os.FileInfo) bool {
-	fake.isSlinkMutex.Lock()
-	ret, specificReturn := fake.isSlinkReturnsOnCall[len(fake.isSlinkArgsForCall)]
-	fake.isSlinkArgsForCall = append(fake.isSlinkArgsForCall, struct {
-		fInfo os.FileInfo
-	}{fInfo})
-	fake.recordInvocation("IsSlink", []interface{}{fInfo})
-	fake.isSlinkMutex.Unlock()
-	if fake.IsSlinkStub != nil {
-		return fake.IsSlinkStub(fInfo)
-	}
-	if specificReturn {
-		return ret.result1
-	}
-	return fake.isSlinkReturns.result1
-}
-
-func (fake *FakeExecutor) IsSlinkCallCount() int {
-	fake.isSlinkMutex.RLock()
-	defer fake.isSlinkMutex.RUnlock()
-	return len(fake.isSlinkArgsForCall)
-}
-
-func (fake *FakeExecutor) IsSlinkArgsForCall(i int) os.FileInfo {
-	fake.isSlinkMutex.RLock()
-	defer fake.isSlinkMutex.RUnlock()
-	return fake.isSlinkArgsForCall[i].fInfo
-}
-
-func (fake *FakeExecutor) IsSlinkReturns(result1 bool) {
-	fake.IsSlinkStub = nil
-	fake.isSlinkReturns = struct {
-		result1 bool
-	}{result1}
-}
-
-func (fake *FakeExecutor) IsSlinkReturnsOnCall(i int, result1 bool) {
-	fake.IsSlinkStub = nil
-	if fake.isSlinkReturnsOnCall == nil {
-		fake.isSlinkReturnsOnCall = make(map[int]struct {
-			result1 bool
-		})
-	}
-	fake.isSlinkReturnsOnCall[i] = struct {
-		result1 bool
-	}{result1}
-}
-
-func (fake *FakeExecutor) GetGlobFiles(file_pattern string) (matches []string, err error) {
-	fake.getGlobFilesMutex.Lock()
-	ret, specificReturn := fake.getGlobFilesReturnsOnCall[len(fake.getGlobFilesArgsForCall)]
-	fake.getGlobFilesArgsForCall = append(fake.getGlobFilesArgsForCall, struct {
-		file_pattern string
-	}{file_pattern})
-	fake.recordInvocation("GetGlobFiles", []interface{}{file_pattern})
-	fake.getGlobFilesMutex.Unlock()
-	if fake.GetGlobFilesStub != nil {
-		return fake.GetGlobFilesStub(file_pattern)
-	}
-	if specificReturn {
-		return ret.result1, ret.result2
-	}
-	return fake.getGlobFilesReturns.result1, fake.getGlobFilesReturns.result2
-}
-
-func (fake *FakeExecutor) GetGlobFilesCallCount() int {
-	fake.getGlobFilesMutex.RLock()
-	defer fake.getGlobFilesMutex.RUnlock()
-	return len(fake.getGlobFilesArgsForCall)
-}
-
-func (fake *FakeExecutor) GetGlobFilesArgsForCall(i int) string {
-	fake.getGlobFilesMutex.RLock()
-	defer fake.getGlobFilesMutex.RUnlock()
-	return fake.getGlobFilesArgsForCall[i].file_pattern
-}
-
-func (fake *FakeExecutor) GetGlobFilesReturns(result1 []string, result2 error) {
-	fake.GetGlobFilesStub = nil
-	fake.getGlobFilesReturns = struct {
-		result1 []string
-		result2 error
-	}{result1, result2}
-}
-
-func (fake *FakeExecutor) GetGlobFilesReturnsOnCall(i int, result1 []string, result2 error) {
-	fake.GetGlobFilesStub = nil
-	if fake.getGlobFilesReturnsOnCall == nil {
-		fake.getGlobFilesReturnsOnCall = make(map[int]struct {
-			result1 []string
-			result2 error
-		})
-	}
-	fake.getGlobFilesReturnsOnCall[i] = struct {
-		result1 []string
-		result2 error
-	}{result1, result2}
-}
-
-func (fake *FakeExecutor) IsSameFile(file1 os.FileInfo, file2 os.FileInfo) bool {
-	fake.isSameFileMutex.Lock()
-	ret, specificReturn := fake.isSameFileReturnsOnCall[len(fake.isSameFileArgsForCall)]
-	fake.isSameFileArgsForCall = append(fake.isSameFileArgsForCall, struct {
-		file1 os.FileInfo
-		file2 os.FileInfo
-	}{file1, file2})
-	fake.recordInvocation("IsSameFile", []interface{}{file1, file2})
-	fake.isSameFileMutex.Unlock()
-	if fake.IsSameFileStub != nil {
-		return fake.IsSameFileStub(file1, file2)
-	}
-	if specificReturn {
-		return ret.result1
-	}
-	return fake.isSameFileReturns.result1
-}
-
-func (fake *FakeExecutor) IsSameFileCallCount() int {
-	fake.isSameFileMutex.RLock()
-	defer fake.isSameFileMutex.RUnlock()
-	return len(fake.isSameFileArgsForCall)
-}
-
-func (fake *FakeExecutor) IsSameFileArgsForCall(i int) (os.FileInfo, os.FileInfo) {
-	fake.isSameFileMutex.RLock()
-	defer fake.isSameFileMutex.RUnlock()
-	return fake.isSameFileArgsForCall[i].file1, fake.isSameFileArgsForCall[i].file2
-}
-
-func (fake *FakeExecutor) IsSameFileReturns(result1 bool) {
-	fake.IsSameFileStub = nil
-	fake.isSameFileReturns = struct {
-		result1 bool
-	}{result1}
-}
-
-func (fake *FakeExecutor) IsSameFileReturnsOnCall(i int, result1 bool) {
-	fake.IsSameFileStub = nil
-	if fake.isSameFileReturnsOnCall == nil {
-		fake.isSameFileReturnsOnCall = make(map[int]struct {
-			result1 bool
-		})
-	}
-	fake.isSameFileReturnsOnCall[i] = struct {
-		result1 bool
-	}{result1}
-}
-
-func (fake *FakeExecutor) IsDirEmpty(dir string) (bool, error) {
-	fake.isDirEmptyMutex.Lock()
-	ret, specificReturn := fake.isDirEmptyReturnsOnCall[len(fake.isDirEmptyArgsForCall)]
-	fake.isDirEmptyArgsForCall = append(fake.isDirEmptyArgsForCall, struct {
-		dir string
-	}{dir})
-	fake.recordInvocation("IsDirEmpty", []interface{}{dir})
-	fake.isDirEmptyMutex.Unlock()
-	if fake.IsDirEmptyStub != nil {
-		return fake.IsDirEmptyStub(dir)
-	}
-	if specificReturn {
-		return ret.result1, ret.result2
-	}
-	return fake.isDirEmptyReturns.result1, fake.isDirEmptyReturns.result2
-}
-
-func (fake *FakeExecutor) IsDirEmptyCallCount() int {
-	fake.isDirEmptyMutex.RLock()
-	defer fake.isDirEmptyMutex.RUnlock()
-	return len(fake.isDirEmptyArgsForCall)
-}
-
-func (fake *FakeExecutor) IsDirEmptyArgsForCall(i int) string {
-	fake.isDirEmptyMutex.RLock()
-	defer fake.isDirEmptyMutex.RUnlock()
-	return fake.isDirEmptyArgsForCall[i].dir
-}
-
-func (fake *FakeExecutor) IsDirEmptyReturns(result1 bool, result2 error) {
-	fake.IsDirEmptyStub = nil
-	fake.isDirEmptyReturns = struct {
-		result1 bool
-		result2 error
-	}{result1, result2}
-}
-
-func (fake *FakeExecutor) IsDirEmptyReturnsOnCall(i int, result1 bool, result2 error) {
-	fake.IsDirEmptyStub = nil
-	if fake.isDirEmptyReturnsOnCall == nil {
-		fake.isDirEmptyReturnsOnCall = make(map[int]struct {
-			result1 bool
-			result2 error
-		})
-	}
-	fake.isDirEmptyReturnsOnCall[i] = struct {
-		result1 bool
-		result2 error
-	}{result1, result2}
-}
-
-func (fake *FakeExecutor) GetDeviceForFileStat(arg1 os.FileInfo) uint64 {
-	fake.getDeviceForFileStatMutex.Lock()
-	ret, specificReturn := fake.getDeviceForFileStatReturnsOnCall[len(fake.getDeviceForFileStatArgsForCall)]
-	fake.getDeviceForFileStatArgsForCall = append(fake.getDeviceForFileStatArgsForCall, struct {
-		arg1 os.FileInfo
-	}{arg1})
-	fake.recordInvocation("GetDeviceForFileStat", []interface{}{arg1})
-	fake.getDeviceForFileStatMutex.Unlock()
-	if fake.GetDeviceForFileStatStub != nil {
-		return fake.GetDeviceForFileStatStub(arg1)
-	}
-	if specificReturn {
-		return ret.result1
-	}
-	return fake.getDeviceForFileStatReturns.result1
-}
-
-func (fake *FakeExecutor) GetDeviceForFileStatCallCount() int {
-	fake.getDeviceForFileStatMutex.RLock()
-	defer fake.getDeviceForFileStatMutex.RUnlock()
-	return len(fake.getDeviceForFileStatArgsForCall)
-}
-
-func (fake *FakeExecutor) GetDeviceForFileStatArgsForCall(i int) os.FileInfo {
-	fake.getDeviceForFileStatMutex.RLock()
-	defer fake.getDeviceForFileStatMutex.RUnlock()
-	return fake.getDeviceForFileStatArgsForCall[i].arg1
-}
-
-func (fake *FakeExecutor) GetDeviceForFileStatReturns(result1 uint64) {
-	fake.GetDeviceForFileStatStub = nil
-	fake.getDeviceForFileStatReturns = struct {
-		result1 uint64
-	}{result1}
-}
-
-func (fake *FakeExecutor) GetDeviceForFileStatReturnsOnCall(i int, result1 uint64) {
-	fake.GetDeviceForFileStatStub = nil
-	if fake.getDeviceForFileStatReturnsOnCall == nil {
-		fake.getDeviceForFileStatReturnsOnCall = make(map[int]struct {
-			result1 uint64
-		})
-	}
-	fake.getDeviceForFileStatReturnsOnCall[i] = struct {
-		result1 uint64
-	}{result1}
-}
-
 func (fake *FakeExecutor) Invocations() map[string][][]interface{} {
 	fake.invocationsMutex.RLock()
 	defer fake.invocationsMutex.RUnlock()
+	fake.evalSymlinksMutex.RLock()
+	defer fake.evalSymlinksMutex.RUnlock()
 	fake.executeMutex.RLock()
 	defer fake.executeMutex.RUnlock()
-	fake.statMutex.RLock()
-	defer fake.statMutex.RUnlock()
-	fake.mkdirMutex.RLock()
-	defer fake.mkdirMutex.RUnlock()
-	fake.mkdirAllMutex.RLock()
-	defer fake.mkdirAllMutex.RUnlock()
-	fake.removeAllMutex.RLock()
-	defer fake.removeAllMutex.RUnlock()
-	fake.removeMutex.RLock()
-	defer fake.removeMutex.RUnlock()
+	fake.executeWithTimeoutMutex.RLock()
+	defer fake.executeWithTimeoutMutex.RUnlock()
+	fake.getDeviceForFileStatMutex.RLock()
+	defer fake.getDeviceForFileStatMutex.RUnlock()
+	fake.getGlobFilesMutex.RLock()
+	defer fake.getGlobFilesMutex.RUnlock()
 	fake.hostnameMutex.RLock()
 	defer fake.hostnameMutex.RUnlock()
+	fake.isDirMutex.RLock()
+	defer fake.isDirMutex.RUnlock()
+	fake.isDirEmptyMutex.RLock()
+	defer fake.isDirEmptyMutex.RUnlock()
 	fake.isExecutableMutex.RLock()
 	defer fake.isExecutableMutex.RUnlock()
 	fake.isNotExistMutex.RLock()
 	defer fake.isNotExistMutex.RUnlock()
-	fake.evalSymlinksMutex.RLock()
-	defer fake.evalSymlinksMutex.RUnlock()
-	fake.executeWithTimeoutMutex.RLock()
-	defer fake.executeWithTimeoutMutex.RUnlock()
-	fake.lstatMutex.RLock()
-	defer fake.lstatMutex.RUnlock()
-	fake.isDirMutex.RLock()
-	defer fake.isDirMutex.RUnlock()
-	fake.symlinkMutex.RLock()
-	defer fake.symlinkMutex.RUnlock()
-	fake.isSlinkMutex.RLock()
-	defer fake.isSlinkMutex.RUnlock()
-	fake.getGlobFilesMutex.RLock()
-	defer fake.getGlobFilesMutex.RUnlock()
 	fake.isSameFileMutex.RLock()
 	defer fake.isSameFileMutex.RUnlock()
-	fake.isDirEmptyMutex.RLock()
-	defer fake.isDirEmptyMutex.RUnlock()
-	fake.getDeviceForFileStatMutex.RLock()
-	defer fake.getDeviceForFileStatMutex.RUnlock()
+	fake.isSlinkMutex.RLock()
+	defer fake.isSlinkMutex.RUnlock()
+	fake.lstatMutex.RLock()
+	defer fake.lstatMutex.RUnlock()
+	fake.mkdirMutex.RLock()
+	defer fake.mkdirMutex.RUnlock()
+	fake.mkdirAllMutex.RLock()
+	defer fake.mkdirAllMutex.RUnlock()
+	fake.removeMutex.RLock()
+	defer fake.removeMutex.RUnlock()
+	fake.removeAllMutex.RLock()
+	defer fake.removeAllMutex.RUnlock()
+	fake.statMutex.RLock()
+	defer fake.statMutex.RUnlock()
+	fake.symlinkMutex.RLock()
+	defer fake.symlinkMutex.RUnlock()
 	copiedInvocations := map[string][][]interface{}{}
 	for key, value := range fake.invocations {
 		copiedInvocations[key] = value

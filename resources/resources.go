@@ -338,3 +338,8 @@ type RequestContext struct {
 	Id         string
 	ActionName string
 }
+
+type VolumeMountProperties struct {
+	WWN       string
+	LunNumber int
+}

@@ -10,13 +10,13 @@ import (
 )
 
 type FakeMounterFactory struct {
-	GetMounterPerBackendStub        func(backend string, legacyLogger *log.Logger, pluginConfig resources.UbiquityPluginConfig, requestContext resources.RequestContext) (resources.Mounter, error)
+	GetMounterPerBackendStub        func(string, *log.Logger, resources.UbiquityPluginConfig, resources.RequestContext) (resources.Mounter, error)
 	getMounterPerBackendMutex       sync.RWMutex
 	getMounterPerBackendArgsForCall []struct {
-		backend        string
-		legacyLogger   *log.Logger
-		pluginConfig   resources.UbiquityPluginConfig
-		requestContext resources.RequestContext
+		arg1 string
+		arg2 *log.Logger
+		arg3 resources.UbiquityPluginConfig
+		arg4 resources.RequestContext
 	}
 	getMounterPerBackendReturns struct {
 		result1 resources.Mounter
@@ -30,24 +30,25 @@ type FakeMounterFactory struct {
 	invocationsMutex sync.RWMutex
 }
 
-func (fake *FakeMounterFactory) GetMounterPerBackend(backend string, legacyLogger *log.Logger, pluginConfig resources.UbiquityPluginConfig, requestContext resources.RequestContext) (resources.Mounter, error) {
+func (fake *FakeMounterFactory) GetMounterPerBackend(arg1 string, arg2 *log.Logger, arg3 resources.UbiquityPluginConfig, arg4 resources.RequestContext) (resources.Mounter, error) {
 	fake.getMounterPerBackendMutex.Lock()
 	ret, specificReturn := fake.getMounterPerBackendReturnsOnCall[len(fake.getMounterPerBackendArgsForCall)]
 	fake.getMounterPerBackendArgsForCall = append(fake.getMounterPerBackendArgsForCall, struct {
-		backend        string
-		legacyLogger   *log.Logger
-		pluginConfig   resources.UbiquityPluginConfig
-		requestContext resources.RequestContext
-	}{backend, legacyLogger, pluginConfig, requestContext})
-	fake.recordInvocation("GetMounterPerBackend", []interface{}{backend, legacyLogger, pluginConfig, requestContext})
+		arg1 string
+		arg2 *log.Logger
+		arg3 resources.UbiquityPluginConfig
+		arg4 resources.RequestContext
+	}{arg1, arg2, arg3, arg4})
+	fake.recordInvocation("GetMounterPerBackend", []interface{}{arg1, arg2, arg3, arg4})
 	fake.getMounterPerBackendMutex.Unlock()
 	if fake.GetMounterPerBackendStub != nil {
-		return fake.GetMounterPerBackendStub(backend, legacyLogger, pluginConfig, requestContext)
+		return fake.GetMounterPerBackendStub(arg1, arg2, arg3, arg4)
 	}
 	if specificReturn {
 		return ret.result1, ret.result2
 	}
-	return fake.getMounterPerBackendReturns.result1, fake.getMounterPerBackendReturns.result2
+	fakeReturns := fake.getMounterPerBackendReturns
+	return fakeReturns.result1, fakeReturns.result2
 }
 
 func (fake *FakeMounterFactory) GetMounterPerBackendCallCount() int {
@@ -56,13 +57,22 @@ func (fake *FakeMounterFactory) GetMounterPerBackendCallCount() int {
 	return len(fake.getMounterPerBackendArgsForCall)
 }
 
+func (fake *FakeMounterFactory) GetMounterPerBackendCalls(stub func(string, *log.Logger, resources.UbiquityPluginConfig, resources.RequestContext) (resources.Mounter, error)) {
+	fake.getMounterPerBackendMutex.Lock()
+	defer fake.getMounterPerBackendMutex.Unlock()
+	fake.GetMounterPerBackendStub = stub
+}
+
 func (fake *FakeMounterFactory) GetMounterPerBackendArgsForCall(i int) (string, *log.Logger, resources.UbiquityPluginConfig, resources.RequestContext) {
 	fake.getMounterPerBackendMutex.RLock()
 	defer fake.getMounterPerBackendMutex.RUnlock()
-	return fake.getMounterPerBackendArgsForCall[i].backend, fake.getMounterPerBackendArgsForCall[i].legacyLogger, fake.getMounterPerBackendArgsForCall[i].pluginConfig, fake.getMounterPerBackendArgsForCall[i].requestContext
+	argsForCall := fake.getMounterPerBackendArgsForCall[i]
+	return argsForCall.arg1, argsForCall.arg2, argsForCall.arg3, argsForCall.arg4
 }
 
 func (fake *FakeMounterFactory) GetMounterPerBackendReturns(result1 resources.Mounter, result2 error) {
+	fake.getMounterPerBackendMutex.Lock()
+	defer fake.getMounterPerBackendMutex.Unlock()
 	fake.GetMounterPerBackendStub = nil
 	fake.getMounterPerBackendReturns = struct {
 		result1 resources.Mounter
@@ -71,6 +81,8 @@ func (fake *FakeMounterFactory) GetMounterPerBackendReturns(result1 resources.Mo
 }
 
 func (fake *FakeMounterFactory) GetMounterPerBackendReturnsOnCall(i int, result1 resources.Mounter, result2 error) {
+	fake.getMounterPerBackendMutex.Lock()
+	defer fake.getMounterPerBackendMutex.Unlock()
 	fake.GetMounterPerBackendStub = nil
 	if fake.getMounterPerBackendReturnsOnCall == nil {
 		fake.getMounterPerBackendReturnsOnCall = make(map[int]struct {

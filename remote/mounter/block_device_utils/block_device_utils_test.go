@@ -22,11 +22,11 @@ import (
 
 	"github.com/IBM/ubiquity/fakes"
 	"github.com/IBM/ubiquity/remote/mounter/block_device_utils"
+	"github.com/IBM/ubiquity/resources"
 	"github.com/IBM/ubiquity/utils"
 
 	"context"
 	"io/ioutil"
-	"os"
 	"os/exec"
 	"strings"
 	"testing"
@@ -42,6 +42,7 @@ var _ = Describe("block_device_utils_test", func() {
 		err      error
 		cmdErr   error = errors.New("command error")
 	)
+	volumeMountProperties := &resources.VolumeMountProperties{WWN: "wwn", LunNumber: 1}
 
 	BeforeEach(func() {
 		fakeExec = new(fakes.FakeExecutor)
@@ -50,7 +51,7 @@ var _ = Describe("block_device_utils_test", func() {
 
 	Context(".Rescan", func() {
 		It("Rescan ISCSI calls 'sudo iscsiadm -m session --rescan'", func() {
-			err = bdUtils.Rescan(block_device_utils.ISCSI)
+			err = bdUtils.Rescan(block_device_utils.ISCSI, volumeMountProperties)
 			Expect(err).ToNot(HaveOccurred())
 			Expect(fakeExec.ExecuteWithTimeoutCallCount()).To(Equal(1))
 			_, cmd, args := fakeExec.ExecuteWithTimeoutArgsForCall(0)
@@ -58,55 +59,32 @@ var _ = Describe("block_device_utils_test", func() {
 			Expect(args).To(Equal([]string{"-m", "session", "--rescan"}))
 		})
 		It("Rescan SCSI calls 'sudo rescan-scsi-bus -r'", func() {
-			err = bdUtils.Rescan(block_device_utils.SCSI)
+			//
+			fakeExec.ExecuteWithTimeoutReturns([]byte(volumeMountProperties.WWN), nil)
+			err = bdUtils.Rescan(block_device_utils.SCSI, volumeMountProperties)
 			Expect(err).ToNot(HaveOccurred())
 			Expect(fakeExec.ExecuteWithTimeoutCallCount()).To(Equal(1))
 			_, cmd, args := fakeExec.ExecuteWithTimeoutArgsForCall(0)
-			Expect(cmd).To(Equal("rescan-scsi-bus"))
-			Expect(args).To(Equal([]string{"-r"}))
+			// check the existence of the new volume after rescan using multipath -ll
+			Expect(cmd).To(Equal("multipath"))
+			Expect(args).To(Equal([]string{"-ll"}))
 		})
 		It("Rescan ISCSI does not fail if iscsiadm command missing", func() {
 			fakeExec.IsExecutableReturns(cmdErr)
-			err = bdUtils.Rescan(block_device_utils.ISCSI)
+			err = bdUtils.Rescan(block_device_utils.ISCSI, volumeMountProperties)
 			Expect(err).To(Not(HaveOccurred()))
 			Expect(fakeExec.ExecuteCallCount()).To(Equal(0))
 			Expect(fakeExec.IsExecutableCallCount()).To(Equal(1))
 			Expect(fakeExec.IsExecutableArgsForCall(0)).To(Equal("iscsiadm"))
 		})
-		It("Rescan SCSI fails if rescan-scsi-bus command missing", func() {
-			fakeExec.IsExecutableReturns(cmdErr)
-			err = bdUtils.Rescan(block_device_utils.SCSI)
-			Expect(err).To(HaveOccurred())
-			Expect(fakeExec.ExecuteWithTimeoutCallCount()).To(Equal(0))
-			Expect(fakeExec.IsExecutableCallCount()).To(Equal(2))
-			Expect(fakeExec.IsExecutableArgsForCall(0)).To(Equal("rescan-scsi-bus"))
-			Expect(fakeExec.IsExecutableArgsForCall(1)).To(Equal("rescan-scsi-bus.sh"))
-		})
 		It("Rescan ISCSI fails if iscsiadm execution fails", func() {
 			fakeExec.ExecuteWithTimeoutReturns([]byte{}, cmdErr)
-			err = bdUtils.Rescan(block_device_utils.ISCSI)
-			Expect(err.Error()).To(MatchRegexp(cmdErr.Error()))
-		})
-		It("Rescan SCSI fails if rescan-scsi-bus execution fails", func() {
-			fakeExec.ExecuteWithTimeoutReturns([]byte{}, cmdErr)
-			err = bdUtils.Rescan(block_device_utils.SCSI)
+			err = bdUtils.Rescan(block_device_utils.ISCSI, volumeMountProperties)
 			Expect(err.Error()).To(MatchRegexp(cmdErr.Error()))
 		})
 		It("Rescan fails if unknown protocol", func() {
-			err = bdUtils.Rescan(2)
+			err = bdUtils.Rescan(2, volumeMountProperties)
 			Expect(err).To(HaveOccurred())
-		})
-		It("Rescan SCSI lun0", func() {
-			dir, _ := ioutil.TempDir("", "")
-			os.Mkdir(dir+"/host33", os.ModePerm)
-			os.Mkdir(dir+"/host34", os.ModePerm)
-			block_device_utils.FcHostDir = dir + "/"
-			block_device_utils.ScsiHostDir = dir + "/"
-			err = bdUtils.RescanSCSILun0()
-			Expect(err).ToNot(HaveOccurred())
-			os.RemoveAll(dir)
-			block_device_utils.FcHostDir = "/sys/class/fc_host/"
-			block_device_utils.ScsiHostDir = "/sys/class/scsi_host/"
 		})
 	})
 	Context(".ReloadMultipath", func() {

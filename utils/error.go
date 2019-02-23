@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 
-
 package utils
 
 import (
@@ -27,4 +26,13 @@ type NoENVKeyError struct {
 
 func (e *NoENVKeyError) Error() string {
 	return fmt.Sprintf("ENV Key [%s] not exist.", e.EnvKeyName)
+}
+
+type CommandExecuteError struct {
+	Cmd string
+	Err error
+}
+
+func (e *CommandExecuteError) Error() string {
+	return fmt.Sprintf("command [%v] execution failure [%v]", e.Cmd, e.Err)
 }
