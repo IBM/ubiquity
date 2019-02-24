@@ -11,8 +11,8 @@ import (
 	"github.com/IBM/ubiquity/utils/logs"
 )
 
-const FC_HOST_SYSFS_PATH = "/sys/class/fc_host"
-const SCSI_HOST_SYSFS_PATH = "/sys/class/scsi_host/"
+var FC_HOST_SYSFS_PATH = "/sys/class/fc_host"
+var SCSI_HOST_SYSFS_PATH = "/sys/class/scsi_host"
 
 type linuxFibreChannel struct {
 	*linuxSCSI
@@ -22,17 +22,17 @@ func NewLinuxFibreChannel() Initiator {
 	return newLinuxFibreChannel()
 }
 
-func NewLinuxFibreChannelWithExecutorAndLogger(executor utils.Executor, logger logs.Logger) Initiator {
-	return newLinuxFibreChannelWithExecutorAndLogger(executor, logger)
+func NewLinuxFibreChannelWithExecutor(executor utils.Executor) Initiator {
+	return newLinuxFibreChannelWithExecutor(executor)
 }
 
 func newLinuxFibreChannel() *linuxFibreChannel {
-	logger := logs.GetLogger()
 	executor := utils.NewExecutor()
-	return newLinuxFibreChannelWithExecutorAndLogger(executor, logger)
+	return newLinuxFibreChannelWithExecutor(executor)
 }
 
-func newLinuxFibreChannelWithExecutorAndLogger(executor utils.Executor, logger logs.Logger) *linuxFibreChannel {
+func newLinuxFibreChannelWithExecutor(executor utils.Executor) *linuxFibreChannel {
+	logger := logs.GetLogger()
 	return &linuxFibreChannel{&linuxSCSI{logger: logger, exec: executor}}
 }
 
@@ -78,6 +78,7 @@ func (lfc *linuxFibreChannel) GetHBAs() []string {
 		return []string{}
 	}
 	hbas := generateHBAsInfoFromSystoolOutput(out)
+	lfc.logger.Debug(fmt.Sprintf("Find %d HBAs from systool output, getting the name of the online one(s)", len(hbas)))
 	hbaNames := []string{}
 	for _, hba := range hbas {
 		if hba["port_state"] == "Online" {
@@ -109,7 +110,7 @@ func (lfc *linuxFibreChannel) RescanHosts(hbas []string, volumeMountProperties *
 	ctl := lfc.getHBAChannelScsiTarget(volumeMountProperties)
 
 	for _, hba := range hbas {
-		hbaPath := SCSI_HOST_SYSFS_PATH + hba + "/scan"
+		hbaPath := SCSI_HOST_SYSFS_PATH + "/" + hba + "/scan"
 		lfc.logger.Debug(fmt.Sprintf(`Scanning HBA with command: echo "%s" > %s`, ctl, hbaPath))
 		if err := ioutil.WriteFile(hbaPath, []byte(ctl), 0666); err != nil {
 			lfc.logger.Debug("Failed to scan HBA", logs.Args{{"name", hba}, {"err", err}})

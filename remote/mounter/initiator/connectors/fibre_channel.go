@@ -36,7 +36,7 @@ func newFibreChannelConnector() *fibreChannelConnector {
 
 func newFibreChannelConnectorWithExecutorAndLogger(executor utils.Executor) *fibreChannelConnector {
 	logger := logs.GetLogger()
-	linuxfc := initiator.NewLinuxFibreChannelWithExecutorAndLogger(executor, logger)
+	linuxfc := initiator.NewLinuxFibreChannelWithExecutor(executor)
 
 	return &fibreChannelConnector{logger: logger, exec: executor, linuxfc: linuxfc}
 }

@@ -10,6 +10,8 @@ import (
 	"github.com/IBM/ubiquity/utils/logs"
 )
 
+var SYS_BLOCK_PATH = "/sys/block"
+
 type linuxSCSI struct {
 	exec   utils.Executor
 	logger logs.Logger
@@ -18,7 +20,7 @@ type linuxSCSI struct {
 // RemoveSCSIDevice removes a scsi device based upon /dev/sdX name.
 func (ls *linuxSCSI) RemoveSCSIDevice(device string) error {
 	deviceName := strings.Replace(device, "/dev/", "", 1)
-	path := fmt.Sprintf("/sys/block/%s/device/delete", deviceName)
+	path := SYS_BLOCK_PATH + fmt.Sprintf("/%s/device/delete", deviceName)
 	if _, err := os.Stat(path); !os.IsNotExist(err) {
 		ls.logger.Debug(fmt.Sprintf("Remove SCSI device %s with %s", device, path))
 		if err := ioutil.WriteFile(path, []byte("1"), 0666); err != nil {
