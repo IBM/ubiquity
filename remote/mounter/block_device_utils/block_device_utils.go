@@ -39,7 +39,7 @@ func newBlockDeviceUtils(executor utils.Executor, fcConnector initiator.Connecto
 	}
 
 	if fcConnector == nil {
-		fcConnector = connectors.NewFibreChannelConnectorWithExecutorAndLogger(executor, logger)
+		fcConnector = connectors.NewFibreChannelConnectorWithExecutor(executor)
 	}
 	return &blockDeviceUtils{logger: logger, exec: executor, regExAlreadyMounted: regex, fcConnector: fcConnector}
 }

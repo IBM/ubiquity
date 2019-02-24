@@ -20,17 +20,22 @@ func NewFibreChannelConnector() initiator.Connector {
 	return newFibreChannelConnector()
 }
 
-func NewFibreChannelConnectorWithExecutorAndLogger(executor utils.Executor, logger logs.Logger) initiator.Connector {
-	return newFibreChannelConnectorWithExecutorAndLogger(executor, logger)
+func NewFibreChannelConnectorWithExecutor(executor utils.Executor) initiator.Connector {
+	return newFibreChannelConnectorWithExecutorAndLogger(executor)
+}
+
+func NewFibreChannelConnectorWithAllFields(executor utils.Executor, linuxfc initiator.Initiator) initiator.Connector {
+	logger := logs.GetLogger()
+	return &fibreChannelConnector{logger: logger, exec: executor, linuxfc: linuxfc}
 }
 
 func newFibreChannelConnector() *fibreChannelConnector {
-	logger := logs.GetLogger()
 	executor := utils.NewExecutor()
-	return newFibreChannelConnectorWithExecutorAndLogger(executor, logger)
+	return newFibreChannelConnectorWithExecutorAndLogger(executor)
 }
 
-func newFibreChannelConnectorWithExecutorAndLogger(executor utils.Executor, logger logs.Logger) *fibreChannelConnector {
+func newFibreChannelConnectorWithExecutorAndLogger(executor utils.Executor) *fibreChannelConnector {
+	logger := logs.GetLogger()
 	linuxfc := initiator.NewLinuxFibreChannelWithExecutorAndLogger(executor, logger)
 
 	return &fibreChannelConnector{logger: logger, exec: executor, linuxfc: linuxfc}
@@ -106,9 +111,12 @@ func generatePathsFromMultipathOutput(out []byte) []string {
 	paths := []string{}
 	for _, line := range lines {
 		line = strings.TrimSpace(line)
+		if line == "" {
+			continue
+		}
 		path := strings.Split(line, " ")[2]
 		if strings.HasPrefix(path, "sd") {
-			paths = append(paths)
+			paths = append(paths, path)
 		}
 	}
 	return paths
