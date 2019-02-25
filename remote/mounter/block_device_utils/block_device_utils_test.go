@@ -22,6 +22,7 @@ import (
 
 	"github.com/IBM/ubiquity/fakes"
 	"github.com/IBM/ubiquity/remote/mounter/block_device_utils"
+	fakeinitiator "github.com/IBM/ubiquity/remote/mounter/initiator/fakes"
 	"github.com/IBM/ubiquity/resources"
 	"github.com/IBM/ubiquity/utils"
 
@@ -38,7 +39,7 @@ import (
 var _ = Describe("block_device_utils_test", func() {
 	var (
 		fakeExec        *fakes.FakeExecutor
-		fakeFcConnector *fakes.FakeConnector
+		fakeFcConnector *fakeinitiator.FakeConnector
 		bdUtils         block_device_utils.BlockDeviceUtils
 		err             error
 		cmdErr          error = errors.New("command error")
@@ -47,7 +48,7 @@ var _ = Describe("block_device_utils_test", func() {
 
 	BeforeEach(func() {
 		fakeExec = new(fakes.FakeExecutor)
-		fakeFcConnector = new(fakes.FakeConnector)
+		fakeFcConnector = new(fakeinitiator.FakeConnector)
 		bdUtils = block_device_utils.NewBlockDeviceUtilsWithExecutorAndConnector(fakeExec, fakeFcConnector)
 	})
 

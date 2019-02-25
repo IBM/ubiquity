@@ -1,6 +1,7 @@
 package initiator_test
 
 import (
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"os"
@@ -69,6 +70,8 @@ var fakeSystoolOutput = `Class = "fc_host"
     Device = "host1"
     Device path = "/sys/devices/css0/0.0.0001/0.0.a300/host1"
       uevent              = "DEVTYPE=scsi_host"
+
+
 `
 
 var _ = Describe("Test FC Initiator", func() {
@@ -78,6 +81,7 @@ var _ = Describe("Test FC Initiator", func() {
 		realFcSysPath    string
 		realScsiSysPath  string
 		realSysBlockPath string
+		cmdErr           error = errors.New("command error")
 	)
 	volumeMountProperties := &resources.VolumeMountProperties{WWN: "wwn", LunNumber: 1}
 
@@ -121,6 +125,30 @@ var _ = Describe("Test FC Initiator", func() {
 			It("should get from systool if it is installed", func() {
 				hbas := fcInitiator.GetHBAs()
 				Expect(hbas).To(Equal([]string{"host0", "host1"}))
+			})
+		})
+
+		Context("get HBAs from sys fc path", func() {
+			hbas := []string{"host0", "host1", "host2"}
+
+			BeforeEach(func() {
+				for _, hba := range hbas {
+					fullPath := FAKE_FC_HOST_SYSFS_PATH + "/" + hba
+					err := os.MkdirAll(fullPath, os.ModePerm)
+					Ω(err).ShouldNot(HaveOccurred())
+				}
+			})
+
+			It("should get from sys fc path if systool is not installed", func() {
+				fakeExec.IsExecutableReturns(cmdErr)
+				hbasRes := fcInitiator.GetHBAs()
+				Expect(hbasRes).To(Equal(hbas))
+			})
+
+			It("should get from sys fc path if systool returns error", func() {
+				fakeExec.ExecuteReturns([]byte{}, cmdErr)
+				hbasRes := fcInitiator.GetHBAs()
+				Expect(hbasRes).To(Equal(hbas))
 			})
 		})
 

@@ -61,7 +61,7 @@ var _ = Describe("Test Fibre Channel Connector", func() {
 			Ω(err).ShouldNot(HaveOccurred())
 			cmd, args := fakeExec.ExecuteArgsForCall(0)
 			Expect(cmd).To(Equal("multipath"))
-			Expect(args).To(Equal([]string{"-ll", "|", fmt.Sprintf("grep %d", volumeMountProperties.LunNumber)}))
+			Expect(args).To(Equal([]string{"-ll", "|", fmt.Sprintf(`egrep "[0-9]+:[0-9]+:[0-9]+:%d "`, volumeMountProperties.LunNumber)}))
 
 			Expect(fakeInitiator.RemoveSCSIDeviceCallCount()).To(Equal(8))
 			var a byte = 97

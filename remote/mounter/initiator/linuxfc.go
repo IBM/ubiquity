@@ -175,6 +175,8 @@ Class = "fc_host"
     Device = "host1"
     Device path = "/sys/devices/css0/0.0.0001/0.0.a300/host1"
       uevent              = "DEVTYPE=scsi_host"
+
+
 */
 func generateHBAsInfoFromSystoolOutput(out []byte) []map[string]string {
 	lines := strings.Split(string(out), "\n")

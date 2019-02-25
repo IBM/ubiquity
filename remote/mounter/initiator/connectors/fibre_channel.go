@@ -84,7 +84,7 @@ func (c *fibreChannelConnector) findPathsFromMultipathOutpot(volumeMountProperti
 	}
 
 	lunNumber := volumeMountProperties.LunNumber
-	out, err := c.exec.Execute(multipath, []string{"-ll", "|", fmt.Sprintf("grep %d", lunNumber)})
+	out, err := c.exec.Execute(multipath, []string{"-ll", "|", fmt.Sprintf(`egrep "[0-9]+:[0-9]+:[0-9]+:%d "`, lunNumber)})
 	if err != nil {
 		c.logger.Warning(fmt.Sprintf("Executing multipath failed with error: %v", err))
 		return []string{}
@@ -93,7 +93,7 @@ func (c *fibreChannelConnector) findPathsFromMultipathOutpot(volumeMountProperti
 }
 
 /*
-generatePathsFromMultipathOutput analysises the output of command "multipath -ll |grep lunNumber",
+generatePathsFromMultipathOutput analysises the output of command "multipath -ll | egrep '[0-9]+:[0-9]+:[0-9]+lunNumber '",
 and generates a list of path.
 
 A sample output is:
