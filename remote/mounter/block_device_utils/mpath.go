@@ -54,6 +54,8 @@ func (b *blockDeviceUtils) ReloadMultipath() error {
 	return nil
 }
 
+// getMultipathOutputAndDeviceUid runs "multipath -ll" and analysises the output to find the device uid
+// and then return both the output and the uid.
 func (b *blockDeviceUtils) getMultipathOutputAndDeviceUid(volumeWwn string) ([]byte, string, error) {
 	if err := b.exec.IsExecutable(multipathCmd); err != nil {
 		return []byte{}, "", b.logger.ErrorRet(&commandNotFoundError{multipathCmd, err}, "failed")

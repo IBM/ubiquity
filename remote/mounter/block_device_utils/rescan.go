@@ -80,6 +80,8 @@ func (b *blockDeviceUtils) RescanISCSI() error {
 }
 
 func (b *blockDeviceUtils) RescanSCSI(volumeMountProperties *resources.VolumeMountProperties) error {
+	defer b.logger.Trace(logs.DEBUG)()
+
 	var err error
 	for i := 0; i < 6; i++ {
 		if err = b.fcConnector.ConnectVolume(volumeMountProperties); err != nil {

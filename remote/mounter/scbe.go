@@ -50,10 +50,11 @@ func NewScbeMounterWithExecuter(blockDeviceMounterUtils block_device_mounter_uti
 	return newScbMounter(blockDeviceMounterUtils, executer)
 }
 
-func (s *scbeMounter) prepareVolumeMountProperties(mountRequest resources.MountRequest) *resources.VolumeMountProperties {
-	volumeWWN := mountRequest.VolumeConfig["Wwn"].(string)
+func (s *scbeMounter) prepareVolumeMountProperties(vcGetter resources.VolumeConfigGetter) *resources.VolumeMountProperties {
+	volumeConfig := vcGetter.GetVolumeConfig()
+	volumeWWN := volumeConfig["Wwn"].(string)
 	volumeLunNumber := -1
-	if volumeLunNumberInterface, exists := mountRequest.VolumeConfig[resources.ScbeKeyVolAttachLunNumToHost]; exists {
+	if volumeLunNumberInterface, exists := volumeConfig[resources.ScbeKeyVolAttachLunNumToHost]; exists {
 		volumeLunNumber = volumeLunNumberInterface.(int)
 	}
 	return &resources.VolumeMountProperties{WWN: volumeWWN, LunNumber: volumeLunNumber}
@@ -151,18 +152,9 @@ func (s *scbeMounter) Unmount(unmountRequest resources.UnmountRequest) error {
 
 }
 
-func (s *scbeMounter) prepareVolumeActionAfterDetachProperties(request resources.AfterDetachRequest) *resources.VolumeMountProperties {
-	volumeWWN := request.VolumeConfig["Wwn"].(string)
-	volumeLunNumber := -1
-	if volumeLunNumberInterface, exists := request.VolumeConfig[resources.ScbeKeyVolAttachLunNumToHost]; exists {
-		volumeLunNumber = volumeLunNumberInterface.(int)
-	}
-	return &resources.VolumeMountProperties{WWN: volumeWWN, LunNumber: volumeLunNumber}
-}
-
 func (s *scbeMounter) ActionAfterDetach(request resources.AfterDetachRequest) error {
 	defer s.logger.Trace(logs.DEBUG)()
-	volumeMountProperties := s.prepareVolumeActionAfterDetachProperties(request)
+	volumeMountProperties := s.prepareVolumeMountProperties(request)
 
 	// Disconnect volume
 	if err := s.blockDeviceMounterUtils.DisconnectAll(volumeMountProperties); err != nil {
