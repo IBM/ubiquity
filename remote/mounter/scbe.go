@@ -62,7 +62,7 @@ func (s *scbeMounter) prepareVolumeMountProperties(vcGetter resources.VolumeConf
 
 func (s *scbeMounter) Mount(mountRequest resources.MountRequest) (string, error) {
 	defer s.logger.Trace(logs.DEBUG)()
-	volumeMountProperties := s.prepareVolumeMountProperties(mountRequest)
+	volumeMountProperties := s.prepareVolumeMountProperties(&mountRequest)
 
 	// Rescan OS
 	if err := s.blockDeviceMounterUtils.RescanAll(volumeMountProperties); err != nil {
@@ -154,7 +154,7 @@ func (s *scbeMounter) Unmount(unmountRequest resources.UnmountRequest) error {
 
 func (s *scbeMounter) ActionAfterDetach(request resources.AfterDetachRequest) error {
 	defer s.logger.Trace(logs.DEBUG)()
-	volumeMountProperties := s.prepareVolumeMountProperties(request)
+	volumeMountProperties := s.prepareVolumeMountProperties(&request)
 
 	// Disconnect volume
 	if err := s.blockDeviceMounterUtils.DisconnectAll(volumeMountProperties); err != nil {
