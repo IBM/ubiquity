@@ -37,7 +37,7 @@ var _ = Describe("block_device_mounter_utils_test", func() {
 		err                     error
 		callErr                 error = errors.New("error")
 	)
-	volumeMountProperties := &resources.VolumeMountProperties{WWN: "wwn", LunNumber: 1}
+	volumeMountProperties := &resources.VolumeMountProperties{WWN: "wwn", LunNumber: float64(1)}
 
 	BeforeEach(func() {
 		fakeBlockDeviceUtils = new(fakes.FakeBlockDeviceUtils)

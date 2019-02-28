@@ -49,7 +49,7 @@ var _ = Describe("Test Fibre Channel Connector", func() {
 		fakeInitiator *fakeinitiator.FakeInitiator
 		fcConnector   initiator.Connector
 	)
-	volumeMountProperties := &resources.VolumeMountProperties{WWN: "wwn", LunNumber: 1}
+	volumeMountProperties := &resources.VolumeMountProperties{WWN: "wwn", LunNumber: float64(1)}
 
 	BeforeEach(func() {
 		fakeExec = new(fakes.FakeExecutor)
@@ -83,7 +83,7 @@ var _ = Describe("Test Fibre Channel Connector", func() {
 				Ω(err).ShouldNot(HaveOccurred())
 				cmd, args := fakeExec.ExecuteArgsForCall(0)
 				Expect(cmd).To(Equal("multipath"))
-				Expect(args).To(Equal([]string{"-ll", "|", fmt.Sprintf(`egrep "[0-9]+:[0-9]+:[0-9]+:%d "`, volumeMountProperties.LunNumber)}))
+				Expect(args).To(Equal([]string{"-ll", "|", fmt.Sprintf(`egrep "[0-9]+:[0-9]+:[0-9]+:%g "`, volumeMountProperties.LunNumber)}))
 
 				Expect(fakeInitiator.RemoveSCSIDeviceCallCount()).To(Equal(8))
 				var a byte = 97
@@ -106,7 +106,7 @@ var _ = Describe("Test Fibre Channel Connector", func() {
 				Ω(err).ShouldNot(HaveOccurred())
 				cmd, args := fakeExec.ExecuteArgsForCall(0)
 				Expect(cmd).To(Equal("multipath"))
-				Expect(args).To(Equal([]string{"-ll", "|", fmt.Sprintf(`egrep "[0-9]+:[0-9]+:[0-9]+:%d "`, volumeMountProperties.LunNumber)}))
+				Expect(args).To(Equal([]string{"-ll", "|", fmt.Sprintf(`egrep "[0-9]+:[0-9]+:[0-9]+:%g "`, volumeMountProperties.LunNumber)}))
 
 				Expect(fakeInitiator.RemoveSCSIDeviceCallCount()).To(Equal(8))
 				var a byte = 97
@@ -129,7 +129,7 @@ var _ = Describe("Test Fibre Channel Connector", func() {
 				Ω(err).ShouldNot(HaveOccurred())
 				cmd, args := fakeExec.ExecuteArgsForCall(0)
 				Expect(cmd).To(Equal("multipath"))
-				Expect(args).To(Equal([]string{"-ll", "|", fmt.Sprintf(`egrep "[0-9]+:[0-9]+:[0-9]+:%d "`, volumeMountProperties.LunNumber)}))
+				Expect(args).To(Equal([]string{"-ll", "|", fmt.Sprintf(`egrep "[0-9]+:[0-9]+:[0-9]+:%g "`, volumeMountProperties.LunNumber)}))
 
 				Expect(fakeInitiator.RemoveSCSIDeviceCallCount()).To(Equal(8))
 				var a byte = 97

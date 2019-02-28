@@ -34,13 +34,13 @@ var _ = Describe("scbe_mounter_test", func() {
 
 		mountRequestForDS8kLun1 = resources.MountRequest{Mountpoint: "test_mountpointDS8k", VolumeConfig: map[string]interface{}{"Name": "u_vol", "PhysicalCapacity": fakePhysicalCapacity,
 			"Profile": fakeProfile, "StorageType": fakeDS8kStoragetType, "UsedCapacity": fakeUsedCapacity, "Wwn": "wwn", "attach-to": "node1",
-			"LogicalCapacity": fakeLogicalCapacity, "LunNumber": 1, "PoolName": "pool", "StorageName": "IBM.2107", "fstype": "ext4"}}
+			"LogicalCapacity": fakeLogicalCapacity, "LunNumber": float64(1), "PoolName": "pool", "StorageName": "IBM.2107", "fstype": "ext4"}}
 		mountRequestForSVCLun1 = resources.MountRequest{Mountpoint: "test_mountpointSVC", VolumeConfig: map[string]interface{}{"Name": "u_vol", "PhysicalCapacity": fakePhysicalCapacity,
 			"Profile": fakeProfile, "StorageType": fakeV7kStorageType, "UsedCapacity": fakeUsedCapacity, "Wwn": "wwn", "attach-to": "node1",
-			"LogicalCapacity": fakeLogicalCapacity, "LunNumber": 1, "PoolName": "pool", "StorageName": "IBM.2706", "fstype": "ext4"}}
+			"LogicalCapacity": fakeLogicalCapacity, "LunNumber": float64(1), "PoolName": "pool", "StorageName": "IBM.2706", "fstype": "ext4"}}
 		mountRequestForDS8kLun2 = resources.MountRequest{Mountpoint: "test_mountpointDS8k", VolumeConfig: map[string]interface{}{"Name": "u_vol", "PhysicalCapacity": fakePhysicalCapacity,
 			"Profile": fakeProfile, "UsedCapacity": fakeUsedCapacity, "Wwn": "wwn", "attach-to": "node1",
-			"LogicalCapacity": fakeLogicalCapacity, "LunNumber": 1, "PoolName": "pool", "StorageName": "IBM.2107", "fstype": "ext4"}}
+			"LogicalCapacity": fakeLogicalCapacity, "LunNumber": float64(1), "PoolName": "pool", "StorageName": "IBM.2107", "fstype": "ext4"}}
 		mountRequestForDS8kLun3 = resources.MountRequest{Mountpoint: "test_mountpointDS8k", VolumeConfig: map[string]interface{}{"Name": "u_vol", "PhysicalCapacity": fakePhysicalCapacity,
 			"Profile": fakeProfile, "StorageType": fakeDS8kStoragetType, "UsedCapacity": fakeUsedCapacity, "Wwn": "wwn", "attach-to": "node1",
 			"LogicalCapacity": fakeLogicalCapacity, "PoolName": "pool", "StorageName": "IBM.2107", "fstype": "ext4"}}
@@ -153,6 +153,10 @@ var _ = Describe("scbe_mounter_test", func() {
 		})
 	})
 	Context("Mount", func() {
+		FIt("should be true to discover ", func() {
+			_, err := scbeMounter.Mount(mountRequestForDS8kLun1)
+			Expect(err).NotTo(HaveOccurred())
+		})
 		It("should fail to discover ds8k with lun1 if failed to discover with '-r' ", func() {
 			fakeBdUtils.DiscoverReturns("", callErr)
 			fakeBdUtils.RescanAllReturns(nil)
@@ -186,7 +190,7 @@ var _ = Describe("scbe_mounter_test", func() {
 	})
 	Context("ActionAfterDetach", func() {
 		It("should call DisconnectAll ", func() {
-			req := resources.AfterDetachRequest{VolumeConfig: map[string]interface{}{"Wwn": "wwn", "LunNumber": 1}}
+			req := resources.AfterDetachRequest{VolumeConfig: map[string]interface{}{"Wwn": "wwn", "LunNumber": float64(1)}}
 			err := scbeMounter.ActionAfterDetach(req)
 			Expect(err).NotTo(HaveOccurred())
 			Expect(fakeBdUtils.DisconnectAllCallCount()).To(Equal(1))

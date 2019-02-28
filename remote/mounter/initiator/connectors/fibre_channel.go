@@ -84,7 +84,8 @@ func (c *fibreChannelConnector) findPathsFromMultipathOutpot(volumeMountProperti
 	}
 
 	lunNumber := volumeMountProperties.LunNumber
-	out, err := c.exec.Execute(multipath, []string{"-ll", "|", fmt.Sprintf(`egrep "[0-9]+:[0-9]+:[0-9]+:%d "`, lunNumber)})
+	// use %g to print a float64 to int
+	out, err := c.exec.Execute(multipath, []string{"-ll", "|", fmt.Sprintf(`egrep "[0-9]+:[0-9]+:[0-9]+:%g "`, lunNumber)})
 	if err != nil {
 		c.logger.Warning(fmt.Sprintf("Executing multipath failed with error: %v", err))
 		return []string{}

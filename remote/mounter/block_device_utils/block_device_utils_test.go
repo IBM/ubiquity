@@ -44,7 +44,7 @@ var _ = Describe("block_device_utils_test", func() {
 		err             error
 		cmdErr          error = errors.New("command error")
 	)
-	volumeMountProperties := &resources.VolumeMountProperties{WWN: "wwn", LunNumber: 1}
+	volumeMountProperties := &resources.VolumeMountProperties{WWN: "wwn", LunNumber: float64(1)}
 
 	BeforeEach(func() {
 		fakeExec = new(fakes.FakeExecutor)

@@ -51,10 +51,11 @@ func (lfc *linuxFibreChannel) hasFCSupport() bool {
 // may be '-' wildcards if unable to determine them.
 func (lfc *linuxFibreChannel) getHBAChannelScsiTarget(volumeMountProperties *resources.VolumeMountProperties) string {
 	//TODO: get channel and target
-	if volumeMountProperties.LunNumber == -1 {
+	if volumeMountProperties.LunNumber == float64(-1) {
 		return "- - -"
 	}
-	return fmt.Sprintf("- - %d", volumeMountProperties.LunNumber)
+	// use %g to print a float64 to int
+	return fmt.Sprintf("- - %g", volumeMountProperties.LunNumber)
 }
 
 // GetHBAs return all the FC HBAs in the system

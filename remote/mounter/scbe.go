@@ -53,9 +53,9 @@ func NewScbeMounterWithExecuter(blockDeviceMounterUtils block_device_mounter_uti
 func (s *scbeMounter) prepareVolumeMountProperties(vcGetter resources.VolumeConfigGetter) *resources.VolumeMountProperties {
 	volumeConfig := vcGetter.GetVolumeConfig()
 	volumeWWN := volumeConfig["Wwn"].(string)
-	volumeLunNumber := -1
+	volumeLunNumber := float64(-1)
 	if volumeLunNumberInterface, exists := volumeConfig[resources.ScbeKeyVolAttachLunNumToHost]; exists {
-		volumeLunNumber = volumeLunNumberInterface.(int)
+		volumeLunNumber = volumeLunNumberInterface.(float64)
 	}
 	return &resources.VolumeMountProperties{WWN: volumeWWN, LunNumber: volumeLunNumber}
 }
