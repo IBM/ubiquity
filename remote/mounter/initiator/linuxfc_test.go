@@ -196,4 +196,19 @@ var _ = Describe("Test FC Initiator", func() {
 			Expect(string(data)).To(Equal("1"))
 		})
 	})
+
+	Context("FlushMultipath", func() {
+
+		It("should flush once if succeeds", func() {
+			fakeExec.ExecuteWithTimeoutReturns([]byte{}, nil)
+			fcInitiator.FlushMultipath("fake")
+			Expect(fakeExec.ExecuteWithTimeoutCallCount()).To(Equal(1))
+		})
+
+		It("should flush twice if fails", func() {
+			fakeExec.ExecuteWithTimeoutReturns([]byte{}, cmdErr)
+			fcInitiator.FlushMultipath("fake")
+			Expect(fakeExec.ExecuteWithTimeoutCallCount()).To(Equal(2))
+		})
+	})
 })

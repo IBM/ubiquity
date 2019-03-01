@@ -24,6 +24,7 @@ import (
 	"regexp"
 	"strings"
 
+	"github.com/IBM/ubiquity/utils"
 	"github.com/IBM/ubiquity/utils/logs"
 )
 
@@ -54,37 +55,10 @@ func (b *blockDeviceUtils) ReloadMultipath() error {
 	return nil
 }
 
-// getMultipathOutputAndDeviceUid runs "multipath -ll" and analysises the output to find the device uid
-// and then return both the output and the uid.
-func (b *blockDeviceUtils) getMultipathOutputAndDeviceUid(volumeWwn string) ([]byte, string, error) {
-	if err := b.exec.IsExecutable(multipathCmd); err != nil {
-		return []byte{}, "", b.logger.ErrorRet(&commandNotFoundError{multipathCmd, err}, "failed")
-	}
-	args := []string{"-ll"}
-	outputBytes, err := b.exec.ExecuteWithTimeout(DiscoverTimeout, multipathCmd, args)
-	if err != nil {
-		return []byte{}, "", b.logger.ErrorRet(&CommandExecuteError{multipathCmd, err}, "failed")
-	}
-	scanner := bufio.NewScanner(strings.NewReader(string(outputBytes[:])))
-	pattern := "(?i)" + volumeWwn
-	regex, err := regexp.Compile(pattern)
-	if err != nil {
-		return []byte{}, "", b.logger.ErrorRet(err, "failed")
-	}
-	dev := ""
-	for scanner.Scan() {
-		if regex.MatchString(scanner.Text()) {
-			dev = strings.Split(scanner.Text(), " ")[0]
-			break
-		}
-	}
-	return outputBytes, dev, nil
-}
-
 func (b *blockDeviceUtils) Discover(volumeWwn string, deepDiscovery bool) (string, error) {
 	defer b.logger.Trace(logs.DEBUG, logs.Args{{"volumeWwn", volumeWwn}, {"deepDiscovery", deepDiscovery}})()
 
-	outputBytes, dev, err := b.getMultipathOutputAndDeviceUid(volumeWwn)
+	outputBytes, dev, _, err := utils.GetMultipathOutputAndDeviceMapperAndDevice(volumeWwn, b.exec)
 	if err != nil {
 		return "", err
 	}

@@ -8,6 +8,11 @@ import (
 )
 
 type FakeBaseInitiator struct {
+	FlushMultipathStub        func(string)
+	flushMultipathMutex       sync.RWMutex
+	flushMultipathArgsForCall []struct {
+		arg1 string
+	}
 	RemoveSCSIDeviceStub        func(string) error
 	removeSCSIDeviceMutex       sync.RWMutex
 	removeSCSIDeviceArgsForCall []struct {
@@ -21,6 +26,37 @@ type FakeBaseInitiator struct {
 	}
 	invocations      map[string][][]interface{}
 	invocationsMutex sync.RWMutex
+}
+
+func (fake *FakeBaseInitiator) FlushMultipath(arg1 string) {
+	fake.flushMultipathMutex.Lock()
+	fake.flushMultipathArgsForCall = append(fake.flushMultipathArgsForCall, struct {
+		arg1 string
+	}{arg1})
+	fake.recordInvocation("FlushMultipath", []interface{}{arg1})
+	fake.flushMultipathMutex.Unlock()
+	if fake.FlushMultipathStub != nil {
+		fake.FlushMultipathStub(arg1)
+	}
+}
+
+func (fake *FakeBaseInitiator) FlushMultipathCallCount() int {
+	fake.flushMultipathMutex.RLock()
+	defer fake.flushMultipathMutex.RUnlock()
+	return len(fake.flushMultipathArgsForCall)
+}
+
+func (fake *FakeBaseInitiator) FlushMultipathCalls(stub func(string)) {
+	fake.flushMultipathMutex.Lock()
+	defer fake.flushMultipathMutex.Unlock()
+	fake.FlushMultipathStub = stub
+}
+
+func (fake *FakeBaseInitiator) FlushMultipathArgsForCall(i int) string {
+	fake.flushMultipathMutex.RLock()
+	defer fake.flushMultipathMutex.RUnlock()
+	argsForCall := fake.flushMultipathArgsForCall[i]
+	return argsForCall.arg1
 }
 
 func (fake *FakeBaseInitiator) RemoveSCSIDevice(arg1 string) error {
@@ -86,6 +122,8 @@ func (fake *FakeBaseInitiator) RemoveSCSIDeviceReturnsOnCall(i int, result1 erro
 func (fake *FakeBaseInitiator) Invocations() map[string][][]interface{} {
 	fake.invocationsMutex.RLock()
 	defer fake.invocationsMutex.RUnlock()
+	fake.flushMultipathMutex.RLock()
+	defer fake.flushMultipathMutex.RUnlock()
 	fake.removeSCSIDeviceMutex.RLock()
 	defer fake.removeSCSIDeviceMutex.RUnlock()
 	copiedInvocations := map[string][][]interface{}{}

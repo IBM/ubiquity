@@ -36,3 +36,12 @@ type CommandExecuteError struct {
 func (e *CommandExecuteError) Error() string {
 	return fmt.Sprintf("command [%v] execution failure [%v]", e.Cmd, e.Err)
 }
+
+type CommandNotFoundError struct {
+	Cmd string
+	Err error
+}
+
+func (e *CommandNotFoundError) Error() string {
+	return fmt.Sprintf("command [%v] is not found [%v]", e.Cmd, e.Err)
+}

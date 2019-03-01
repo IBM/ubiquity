@@ -21,6 +21,7 @@ import (
 	"time"
 
 	"github.com/IBM/ubiquity/resources"
+	"github.com/IBM/ubiquity/utils"
 	"github.com/IBM/ubiquity/utils/logs"
 )
 
@@ -87,7 +88,7 @@ func (b *blockDeviceUtils) RescanSCSI(volumeMountProperties *resources.VolumeMou
 		if err = b.fcConnector.ConnectVolume(volumeMountProperties); err != nil {
 			return b.logger.ErrorRet(err, "RescanSCSI failed", logs.Args{{"volumeWWN", volumeMountProperties.WWN}})
 		}
-		if _, _, err = b.getMultipathOutputAndDeviceUid(volumeMountProperties.WWN); err == nil {
+		if _, _, _, err = utils.GetMultipathOutputAndDeviceMapperAndDevice(volumeMountProperties.WWN, b.exec); err == nil {
 			return nil
 		}
 		b.logger.Warning("Can't find the new volume in multipath output after rescan, sleep one second and try again.")
