@@ -90,17 +90,17 @@ var _ = Describe("block_device_utils_test", func() {
 			Expect(err).To(HaveOccurred())
 		})
 	})
-	Context(".Disconnect", func() {
-		It("Disconnect ISCSI calls 'sudo iscsiadm -m session --rescan'", func() {
-			err = bdUtils.Disconnect(block_device_utils.ISCSI, volumeMountProperties)
+	Context(".CleanupDevices", func() {
+		It("Cleanup ISCSI calls 'sudo iscsiadm -m session --rescan'", func() {
+			err = bdUtils.CleanupDevices(block_device_utils.ISCSI, volumeMountProperties)
 			Expect(err).ToNot(HaveOccurred())
 			Expect(fakeExec.ExecuteWithTimeoutCallCount()).To(Equal(1))
 			_, cmd, args := fakeExec.ExecuteWithTimeoutArgsForCall(0)
 			Expect(cmd).To(Equal("iscsiadm"))
 			Expect(args).To(Equal([]string{"-m", "session", "--rescan"}))
 		})
-		It(`Disconnect SCSI calls fcConnector.DisconnectVolume`, func() {
-			err = bdUtils.Disconnect(block_device_utils.SCSI, volumeMountProperties)
+		It(`Cleanup SCSI calls fcConnector.DisconnectVolume`, func() {
+			err = bdUtils.CleanupDevices(block_device_utils.SCSI, volumeMountProperties)
 			Expect(err).ToNot(HaveOccurred())
 			Expect(fakeFcConnector.DisconnectVolumeCallCount()).To(Equal(1))
 		})

@@ -33,16 +33,16 @@ type FakeBlockDeviceUtils struct {
 	cleanupReturnsOnCall map[int]struct {
 		result1 error
 	}
-	DisconnectStub        func(block_device_utils.Protocol, *resources.VolumeMountProperties) error
-	disconnectMutex       sync.RWMutex
-	disconnectArgsForCall []struct {
+	CleanupDevicesStub        func(block_device_utils.Protocol, *resources.VolumeMountProperties) error
+	cleanupDevicesMutex       sync.RWMutex
+	cleanupDevicesArgsForCall []struct {
 		arg1 block_device_utils.Protocol
 		arg2 *resources.VolumeMountProperties
 	}
-	disconnectReturns struct {
+	cleanupDevicesReturns struct {
 		result1 error
 	}
-	disconnectReturnsOnCall map[int]struct {
+	cleanupDevicesReturnsOnCall map[int]struct {
 		result1 error
 	}
 	DiscoverStub        func(string, bool) (string, error)
@@ -313,63 +313,63 @@ func (fake *FakeBlockDeviceUtils) CleanupReturnsOnCall(i int, result1 error) {
 	}{result1}
 }
 
-func (fake *FakeBlockDeviceUtils) Disconnect(arg1 block_device_utils.Protocol, arg2 *resources.VolumeMountProperties) error {
-	fake.disconnectMutex.Lock()
-	ret, specificReturn := fake.disconnectReturnsOnCall[len(fake.disconnectArgsForCall)]
-	fake.disconnectArgsForCall = append(fake.disconnectArgsForCall, struct {
+func (fake *FakeBlockDeviceUtils) CleanupDevices(arg1 block_device_utils.Protocol, arg2 *resources.VolumeMountProperties) error {
+	fake.cleanupDevicesMutex.Lock()
+	ret, specificReturn := fake.cleanupDevicesReturnsOnCall[len(fake.cleanupDevicesArgsForCall)]
+	fake.cleanupDevicesArgsForCall = append(fake.cleanupDevicesArgsForCall, struct {
 		arg1 block_device_utils.Protocol
 		arg2 *resources.VolumeMountProperties
 	}{arg1, arg2})
-	fake.recordInvocation("Disconnect", []interface{}{arg1, arg2})
-	fake.disconnectMutex.Unlock()
-	if fake.DisconnectStub != nil {
-		return fake.DisconnectStub(arg1, arg2)
+	fake.recordInvocation("CleanupDevices", []interface{}{arg1, arg2})
+	fake.cleanupDevicesMutex.Unlock()
+	if fake.CleanupDevicesStub != nil {
+		return fake.CleanupDevicesStub(arg1, arg2)
 	}
 	if specificReturn {
 		return ret.result1
 	}
-	fakeReturns := fake.disconnectReturns
+	fakeReturns := fake.cleanupDevicesReturns
 	return fakeReturns.result1
 }
 
-func (fake *FakeBlockDeviceUtils) DisconnectCallCount() int {
-	fake.disconnectMutex.RLock()
-	defer fake.disconnectMutex.RUnlock()
-	return len(fake.disconnectArgsForCall)
+func (fake *FakeBlockDeviceUtils) CleanupDevicesCallCount() int {
+	fake.cleanupDevicesMutex.RLock()
+	defer fake.cleanupDevicesMutex.RUnlock()
+	return len(fake.cleanupDevicesArgsForCall)
 }
 
-func (fake *FakeBlockDeviceUtils) DisconnectCalls(stub func(block_device_utils.Protocol, *resources.VolumeMountProperties) error) {
-	fake.disconnectMutex.Lock()
-	defer fake.disconnectMutex.Unlock()
-	fake.DisconnectStub = stub
+func (fake *FakeBlockDeviceUtils) CleanupDevicesCalls(stub func(block_device_utils.Protocol, *resources.VolumeMountProperties) error) {
+	fake.cleanupDevicesMutex.Lock()
+	defer fake.cleanupDevicesMutex.Unlock()
+	fake.CleanupDevicesStub = stub
 }
 
-func (fake *FakeBlockDeviceUtils) DisconnectArgsForCall(i int) (block_device_utils.Protocol, *resources.VolumeMountProperties) {
-	fake.disconnectMutex.RLock()
-	defer fake.disconnectMutex.RUnlock()
-	argsForCall := fake.disconnectArgsForCall[i]
+func (fake *FakeBlockDeviceUtils) CleanupDevicesArgsForCall(i int) (block_device_utils.Protocol, *resources.VolumeMountProperties) {
+	fake.cleanupDevicesMutex.RLock()
+	defer fake.cleanupDevicesMutex.RUnlock()
+	argsForCall := fake.cleanupDevicesArgsForCall[i]
 	return argsForCall.arg1, argsForCall.arg2
 }
 
-func (fake *FakeBlockDeviceUtils) DisconnectReturns(result1 error) {
-	fake.disconnectMutex.Lock()
-	defer fake.disconnectMutex.Unlock()
-	fake.DisconnectStub = nil
-	fake.disconnectReturns = struct {
+func (fake *FakeBlockDeviceUtils) CleanupDevicesReturns(result1 error) {
+	fake.cleanupDevicesMutex.Lock()
+	defer fake.cleanupDevicesMutex.Unlock()
+	fake.CleanupDevicesStub = nil
+	fake.cleanupDevicesReturns = struct {
 		result1 error
 	}{result1}
 }
 
-func (fake *FakeBlockDeviceUtils) DisconnectReturnsOnCall(i int, result1 error) {
-	fake.disconnectMutex.Lock()
-	defer fake.disconnectMutex.Unlock()
-	fake.DisconnectStub = nil
-	if fake.disconnectReturnsOnCall == nil {
-		fake.disconnectReturnsOnCall = make(map[int]struct {
+func (fake *FakeBlockDeviceUtils) CleanupDevicesReturnsOnCall(i int, result1 error) {
+	fake.cleanupDevicesMutex.Lock()
+	defer fake.cleanupDevicesMutex.Unlock()
+	fake.CleanupDevicesStub = nil
+	if fake.cleanupDevicesReturnsOnCall == nil {
+		fake.cleanupDevicesReturnsOnCall = make(map[int]struct {
 			result1 error
 		})
 	}
-	fake.disconnectReturnsOnCall[i] = struct {
+	fake.cleanupDevicesReturnsOnCall[i] = struct {
 		result1 error
 	}{result1}
 }
@@ -1061,8 +1061,8 @@ func (fake *FakeBlockDeviceUtils) Invocations() map[string][][]interface{} {
 	defer fake.checkFsMutex.RUnlock()
 	fake.cleanupMutex.RLock()
 	defer fake.cleanupMutex.RUnlock()
-	fake.disconnectMutex.RLock()
-	defer fake.disconnectMutex.RUnlock()
+	fake.cleanupDevicesMutex.RLock()
+	defer fake.cleanupDevicesMutex.RUnlock()
 	fake.discoverMutex.RLock()
 	defer fake.discoverMutex.RUnlock()
 	fake.discoverBySgInqMutex.RLock()

@@ -21,7 +21,7 @@ import "github.com/IBM/ubiquity/resources"
 //go:generate counterfeiter -o ../../../fakes/fake_block_device_mounter_utils.go . BlockDeviceMounterUtils
 type BlockDeviceMounterUtils interface {
 	RescanAll(volumeMountProperties *resources.VolumeMountProperties) error
-	DisconnectAll(volumeMountProperties *resources.VolumeMountProperties) error
+	CleanupAll(volumeMountProperties *resources.VolumeMountProperties) error
 	MountDeviceFlow(devicePath string, fsType string, mountPoint string) error
 	Discover(volumeWwn string, deepDiscovery bool) (string, error)
 	UnmountDeviceFlow(devicePath string, volumeWwn string) error

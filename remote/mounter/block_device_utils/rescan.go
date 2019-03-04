@@ -44,14 +44,14 @@ func (b *blockDeviceUtils) Rescan(protocol Protocol, volumeMountProperties *reso
 	}
 }
 
-func (b *blockDeviceUtils) Disconnect(protocol Protocol, volumeMountProperties *resources.VolumeMountProperties) error {
+func (b *blockDeviceUtils) CleanupDevices(protocol Protocol, volumeMountProperties *resources.VolumeMountProperties) error {
 	defer b.logger.Trace(logs.DEBUG)()
 
 	switch protocol {
 	case SCSI:
-		return b.DisconnectSCSI(volumeMountProperties)
+		return b.CleanupSCSIDevices(volumeMountProperties)
 	case ISCSI:
-		return b.DisconnectISCSI()
+		return b.CleanupISCSIDevices()
 	default:
 		return b.logger.ErrorRet(&unsupportedProtocolError{protocol}, "failed")
 	}
@@ -97,11 +97,11 @@ func (b *blockDeviceUtils) RescanSCSI(volumeMountProperties *resources.VolumeMou
 	return b.logger.ErrorRet(err, "RescanSCSI failed", logs.Args{{"volumeWWN", volumeMountProperties.WWN}})
 }
 
-// TODO: improve it to make it faster
-func (b *blockDeviceUtils) DisconnectISCSI() error {
+// TODO: improve it to make it faster, for more details, see os_brick project.
+func (b *blockDeviceUtils) CleanupISCSIDevices() error {
 	return b.RescanISCSI()
 }
 
-func (b *blockDeviceUtils) DisconnectSCSI(volumeMountProperties *resources.VolumeMountProperties) error {
+func (b *blockDeviceUtils) CleanupSCSIDevices(volumeMountProperties *resources.VolumeMountProperties) error {
 	return b.fcConnector.DisconnectVolume(volumeMountProperties)
 }

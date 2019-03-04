@@ -12,6 +12,7 @@ import (
 )
 
 const SYSTOOL = "systool"
+const SYSTOOL_TIMEOUT = 5 * 1000
 
 var FC_HOST_SYSFS_PATH = "/sys/class/fc_host"
 var SCSI_HOST_SYSFS_PATH = "/sys/class/scsi_host"
@@ -64,13 +65,12 @@ func (lfc *linuxFibreChannel) GetHBAs() []string {
 		return []string{}
 	}
 
-	SYSTOOL := "systool"
 	if err := lfc.exec.IsExecutable(SYSTOOL); err != nil {
 		lfc.logger.Warning(fmt.Sprintf("No systool installed, get from path %s instead.", FC_HOST_SYSFS_PATH))
 		return lfc.getFcHBAsByPath()
 	}
 
-	out, err := lfc.exec.Execute(SYSTOOL, []string{"-c", "fc_host", "-v"})
+	out, err := lfc.exec.ExecuteWithTimeout(SYSTOOL_TIMEOUT, SYSTOOL, []string{"-c", "fc_host", "-v"})
 	if err != nil {
 		lfc.logger.Warning(fmt.Sprintf("Executing systool failed with error: %v. Get from path %s instead.", err, FC_HOST_SYSFS_PATH))
 		return lfc.getFcHBAsByPath()

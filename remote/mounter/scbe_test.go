@@ -153,7 +153,7 @@ var _ = Describe("scbe_mounter_test", func() {
 		})
 	})
 	Context("Mount", func() {
-		FIt("should be true to discover ", func() {
+		It("should be true to discover ", func() {
 			_, err := scbeMounter.Mount(mountRequestForDS8kLun1)
 			Expect(err).NotTo(HaveOccurred())
 		})
@@ -189,11 +189,11 @@ var _ = Describe("scbe_mounter_test", func() {
 		})
 	})
 	Context("ActionAfterDetach", func() {
-		It("should call DisconnectAll ", func() {
+		It("should call CleanupAll ", func() {
 			req := resources.AfterDetachRequest{VolumeConfig: map[string]interface{}{"Wwn": "wwn", "LunNumber": float64(1)}}
 			err := scbeMounter.ActionAfterDetach(req)
 			Expect(err).NotTo(HaveOccurred())
-			Expect(fakeBdUtils.DisconnectAllCallCount()).To(Equal(1))
+			Expect(fakeBdUtils.CleanupAllCallCount()).To(Equal(1))
 		})
 	})
 })

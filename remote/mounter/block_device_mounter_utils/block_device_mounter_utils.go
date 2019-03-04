@@ -200,13 +200,13 @@ func (b *blockDeviceMounterUtils) RescanAll(volumeMountProperties *resources.Vol
 }
 
 // DisconnectAll remove the device from host after the volume is unmapped.
-func (b *blockDeviceMounterUtils) DisconnectAll(volumeMountProperties *resources.VolumeMountProperties) error {
+func (b *blockDeviceMounterUtils) CleanupAll(volumeMountProperties *resources.VolumeMountProperties) error {
 	// in case of FC : if no iscsiadm on the machine or no session login - this will log a warning not fail!
-	if err := b.blockDeviceUtils.Disconnect(block_device_utils.ISCSI, volumeMountProperties); err != nil {
+	if err := b.blockDeviceUtils.CleanupDevices(block_device_utils.ISCSI, volumeMountProperties); err != nil {
 		return b.logger.ErrorRet(err, "ISCSI Disconnect failed", logs.Args{{"protocol", block_device_utils.ISCSI}})
 	}
 
-	if err := b.blockDeviceUtils.Disconnect(block_device_utils.SCSI, volumeMountProperties); err != nil {
+	if err := b.blockDeviceUtils.CleanupDevices(block_device_utils.SCSI, volumeMountProperties); err != nil {
 		return b.logger.ErrorRet(err, "OS Disconnect failed", logs.Args{{"protocol", block_device_utils.SCSI}})
 	}
 	return nil

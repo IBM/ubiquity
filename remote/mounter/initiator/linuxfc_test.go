@@ -119,7 +119,7 @@ var _ = Describe("Test FC Initiator", func() {
 
 		Context("get HBAs from systool", func() {
 			BeforeEach(func() {
-				fakeExec.ExecuteReturns([]byte(fakeSystoolOutput), nil)
+				fakeExec.ExecuteWithTimeoutReturns([]byte(fakeSystoolOutput), nil)
 			})
 
 			It("should get from systool if it is installed", func() {
@@ -146,7 +146,7 @@ var _ = Describe("Test FC Initiator", func() {
 			})
 
 			It("should get from sys fc path if systool returns error", func() {
-				fakeExec.ExecuteReturns([]byte{}, cmdErr)
+				fakeExec.ExecuteWithTimeoutReturns([]byte{}, cmdErr)
 				hbasRes := fcInitiator.GetHBAs()
 				Expect(hbasRes).To(Equal(hbas))
 			})

@@ -30,7 +30,7 @@ const (
 //go:generate counterfeiter -o ../../../fakes/fake_block_device_utils.go . BlockDeviceUtils
 type BlockDeviceUtils interface {
 	Rescan(protocol Protocol, volumes *resources.VolumeMountProperties) error
-	Disconnect(protocol Protocol, volumes *resources.VolumeMountProperties) error
+	CleanupDevices(protocol Protocol, volumes *resources.VolumeMountProperties) error
 	ReloadMultipath() error
 	Discover(volumeWwn string, deepDiscovery bool) (string, error)
 	GetWwnByScsiInq(mpathOutput string, dev string) (string, error)

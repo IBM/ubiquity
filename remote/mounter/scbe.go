@@ -156,9 +156,9 @@ func (s *scbeMounter) ActionAfterDetach(request resources.AfterDetachRequest) er
 	defer s.logger.Trace(logs.DEBUG)()
 	volumeMountProperties := s.prepareVolumeMountProperties(&request)
 
-	// Disconnect volume
-	if err := s.blockDeviceMounterUtils.DisconnectAll(volumeMountProperties); err != nil {
-		return s.logger.ErrorRet(err, "DisconnectAll failed")
+	// Cleanup volume
+	if err := s.blockDeviceMounterUtils.CleanupAll(volumeMountProperties); err != nil {
+		return s.logger.ErrorRet(err, "CleanupAll failed")
 	}
 	return nil
 }
