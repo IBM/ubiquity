@@ -615,10 +615,14 @@ mpathhb (36001738cfc9035eb0000000000cea###) dm-3 ##,##
 			mpoint := "mpoint"
 			err = bdUtils.MountFs(mpath, mpoint)
 			Expect(err).To(Not(HaveOccurred()))
-			Expect(fakeExec.ExecuteWithTimeoutCallCount()).To(Equal(1))
+			Expect(fakeExec.ExecuteWithTimeoutCallCount()).To(Equal(2))
 			_, cmd, args := fakeExec.ExecuteWithTimeoutArgsForCall(0)
 			Expect(cmd).To(Equal("mount"))
 			Expect(args).To(Equal([]string{mpath, mpoint}))
+
+			_, cmd, args = fakeExec.ExecuteWithTimeoutArgsForCall(1)
+			Expect(cmd).To(Equal("chmod"))
+			Expect(args).To(Equal([]string{"775", mpoint}))
 		})
 		It("MountFs fails if mount command missing", func() {
 			mpath := "mpath"
@@ -632,6 +636,15 @@ mpathhb (36001738cfc9035eb0000000000cea###) dm-3 ##,##
 			mpath := "mpath"
 			mpoint := "mpoint"
 			fakeExec.ExecuteWithTimeoutReturns([]byte{}, cmdErr)
+			err = bdUtils.MountFs(mpath, mpoint)
+			Expect(err).To(HaveOccurred())
+			Expect(err.Error()).To(MatchRegexp(cmdErr.Error()))
+		})
+		It("MountFs fails if chmod command fails", func() {
+			mpath := "mpath"
+			mpoint := "mpoint"
+			fakeExec.ExecuteWithTimeoutReturnsOnCall(0, []byte{}, nil)
+			fakeExec.ExecuteWithTimeoutReturnsOnCall(1, []byte{}, cmdErr)
 			err = bdUtils.MountFs(mpath, mpoint)
 			Expect(err).To(HaveOccurred())
 			Expect(err.Error()).To(MatchRegexp(cmdErr.Error()))
