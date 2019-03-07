@@ -14,6 +14,8 @@ import (
 const SYSTOOL = "systool"
 const SYSTOOL_TIMEOUT = 5 * 1000
 
+var RESET_LIP = true
+
 var FC_HOST_SYSFS_PATH = "/sys/class/fc_host"
 var SCSI_HOST_SYSFS_PATH = "/sys/class/scsi_host"
 
@@ -113,14 +115,27 @@ func (lfc *linuxFibreChannel) RescanHosts(hbas []string, volumeMountProperties *
 	ctl := lfc.getHBAChannelScsiTarget(volumeMountProperties)
 
 	for _, hba := range hbas {
+
+		if RESET_LIP {
+			lfc.lipReset(hba)
+		}
+
 		hbaPath := SCSI_HOST_SYSFS_PATH + "/" + hba + "/scan"
 		lfc.logger.Debug(fmt.Sprintf(`Scanning HBA with command: echo "%s" > %s`, ctl, hbaPath))
 		if err := ioutil.WriteFile(hbaPath, []byte(ctl), 0666); err != nil {
-			lfc.logger.Debug("Failed to scan HBA", logs.Args{{"name", hba}, {"err", err}})
+			lfc.logger.Warning("Failed to scan HBA", logs.Args{{"name", hba}, {"err", err}})
 			continue
 		}
 	}
 	return nil
+}
+
+func (lfc *linuxFibreChannel) lipReset(hba string) {
+	path := FC_HOST_SYSFS_PATH + "/" + hba + "/issue_lip"
+	lfc.logger.Debug(fmt.Sprintf(`Resetting LIP with command: echo "1" > %s`, path))
+	if err := ioutil.WriteFile(path, []byte("1"), 0666); err != nil {
+		lfc.logger.Warning("Failed to reset LIP", logs.Args{{"name", hba}, {"err", err}})
+	}
 }
 
 /*

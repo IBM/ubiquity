@@ -158,21 +158,68 @@ var _ = Describe("Test FC Initiator", func() {
 		var hbas = []string{"host0"}
 		var scanPath = FAKE_SCSI_HOST_SYSFS_PATH + "/" + hbas[0]
 		var scanFile = scanPath + "/scan"
+		var lipPath = FAKE_FC_HOST_SYSFS_PATH + "/" + hbas[0]
+		var lipFile = lipPath + "/issue_lip"
+		var realLipResetBool bool
 
 		BeforeEach(func() {
 			err := os.MkdirAll(scanPath, os.ModePerm)
 			Ω(err).ShouldNot(HaveOccurred())
 			_, err = os.Create(scanFile)
 			Ω(err).ShouldNot(HaveOccurred())
+
+			err = os.MkdirAll(lipPath, os.ModePerm)
+			Ω(err).ShouldNot(HaveOccurred())
+			_, err = os.Create(lipFile)
+			Ω(err).ShouldNot(HaveOccurred())
 		})
 
-		It("should write '- - lunid' to the hba scan file", func() {
-			err := fcInitiator.RescanHosts(hbas, volumeMountProperties)
-			Ω(err).ShouldNot(HaveOccurred())
-			data, err := ioutil.ReadFile(scanFile)
-			Ω(err).ShouldNot(HaveOccurred())
-			Expect(string(data)).To(Equal(fmt.Sprintf("- - %g", volumeMountProperties.LunNumber)))
+		Context("RESET_LIP is true", func() {
+			BeforeEach(func() {
+				realLipResetBool = initiator.RESET_LIP
+				initiator.RESET_LIP = true
+			})
+
+			AfterEach(func() {
+				initiator.RESET_LIP = realLipResetBool
+			})
+
+			It("should write '- - lunid' to the hba scan file", func() {
+				err := fcInitiator.RescanHosts(hbas, volumeMountProperties)
+				Ω(err).ShouldNot(HaveOccurred())
+				data, err := ioutil.ReadFile(scanFile)
+				Ω(err).ShouldNot(HaveOccurred())
+				Expect(string(data)).To(Equal(fmt.Sprintf("- - %g", volumeMountProperties.LunNumber)))
+			})
+
+			It("should write '1' to the hba lip file", func() {
+				err := fcInitiator.RescanHosts(hbas, volumeMountProperties)
+				Ω(err).ShouldNot(HaveOccurred())
+				data, err := ioutil.ReadFile(lipFile)
+				Ω(err).ShouldNot(HaveOccurred())
+				Expect(string(data)).To(Equal("1"))
+			})
 		})
+
+		Context("RESET_LIP is false", func() {
+			BeforeEach(func() {
+				realLipResetBool = initiator.RESET_LIP
+				initiator.RESET_LIP = false
+			})
+
+			AfterEach(func() {
+				initiator.RESET_LIP = realLipResetBool
+			})
+
+			It("should write nothing to the hba lip file", func() {
+				err := fcInitiator.RescanHosts(hbas, volumeMountProperties)
+				Ω(err).ShouldNot(HaveOccurred())
+				data, err := ioutil.ReadFile(lipFile)
+				Ω(err).ShouldNot(HaveOccurred())
+				Expect(string(data)).To(Equal(""))
+			})
+		})
+
 	})
 
 	Context("RemoveSCSIDevice", func() {
