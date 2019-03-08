@@ -160,7 +160,6 @@ var _ = Describe("Test FC Initiator", func() {
 		var scanFile = scanPath + "/scan"
 		var lipPath = FAKE_FC_HOST_SYSFS_PATH + "/" + hbas[0]
 		var lipFile = lipPath + "/issue_lip"
-		var realLipResetBool bool
 
 		BeforeEach(func() {
 			err := os.MkdirAll(scanPath, os.ModePerm)
@@ -176,12 +175,11 @@ var _ = Describe("Test FC Initiator", func() {
 
 		Context("RESET_LIP is true", func() {
 			BeforeEach(func() {
-				realLipResetBool = initiator.RESET_LIP
-				initiator.RESET_LIP = true
+				os.Setenv("RESET_LIP", "true")
 			})
 
 			AfterEach(func() {
-				initiator.RESET_LIP = realLipResetBool
+				os.Setenv("RESET_LIP", "")
 			})
 
 			It("should write '- - lunid' to the hba scan file", func() {
@@ -202,14 +200,6 @@ var _ = Describe("Test FC Initiator", func() {
 		})
 
 		Context("RESET_LIP is false", func() {
-			BeforeEach(func() {
-				realLipResetBool = initiator.RESET_LIP
-				initiator.RESET_LIP = false
-			})
-
-			AfterEach(func() {
-				initiator.RESET_LIP = realLipResetBool
-			})
 
 			It("should write nothing to the hba lip file", func() {
 				err := fcInitiator.RescanHosts(hbas, volumeMountProperties)

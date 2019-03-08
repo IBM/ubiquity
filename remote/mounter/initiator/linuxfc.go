@@ -13,8 +13,7 @@ import (
 
 const SYSTOOL = "systool"
 const SYSTOOL_TIMEOUT = 5 * 1000
-
-var RESET_LIP = true
+const KeyResetLIP = "RESET_LIP"
 
 var FC_HOST_SYSFS_PATH = "/sys/class/fc_host"
 var SCSI_HOST_SYSFS_PATH = "/sys/class/scsi_host"
@@ -112,11 +111,13 @@ func (lfc *linuxFibreChannel) getFcHBAsByPath() []string {
 func (lfc *linuxFibreChannel) RescanHosts(hbas []string, volumeMountProperties *resources.VolumeMountProperties) error {
 	defer lfc.logger.Trace(logs.DEBUG)()
 
+	resetLIP := os.Getenv(KeyResetLIP)
+
 	ctl := lfc.getHBAChannelScsiTarget(volumeMountProperties)
 
 	for _, hba := range hbas {
 
-		if RESET_LIP {
+		if resetLIP != "" {
 			lfc.lipReset(hba)
 		}
 
