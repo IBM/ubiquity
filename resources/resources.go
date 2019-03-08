@@ -195,6 +195,10 @@ type Mounter interface {
 	ActionAfterDetach(request AfterDetachRequest) error
 }
 
+type VolumeConfigGetter interface {
+	GetVolumeConfig() map[string]interface{}
+}
+
 type ActivateRequest struct {
 	CredentialInfo CredentialInfo
 	Backends       []string
@@ -261,6 +265,12 @@ type MountRequest struct {
 	Context      RequestContext
 }
 
+func (r *MountRequest) GetVolumeConfig() map[string]interface{} {
+	return r.VolumeConfig
+}
+
+var _ VolumeConfigGetter = &MountRequest{}
+
 type UnmountRequest struct {
 	// TODO missing Mountpoint string
 	VolumeConfig map[string]interface{}
@@ -270,6 +280,13 @@ type AfterDetachRequest struct {
 	VolumeConfig map[string]interface{}
 	Context      RequestContext
 }
+
+func (r *AfterDetachRequest) GetVolumeConfig() map[string]interface{} {
+	return r.VolumeConfig
+}
+
+var _ VolumeConfigGetter = &AfterDetachRequest{}
+
 type AttachResponse struct {
 	Mountpoint string
 	Err        string
@@ -337,4 +354,9 @@ type FlexVolumeDetachRequest struct {
 type RequestContext struct {
 	Id         string
 	ActionName string
+}
+
+type VolumeMountProperties struct {
+	WWN       string
+	LunNumber float64
 }

@@ -50,35 +50,29 @@ func NewScbeMounterWithExecuter(blockDeviceMounterUtils block_device_mounter_uti
 	return newScbMounter(blockDeviceMounterUtils, executer)
 }
 
+func (s *scbeMounter) prepareVolumeMountProperties(vcGetter resources.VolumeConfigGetter) *resources.VolumeMountProperties {
+	volumeConfig := vcGetter.GetVolumeConfig()
+	volumeWWN := volumeConfig["Wwn"].(string)
+	volumeLunNumber := float64(-1)
+	if volumeLunNumberInterface, exists := volumeConfig[resources.ScbeKeyVolAttachLunNumToHost]; exists {
+		volumeLunNumber = volumeLunNumberInterface.(float64)
+	}
+	return &resources.VolumeMountProperties{WWN: volumeWWN, LunNumber: volumeLunNumber}
+}
+
 func (s *scbeMounter) Mount(mountRequest resources.MountRequest) (string, error) {
 	defer s.logger.Trace(logs.DEBUG)()
-	volumeWWN := mountRequest.VolumeConfig["Wwn"].(string)
+	volumeMountProperties := s.prepareVolumeMountProperties(&mountRequest)
 
 	// Rescan OS
-	if err := s.blockDeviceMounterUtils.RescanAll(volumeWWN, false, false); err != nil {
+	if err := s.blockDeviceMounterUtils.RescanAll(volumeMountProperties); err != nil {
 		return "", s.logger.ErrorRet(err, "RescanAll failed")
 	}
 
 	// Discover device
-	devicePath, err := s.blockDeviceMounterUtils.Discover(volumeWWN, true)
+	devicePath, err := s.blockDeviceMounterUtils.Discover(volumeMountProperties.WWN, true)
 	if err != nil {
-		// Known issue: UB-1103 in https://www.ibm.com/support/knowledgecenter/SS6JWS_3.4.0/RN/sc_rn_knownissues.html
-		// XIV doesn't using Lun Number 0, We don't care the storage type here.
-		// For DS8k and Storwize Lun0, "rescan-scsi-bus.sh -r" cannot discover the LUN0, need to use rescanLun0 instead
-		s.logger.Info("volumeConfig: ", logs.Args{{"volumeConfig: ", mountRequest.VolumeConfig}})
-		_, ok := err.(*block_device_utils.VolumeNotFoundError)
-		if ok && isLun0(mountRequest) {
-			s.logger.Info("It is the first lun of DS8K or Storwize, will try to rescan lun0")
-			if err := s.blockDeviceMounterUtils.RescanAll(volumeWWN, false, true); err != nil {
-				return "", s.logger.ErrorRet(err, "Rescan lun0 failed", logs.Args{{"volumeWWN", volumeWWN}})
-			}
-			devicePath, err = s.blockDeviceMounterUtils.Discover(volumeWWN, true)
-			if err != nil {
-				return "", s.logger.ErrorRet(err, "Discover failed after run rescan and also additional rescan with special lun0 scanning", logs.Args{{"volumeWWN", volumeWWN}})
-			}
-		} else {
-			return "", s.logger.ErrorRet(err, "Discover failed", logs.Args{{"volumeWWN", volumeWWN}})
-		}
+		return "", s.logger.ErrorRet(err, "Discover failed", logs.Args{{"volumeWWN", volumeMountProperties.WWN}})
 	}
 
 	// Create mount point if needed   // TODO consider to move it inside the util
@@ -160,22 +154,11 @@ func (s *scbeMounter) Unmount(unmountRequest resources.UnmountRequest) error {
 
 func (s *scbeMounter) ActionAfterDetach(request resources.AfterDetachRequest) error {
 	defer s.logger.Trace(logs.DEBUG)()
-	volumeWWN := request.VolumeConfig["Wwn"].(string)
+	volumeMountProperties := s.prepareVolumeMountProperties(&request)
 
-	// Rescan OS
-	if err := s.blockDeviceMounterUtils.RescanAll(volumeWWN, true, false); err != nil {
-		return s.logger.ErrorRet(err, "RescanAll failed")
+	// Cleanup volume
+	if err := s.blockDeviceMounterUtils.CleanupAll(volumeMountProperties); err != nil {
+		return s.logger.ErrorRet(err, "CleanupAll failed")
 	}
 	return nil
-}
-
-func isLun0(mountRequest resources.MountRequest) bool {
-	lunNumber, ok := mountRequest.VolumeConfig[resources.ScbeKeyVolAttachLunNumToHost]
-	if !ok {
-		return false
-	}
-	if int(lunNumber.(float64)) == 0 {
-		return true
-	}
-	return false
 }

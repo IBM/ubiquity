@@ -24,6 +24,7 @@ import (
 	"regexp"
 	"strings"
 
+	"github.com/IBM/ubiquity/utils"
 	"github.com/IBM/ubiquity/utils/logs"
 )
 
@@ -56,27 +57,12 @@ func (b *blockDeviceUtils) ReloadMultipath() error {
 
 func (b *blockDeviceUtils) Discover(volumeWwn string, deepDiscovery bool) (string, error) {
 	defer b.logger.Trace(logs.DEBUG, logs.Args{{"volumeWwn", volumeWwn}, {"deepDiscovery", deepDiscovery}})()
-	if err := b.exec.IsExecutable(multipathCmd); err != nil {
-		return "", b.logger.ErrorRet(&commandNotFoundError{multipathCmd, err}, "failed")
-	}
-	args := []string{"-ll"}
-	outputBytes, err := b.exec.ExecuteWithTimeout(DiscoverTimeout, multipathCmd, args)
+
+	outputBytes, dev, _, err := utils.GetMultipathOutputAndDeviceMapperAndDevice(volumeWwn, b.exec)
 	if err != nil {
-		return "", b.logger.ErrorRet(&CommandExecuteError{multipathCmd, err}, "failed")
+		return "", err
 	}
-	scanner := bufio.NewScanner(strings.NewReader(string(outputBytes[:])))
-	pattern := "(?i)" + volumeWwn
-	regex, err := regexp.Compile(pattern)
-	if err != nil {
-		return "", b.logger.ErrorRet(err, "failed")
-	}
-	dev := ""
-	for scanner.Scan() {
-		if regex.MatchString(scanner.Text()) {
-			dev = strings.Split(scanner.Text(), " ")[0]
-			break
-		}
-	}
+
 	mpath := ""
 	if dev == "" {
 		if !deepDiscovery {

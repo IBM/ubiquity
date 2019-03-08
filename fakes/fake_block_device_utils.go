@@ -5,95 +5,14 @@ import (
 	"sync"
 
 	"github.com/IBM/ubiquity/remote/mounter/block_device_utils"
+	"github.com/IBM/ubiquity/resources"
 )
 
 type FakeBlockDeviceUtils struct {
-	RescanStub        func(protocol block_device_utils.Protocol) error
-	rescanMutex       sync.RWMutex
-	rescanArgsForCall []struct {
-		protocol block_device_utils.Protocol
-	}
-	rescanReturns struct {
-		result1 error
-	}
-	rescanReturnsOnCall map[int]struct {
-		result1 error
-	}
-	RescanSCSILun0Stub        func() error
-	rescanSCSILun0Mutex       sync.RWMutex
-	rescanSCSILun0ArgsForCall []struct{}
-	rescanSCSILun0Returns     struct {
-		result1 error
-	}
-	rescanSCSILun0ReturnsOnCall map[int]struct {
-		result1 error
-	}
-	ReloadMultipathStub        func() error
-	reloadMultipathMutex       sync.RWMutex
-	reloadMultipathArgsForCall []struct{}
-	reloadMultipathReturns     struct {
-		result1 error
-	}
-	reloadMultipathReturnsOnCall map[int]struct {
-		result1 error
-	}
-	DiscoverStub        func(volumeWwn string, deepDiscovery bool) (string, error)
-	discoverMutex       sync.RWMutex
-	discoverArgsForCall []struct {
-		volumeWwn     string
-		deepDiscovery bool
-	}
-	discoverReturns struct {
-		result1 string
-		result2 error
-	}
-	discoverReturnsOnCall map[int]struct {
-		result1 string
-		result2 error
-	}
-	GetWwnByScsiInqStub        func(mpathOutput string, dev string) (string, error)
-	getWwnByScsiInqMutex       sync.RWMutex
-	getWwnByScsiInqArgsForCall []struct {
-		mpathOutput string
-		dev         string
-	}
-	getWwnByScsiInqReturns struct {
-		result1 string
-		result2 error
-	}
-	getWwnByScsiInqReturnsOnCall map[int]struct {
-		result1 string
-		result2 error
-	}
-	DiscoverBySgInqStub        func(mpathOutput string, volumeWwn string) (string, error)
-	discoverBySgInqMutex       sync.RWMutex
-	discoverBySgInqArgsForCall []struct {
-		mpathOutput string
-		volumeWwn   string
-	}
-	discoverBySgInqReturns struct {
-		result1 string
-		result2 error
-	}
-	discoverBySgInqReturnsOnCall map[int]struct {
-		result1 string
-		result2 error
-	}
-	CleanupStub        func(mpath string) error
-	cleanupMutex       sync.RWMutex
-	cleanupArgsForCall []struct {
-		mpath string
-	}
-	cleanupReturns struct {
-		result1 error
-	}
-	cleanupReturnsOnCall map[int]struct {
-		result1 error
-	}
-	CheckFsStub        func(mpath string) (bool, error)
+	CheckFsStub        func(string) (bool, error)
 	checkFsMutex       sync.RWMutex
 	checkFsArgsForCall []struct {
-		mpath string
+		arg1 string
 	}
 	checkFsReturns struct {
 		result1 bool
@@ -103,46 +22,75 @@ type FakeBlockDeviceUtils struct {
 		result1 bool
 		result2 error
 	}
-	MakeFsStub        func(mpath string, fsType string) error
-	makeFsMutex       sync.RWMutex
-	makeFsArgsForCall []struct {
-		mpath  string
-		fsType string
+	CleanupStub        func(string) error
+	cleanupMutex       sync.RWMutex
+	cleanupArgsForCall []struct {
+		arg1 string
 	}
-	makeFsReturns struct {
+	cleanupReturns struct {
 		result1 error
 	}
-	makeFsReturnsOnCall map[int]struct {
+	cleanupReturnsOnCall map[int]struct {
 		result1 error
 	}
-	MountFsStub        func(mpath string, mpoint string) error
-	mountFsMutex       sync.RWMutex
-	mountFsArgsForCall []struct {
-		mpath  string
-		mpoint string
+	CleanupDevicesStub        func(block_device_utils.Protocol, *resources.VolumeMountProperties) error
+	cleanupDevicesMutex       sync.RWMutex
+	cleanupDevicesArgsForCall []struct {
+		arg1 block_device_utils.Protocol
+		arg2 *resources.VolumeMountProperties
 	}
-	mountFsReturns struct {
+	cleanupDevicesReturns struct {
 		result1 error
 	}
-	mountFsReturnsOnCall map[int]struct {
+	cleanupDevicesReturnsOnCall map[int]struct {
 		result1 error
 	}
-	UmountFsStub        func(mpoint string, volumeWwn string) error
-	umountFsMutex       sync.RWMutex
-	umountFsArgsForCall []struct {
-		mpoint    string
-		volumeWwn string
+	DiscoverStub        func(string, bool) (string, error)
+	discoverMutex       sync.RWMutex
+	discoverArgsForCall []struct {
+		arg1 string
+		arg2 bool
 	}
-	umountFsReturns struct {
-		result1 error
+	discoverReturns struct {
+		result1 string
+		result2 error
 	}
-	umountFsReturnsOnCall map[int]struct {
-		result1 error
+	discoverReturnsOnCall map[int]struct {
+		result1 string
+		result2 error
 	}
-	IsDeviceMountedStub        func(devPath string) (bool, []string, error)
+	DiscoverBySgInqStub        func(string, string) (string, error)
+	discoverBySgInqMutex       sync.RWMutex
+	discoverBySgInqArgsForCall []struct {
+		arg1 string
+		arg2 string
+	}
+	discoverBySgInqReturns struct {
+		result1 string
+		result2 error
+	}
+	discoverBySgInqReturnsOnCall map[int]struct {
+		result1 string
+		result2 error
+	}
+	GetWwnByScsiInqStub        func(string, string) (string, error)
+	getWwnByScsiInqMutex       sync.RWMutex
+	getWwnByScsiInqArgsForCall []struct {
+		arg1 string
+		arg2 string
+	}
+	getWwnByScsiInqReturns struct {
+		result1 string
+		result2 error
+	}
+	getWwnByScsiInqReturnsOnCall map[int]struct {
+		result1 string
+		result2 error
+	}
+	IsDeviceMountedStub        func(string) (bool, []string, error)
 	isDeviceMountedMutex       sync.RWMutex
 	isDeviceMountedArgsForCall []struct {
-		devPath string
+		arg1 string
 	}
 	isDeviceMountedReturns struct {
 		result1 bool
@@ -154,10 +102,10 @@ type FakeBlockDeviceUtils struct {
 		result2 []string
 		result3 error
 	}
-	IsDirAMountPointStub        func(dirPath string) (bool, []string, error)
+	IsDirAMountPointStub        func(string) (bool, []string, error)
 	isDirAMountPointMutex       sync.RWMutex
 	isDirAMountPointArgsForCall []struct {
-		dirPath string
+		arg1 string
 	}
 	isDirAMountPointReturns struct {
 		result1 bool
@@ -169,10 +117,56 @@ type FakeBlockDeviceUtils struct {
 		result2 []string
 		result3 error
 	}
-	SetDmsetupStub        func(mpath string) error
+	MakeFsStub        func(string, string) error
+	makeFsMutex       sync.RWMutex
+	makeFsArgsForCall []struct {
+		arg1 string
+		arg2 string
+	}
+	makeFsReturns struct {
+		result1 error
+	}
+	makeFsReturnsOnCall map[int]struct {
+		result1 error
+	}
+	MountFsStub        func(string, string) error
+	mountFsMutex       sync.RWMutex
+	mountFsArgsForCall []struct {
+		arg1 string
+		arg2 string
+	}
+	mountFsReturns struct {
+		result1 error
+	}
+	mountFsReturnsOnCall map[int]struct {
+		result1 error
+	}
+	ReloadMultipathStub        func() error
+	reloadMultipathMutex       sync.RWMutex
+	reloadMultipathArgsForCall []struct {
+	}
+	reloadMultipathReturns struct {
+		result1 error
+	}
+	reloadMultipathReturnsOnCall map[int]struct {
+		result1 error
+	}
+	RescanStub        func(block_device_utils.Protocol, *resources.VolumeMountProperties) error
+	rescanMutex       sync.RWMutex
+	rescanArgsForCall []struct {
+		arg1 block_device_utils.Protocol
+		arg2 *resources.VolumeMountProperties
+	}
+	rescanReturns struct {
+		result1 error
+	}
+	rescanReturnsOnCall map[int]struct {
+		result1 error
+	}
+	SetDmsetupStub        func(string) error
 	setDmsetupMutex       sync.RWMutex
 	setDmsetupArgsForCall []struct {
-		mpath string
+		arg1 string
 	}
 	setDmsetupReturns struct {
 		result1 error
@@ -180,357 +174,38 @@ type FakeBlockDeviceUtils struct {
 	setDmsetupReturnsOnCall map[int]struct {
 		result1 error
 	}
+	UmountFsStub        func(string, string) error
+	umountFsMutex       sync.RWMutex
+	umountFsArgsForCall []struct {
+		arg1 string
+		arg2 string
+	}
+	umountFsReturns struct {
+		result1 error
+	}
+	umountFsReturnsOnCall map[int]struct {
+		result1 error
+	}
 	invocations      map[string][][]interface{}
 	invocationsMutex sync.RWMutex
 }
 
-func (fake *FakeBlockDeviceUtils) Rescan(protocol block_device_utils.Protocol) error {
-	fake.rescanMutex.Lock()
-	ret, specificReturn := fake.rescanReturnsOnCall[len(fake.rescanArgsForCall)]
-	fake.rescanArgsForCall = append(fake.rescanArgsForCall, struct {
-		protocol block_device_utils.Protocol
-	}{protocol})
-	fake.recordInvocation("Rescan", []interface{}{protocol})
-	fake.rescanMutex.Unlock()
-	if fake.RescanStub != nil {
-		return fake.RescanStub(protocol)
-	}
-	if specificReturn {
-		return ret.result1
-	}
-	return fake.rescanReturns.result1
-}
-
-func (fake *FakeBlockDeviceUtils) RescanCallCount() int {
-	fake.rescanMutex.RLock()
-	defer fake.rescanMutex.RUnlock()
-	return len(fake.rescanArgsForCall)
-}
-
-func (fake *FakeBlockDeviceUtils) RescanArgsForCall(i int) block_device_utils.Protocol {
-	fake.rescanMutex.RLock()
-	defer fake.rescanMutex.RUnlock()
-	return fake.rescanArgsForCall[i].protocol
-}
-
-func (fake *FakeBlockDeviceUtils) RescanReturns(result1 error) {
-	fake.RescanStub = nil
-	fake.rescanReturns = struct {
-		result1 error
-	}{result1}
-}
-
-func (fake *FakeBlockDeviceUtils) RescanReturnsOnCall(i int, result1 error) {
-	fake.RescanStub = nil
-	if fake.rescanReturnsOnCall == nil {
-		fake.rescanReturnsOnCall = make(map[int]struct {
-			result1 error
-		})
-	}
-	fake.rescanReturnsOnCall[i] = struct {
-		result1 error
-	}{result1}
-}
-
-func (fake *FakeBlockDeviceUtils) RescanSCSILun0() error {
-	fake.rescanSCSILun0Mutex.Lock()
-	ret, specificReturn := fake.rescanSCSILun0ReturnsOnCall[len(fake.rescanSCSILun0ArgsForCall)]
-	fake.rescanSCSILun0ArgsForCall = append(fake.rescanSCSILun0ArgsForCall, struct{}{})
-	fake.recordInvocation("RescanSCSILun0", []interface{}{})
-	fake.rescanSCSILun0Mutex.Unlock()
-	if fake.RescanSCSILun0Stub != nil {
-		return fake.RescanSCSILun0Stub()
-	}
-	if specificReturn {
-		return ret.result1
-	}
-	return fake.rescanSCSILun0Returns.result1
-}
-
-func (fake *FakeBlockDeviceUtils) RescanSCSILun0CallCount() int {
-	fake.rescanSCSILun0Mutex.RLock()
-	defer fake.rescanSCSILun0Mutex.RUnlock()
-	return len(fake.rescanSCSILun0ArgsForCall)
-}
-
-func (fake *FakeBlockDeviceUtils) RescanSCSILun0Returns(result1 error) {
-	fake.RescanSCSILun0Stub = nil
-	fake.rescanSCSILun0Returns = struct {
-		result1 error
-	}{result1}
-}
-
-func (fake *FakeBlockDeviceUtils) RescanSCSILun0ReturnsOnCall(i int, result1 error) {
-	fake.RescanSCSILun0Stub = nil
-	if fake.rescanSCSILun0ReturnsOnCall == nil {
-		fake.rescanSCSILun0ReturnsOnCall = make(map[int]struct {
-			result1 error
-		})
-	}
-	fake.rescanSCSILun0ReturnsOnCall[i] = struct {
-		result1 error
-	}{result1}
-}
-
-func (fake *FakeBlockDeviceUtils) ReloadMultipath() error {
-	fake.reloadMultipathMutex.Lock()
-	ret, specificReturn := fake.reloadMultipathReturnsOnCall[len(fake.reloadMultipathArgsForCall)]
-	fake.reloadMultipathArgsForCall = append(fake.reloadMultipathArgsForCall, struct{}{})
-	fake.recordInvocation("ReloadMultipath", []interface{}{})
-	fake.reloadMultipathMutex.Unlock()
-	if fake.ReloadMultipathStub != nil {
-		return fake.ReloadMultipathStub()
-	}
-	if specificReturn {
-		return ret.result1
-	}
-	return fake.reloadMultipathReturns.result1
-}
-
-func (fake *FakeBlockDeviceUtils) ReloadMultipathCallCount() int {
-	fake.reloadMultipathMutex.RLock()
-	defer fake.reloadMultipathMutex.RUnlock()
-	return len(fake.reloadMultipathArgsForCall)
-}
-
-func (fake *FakeBlockDeviceUtils) ReloadMultipathReturns(result1 error) {
-	fake.ReloadMultipathStub = nil
-	fake.reloadMultipathReturns = struct {
-		result1 error
-	}{result1}
-}
-
-func (fake *FakeBlockDeviceUtils) ReloadMultipathReturnsOnCall(i int, result1 error) {
-	fake.ReloadMultipathStub = nil
-	if fake.reloadMultipathReturnsOnCall == nil {
-		fake.reloadMultipathReturnsOnCall = make(map[int]struct {
-			result1 error
-		})
-	}
-	fake.reloadMultipathReturnsOnCall[i] = struct {
-		result1 error
-	}{result1}
-}
-
-func (fake *FakeBlockDeviceUtils) Discover(volumeWwn string, deepDiscovery bool) (string, error) {
-	fake.discoverMutex.Lock()
-	ret, specificReturn := fake.discoverReturnsOnCall[len(fake.discoverArgsForCall)]
-	fake.discoverArgsForCall = append(fake.discoverArgsForCall, struct {
-		volumeWwn     string
-		deepDiscovery bool
-	}{volumeWwn, deepDiscovery})
-	fake.recordInvocation("Discover", []interface{}{volumeWwn, deepDiscovery})
-	fake.discoverMutex.Unlock()
-	if fake.DiscoverStub != nil {
-		return fake.DiscoverStub(volumeWwn, deepDiscovery)
-	}
-	if specificReturn {
-		return ret.result1, ret.result2
-	}
-	return fake.discoverReturns.result1, fake.discoverReturns.result2
-}
-
-func (fake *FakeBlockDeviceUtils) DiscoverCallCount() int {
-	fake.discoverMutex.RLock()
-	defer fake.discoverMutex.RUnlock()
-	return len(fake.discoverArgsForCall)
-}
-
-func (fake *FakeBlockDeviceUtils) DiscoverArgsForCall(i int) (string, bool) {
-	fake.discoverMutex.RLock()
-	defer fake.discoverMutex.RUnlock()
-	return fake.discoverArgsForCall[i].volumeWwn, fake.discoverArgsForCall[i].deepDiscovery
-}
-
-func (fake *FakeBlockDeviceUtils) DiscoverReturns(result1 string, result2 error) {
-	fake.DiscoverStub = nil
-	fake.discoverReturns = struct {
-		result1 string
-		result2 error
-	}{result1, result2}
-}
-
-func (fake *FakeBlockDeviceUtils) DiscoverReturnsOnCall(i int, result1 string, result2 error) {
-	fake.DiscoverStub = nil
-	if fake.discoverReturnsOnCall == nil {
-		fake.discoverReturnsOnCall = make(map[int]struct {
-			result1 string
-			result2 error
-		})
-	}
-	fake.discoverReturnsOnCall[i] = struct {
-		result1 string
-		result2 error
-	}{result1, result2}
-}
-
-func (fake *FakeBlockDeviceUtils) GetWwnByScsiInq(mpathOutput string, dev string) (string, error) {
-	fake.getWwnByScsiInqMutex.Lock()
-	ret, specificReturn := fake.getWwnByScsiInqReturnsOnCall[len(fake.getWwnByScsiInqArgsForCall)]
-	fake.getWwnByScsiInqArgsForCall = append(fake.getWwnByScsiInqArgsForCall, struct {
-		mpathOutput string
-		dev         string
-	}{mpathOutput, dev})
-	fake.recordInvocation("GetWwnByScsiInq", []interface{}{mpathOutput, dev})
-	fake.getWwnByScsiInqMutex.Unlock()
-	if fake.GetWwnByScsiInqStub != nil {
-		return fake.GetWwnByScsiInqStub(mpathOutput, dev)
-	}
-	if specificReturn {
-		return ret.result1, ret.result2
-	}
-	return fake.getWwnByScsiInqReturns.result1, fake.getWwnByScsiInqReturns.result2
-}
-
-func (fake *FakeBlockDeviceUtils) GetWwnByScsiInqCallCount() int {
-	fake.getWwnByScsiInqMutex.RLock()
-	defer fake.getWwnByScsiInqMutex.RUnlock()
-	return len(fake.getWwnByScsiInqArgsForCall)
-}
-
-func (fake *FakeBlockDeviceUtils) GetWwnByScsiInqArgsForCall(i int) (string, string) {
-	fake.getWwnByScsiInqMutex.RLock()
-	defer fake.getWwnByScsiInqMutex.RUnlock()
-	return fake.getWwnByScsiInqArgsForCall[i].mpathOutput, fake.getWwnByScsiInqArgsForCall[i].dev
-}
-
-func (fake *FakeBlockDeviceUtils) GetWwnByScsiInqReturns(result1 string, result2 error) {
-	fake.GetWwnByScsiInqStub = nil
-	fake.getWwnByScsiInqReturns = struct {
-		result1 string
-		result2 error
-	}{result1, result2}
-}
-
-func (fake *FakeBlockDeviceUtils) GetWwnByScsiInqReturnsOnCall(i int, result1 string, result2 error) {
-	fake.GetWwnByScsiInqStub = nil
-	if fake.getWwnByScsiInqReturnsOnCall == nil {
-		fake.getWwnByScsiInqReturnsOnCall = make(map[int]struct {
-			result1 string
-			result2 error
-		})
-	}
-	fake.getWwnByScsiInqReturnsOnCall[i] = struct {
-		result1 string
-		result2 error
-	}{result1, result2}
-}
-
-func (fake *FakeBlockDeviceUtils) DiscoverBySgInq(mpathOutput string, volumeWwn string) (string, error) {
-	fake.discoverBySgInqMutex.Lock()
-	ret, specificReturn := fake.discoverBySgInqReturnsOnCall[len(fake.discoverBySgInqArgsForCall)]
-	fake.discoverBySgInqArgsForCall = append(fake.discoverBySgInqArgsForCall, struct {
-		mpathOutput string
-		volumeWwn   string
-	}{mpathOutput, volumeWwn})
-	fake.recordInvocation("DiscoverBySgInq", []interface{}{mpathOutput, volumeWwn})
-	fake.discoverBySgInqMutex.Unlock()
-	if fake.DiscoverBySgInqStub != nil {
-		return fake.DiscoverBySgInqStub(mpathOutput, volumeWwn)
-	}
-	if specificReturn {
-		return ret.result1, ret.result2
-	}
-	return fake.discoverBySgInqReturns.result1, fake.discoverBySgInqReturns.result2
-}
-
-func (fake *FakeBlockDeviceUtils) DiscoverBySgInqCallCount() int {
-	fake.discoverBySgInqMutex.RLock()
-	defer fake.discoverBySgInqMutex.RUnlock()
-	return len(fake.discoverBySgInqArgsForCall)
-}
-
-func (fake *FakeBlockDeviceUtils) DiscoverBySgInqArgsForCall(i int) (string, string) {
-	fake.discoverBySgInqMutex.RLock()
-	defer fake.discoverBySgInqMutex.RUnlock()
-	return fake.discoverBySgInqArgsForCall[i].mpathOutput, fake.discoverBySgInqArgsForCall[i].volumeWwn
-}
-
-func (fake *FakeBlockDeviceUtils) DiscoverBySgInqReturns(result1 string, result2 error) {
-	fake.DiscoverBySgInqStub = nil
-	fake.discoverBySgInqReturns = struct {
-		result1 string
-		result2 error
-	}{result1, result2}
-}
-
-func (fake *FakeBlockDeviceUtils) DiscoverBySgInqReturnsOnCall(i int, result1 string, result2 error) {
-	fake.DiscoverBySgInqStub = nil
-	if fake.discoverBySgInqReturnsOnCall == nil {
-		fake.discoverBySgInqReturnsOnCall = make(map[int]struct {
-			result1 string
-			result2 error
-		})
-	}
-	fake.discoverBySgInqReturnsOnCall[i] = struct {
-		result1 string
-		result2 error
-	}{result1, result2}
-}
-
-func (fake *FakeBlockDeviceUtils) Cleanup(mpath string) error {
-	fake.cleanupMutex.Lock()
-	ret, specificReturn := fake.cleanupReturnsOnCall[len(fake.cleanupArgsForCall)]
-	fake.cleanupArgsForCall = append(fake.cleanupArgsForCall, struct {
-		mpath string
-	}{mpath})
-	fake.recordInvocation("Cleanup", []interface{}{mpath})
-	fake.cleanupMutex.Unlock()
-	if fake.CleanupStub != nil {
-		return fake.CleanupStub(mpath)
-	}
-	if specificReturn {
-		return ret.result1
-	}
-	return fake.cleanupReturns.result1
-}
-
-func (fake *FakeBlockDeviceUtils) CleanupCallCount() int {
-	fake.cleanupMutex.RLock()
-	defer fake.cleanupMutex.RUnlock()
-	return len(fake.cleanupArgsForCall)
-}
-
-func (fake *FakeBlockDeviceUtils) CleanupArgsForCall(i int) string {
-	fake.cleanupMutex.RLock()
-	defer fake.cleanupMutex.RUnlock()
-	return fake.cleanupArgsForCall[i].mpath
-}
-
-func (fake *FakeBlockDeviceUtils) CleanupReturns(result1 error) {
-	fake.CleanupStub = nil
-	fake.cleanupReturns = struct {
-		result1 error
-	}{result1}
-}
-
-func (fake *FakeBlockDeviceUtils) CleanupReturnsOnCall(i int, result1 error) {
-	fake.CleanupStub = nil
-	if fake.cleanupReturnsOnCall == nil {
-		fake.cleanupReturnsOnCall = make(map[int]struct {
-			result1 error
-		})
-	}
-	fake.cleanupReturnsOnCall[i] = struct {
-		result1 error
-	}{result1}
-}
-
-func (fake *FakeBlockDeviceUtils) CheckFs(mpath string) (bool, error) {
+func (fake *FakeBlockDeviceUtils) CheckFs(arg1 string) (bool, error) {
 	fake.checkFsMutex.Lock()
 	ret, specificReturn := fake.checkFsReturnsOnCall[len(fake.checkFsArgsForCall)]
 	fake.checkFsArgsForCall = append(fake.checkFsArgsForCall, struct {
-		mpath string
-	}{mpath})
-	fake.recordInvocation("CheckFs", []interface{}{mpath})
+		arg1 string
+	}{arg1})
+	fake.recordInvocation("CheckFs", []interface{}{arg1})
 	fake.checkFsMutex.Unlock()
 	if fake.CheckFsStub != nil {
-		return fake.CheckFsStub(mpath)
+		return fake.CheckFsStub(arg1)
 	}
 	if specificReturn {
 		return ret.result1, ret.result2
 	}
-	return fake.checkFsReturns.result1, fake.checkFsReturns.result2
+	fakeReturns := fake.checkFsReturns
+	return fakeReturns.result1, fakeReturns.result2
 }
 
 func (fake *FakeBlockDeviceUtils) CheckFsCallCount() int {
@@ -539,13 +214,22 @@ func (fake *FakeBlockDeviceUtils) CheckFsCallCount() int {
 	return len(fake.checkFsArgsForCall)
 }
 
+func (fake *FakeBlockDeviceUtils) CheckFsCalls(stub func(string) (bool, error)) {
+	fake.checkFsMutex.Lock()
+	defer fake.checkFsMutex.Unlock()
+	fake.CheckFsStub = stub
+}
+
 func (fake *FakeBlockDeviceUtils) CheckFsArgsForCall(i int) string {
 	fake.checkFsMutex.RLock()
 	defer fake.checkFsMutex.RUnlock()
-	return fake.checkFsArgsForCall[i].mpath
+	argsForCall := fake.checkFsArgsForCall[i]
+	return argsForCall.arg1
 }
 
 func (fake *FakeBlockDeviceUtils) CheckFsReturns(result1 bool, result2 error) {
+	fake.checkFsMutex.Lock()
+	defer fake.checkFsMutex.Unlock()
 	fake.CheckFsStub = nil
 	fake.checkFsReturns = struct {
 		result1 bool
@@ -554,6 +238,8 @@ func (fake *FakeBlockDeviceUtils) CheckFsReturns(result1 bool, result2 error) {
 }
 
 func (fake *FakeBlockDeviceUtils) CheckFsReturnsOnCall(i int, result1 bool, result2 error) {
+	fake.checkFsMutex.Lock()
+	defer fake.checkFsMutex.Unlock()
 	fake.CheckFsStub = nil
 	if fake.checkFsReturnsOnCall == nil {
 		fake.checkFsReturnsOnCall = make(map[int]struct {
@@ -567,168 +253,335 @@ func (fake *FakeBlockDeviceUtils) CheckFsReturnsOnCall(i int, result1 bool, resu
 	}{result1, result2}
 }
 
-func (fake *FakeBlockDeviceUtils) MakeFs(mpath string, fsType string) error {
-	fake.makeFsMutex.Lock()
-	ret, specificReturn := fake.makeFsReturnsOnCall[len(fake.makeFsArgsForCall)]
-	fake.makeFsArgsForCall = append(fake.makeFsArgsForCall, struct {
-		mpath  string
-		fsType string
-	}{mpath, fsType})
-	fake.recordInvocation("MakeFs", []interface{}{mpath, fsType})
-	fake.makeFsMutex.Unlock()
-	if fake.MakeFsStub != nil {
-		return fake.MakeFsStub(mpath, fsType)
+func (fake *FakeBlockDeviceUtils) Cleanup(arg1 string) error {
+	fake.cleanupMutex.Lock()
+	ret, specificReturn := fake.cleanupReturnsOnCall[len(fake.cleanupArgsForCall)]
+	fake.cleanupArgsForCall = append(fake.cleanupArgsForCall, struct {
+		arg1 string
+	}{arg1})
+	fake.recordInvocation("Cleanup", []interface{}{arg1})
+	fake.cleanupMutex.Unlock()
+	if fake.CleanupStub != nil {
+		return fake.CleanupStub(arg1)
 	}
 	if specificReturn {
 		return ret.result1
 	}
-	return fake.makeFsReturns.result1
+	fakeReturns := fake.cleanupReturns
+	return fakeReturns.result1
 }
 
-func (fake *FakeBlockDeviceUtils) MakeFsCallCount() int {
-	fake.makeFsMutex.RLock()
-	defer fake.makeFsMutex.RUnlock()
-	return len(fake.makeFsArgsForCall)
+func (fake *FakeBlockDeviceUtils) CleanupCallCount() int {
+	fake.cleanupMutex.RLock()
+	defer fake.cleanupMutex.RUnlock()
+	return len(fake.cleanupArgsForCall)
 }
 
-func (fake *FakeBlockDeviceUtils) MakeFsArgsForCall(i int) (string, string) {
-	fake.makeFsMutex.RLock()
-	defer fake.makeFsMutex.RUnlock()
-	return fake.makeFsArgsForCall[i].mpath, fake.makeFsArgsForCall[i].fsType
+func (fake *FakeBlockDeviceUtils) CleanupCalls(stub func(string) error) {
+	fake.cleanupMutex.Lock()
+	defer fake.cleanupMutex.Unlock()
+	fake.CleanupStub = stub
 }
 
-func (fake *FakeBlockDeviceUtils) MakeFsReturns(result1 error) {
-	fake.MakeFsStub = nil
-	fake.makeFsReturns = struct {
+func (fake *FakeBlockDeviceUtils) CleanupArgsForCall(i int) string {
+	fake.cleanupMutex.RLock()
+	defer fake.cleanupMutex.RUnlock()
+	argsForCall := fake.cleanupArgsForCall[i]
+	return argsForCall.arg1
+}
+
+func (fake *FakeBlockDeviceUtils) CleanupReturns(result1 error) {
+	fake.cleanupMutex.Lock()
+	defer fake.cleanupMutex.Unlock()
+	fake.CleanupStub = nil
+	fake.cleanupReturns = struct {
 		result1 error
 	}{result1}
 }
 
-func (fake *FakeBlockDeviceUtils) MakeFsReturnsOnCall(i int, result1 error) {
-	fake.MakeFsStub = nil
-	if fake.makeFsReturnsOnCall == nil {
-		fake.makeFsReturnsOnCall = make(map[int]struct {
+func (fake *FakeBlockDeviceUtils) CleanupReturnsOnCall(i int, result1 error) {
+	fake.cleanupMutex.Lock()
+	defer fake.cleanupMutex.Unlock()
+	fake.CleanupStub = nil
+	if fake.cleanupReturnsOnCall == nil {
+		fake.cleanupReturnsOnCall = make(map[int]struct {
 			result1 error
 		})
 	}
-	fake.makeFsReturnsOnCall[i] = struct {
+	fake.cleanupReturnsOnCall[i] = struct {
 		result1 error
 	}{result1}
 }
 
-func (fake *FakeBlockDeviceUtils) MountFs(mpath string, mpoint string) error {
-	fake.mountFsMutex.Lock()
-	ret, specificReturn := fake.mountFsReturnsOnCall[len(fake.mountFsArgsForCall)]
-	fake.mountFsArgsForCall = append(fake.mountFsArgsForCall, struct {
-		mpath  string
-		mpoint string
-	}{mpath, mpoint})
-	fake.recordInvocation("MountFs", []interface{}{mpath, mpoint})
-	fake.mountFsMutex.Unlock()
-	if fake.MountFsStub != nil {
-		return fake.MountFsStub(mpath, mpoint)
+func (fake *FakeBlockDeviceUtils) CleanupDevices(arg1 block_device_utils.Protocol, arg2 *resources.VolumeMountProperties) error {
+	fake.cleanupDevicesMutex.Lock()
+	ret, specificReturn := fake.cleanupDevicesReturnsOnCall[len(fake.cleanupDevicesArgsForCall)]
+	fake.cleanupDevicesArgsForCall = append(fake.cleanupDevicesArgsForCall, struct {
+		arg1 block_device_utils.Protocol
+		arg2 *resources.VolumeMountProperties
+	}{arg1, arg2})
+	fake.recordInvocation("CleanupDevices", []interface{}{arg1, arg2})
+	fake.cleanupDevicesMutex.Unlock()
+	if fake.CleanupDevicesStub != nil {
+		return fake.CleanupDevicesStub(arg1, arg2)
 	}
 	if specificReturn {
 		return ret.result1
 	}
-	return fake.mountFsReturns.result1
+	fakeReturns := fake.cleanupDevicesReturns
+	return fakeReturns.result1
 }
 
-func (fake *FakeBlockDeviceUtils) MountFsCallCount() int {
-	fake.mountFsMutex.RLock()
-	defer fake.mountFsMutex.RUnlock()
-	return len(fake.mountFsArgsForCall)
+func (fake *FakeBlockDeviceUtils) CleanupDevicesCallCount() int {
+	fake.cleanupDevicesMutex.RLock()
+	defer fake.cleanupDevicesMutex.RUnlock()
+	return len(fake.cleanupDevicesArgsForCall)
 }
 
-func (fake *FakeBlockDeviceUtils) MountFsArgsForCall(i int) (string, string) {
-	fake.mountFsMutex.RLock()
-	defer fake.mountFsMutex.RUnlock()
-	return fake.mountFsArgsForCall[i].mpath, fake.mountFsArgsForCall[i].mpoint
+func (fake *FakeBlockDeviceUtils) CleanupDevicesCalls(stub func(block_device_utils.Protocol, *resources.VolumeMountProperties) error) {
+	fake.cleanupDevicesMutex.Lock()
+	defer fake.cleanupDevicesMutex.Unlock()
+	fake.CleanupDevicesStub = stub
 }
 
-func (fake *FakeBlockDeviceUtils) MountFsReturns(result1 error) {
-	fake.MountFsStub = nil
-	fake.mountFsReturns = struct {
+func (fake *FakeBlockDeviceUtils) CleanupDevicesArgsForCall(i int) (block_device_utils.Protocol, *resources.VolumeMountProperties) {
+	fake.cleanupDevicesMutex.RLock()
+	defer fake.cleanupDevicesMutex.RUnlock()
+	argsForCall := fake.cleanupDevicesArgsForCall[i]
+	return argsForCall.arg1, argsForCall.arg2
+}
+
+func (fake *FakeBlockDeviceUtils) CleanupDevicesReturns(result1 error) {
+	fake.cleanupDevicesMutex.Lock()
+	defer fake.cleanupDevicesMutex.Unlock()
+	fake.CleanupDevicesStub = nil
+	fake.cleanupDevicesReturns = struct {
 		result1 error
 	}{result1}
 }
 
-func (fake *FakeBlockDeviceUtils) MountFsReturnsOnCall(i int, result1 error) {
-	fake.MountFsStub = nil
-	if fake.mountFsReturnsOnCall == nil {
-		fake.mountFsReturnsOnCall = make(map[int]struct {
+func (fake *FakeBlockDeviceUtils) CleanupDevicesReturnsOnCall(i int, result1 error) {
+	fake.cleanupDevicesMutex.Lock()
+	defer fake.cleanupDevicesMutex.Unlock()
+	fake.CleanupDevicesStub = nil
+	if fake.cleanupDevicesReturnsOnCall == nil {
+		fake.cleanupDevicesReturnsOnCall = make(map[int]struct {
 			result1 error
 		})
 	}
-	fake.mountFsReturnsOnCall[i] = struct {
+	fake.cleanupDevicesReturnsOnCall[i] = struct {
 		result1 error
 	}{result1}
 }
 
-func (fake *FakeBlockDeviceUtils) UmountFs(mpoint string, volumeWwn string) error {
-	fake.umountFsMutex.Lock()
-	ret, specificReturn := fake.umountFsReturnsOnCall[len(fake.umountFsArgsForCall)]
-	fake.umountFsArgsForCall = append(fake.umountFsArgsForCall, struct {
-		mpoint    string
-		volumeWwn string
-	}{mpoint, volumeWwn})
-	fake.recordInvocation("UmountFs", []interface{}{mpoint, volumeWwn})
-	fake.umountFsMutex.Unlock()
-	if fake.UmountFsStub != nil {
-		return fake.UmountFsStub(mpoint, volumeWwn)
+func (fake *FakeBlockDeviceUtils) Discover(arg1 string, arg2 bool) (string, error) {
+	fake.discoverMutex.Lock()
+	ret, specificReturn := fake.discoverReturnsOnCall[len(fake.discoverArgsForCall)]
+	fake.discoverArgsForCall = append(fake.discoverArgsForCall, struct {
+		arg1 string
+		arg2 bool
+	}{arg1, arg2})
+	fake.recordInvocation("Discover", []interface{}{arg1, arg2})
+	fake.discoverMutex.Unlock()
+	if fake.DiscoverStub != nil {
+		return fake.DiscoverStub(arg1, arg2)
 	}
 	if specificReturn {
-		return ret.result1
+		return ret.result1, ret.result2
 	}
-	return fake.umountFsReturns.result1
+	fakeReturns := fake.discoverReturns
+	return fakeReturns.result1, fakeReturns.result2
 }
 
-func (fake *FakeBlockDeviceUtils) UmountFsCallCount() int {
-	fake.umountFsMutex.RLock()
-	defer fake.umountFsMutex.RUnlock()
-	return len(fake.umountFsArgsForCall)
+func (fake *FakeBlockDeviceUtils) DiscoverCallCount() int {
+	fake.discoverMutex.RLock()
+	defer fake.discoverMutex.RUnlock()
+	return len(fake.discoverArgsForCall)
 }
 
-func (fake *FakeBlockDeviceUtils) UmountFsArgsForCall(i int) (string, string) {
-	fake.umountFsMutex.RLock()
-	defer fake.umountFsMutex.RUnlock()
-	return fake.umountFsArgsForCall[i].mpoint, fake.umountFsArgsForCall[i].volumeWwn
+func (fake *FakeBlockDeviceUtils) DiscoverCalls(stub func(string, bool) (string, error)) {
+	fake.discoverMutex.Lock()
+	defer fake.discoverMutex.Unlock()
+	fake.DiscoverStub = stub
 }
 
-func (fake *FakeBlockDeviceUtils) UmountFsReturns(result1 error) {
-	fake.UmountFsStub = nil
-	fake.umountFsReturns = struct {
-		result1 error
-	}{result1}
+func (fake *FakeBlockDeviceUtils) DiscoverArgsForCall(i int) (string, bool) {
+	fake.discoverMutex.RLock()
+	defer fake.discoverMutex.RUnlock()
+	argsForCall := fake.discoverArgsForCall[i]
+	return argsForCall.arg1, argsForCall.arg2
 }
 
-func (fake *FakeBlockDeviceUtils) UmountFsReturnsOnCall(i int, result1 error) {
-	fake.UmountFsStub = nil
-	if fake.umountFsReturnsOnCall == nil {
-		fake.umountFsReturnsOnCall = make(map[int]struct {
-			result1 error
+func (fake *FakeBlockDeviceUtils) DiscoverReturns(result1 string, result2 error) {
+	fake.discoverMutex.Lock()
+	defer fake.discoverMutex.Unlock()
+	fake.DiscoverStub = nil
+	fake.discoverReturns = struct {
+		result1 string
+		result2 error
+	}{result1, result2}
+}
+
+func (fake *FakeBlockDeviceUtils) DiscoverReturnsOnCall(i int, result1 string, result2 error) {
+	fake.discoverMutex.Lock()
+	defer fake.discoverMutex.Unlock()
+	fake.DiscoverStub = nil
+	if fake.discoverReturnsOnCall == nil {
+		fake.discoverReturnsOnCall = make(map[int]struct {
+			result1 string
+			result2 error
 		})
 	}
-	fake.umountFsReturnsOnCall[i] = struct {
-		result1 error
-	}{result1}
+	fake.discoverReturnsOnCall[i] = struct {
+		result1 string
+		result2 error
+	}{result1, result2}
 }
 
-func (fake *FakeBlockDeviceUtils) IsDeviceMounted(devPath string) (bool, []string, error) {
+func (fake *FakeBlockDeviceUtils) DiscoverBySgInq(arg1 string, arg2 string) (string, error) {
+	fake.discoverBySgInqMutex.Lock()
+	ret, specificReturn := fake.discoverBySgInqReturnsOnCall[len(fake.discoverBySgInqArgsForCall)]
+	fake.discoverBySgInqArgsForCall = append(fake.discoverBySgInqArgsForCall, struct {
+		arg1 string
+		arg2 string
+	}{arg1, arg2})
+	fake.recordInvocation("DiscoverBySgInq", []interface{}{arg1, arg2})
+	fake.discoverBySgInqMutex.Unlock()
+	if fake.DiscoverBySgInqStub != nil {
+		return fake.DiscoverBySgInqStub(arg1, arg2)
+	}
+	if specificReturn {
+		return ret.result1, ret.result2
+	}
+	fakeReturns := fake.discoverBySgInqReturns
+	return fakeReturns.result1, fakeReturns.result2
+}
+
+func (fake *FakeBlockDeviceUtils) DiscoverBySgInqCallCount() int {
+	fake.discoverBySgInqMutex.RLock()
+	defer fake.discoverBySgInqMutex.RUnlock()
+	return len(fake.discoverBySgInqArgsForCall)
+}
+
+func (fake *FakeBlockDeviceUtils) DiscoverBySgInqCalls(stub func(string, string) (string, error)) {
+	fake.discoverBySgInqMutex.Lock()
+	defer fake.discoverBySgInqMutex.Unlock()
+	fake.DiscoverBySgInqStub = stub
+}
+
+func (fake *FakeBlockDeviceUtils) DiscoverBySgInqArgsForCall(i int) (string, string) {
+	fake.discoverBySgInqMutex.RLock()
+	defer fake.discoverBySgInqMutex.RUnlock()
+	argsForCall := fake.discoverBySgInqArgsForCall[i]
+	return argsForCall.arg1, argsForCall.arg2
+}
+
+func (fake *FakeBlockDeviceUtils) DiscoverBySgInqReturns(result1 string, result2 error) {
+	fake.discoverBySgInqMutex.Lock()
+	defer fake.discoverBySgInqMutex.Unlock()
+	fake.DiscoverBySgInqStub = nil
+	fake.discoverBySgInqReturns = struct {
+		result1 string
+		result2 error
+	}{result1, result2}
+}
+
+func (fake *FakeBlockDeviceUtils) DiscoverBySgInqReturnsOnCall(i int, result1 string, result2 error) {
+	fake.discoverBySgInqMutex.Lock()
+	defer fake.discoverBySgInqMutex.Unlock()
+	fake.DiscoverBySgInqStub = nil
+	if fake.discoverBySgInqReturnsOnCall == nil {
+		fake.discoverBySgInqReturnsOnCall = make(map[int]struct {
+			result1 string
+			result2 error
+		})
+	}
+	fake.discoverBySgInqReturnsOnCall[i] = struct {
+		result1 string
+		result2 error
+	}{result1, result2}
+}
+
+func (fake *FakeBlockDeviceUtils) GetWwnByScsiInq(arg1 string, arg2 string) (string, error) {
+	fake.getWwnByScsiInqMutex.Lock()
+	ret, specificReturn := fake.getWwnByScsiInqReturnsOnCall[len(fake.getWwnByScsiInqArgsForCall)]
+	fake.getWwnByScsiInqArgsForCall = append(fake.getWwnByScsiInqArgsForCall, struct {
+		arg1 string
+		arg2 string
+	}{arg1, arg2})
+	fake.recordInvocation("GetWwnByScsiInq", []interface{}{arg1, arg2})
+	fake.getWwnByScsiInqMutex.Unlock()
+	if fake.GetWwnByScsiInqStub != nil {
+		return fake.GetWwnByScsiInqStub(arg1, arg2)
+	}
+	if specificReturn {
+		return ret.result1, ret.result2
+	}
+	fakeReturns := fake.getWwnByScsiInqReturns
+	return fakeReturns.result1, fakeReturns.result2
+}
+
+func (fake *FakeBlockDeviceUtils) GetWwnByScsiInqCallCount() int {
+	fake.getWwnByScsiInqMutex.RLock()
+	defer fake.getWwnByScsiInqMutex.RUnlock()
+	return len(fake.getWwnByScsiInqArgsForCall)
+}
+
+func (fake *FakeBlockDeviceUtils) GetWwnByScsiInqCalls(stub func(string, string) (string, error)) {
+	fake.getWwnByScsiInqMutex.Lock()
+	defer fake.getWwnByScsiInqMutex.Unlock()
+	fake.GetWwnByScsiInqStub = stub
+}
+
+func (fake *FakeBlockDeviceUtils) GetWwnByScsiInqArgsForCall(i int) (string, string) {
+	fake.getWwnByScsiInqMutex.RLock()
+	defer fake.getWwnByScsiInqMutex.RUnlock()
+	argsForCall := fake.getWwnByScsiInqArgsForCall[i]
+	return argsForCall.arg1, argsForCall.arg2
+}
+
+func (fake *FakeBlockDeviceUtils) GetWwnByScsiInqReturns(result1 string, result2 error) {
+	fake.getWwnByScsiInqMutex.Lock()
+	defer fake.getWwnByScsiInqMutex.Unlock()
+	fake.GetWwnByScsiInqStub = nil
+	fake.getWwnByScsiInqReturns = struct {
+		result1 string
+		result2 error
+	}{result1, result2}
+}
+
+func (fake *FakeBlockDeviceUtils) GetWwnByScsiInqReturnsOnCall(i int, result1 string, result2 error) {
+	fake.getWwnByScsiInqMutex.Lock()
+	defer fake.getWwnByScsiInqMutex.Unlock()
+	fake.GetWwnByScsiInqStub = nil
+	if fake.getWwnByScsiInqReturnsOnCall == nil {
+		fake.getWwnByScsiInqReturnsOnCall = make(map[int]struct {
+			result1 string
+			result2 error
+		})
+	}
+	fake.getWwnByScsiInqReturnsOnCall[i] = struct {
+		result1 string
+		result2 error
+	}{result1, result2}
+}
+
+func (fake *FakeBlockDeviceUtils) IsDeviceMounted(arg1 string) (bool, []string, error) {
 	fake.isDeviceMountedMutex.Lock()
 	ret, specificReturn := fake.isDeviceMountedReturnsOnCall[len(fake.isDeviceMountedArgsForCall)]
 	fake.isDeviceMountedArgsForCall = append(fake.isDeviceMountedArgsForCall, struct {
-		devPath string
-	}{devPath})
-	fake.recordInvocation("IsDeviceMounted", []interface{}{devPath})
+		arg1 string
+	}{arg1})
+	fake.recordInvocation("IsDeviceMounted", []interface{}{arg1})
 	fake.isDeviceMountedMutex.Unlock()
 	if fake.IsDeviceMountedStub != nil {
-		return fake.IsDeviceMountedStub(devPath)
+		return fake.IsDeviceMountedStub(arg1)
 	}
 	if specificReturn {
 		return ret.result1, ret.result2, ret.result3
 	}
-	return fake.isDeviceMountedReturns.result1, fake.isDeviceMountedReturns.result2, fake.isDeviceMountedReturns.result3
+	fakeReturns := fake.isDeviceMountedReturns
+	return fakeReturns.result1, fakeReturns.result2, fakeReturns.result3
 }
 
 func (fake *FakeBlockDeviceUtils) IsDeviceMountedCallCount() int {
@@ -737,13 +590,22 @@ func (fake *FakeBlockDeviceUtils) IsDeviceMountedCallCount() int {
 	return len(fake.isDeviceMountedArgsForCall)
 }
 
+func (fake *FakeBlockDeviceUtils) IsDeviceMountedCalls(stub func(string) (bool, []string, error)) {
+	fake.isDeviceMountedMutex.Lock()
+	defer fake.isDeviceMountedMutex.Unlock()
+	fake.IsDeviceMountedStub = stub
+}
+
 func (fake *FakeBlockDeviceUtils) IsDeviceMountedArgsForCall(i int) string {
 	fake.isDeviceMountedMutex.RLock()
 	defer fake.isDeviceMountedMutex.RUnlock()
-	return fake.isDeviceMountedArgsForCall[i].devPath
+	argsForCall := fake.isDeviceMountedArgsForCall[i]
+	return argsForCall.arg1
 }
 
 func (fake *FakeBlockDeviceUtils) IsDeviceMountedReturns(result1 bool, result2 []string, result3 error) {
+	fake.isDeviceMountedMutex.Lock()
+	defer fake.isDeviceMountedMutex.Unlock()
 	fake.IsDeviceMountedStub = nil
 	fake.isDeviceMountedReturns = struct {
 		result1 bool
@@ -753,6 +615,8 @@ func (fake *FakeBlockDeviceUtils) IsDeviceMountedReturns(result1 bool, result2 [
 }
 
 func (fake *FakeBlockDeviceUtils) IsDeviceMountedReturnsOnCall(i int, result1 bool, result2 []string, result3 error) {
+	fake.isDeviceMountedMutex.Lock()
+	defer fake.isDeviceMountedMutex.Unlock()
 	fake.IsDeviceMountedStub = nil
 	if fake.isDeviceMountedReturnsOnCall == nil {
 		fake.isDeviceMountedReturnsOnCall = make(map[int]struct {
@@ -768,21 +632,22 @@ func (fake *FakeBlockDeviceUtils) IsDeviceMountedReturnsOnCall(i int, result1 bo
 	}{result1, result2, result3}
 }
 
-func (fake *FakeBlockDeviceUtils) IsDirAMountPoint(dirPath string) (bool, []string, error) {
+func (fake *FakeBlockDeviceUtils) IsDirAMountPoint(arg1 string) (bool, []string, error) {
 	fake.isDirAMountPointMutex.Lock()
 	ret, specificReturn := fake.isDirAMountPointReturnsOnCall[len(fake.isDirAMountPointArgsForCall)]
 	fake.isDirAMountPointArgsForCall = append(fake.isDirAMountPointArgsForCall, struct {
-		dirPath string
-	}{dirPath})
-	fake.recordInvocation("IsDirAMountPoint", []interface{}{dirPath})
+		arg1 string
+	}{arg1})
+	fake.recordInvocation("IsDirAMountPoint", []interface{}{arg1})
 	fake.isDirAMountPointMutex.Unlock()
 	if fake.IsDirAMountPointStub != nil {
-		return fake.IsDirAMountPointStub(dirPath)
+		return fake.IsDirAMountPointStub(arg1)
 	}
 	if specificReturn {
 		return ret.result1, ret.result2, ret.result3
 	}
-	return fake.isDirAMountPointReturns.result1, fake.isDirAMountPointReturns.result2, fake.isDirAMountPointReturns.result3
+	fakeReturns := fake.isDirAMountPointReturns
+	return fakeReturns.result1, fakeReturns.result2, fakeReturns.result3
 }
 
 func (fake *FakeBlockDeviceUtils) IsDirAMountPointCallCount() int {
@@ -791,13 +656,22 @@ func (fake *FakeBlockDeviceUtils) IsDirAMountPointCallCount() int {
 	return len(fake.isDirAMountPointArgsForCall)
 }
 
+func (fake *FakeBlockDeviceUtils) IsDirAMountPointCalls(stub func(string) (bool, []string, error)) {
+	fake.isDirAMountPointMutex.Lock()
+	defer fake.isDirAMountPointMutex.Unlock()
+	fake.IsDirAMountPointStub = stub
+}
+
 func (fake *FakeBlockDeviceUtils) IsDirAMountPointArgsForCall(i int) string {
 	fake.isDirAMountPointMutex.RLock()
 	defer fake.isDirAMountPointMutex.RUnlock()
-	return fake.isDirAMountPointArgsForCall[i].dirPath
+	argsForCall := fake.isDirAMountPointArgsForCall[i]
+	return argsForCall.arg1
 }
 
 func (fake *FakeBlockDeviceUtils) IsDirAMountPointReturns(result1 bool, result2 []string, result3 error) {
+	fake.isDirAMountPointMutex.Lock()
+	defer fake.isDirAMountPointMutex.Unlock()
 	fake.IsDirAMountPointStub = nil
 	fake.isDirAMountPointReturns = struct {
 		result1 bool
@@ -807,6 +681,8 @@ func (fake *FakeBlockDeviceUtils) IsDirAMountPointReturns(result1 bool, result2 
 }
 
 func (fake *FakeBlockDeviceUtils) IsDirAMountPointReturnsOnCall(i int, result1 bool, result2 []string, result3 error) {
+	fake.isDirAMountPointMutex.Lock()
+	defer fake.isDirAMountPointMutex.Unlock()
 	fake.IsDirAMountPointStub = nil
 	if fake.isDirAMountPointReturnsOnCall == nil {
 		fake.isDirAMountPointReturnsOnCall = make(map[int]struct {
@@ -822,21 +698,257 @@ func (fake *FakeBlockDeviceUtils) IsDirAMountPointReturnsOnCall(i int, result1 b
 	}{result1, result2, result3}
 }
 
-func (fake *FakeBlockDeviceUtils) SetDmsetup(mpath string) error {
-	fake.setDmsetupMutex.Lock()
-	ret, specificReturn := fake.setDmsetupReturnsOnCall[len(fake.setDmsetupArgsForCall)]
-	fake.setDmsetupArgsForCall = append(fake.setDmsetupArgsForCall, struct {
-		mpath string
-	}{mpath})
-	fake.recordInvocation("SetDmsetup", []interface{}{mpath})
-	fake.setDmsetupMutex.Unlock()
-	if fake.SetDmsetupStub != nil {
-		return fake.SetDmsetupStub(mpath)
+func (fake *FakeBlockDeviceUtils) MakeFs(arg1 string, arg2 string) error {
+	fake.makeFsMutex.Lock()
+	ret, specificReturn := fake.makeFsReturnsOnCall[len(fake.makeFsArgsForCall)]
+	fake.makeFsArgsForCall = append(fake.makeFsArgsForCall, struct {
+		arg1 string
+		arg2 string
+	}{arg1, arg2})
+	fake.recordInvocation("MakeFs", []interface{}{arg1, arg2})
+	fake.makeFsMutex.Unlock()
+	if fake.MakeFsStub != nil {
+		return fake.MakeFsStub(arg1, arg2)
 	}
 	if specificReturn {
 		return ret.result1
 	}
-	return fake.setDmsetupReturns.result1
+	fakeReturns := fake.makeFsReturns
+	return fakeReturns.result1
+}
+
+func (fake *FakeBlockDeviceUtils) MakeFsCallCount() int {
+	fake.makeFsMutex.RLock()
+	defer fake.makeFsMutex.RUnlock()
+	return len(fake.makeFsArgsForCall)
+}
+
+func (fake *FakeBlockDeviceUtils) MakeFsCalls(stub func(string, string) error) {
+	fake.makeFsMutex.Lock()
+	defer fake.makeFsMutex.Unlock()
+	fake.MakeFsStub = stub
+}
+
+func (fake *FakeBlockDeviceUtils) MakeFsArgsForCall(i int) (string, string) {
+	fake.makeFsMutex.RLock()
+	defer fake.makeFsMutex.RUnlock()
+	argsForCall := fake.makeFsArgsForCall[i]
+	return argsForCall.arg1, argsForCall.arg2
+}
+
+func (fake *FakeBlockDeviceUtils) MakeFsReturns(result1 error) {
+	fake.makeFsMutex.Lock()
+	defer fake.makeFsMutex.Unlock()
+	fake.MakeFsStub = nil
+	fake.makeFsReturns = struct {
+		result1 error
+	}{result1}
+}
+
+func (fake *FakeBlockDeviceUtils) MakeFsReturnsOnCall(i int, result1 error) {
+	fake.makeFsMutex.Lock()
+	defer fake.makeFsMutex.Unlock()
+	fake.MakeFsStub = nil
+	if fake.makeFsReturnsOnCall == nil {
+		fake.makeFsReturnsOnCall = make(map[int]struct {
+			result1 error
+		})
+	}
+	fake.makeFsReturnsOnCall[i] = struct {
+		result1 error
+	}{result1}
+}
+
+func (fake *FakeBlockDeviceUtils) MountFs(arg1 string, arg2 string) error {
+	fake.mountFsMutex.Lock()
+	ret, specificReturn := fake.mountFsReturnsOnCall[len(fake.mountFsArgsForCall)]
+	fake.mountFsArgsForCall = append(fake.mountFsArgsForCall, struct {
+		arg1 string
+		arg2 string
+	}{arg1, arg2})
+	fake.recordInvocation("MountFs", []interface{}{arg1, arg2})
+	fake.mountFsMutex.Unlock()
+	if fake.MountFsStub != nil {
+		return fake.MountFsStub(arg1, arg2)
+	}
+	if specificReturn {
+		return ret.result1
+	}
+	fakeReturns := fake.mountFsReturns
+	return fakeReturns.result1
+}
+
+func (fake *FakeBlockDeviceUtils) MountFsCallCount() int {
+	fake.mountFsMutex.RLock()
+	defer fake.mountFsMutex.RUnlock()
+	return len(fake.mountFsArgsForCall)
+}
+
+func (fake *FakeBlockDeviceUtils) MountFsCalls(stub func(string, string) error) {
+	fake.mountFsMutex.Lock()
+	defer fake.mountFsMutex.Unlock()
+	fake.MountFsStub = stub
+}
+
+func (fake *FakeBlockDeviceUtils) MountFsArgsForCall(i int) (string, string) {
+	fake.mountFsMutex.RLock()
+	defer fake.mountFsMutex.RUnlock()
+	argsForCall := fake.mountFsArgsForCall[i]
+	return argsForCall.arg1, argsForCall.arg2
+}
+
+func (fake *FakeBlockDeviceUtils) MountFsReturns(result1 error) {
+	fake.mountFsMutex.Lock()
+	defer fake.mountFsMutex.Unlock()
+	fake.MountFsStub = nil
+	fake.mountFsReturns = struct {
+		result1 error
+	}{result1}
+}
+
+func (fake *FakeBlockDeviceUtils) MountFsReturnsOnCall(i int, result1 error) {
+	fake.mountFsMutex.Lock()
+	defer fake.mountFsMutex.Unlock()
+	fake.MountFsStub = nil
+	if fake.mountFsReturnsOnCall == nil {
+		fake.mountFsReturnsOnCall = make(map[int]struct {
+			result1 error
+		})
+	}
+	fake.mountFsReturnsOnCall[i] = struct {
+		result1 error
+	}{result1}
+}
+
+func (fake *FakeBlockDeviceUtils) ReloadMultipath() error {
+	fake.reloadMultipathMutex.Lock()
+	ret, specificReturn := fake.reloadMultipathReturnsOnCall[len(fake.reloadMultipathArgsForCall)]
+	fake.reloadMultipathArgsForCall = append(fake.reloadMultipathArgsForCall, struct {
+	}{})
+	fake.recordInvocation("ReloadMultipath", []interface{}{})
+	fake.reloadMultipathMutex.Unlock()
+	if fake.ReloadMultipathStub != nil {
+		return fake.ReloadMultipathStub()
+	}
+	if specificReturn {
+		return ret.result1
+	}
+	fakeReturns := fake.reloadMultipathReturns
+	return fakeReturns.result1
+}
+
+func (fake *FakeBlockDeviceUtils) ReloadMultipathCallCount() int {
+	fake.reloadMultipathMutex.RLock()
+	defer fake.reloadMultipathMutex.RUnlock()
+	return len(fake.reloadMultipathArgsForCall)
+}
+
+func (fake *FakeBlockDeviceUtils) ReloadMultipathCalls(stub func() error) {
+	fake.reloadMultipathMutex.Lock()
+	defer fake.reloadMultipathMutex.Unlock()
+	fake.ReloadMultipathStub = stub
+}
+
+func (fake *FakeBlockDeviceUtils) ReloadMultipathReturns(result1 error) {
+	fake.reloadMultipathMutex.Lock()
+	defer fake.reloadMultipathMutex.Unlock()
+	fake.ReloadMultipathStub = nil
+	fake.reloadMultipathReturns = struct {
+		result1 error
+	}{result1}
+}
+
+func (fake *FakeBlockDeviceUtils) ReloadMultipathReturnsOnCall(i int, result1 error) {
+	fake.reloadMultipathMutex.Lock()
+	defer fake.reloadMultipathMutex.Unlock()
+	fake.ReloadMultipathStub = nil
+	if fake.reloadMultipathReturnsOnCall == nil {
+		fake.reloadMultipathReturnsOnCall = make(map[int]struct {
+			result1 error
+		})
+	}
+	fake.reloadMultipathReturnsOnCall[i] = struct {
+		result1 error
+	}{result1}
+}
+
+func (fake *FakeBlockDeviceUtils) Rescan(arg1 block_device_utils.Protocol, arg2 *resources.VolumeMountProperties) error {
+	fake.rescanMutex.Lock()
+	ret, specificReturn := fake.rescanReturnsOnCall[len(fake.rescanArgsForCall)]
+	fake.rescanArgsForCall = append(fake.rescanArgsForCall, struct {
+		arg1 block_device_utils.Protocol
+		arg2 *resources.VolumeMountProperties
+	}{arg1, arg2})
+	fake.recordInvocation("Rescan", []interface{}{arg1, arg2})
+	fake.rescanMutex.Unlock()
+	if fake.RescanStub != nil {
+		return fake.RescanStub(arg1, arg2)
+	}
+	if specificReturn {
+		return ret.result1
+	}
+	fakeReturns := fake.rescanReturns
+	return fakeReturns.result1
+}
+
+func (fake *FakeBlockDeviceUtils) RescanCallCount() int {
+	fake.rescanMutex.RLock()
+	defer fake.rescanMutex.RUnlock()
+	return len(fake.rescanArgsForCall)
+}
+
+func (fake *FakeBlockDeviceUtils) RescanCalls(stub func(block_device_utils.Protocol, *resources.VolumeMountProperties) error) {
+	fake.rescanMutex.Lock()
+	defer fake.rescanMutex.Unlock()
+	fake.RescanStub = stub
+}
+
+func (fake *FakeBlockDeviceUtils) RescanArgsForCall(i int) (block_device_utils.Protocol, *resources.VolumeMountProperties) {
+	fake.rescanMutex.RLock()
+	defer fake.rescanMutex.RUnlock()
+	argsForCall := fake.rescanArgsForCall[i]
+	return argsForCall.arg1, argsForCall.arg2
+}
+
+func (fake *FakeBlockDeviceUtils) RescanReturns(result1 error) {
+	fake.rescanMutex.Lock()
+	defer fake.rescanMutex.Unlock()
+	fake.RescanStub = nil
+	fake.rescanReturns = struct {
+		result1 error
+	}{result1}
+}
+
+func (fake *FakeBlockDeviceUtils) RescanReturnsOnCall(i int, result1 error) {
+	fake.rescanMutex.Lock()
+	defer fake.rescanMutex.Unlock()
+	fake.RescanStub = nil
+	if fake.rescanReturnsOnCall == nil {
+		fake.rescanReturnsOnCall = make(map[int]struct {
+			result1 error
+		})
+	}
+	fake.rescanReturnsOnCall[i] = struct {
+		result1 error
+	}{result1}
+}
+
+func (fake *FakeBlockDeviceUtils) SetDmsetup(arg1 string) error {
+	fake.setDmsetupMutex.Lock()
+	ret, specificReturn := fake.setDmsetupReturnsOnCall[len(fake.setDmsetupArgsForCall)]
+	fake.setDmsetupArgsForCall = append(fake.setDmsetupArgsForCall, struct {
+		arg1 string
+	}{arg1})
+	fake.recordInvocation("SetDmsetup", []interface{}{arg1})
+	fake.setDmsetupMutex.Unlock()
+	if fake.SetDmsetupStub != nil {
+		return fake.SetDmsetupStub(arg1)
+	}
+	if specificReturn {
+		return ret.result1
+	}
+	fakeReturns := fake.setDmsetupReturns
+	return fakeReturns.result1
 }
 
 func (fake *FakeBlockDeviceUtils) SetDmsetupCallCount() int {
@@ -845,13 +957,22 @@ func (fake *FakeBlockDeviceUtils) SetDmsetupCallCount() int {
 	return len(fake.setDmsetupArgsForCall)
 }
 
+func (fake *FakeBlockDeviceUtils) SetDmsetupCalls(stub func(string) error) {
+	fake.setDmsetupMutex.Lock()
+	defer fake.setDmsetupMutex.Unlock()
+	fake.SetDmsetupStub = stub
+}
+
 func (fake *FakeBlockDeviceUtils) SetDmsetupArgsForCall(i int) string {
 	fake.setDmsetupMutex.RLock()
 	defer fake.setDmsetupMutex.RUnlock()
-	return fake.setDmsetupArgsForCall[i].mpath
+	argsForCall := fake.setDmsetupArgsForCall[i]
+	return argsForCall.arg1
 }
 
 func (fake *FakeBlockDeviceUtils) SetDmsetupReturns(result1 error) {
+	fake.setDmsetupMutex.Lock()
+	defer fake.setDmsetupMutex.Unlock()
 	fake.SetDmsetupStub = nil
 	fake.setDmsetupReturns = struct {
 		result1 error
@@ -859,6 +980,8 @@ func (fake *FakeBlockDeviceUtils) SetDmsetupReturns(result1 error) {
 }
 
 func (fake *FakeBlockDeviceUtils) SetDmsetupReturnsOnCall(i int, result1 error) {
+	fake.setDmsetupMutex.Lock()
+	defer fake.setDmsetupMutex.Unlock()
 	fake.SetDmsetupStub = nil
 	if fake.setDmsetupReturnsOnCall == nil {
 		fake.setDmsetupReturnsOnCall = make(map[int]struct {
@@ -870,37 +993,98 @@ func (fake *FakeBlockDeviceUtils) SetDmsetupReturnsOnCall(i int, result1 error) 
 	}{result1}
 }
 
+func (fake *FakeBlockDeviceUtils) UmountFs(arg1 string, arg2 string) error {
+	fake.umountFsMutex.Lock()
+	ret, specificReturn := fake.umountFsReturnsOnCall[len(fake.umountFsArgsForCall)]
+	fake.umountFsArgsForCall = append(fake.umountFsArgsForCall, struct {
+		arg1 string
+		arg2 string
+	}{arg1, arg2})
+	fake.recordInvocation("UmountFs", []interface{}{arg1, arg2})
+	fake.umountFsMutex.Unlock()
+	if fake.UmountFsStub != nil {
+		return fake.UmountFsStub(arg1, arg2)
+	}
+	if specificReturn {
+		return ret.result1
+	}
+	fakeReturns := fake.umountFsReturns
+	return fakeReturns.result1
+}
+
+func (fake *FakeBlockDeviceUtils) UmountFsCallCount() int {
+	fake.umountFsMutex.RLock()
+	defer fake.umountFsMutex.RUnlock()
+	return len(fake.umountFsArgsForCall)
+}
+
+func (fake *FakeBlockDeviceUtils) UmountFsCalls(stub func(string, string) error) {
+	fake.umountFsMutex.Lock()
+	defer fake.umountFsMutex.Unlock()
+	fake.UmountFsStub = stub
+}
+
+func (fake *FakeBlockDeviceUtils) UmountFsArgsForCall(i int) (string, string) {
+	fake.umountFsMutex.RLock()
+	defer fake.umountFsMutex.RUnlock()
+	argsForCall := fake.umountFsArgsForCall[i]
+	return argsForCall.arg1, argsForCall.arg2
+}
+
+func (fake *FakeBlockDeviceUtils) UmountFsReturns(result1 error) {
+	fake.umountFsMutex.Lock()
+	defer fake.umountFsMutex.Unlock()
+	fake.UmountFsStub = nil
+	fake.umountFsReturns = struct {
+		result1 error
+	}{result1}
+}
+
+func (fake *FakeBlockDeviceUtils) UmountFsReturnsOnCall(i int, result1 error) {
+	fake.umountFsMutex.Lock()
+	defer fake.umountFsMutex.Unlock()
+	fake.UmountFsStub = nil
+	if fake.umountFsReturnsOnCall == nil {
+		fake.umountFsReturnsOnCall = make(map[int]struct {
+			result1 error
+		})
+	}
+	fake.umountFsReturnsOnCall[i] = struct {
+		result1 error
+	}{result1}
+}
+
 func (fake *FakeBlockDeviceUtils) Invocations() map[string][][]interface{} {
 	fake.invocationsMutex.RLock()
 	defer fake.invocationsMutex.RUnlock()
-	fake.rescanMutex.RLock()
-	defer fake.rescanMutex.RUnlock()
-	fake.rescanSCSILun0Mutex.RLock()
-	defer fake.rescanSCSILun0Mutex.RUnlock()
-	fake.reloadMultipathMutex.RLock()
-	defer fake.reloadMultipathMutex.RUnlock()
-	fake.discoverMutex.RLock()
-	defer fake.discoverMutex.RUnlock()
-	fake.getWwnByScsiInqMutex.RLock()
-	defer fake.getWwnByScsiInqMutex.RUnlock()
-	fake.discoverBySgInqMutex.RLock()
-	defer fake.discoverBySgInqMutex.RUnlock()
-	fake.cleanupMutex.RLock()
-	defer fake.cleanupMutex.RUnlock()
 	fake.checkFsMutex.RLock()
 	defer fake.checkFsMutex.RUnlock()
-	fake.makeFsMutex.RLock()
-	defer fake.makeFsMutex.RUnlock()
-	fake.mountFsMutex.RLock()
-	defer fake.mountFsMutex.RUnlock()
-	fake.umountFsMutex.RLock()
-	defer fake.umountFsMutex.RUnlock()
+	fake.cleanupMutex.RLock()
+	defer fake.cleanupMutex.RUnlock()
+	fake.cleanupDevicesMutex.RLock()
+	defer fake.cleanupDevicesMutex.RUnlock()
+	fake.discoverMutex.RLock()
+	defer fake.discoverMutex.RUnlock()
+	fake.discoverBySgInqMutex.RLock()
+	defer fake.discoverBySgInqMutex.RUnlock()
+	fake.getWwnByScsiInqMutex.RLock()
+	defer fake.getWwnByScsiInqMutex.RUnlock()
 	fake.isDeviceMountedMutex.RLock()
 	defer fake.isDeviceMountedMutex.RUnlock()
 	fake.isDirAMountPointMutex.RLock()
 	defer fake.isDirAMountPointMutex.RUnlock()
+	fake.makeFsMutex.RLock()
+	defer fake.makeFsMutex.RUnlock()
+	fake.mountFsMutex.RLock()
+	defer fake.mountFsMutex.RUnlock()
+	fake.reloadMultipathMutex.RLock()
+	defer fake.reloadMultipathMutex.RUnlock()
+	fake.rescanMutex.RLock()
+	defer fake.rescanMutex.RUnlock()
 	fake.setDmsetupMutex.RLock()
 	defer fake.setDmsetupMutex.RUnlock()
+	fake.umountFsMutex.RLock()
+	defer fake.umountFsMutex.RUnlock()
 	copiedInvocations := map[string][][]interface{}{}
 	for key, value := range fake.invocations {
 		copiedInvocations[key] = value
