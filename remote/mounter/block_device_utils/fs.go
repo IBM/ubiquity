@@ -32,7 +32,6 @@ const (
 	TimeoutMilisecondMountCmdIsDeviceMounted = 20 * 1000     // max to wait for mount command
 	TimeoutMilisecondMountCmdMountFs         = 120 * 1000    // max to wait for mounting device
 	TimeoutMilisecondUmountCmdUmountFs       = 30 * 1000	// max wait timeout for umount command
-	TimeoutMilisecondChmodCmd                = 3 * 1000
 )
 
 func (b *blockDeviceUtils) CheckFs(mpath string) (bool, error) {
@@ -74,8 +73,6 @@ func (b *blockDeviceUtils) MakeFs(mpath string, fsType string) error {
 func (b *blockDeviceUtils) MountFs(mpath string, mpoint string) error {
 	defer b.logger.Trace(logs.DEBUG)()
 	mountCmd := "mount"
-	chmodCmd := "chmod"
-
 	if err := b.exec.IsExecutable(mountCmd); err != nil {
 		return b.logger.ErrorRet(&commandNotFoundError{mountCmd, err}, "failed")
 	}
@@ -83,13 +80,6 @@ func (b *blockDeviceUtils) MountFs(mpath string, mpoint string) error {
 	if _, err := b.exec.ExecuteWithTimeout(TimeoutMilisecondMountCmdMountFs, mountCmd, args); err != nil {
 		return b.logger.ErrorRet(&CommandExecuteError{mountCmd, err}, "failed")
 	}
-
-	// Set explicitly the PV mountpoint permission to 775
-	args = []string{"775", mpoint}
-	if _, err := b.exec.ExecuteWithTimeout(TimeoutMilisecondChmodCmd, chmodCmd, args); err != nil {
-		return b.logger.ErrorRet(&CommandExecuteError{chmodCmd, err}, "failed")
-	}
-
 	b.logger.Info("mounted", logs.Args{{"mpoint", mpoint}})
 	return nil
 }
