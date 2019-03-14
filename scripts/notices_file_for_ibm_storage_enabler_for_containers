@@ -5,10 +5,13 @@ This file details additional Software License Agreements
 and third party notices and information that are required 
 to be reproduced for the following programs:
    
-IBM Storage Enabler for Containers Version 2.0
-IBM Storage Kubernetes FlexVolume Version 2.0
-IBM Storage Kubernetes Dynamic Provisioner Version 2.0
-IBM Storage Enabler for Containers DB Version 2.0
+IBM Storage Enabler for Containers Version 2.1.0
+IBM Storage Enabler for Containers DB Version 2.1.0
+IBM Storage Enabler for Containers Helm Utils Version 2.1.0
+IBM Storage Kubernetes Dynamic Provisioner Version 2.1.0
+IBM Storage Kubernetes FlexVolume Version 2.1.0
+IBM Storage Kubernetes FlexVolume Sidecar Version 2.1.0
+
 
 ===========================================================================
 Section 1 - TERMS AND CONDITIONS FOR SEPARATELY LICENSED CODE
@@ -634,6 +637,7 @@ based on the Application, and not on the Linked Version.
   The "Corresponding Application Code" for a Combined Work means the
 object code and/or source code for the Application, including any data
 and utility programs needed for reproducing the Combined Work from the
+
 Application, but excluding the System Libraries of the Combined Work.
 
   1. Exception to Section 3 of the GNU GPL.
@@ -1894,6 +1898,7 @@ SUCH DAMAGE.
 
 ---------------------------------------------------------------------------
 
+
 Copyright (c) 1998-2004 Dag-Erling Cïdan Smørgrav
 All rights reserved.
 
@@ -2613,7 +2618,7 @@ Offer to obtain source code for GNU GPL and GNU LGPL licensed software
 distributed with the IBM Storage Enabler for Containers, IBM Storage 
 Kubernetes FlexVolume, IBM Storage Kubernetes Dynamic Provisioner, IBM 
 Storage Enabler for Containers DB, and IBM Storage Enabler for Containers 
-Helm Utils Version 2.0:
+Helm Utils Version 2.1.0:
 
 alpine-baselayout version 3.1.0
 apk-tools version 2.10.1
@@ -2644,8 +2649,8 @@ END OF Offer for GNU GPL and LGPL Source Code
 
 ===========================================================================
 END OF TERMS AND CONDITIONS FOR SEPARATELY LICENSED CODE for IBM Storage 
-Enabler for Containers 2.0, IBM Storage Kubernetes FlexVolume 2.0, 
-and IBM Storage Kubernetes Dynamic Provisioner 2.0 
+Enabler for Containers 2.1.0, IBM Storage Kubernetes FlexVolume 2.1.0, 
+and IBM Storage Kubernetes Dynamic Provisioner 2.1.0 
 ===========================================================================
 
 
@@ -2685,6 +2690,7 @@ Portions of Curl version 7.61.1
 glog commit level 23def4e
 gnostic commit level 0c51083
 gofuzz commit level 44d8105
+golang/mock commit level e698a2e
 groupcache commit level 02826c3
 jsonpointer commit level 46af16f
 jsonreference commit level 13c6e35
@@ -3253,6 +3259,7 @@ distribution.
    * Neither the name of Google Inc. nor the names of its
 contributors may be used to endorse or promote products derived from
 this software without specific prior written permission.
+
 
 THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
 "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
@@ -10722,7 +10729,8 @@ END Mozilla Public License, Version 2.0
 
 =====================================================================
 END OF NOTICES AND INFORMATION FOR IBM Storage Enabler for
-Containers, Kubermetes FlexVolume, Kubermetes Dynamic
-Provisioner, and Enabler for Containers DB Version 2.0 
+Containers, Containers DB, Containers Helm Utils, and
+Kubermetes Dynamic Provisioner, FlexVolume, FlexVolumne
+Sidecar, Version 2.1.0 
 =====================================================================
 
