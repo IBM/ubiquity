@@ -53,9 +53,13 @@ func NewScbeMounterWithExecuter(blockDeviceMounterUtils block_device_mounter_uti
 func (s *scbeMounter) prepareVolumeMountProperties(vcGetter resources.VolumeConfigGetter) *resources.VolumeMountProperties {
 	volumeConfig := vcGetter.GetVolumeConfig()
 	volumeWWN := volumeConfig["Wwn"].(string)
-	volumeLunNumber := float64(-1)
+	volumeLunNumber := -1
 	if volumeLunNumberInterface, exists := volumeConfig[resources.ScbeKeyVolAttachLunNumToHost]; exists {
-		volumeLunNumber = volumeLunNumberInterface.(float64)
+
+		// LunNumber is int, but after json.Marshal and json.UNmarshal it will become float64.
+		// see https://stackoverflow.com/questions/39152481/unmarshaling-a-json-integer-to-an-empty-interface-results-in-wrong-type-assertio
+		// but LunNumber should be int, so convert it here.
+		volumeLunNumber = int(volumeLunNumberInterface.(float64))
 	}
 	return &resources.VolumeMountProperties{WWN: volumeWWN, LunNumber: volumeLunNumber}
 }

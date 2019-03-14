@@ -358,5 +358,5 @@ type RequestContext struct {
 
 type VolumeMountProperties struct {
 	WWN       string
-	LunNumber float64
+	LunNumber int
 }
