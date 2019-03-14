@@ -60,12 +60,30 @@ var _ = Describe("Test Fibre Channel Connector", func() {
 			fakeExec.ExecuteWithTimeoutReturns([]byte(fakeMultipathOutput), nil)
 		})
 
-		It("should remove all the scsi devices", func() {
+		It("should call multipath and remove all the scsi devices", func() {
 			err := fcConnector.DisconnectVolume(volumeMountProperties)
 			Ω(err).ShouldNot(HaveOccurred())
+			Expect(fakeExec.ExecuteWithTimeoutCallCount()).To(Equal(1))
 			Expect(fakeInitiator.RemoveSCSIDeviceCallCount()).To(Equal(3))
 			var a byte = 97
 			for i := 0; i < 3; i++ {
+				expectDev := "/dev/sd" + string(a+byte(i))
+				dev := fakeInitiator.RemoveSCSIDeviceArgsForCall(i)
+				Expect(dev).To(Equal(expectDev))
+			}
+		})
+
+		It("should not call multipath and will remove all the scsi devices", func() {
+			devNames := []string{"sda", "sdb"}
+
+			volumeMountProperties.DeviceMapper = "test"
+			volumeMountProperties.Devices = devNames
+			err := fcConnector.DisconnectVolume(volumeMountProperties)
+			Ω(err).ShouldNot(HaveOccurred())
+			Expect(fakeExec.ExecuteWithTimeoutCallCount()).To(Equal(0))
+			Expect(fakeInitiator.RemoveSCSIDeviceCallCount()).To(Equal(2))
+			var a byte = 97
+			for i := 0; i < 2; i++ {
 				expectDev := "/dev/sd" + string(a+byte(i))
 				dev := fakeInitiator.RemoveSCSIDeviceArgsForCall(i)
 				Expect(dev).To(Equal(expectDev))
