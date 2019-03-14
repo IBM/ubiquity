@@ -18,6 +18,7 @@ package block_device_utils
 
 import (
 	"fmt"
+	"sync"
 	"time"
 
 	"github.com/IBM/ubiquity/resources"
@@ -31,22 +32,32 @@ const rescanScsiTimeout = 2 * 60 * 1000
 // store the volume mount info to a local cache.
 // It is just a workaround, We can not get the multipath devices from multipath -ll
 // output in the cleanup stage. because we run multipath -f before it.
-var volumeCache = make(map[string]*resources.VolumeMountProperties)
+var volumeCache = &sync.Map{}
 
 var FcHostDir = "/sys/class/fc_host/"
 var ScsiHostDir = "/sys/class/scsi_host/"
 
-func getVolumeFromCache(volumeMountProperties *resources.VolumeMountProperties) *resources.VolumeMountProperties {
-	if volume, exists := volumeCache[volumeMountProperties.WWN]; exists {
-		return volume
+func (b *blockDeviceUtils) getVolumeFromCache(volumeMountProperties *resources.VolumeMountProperties) *resources.VolumeMountProperties {
+	defer b.logger.Trace(logs.DEBUG, logs.Args{{"wwn", volumeMountProperties.WWN}})()
+
+	if volume, exists := volumeCache.Load(volumeMountProperties.WWN); exists {
+		return volume.(*resources.VolumeMountProperties)
 	}
 	return volumeMountProperties
 }
 
-func storeVolumeToCache(volumeMountProperties *resources.VolumeMountProperties) {
+func (b *blockDeviceUtils) removeVolumeFromCache(volumeMountProperties *resources.VolumeMountProperties) {
+	defer b.logger.Trace(logs.DEBUG, logs.Args{{"wwn", volumeMountProperties.WWN}})()
+
+	volumeCache.Delete(volumeMountProperties.WWN)
+}
+
+func (b *blockDeviceUtils) storeVolumeToCache(volumeMountProperties *resources.VolumeMountProperties) {
+	defer b.logger.Trace(logs.DEBUG, logs.Args{{"wwn", volumeMountProperties.WWN}})()
+
 	volume := new(resources.VolumeMountProperties)
 	*volume = *volumeMountProperties
-	volumeCache[volume.WWN] = volume
+	volumeCache.Store(volumeMountProperties.WWN, volume)
 }
 
 func (b *blockDeviceUtils) Rescan(protocol Protocol, volumeMountProperties *resources.VolumeMountProperties) error {
@@ -112,7 +123,7 @@ func (b *blockDeviceUtils) RescanSCSI(volumeMountProperties *resources.VolumeMou
 			volumeMountProperties.DeviceMapper = devMapper
 			volumeMountProperties.Devices = devNames
 			// store the volumeMountProperties to a local cache, it will be used in cleanup stage.
-			storeVolumeToCache(volumeMountProperties)
+			b.storeVolumeToCache(volumeMountProperties)
 			return nil
 		}
 		b.logger.Warning("Can't find the new volume in multipath output after rescan, sleep one second and try again.")
@@ -129,5 +140,10 @@ func (b *blockDeviceUtils) CleanupISCSIDevices() error {
 func (b *blockDeviceUtils) CleanupSCSIDevices(volumeMountProperties *resources.VolumeMountProperties) error {
 	defer b.logger.Trace(logs.DEBUG)()
 
-	return b.fcConnector.DisconnectVolume(getVolumeFromCache(volumeMountProperties))
+	volume := b.getVolumeFromCache(volumeMountProperties)
+	if err := b.fcConnector.DisconnectVolume(volume); err != nil {
+		return err
+	}
+	b.removeVolumeFromCache(volumeMountProperties)
+	return nil
 }

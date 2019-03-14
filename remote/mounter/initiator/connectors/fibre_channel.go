@@ -64,7 +64,7 @@ func (c *fibreChannelConnector) DisconnectVolume(volumeMountProperties *resource
 	devNames := volumeMountProperties.Devices
 	if devMapper == "" {
 		_, devMapper, devNames, err = utils.GetMultipathOutputAndDeviceMapperAndDevice(volumeMountProperties.WWN, c.exec)
-		if err != nil {
+		if err != nil || devMapper == "" {
 			return c.logger.ErrorRet(err, "Failed to get multipath output before disconnecting volume")
 		}
 	}
