@@ -127,5 +127,7 @@ func (b *blockDeviceUtils) CleanupISCSIDevices() error {
 }
 
 func (b *blockDeviceUtils) CleanupSCSIDevices(volumeMountProperties *resources.VolumeMountProperties) error {
+	defer b.logger.Trace(logs.DEBUG)()
+
 	return b.fcConnector.DisconnectVolume(getVolumeFromCache(volumeMountProperties))
 }
