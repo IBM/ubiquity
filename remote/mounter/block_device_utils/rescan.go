@@ -28,8 +28,26 @@ import (
 const rescanIscsiTimeout = 1 * 60 * 1000
 const rescanScsiTimeout = 2 * 60 * 1000
 
+// store the volume mount info to a local cache.
+// It is just a workaround, We can not get the multipath devices from multipath -ll
+// output in the cleanup stage. because we run multipath -f before it.
+var volumeCache = make(map[string]*resources.VolumeMountProperties)
+
 var FcHostDir = "/sys/class/fc_host/"
 var ScsiHostDir = "/sys/class/scsi_host/"
+
+func getVolumeFromCache(volumeMountProperties *resources.VolumeMountProperties) *resources.VolumeMountProperties {
+	if volume, exists := volumeCache[volumeMountProperties.WWN]; exists {
+		return volume
+	}
+	return volumeMountProperties
+}
+
+func storeVolumeToCache(volumeMountProperties *resources.VolumeMountProperties) {
+	volume := new(resources.VolumeMountProperties)
+	*volume = *volumeMountProperties
+	volumeCache[volume.WWN] = volume
+}
 
 func (b *blockDeviceUtils) Rescan(protocol Protocol, volumeMountProperties *resources.VolumeMountProperties) error {
 	defer b.logger.Trace(logs.DEBUG)()
@@ -84,11 +102,17 @@ func (b *blockDeviceUtils) RescanSCSI(volumeMountProperties *resources.VolumeMou
 	defer b.logger.Trace(logs.DEBUG)()
 
 	var err error
+	var devMapper string
+	var devNames []string
 	for i := 0; i < 6; i++ {
 		if err = b.fcConnector.ConnectVolume(volumeMountProperties); err != nil {
 			return b.logger.ErrorRet(err, "RescanSCSI failed", logs.Args{{"volumeWWN", volumeMountProperties.WWN}})
 		}
-		if _, _, _, err = utils.GetMultipathOutputAndDeviceMapperAndDevice(volumeMountProperties.WWN, b.exec); err == nil {
+		if _, devMapper, devNames, err = utils.GetMultipathOutputAndDeviceMapperAndDevice(volumeMountProperties.WWN, b.exec); err == nil {
+			volumeMountProperties.DeviceMapper = devMapper
+			volumeMountProperties.Devices = devNames
+			// store the volumeMountProperties to a local cache, it will be used in cleanup stage.
+			storeVolumeToCache(volumeMountProperties)
 			return nil
 		}
 		b.logger.Warning("Can't find the new volume in multipath output after rescan, sleep one second and try again.")
@@ -103,5 +127,5 @@ func (b *blockDeviceUtils) CleanupISCSIDevices() error {
 }
 
 func (b *blockDeviceUtils) CleanupSCSIDevices(volumeMountProperties *resources.VolumeMountProperties) error {
-	return b.fcConnector.DisconnectVolume(volumeMountProperties)
+	return b.fcConnector.DisconnectVolume(getVolumeFromCache(volumeMountProperties))
 }

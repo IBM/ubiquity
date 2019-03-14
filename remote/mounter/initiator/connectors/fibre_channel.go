@@ -52,28 +52,43 @@ func (c *fibreChannelConnector) ConnectVolume(volumeMountProperties *resources.V
 	return c.linuxfc.RescanHosts(hbas, volumeMountProperties)
 }
 
-// DisconnectVolume removes a volume from host by echo "1" to all scsi device's /delete
+// DisconnectVolume will do following things:
+// 1. flush multipath device: multipath -f /dev/mapper/mpathx
+// 2. flush device io for all devices: blockdev --flushbufs /dev/sdx (not implemented yet)
+// 3. remove all devices by path from host: /sys/block/sdx/device/delete
 func (c *fibreChannelConnector) DisconnectVolume(volumeMountProperties *resources.VolumeMountProperties) error {
+	var err error
+
 	devices := []string{}
-	_, _, devNames, err := utils.GetMultipathOutputAndDeviceMapperAndDevice(volumeMountProperties.WWN, c.exec)
-	if err != nil {
-		return c.logger.ErrorRet(err, "Failed to get multipath output before disconnecting volume")
+	devMapper := volumeMountProperties.DeviceMapper
+	devNames := volumeMountProperties.Devices
+	if devMapper == "" {
+		_, devMapper, devNames, err = utils.GetMultipathOutputAndDeviceMapperAndDevice(volumeMountProperties.WWN, c.exec)
+		if err != nil {
+			return c.logger.ErrorRet(err, "Failed to get multipath output before disconnecting volume")
+		}
 	}
+
+	devMapperFullPath := utils.MpathDevFullPath(devMapper)
+
+	// flush multipath device
+	c.logger.Info("Flush multipath device", logs.Args{{"path", devMapperFullPath}})
+	c.linuxfc.FlushMultipath(devMapperFullPath)
+
 	for _, devName := range devNames {
 		device := fmt.Sprintf("/dev/%s", devName)
 		devices = append(devices, device)
 	}
 
-	c.logger.Debug("Remove devices", logs.Args{{"names", devices}})
+	c.logger.Info("Remove devices", logs.Args{{"names", devices}})
 	err = c.removeDevices(devices)
 	if err != nil {
 		return c.logger.ErrorRet(err, "Failed to remove devices")
 	}
 
-	if _, devMapper, _, _ := utils.GetMultipathOutputAndDeviceMapperAndDevice(volumeMountProperties.WWN, c.exec); devMapper != "" {
-		// flush multipath if device still exists after disconnection
-		c.linuxfc.FlushMultipath(devMapper)
-	}
+	// If flushing the multipath failed before, try now after we have removed the devices.
+	c.logger.Info("Flush multipath device again after removing the devices", logs.Args{{"path", devMapperFullPath}})
+	c.linuxfc.FlushMultipath(devMapperFullPath)
 	return nil
 }
 

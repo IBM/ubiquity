@@ -124,7 +124,7 @@ func (lfc *linuxFibreChannel) RescanHosts(hbas []string, volumeMountProperties *
 		hbaPath := SCSI_HOST_SYSFS_PATH + "/" + hba + "/scan"
 		lfc.logger.Debug(fmt.Sprintf(`Scanning HBA with command: echo "%s" > %s`, ctl, hbaPath))
 		if err := ioutil.WriteFile(hbaPath, []byte(ctl), 0666); err != nil {
-			lfc.logger.Warning("Failed to scan HBA", logs.Args{{"name", hba}, {"err", err}})
+			lfc.logger.Warning("Failed to scan HBA", logs.Args{{"name", hba}, {"ctl", ctl}, {"err", err}})
 			continue
 		}
 	}

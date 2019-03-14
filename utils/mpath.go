@@ -2,6 +2,8 @@ package utils
 
 import (
 	"bufio"
+	"path"
+	"path/filepath"
 	"regexp"
 	"strings"
 )
@@ -78,4 +80,8 @@ func GetMultipathOutputAndDeviceMapperAndDevice(volumeWwn string, exec Executor)
 		}
 	}
 	return outputBytes, devMapper, deviceNames, nil
+}
+
+func MpathDevFullPath(dev string) string {
+	return path.Join(string(filepath.Separator), "dev", "mapper", dev)
 }

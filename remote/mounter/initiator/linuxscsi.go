@@ -20,13 +20,13 @@ type linuxSCSI struct {
 	logger logs.Logger
 }
 
-// FlushMultipath flushes the device, if it is failed becasue of device in use, retry again.
+// FlushMultipath flushes the device, retry 3 times if it is failed.
 func (ls *linuxSCSI) FlushMultipath(deviceMapName string) {
 	if err := ls.exec.IsExecutable(multipathCmd); err != nil {
 		return
 	}
 
-	for i := 0; i < 2; i++ {
+	for i := 0; i < 3; i++ {
 		args := []string{"-f", deviceMapName}
 		ls.logger.Info(fmt.Sprintf("Flush multipath by running: multipath -f %s", deviceMapName))
 		_, err := ls.exec.ExecuteWithTimeout(FlushTimeout, multipathCmd, args)
