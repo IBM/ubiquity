@@ -33,7 +33,7 @@ var _ = Describe("Test Fibre Channel Connector", func() {
 		fakeInitiator *fakeinitiator.FakeInitiator
 		fcConnector   initiator.Connector
 	)
-	volumeMountProperties := &resources.VolumeMountProperties{WWN: fakeWwn, LunNumber: float64(1)}
+	volumeMountProperties := &resources.VolumeMountProperties{WWN: fakeWwn, LunNumber: 1}
 
 	BeforeEach(func() {
 		fakeExec = new(fakes.FakeExecutor)

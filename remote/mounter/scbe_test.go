@@ -40,7 +40,7 @@ var _ = Describe("scbe_mounter_test", func() {
 			"LogicalCapacity": fakeLogicalCapacity, "LunNumber": float64(1), "PoolName": "pool", "StorageName": "IBM.2706", "fstype": "ext4"}}
 		mountRequestForDS8kLun2 = resources.MountRequest{Mountpoint: "test_mountpointDS8k", VolumeConfig: map[string]interface{}{"Name": "u_vol", "PhysicalCapacity": fakePhysicalCapacity,
 			"Profile": fakeProfile, "UsedCapacity": fakeUsedCapacity, "Wwn": "wwn", "attach-to": "node1",
-			"LogicalCapacity": fakeLogicalCapacity, "LunNumber": float64(1), "PoolName": "pool", "StorageName": "IBM.2107", "fstype": "ext4"}}
+			"LogicalCapacity": fakeLogicalCapacity, "LunNumber": float64(1074741264), "PoolName": "pool", "StorageName": "IBM.2107", "fstype": "ext4"}}
 		mountRequestForDS8kLun3 = resources.MountRequest{Mountpoint: "test_mountpointDS8k", VolumeConfig: map[string]interface{}{"Name": "u_vol", "PhysicalCapacity": fakePhysicalCapacity,
 			"Profile": fakeProfile, "StorageType": fakeDS8kStoragetType, "UsedCapacity": fakeUsedCapacity, "Wwn": "wwn", "attach-to": "node1",
 			"LogicalCapacity": fakeLogicalCapacity, "PoolName": "pool", "StorageName": "IBM.2107", "fstype": "ext4"}}

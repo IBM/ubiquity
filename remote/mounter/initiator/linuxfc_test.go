@@ -83,7 +83,7 @@ var _ = Describe("Test FC Initiator", func() {
 		realSysBlockPath string
 		cmdErr           error = errors.New("command error")
 	)
-	volumeMountProperties := &resources.VolumeMountProperties{WWN: "wwn", LunNumber: float64(1)}
+	volumeMountProperties := &resources.VolumeMountProperties{WWN: "wwn", LunNumber: 1}
 
 	BeforeEach(func() {
 		err := os.MkdirAll(FAKE_FC_HOST_SYSFS_PATH, os.ModePerm)
@@ -187,7 +187,7 @@ var _ = Describe("Test FC Initiator", func() {
 				Ω(err).ShouldNot(HaveOccurred())
 				data, err := ioutil.ReadFile(scanFile)
 				Ω(err).ShouldNot(HaveOccurred())
-				Expect(string(data)).To(Equal(fmt.Sprintf("- - %g", volumeMountProperties.LunNumber)))
+				Expect(string(data)).To(Equal(fmt.Sprintf("- - %d", volumeMountProperties.LunNumber)))
 			})
 
 			It("should write '1' to the hba lip file", func() {
