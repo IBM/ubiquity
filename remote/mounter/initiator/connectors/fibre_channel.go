@@ -55,7 +55,7 @@ func (c *fibreChannelConnector) ConnectVolume(volumeMountProperties *resources.V
 // DisconnectVolume will do following things:
 // 1. flush multipath device: multipath -f /dev/mapper/mpathx
 // 2. flush device io for all devices: blockdev --flushbufs /dev/sdx (not implemented yet)
-// 3. remove all devices by path from host: /sys/block/sdx/device/delete
+// 3. remove all devices by path from host: echo 1 > /sys/block/sdx/device/delete
 func (c *fibreChannelConnector) DisconnectVolume(volumeMountProperties *resources.VolumeMountProperties) error {
 	var err error
 
