@@ -69,11 +69,9 @@ func (c *fibreChannelConnector) DisconnectVolume(volumeMountProperties *resource
 		}
 	}
 
-	devMapperFullPath := utils.MpathDevFullPath(devMapper)
-
 	// flush multipath device
-	c.logger.Info("Flush multipath device", logs.Args{{"path", devMapperFullPath}})
-	c.linuxfc.FlushMultipath(devMapperFullPath)
+	c.logger.Info("Flush multipath device", logs.Args{{"name", devMapper}})
+	c.linuxfc.FlushMultipath(devMapper)
 
 	for _, devName := range devNames {
 		device := fmt.Sprintf("/dev/%s", devName)
@@ -87,8 +85,8 @@ func (c *fibreChannelConnector) DisconnectVolume(volumeMountProperties *resource
 	}
 
 	// If flushing the multipath failed before, try now after we have removed the devices.
-	c.logger.Info("Flush multipath device again after removing the devices", logs.Args{{"path", devMapperFullPath}})
-	c.linuxfc.FlushMultipath(devMapperFullPath)
+	c.logger.Info("Flush multipath device again after removing the devices", logs.Args{{"name", devMapper}})
+	c.linuxfc.FlushMultipath(devMapper)
 	return nil
 }
 

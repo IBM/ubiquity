@@ -52,6 +52,39 @@ var _ = Describe("block_device_utils_test", func() {
 		bdUtils = block_device_utils.NewBlockDeviceUtilsWithExecutorAndConnector(fakeExec, fakeFcConnector)
 	})
 
+	Context("volume cache", func() {
+		BeforeEach(func() {
+			volumeMountProperties = &resources.VolumeMountProperties{WWN: "wwn", Devices: []string{"sda"}, DeviceMapper: "mpatha"}
+			bdUtils.StoreVolumeToCache(volumeMountProperties)
+		})
+
+		AfterEach(func() {
+			bdUtils.RemoveVolumeFromCache(volumeMountProperties)
+		})
+
+		Context("get", func() {
+
+			It("should get from cache successfully", func() {
+				volume := bdUtils.GetVolumeFromCache(&resources.VolumeMountProperties{WWN: volumeMountProperties.WWN})
+				Expect(volume.DeviceMapper).To(Equal(volumeMountProperties.DeviceMapper))
+				Expect(volume.Devices).To(Equal(volumeMountProperties.Devices))
+			})
+		})
+
+		Context("remove", func() {
+
+			It("should remove from cache successfully", func() {
+				volume := bdUtils.GetVolumeFromCache(&resources.VolumeMountProperties{WWN: volumeMountProperties.WWN})
+				Expect(volume.DeviceMapper).To(Equal(volumeMountProperties.DeviceMapper))
+				Expect(volume.Devices).To(Equal(volumeMountProperties.Devices))
+				bdUtils.RemoveVolumeFromCache(volume)
+				volumeAgain := bdUtils.GetVolumeFromCache(&resources.VolumeMountProperties{WWN: volumeMountProperties.WWN})
+				Expect(volumeAgain.DeviceMapper).To(Equal(""))
+				Expect(volumeAgain.Devices).To(BeNil())
+			})
+		})
+	})
+
 	Context(".Rescan", func() {
 		It("Rescan ISCSI calls 'sudo iscsiadm -m session --rescan'", func() {
 			err = bdUtils.Rescan(block_device_utils.ISCSI, volumeMountProperties)

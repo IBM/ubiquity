@@ -43,4 +43,7 @@ type BlockDeviceUtils interface {
 	IsDeviceMounted(devPath string) (bool, []string, error)
 	IsDirAMountPoint(dirPath string) (bool, []string, error)
 	SetDmsetup(mpath string) error
+	GetVolumeFromCache(volumeMountProperties *resources.VolumeMountProperties) *resources.VolumeMountProperties
+	RemoveVolumeFromCache(volumeMountProperties *resources.VolumeMountProperties)
+	StoreVolumeToCache(volumeMountProperties *resources.VolumeMountProperties)
 }
