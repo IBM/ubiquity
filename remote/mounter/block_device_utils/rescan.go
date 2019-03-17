@@ -44,7 +44,7 @@ func (b *blockDeviceUtils) GetVolumeFromCache(volumeMountProperties *resources.V
 		return volume.(*resources.VolumeMountProperties)
 	}
 	b.logger.Warning("Volume not found in cache.", logs.Args{{"wwn", volumeMountProperties.WWN}})
-	return volumeMountProperties
+	return nil
 }
 
 func (b *blockDeviceUtils) RemoveVolumeFromCache(volumeMountProperties *resources.VolumeMountProperties) {
@@ -136,6 +136,11 @@ func (b *blockDeviceUtils) CleanupSCSIDevices(volumeMountProperties *resources.V
 	defer b.logger.Trace(logs.DEBUG)()
 
 	volume := b.GetVolumeFromCache(volumeMountProperties)
+	if volume == nil {
+		// devices are already cleaned up
+		return nil
+	}
+
 	if err := b.fcConnector.DisconnectVolume(volume); err != nil {
 		return err
 	}
