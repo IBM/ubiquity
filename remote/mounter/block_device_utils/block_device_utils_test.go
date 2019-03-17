@@ -79,8 +79,7 @@ var _ = Describe("block_device_utils_test", func() {
 				Expect(volume.Devices).To(Equal(volumeMountProperties.Devices))
 				bdUtils.RemoveVolumeFromCache(volume)
 				volumeAgain := bdUtils.GetVolumeFromCache(&resources.VolumeMountProperties{WWN: volumeMountProperties.WWN})
-				Expect(volumeAgain.DeviceMapper).To(Equal(""))
-				Expect(volumeAgain.Devices).To(BeNil())
+				Expect(volumeAgain).To(BeNil())
 			})
 		})
 	})
@@ -124,6 +123,10 @@ var _ = Describe("block_device_utils_test", func() {
 		})
 	})
 	Context(".CleanupDevices", func() {
+		BeforeEach(func() {
+			bdUtils.StoreVolumeToCache(volumeMountProperties)
+		})
+
 		It("Cleanup ISCSI calls 'sudo iscsiadm -m session --rescan'", func() {
 			err = bdUtils.CleanupDevices(block_device_utils.ISCSI, volumeMountProperties)
 			Expect(err).ToNot(HaveOccurred())
