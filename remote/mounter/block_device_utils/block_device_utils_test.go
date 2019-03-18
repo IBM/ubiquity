@@ -38,18 +38,20 @@ import (
 
 var _ = Describe("block_device_utils_test", func() {
 	var (
-		fakeExec        *fakes.FakeExecutor
-		fakeFcConnector *fakeinitiator.FakeConnector
-		bdUtils         block_device_utils.BlockDeviceUtils
-		err             error
-		cmdErr          error = errors.New("command error")
+		fakeExec           *fakes.FakeExecutor
+		fakeFcConnector    *fakeinitiator.FakeConnector
+		fakeISCSIConnector *fakeinitiator.FakeConnector
+		bdUtils            block_device_utils.BlockDeviceUtils
+		err                error
+		cmdErr             error = errors.New("command error")
 	)
 	volumeMountProperties := &resources.VolumeMountProperties{WWN: "wwn", LunNumber: 1}
 
 	BeforeEach(func() {
 		fakeExec = new(fakes.FakeExecutor)
 		fakeFcConnector = new(fakeinitiator.FakeConnector)
-		bdUtils = block_device_utils.NewBlockDeviceUtilsWithExecutorAndConnector(fakeExec, fakeFcConnector)
+		fakeISCSIConnector = new(fakeinitiator.FakeConnector)
+		bdUtils = block_device_utils.NewBlockDeviceUtilsWithExecutorAndConnector(fakeExec, fakeFcConnector, fakeISCSIConnector)
 	})
 
 	Context("volume cache", func() {
@@ -134,6 +136,7 @@ var _ = Describe("block_device_utils_test", func() {
 			_, cmd, args := fakeExec.ExecuteWithTimeoutArgsForCall(0)
 			Expect(cmd).To(Equal("iscsiadm"))
 			Expect(args).To(Equal([]string{"-m", "session", "--rescan"}))
+			Expect(fakeISCSIConnector.DisconnectVolumeCallCount()).To(Equal(1))
 		})
 		It(`Cleanup SCSI calls fcConnector.DisconnectVolume`, func() {
 			err = bdUtils.CleanupDevices(block_device_utils.SCSI, volumeMountProperties)
