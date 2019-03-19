@@ -18,7 +18,6 @@ package block_device_utils
 
 import (
 	"fmt"
-	"sync"
 	"time"
 
 	"github.com/IBM/ubiquity/resources"
@@ -30,37 +29,8 @@ const rescanIscsiTimeout = 1 * 60 * 1000
 const rescanScsiTimeout = 2 * 60 * 1000
 const ISCSIADM = "iscsiadm"
 
-// store the volume mount info to a local cache.
-// It is just a workaround, We can not get the multipath devices from multipath -ll
-// output in the cleanup stage. because we run multipath -f before it.
-var volumeCache = &sync.Map{}
-
 var FcHostDir = "/sys/class/fc_host/"
 var ScsiHostDir = "/sys/class/scsi_host/"
-
-func (b *blockDeviceUtils) GetVolumeFromCache(volumeMountProperties *resources.VolumeMountProperties) *resources.VolumeMountProperties {
-	defer b.logger.Trace(logs.DEBUG, logs.Args{{"wwn", volumeMountProperties.WWN}})()
-
-	if volume, exists := volumeCache.Load(volumeMountProperties.WWN); exists {
-		return volume.(*resources.VolumeMountProperties)
-	}
-	b.logger.Warning("Volume not found in cache.", logs.Args{{"wwn", volumeMountProperties.WWN}})
-	return nil
-}
-
-func (b *blockDeviceUtils) RemoveVolumeFromCache(volumeMountProperties *resources.VolumeMountProperties) {
-	defer b.logger.Trace(logs.DEBUG, logs.Args{{"wwn", volumeMountProperties.WWN}})()
-
-	volumeCache.Delete(volumeMountProperties.WWN)
-}
-
-func (b *blockDeviceUtils) StoreVolumeToCache(volumeMountProperties *resources.VolumeMountProperties) {
-	defer b.logger.Trace(logs.DEBUG, logs.Args{{"wwn", volumeMountProperties.WWN}})()
-
-	volume := new(resources.VolumeMountProperties)
-	*volume = *volumeMountProperties
-	volumeCache.Store(volumeMountProperties.WWN, volume)
-}
 
 func (b *blockDeviceUtils) Rescan(protocol Protocol, volumeMountProperties *resources.VolumeMountProperties) error {
 	defer b.logger.Trace(logs.DEBUG)()
@@ -138,32 +108,11 @@ func (b *blockDeviceUtils) CleanupISCSIDevices(volumeMountProperties *resources.
 	}
 
 	b.RescanISCSI()
-
-	volume := b.GetVolumeFromCache(volumeMountProperties)
-	if volume == nil {
-		// devices are already cleaned up
-		return nil
-	}
-
-	if err := b.iscsiConnector.DisconnectVolume(volume); err != nil {
-		return err
-	}
-	b.RemoveVolumeFromCache(volumeMountProperties)
-	return nil
+	return b.iscsiConnector.DisconnectVolume(volumeMountProperties)
 }
 
 func (b *blockDeviceUtils) CleanupSCSIDevices(volumeMountProperties *resources.VolumeMountProperties) error {
 	defer b.logger.Trace(logs.DEBUG)()
 
-	volume := b.GetVolumeFromCache(volumeMountProperties)
-	if volume == nil {
-		// devices are already cleaned up
-		return nil
-	}
-
-	if err := b.fcConnector.DisconnectVolume(volume); err != nil {
-		return err
-	}
-	b.RemoveVolumeFromCache(volumeMountProperties)
-	return nil
+	return b.fcConnector.DisconnectVolume(volumeMountProperties)
 }

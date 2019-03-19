@@ -357,8 +357,6 @@ type RequestContext struct {
 }
 
 type VolumeMountProperties struct {
-	WWN          string
-	LunNumber    int
-	DeviceMapper string
-	Devices      []string
+	WWN       string
+	LunNumber int
 }

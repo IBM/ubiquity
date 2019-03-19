@@ -20,16 +20,15 @@ type scsiConnector struct {
 // 2. flush device io for all devices: blockdev --flushbufs /dev/sdx (not implemented yet)
 // 3. remove all devices by path from host: echo 1 > /sys/block/sdx/device/delete
 func (c *scsiConnector) DisconnectVolume(volumeMountProperties *resources.VolumeMountProperties) error {
-	var err error
 
 	devices := []string{}
-	devMapper := volumeMountProperties.DeviceMapper
-	devNames := volumeMountProperties.Devices
+	_, devMapper, devNames, err := utils.GetMultipathOutputAndDeviceMapperAndDevice(volumeMountProperties.WWN, c.exec)
+	if err != nil || devMapper == "" {
+		return c.logger.ErrorRet(err, "Failed to get multipath output before disconnecting volume")
+	}
 	if devMapper == "" {
-		_, devMapper, devNames, err = utils.GetMultipathOutputAndDeviceMapperAndDevice(volumeMountProperties.WWN, c.exec)
-		if err != nil || devMapper == "" {
-			return c.logger.ErrorRet(err, "Failed to get multipath output before disconnecting volume")
-		}
+		// The device is already removed
+		return nil
 	}
 
 	// flush multipath device

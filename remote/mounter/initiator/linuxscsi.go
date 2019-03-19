@@ -12,6 +12,7 @@ import (
 
 const multipathCmd = "multipath"
 const FlushTimeout = 10 * 1000
+const FlushRetries = 3
 
 var SYS_BLOCK_PATH = "/sys/block"
 
@@ -26,7 +27,7 @@ func (ls *linuxSCSI) FlushMultipath(deviceMapName string) {
 		return
 	}
 
-	for i := 0; i < 3; i++ {
+	for i := 0; i < FlushRetries; i++ {
 		args := []string{"-f", deviceMapName}
 		ls.logger.Info(fmt.Sprintf("Flush multipath by running: multipath -f %s", deviceMapName))
 		_, err := ls.exec.ExecuteWithTimeout(FlushTimeout, multipathCmd, args)

@@ -23,7 +23,6 @@ import (
 
 	"github.com/IBM/ubiquity/remote/mounter/block_device_utils"
 	"github.com/IBM/ubiquity/resources"
-	"github.com/IBM/ubiquity/utils"
 	"github.com/IBM/ubiquity/utils/logs"
 	"github.com/nightlyone/lockfile"
 )
@@ -37,7 +36,6 @@ type blockDeviceMounterUtils struct {
 	blockDeviceUtils block_device_utils.BlockDeviceUtils
 	rescanFlock      lockfile.Lockfile
 	mpathFlock       lockfile.Lockfile
-	exec             utils.Executor
 }
 
 func NewBlockDeviceMounterUtilsWithBlockDeviceUtils(blockDeviceUtils block_device_utils.BlockDeviceUtils) BlockDeviceMounterUtils {
@@ -62,7 +60,6 @@ func newBlockDeviceMounterUtils(blockDeviceUtils block_device_utils.BlockDeviceU
 		blockDeviceUtils: blockDeviceUtils,
 		rescanFlock:      rescanLock,
 		mpathFlock:       mpathLock,
-		exec:             utils.NewExecutor(),
 	}
 }
 
@@ -145,24 +142,11 @@ func (b *blockDeviceMounterUtils) UnmountDeviceFlow(devicePath string, volumeWwn
 	defer b.mpathFlock.Unlock()
 	defer b.logger.Debug("Released mpathLock for device", logs.Args{{"device", devicePath}})
 
-	b.prepareAndStoreVolumeToCache(volumeWwn)
-	if err := b.blockDeviceUtils.Cleanup(devicePath); err != nil {
+	if err := b.CleanupAll(&resources.VolumeMountProperties{WWN: volumeWwn}); err != nil {
 		return b.logger.ErrorRet(err, "Cleanup failed")
 	}
 
 	return nil
-}
-
-func (b *blockDeviceMounterUtils) prepareAndStoreVolumeToCache(volumeWwn string) {
-	volumeMountProperties := &resources.VolumeMountProperties{WWN: volumeWwn}
-	if _, devMapper, devNames, err := utils.GetMultipathOutputAndDeviceMapperAndDevice(volumeWwn, b.exec); err == nil {
-		volumeMountProperties.DeviceMapper = devMapper
-		volumeMountProperties.Devices = devNames
-		// store the volumeMountProperties to a local cache, it will be used in cleanup stage.
-		b.blockDeviceUtils.StoreVolumeToCache(volumeMountProperties)
-	} else {
-		b.logger.Warning("Failed to store volume info", logs.Args{{"volumeWWN", volumeWwn}, {"error", err}})
-	}
 }
 
 // RescanAll triggers the following OS rescanning :
