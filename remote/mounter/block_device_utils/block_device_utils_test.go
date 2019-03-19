@@ -93,9 +93,6 @@ var _ = Describe("block_device_utils_test", func() {
 		})
 	})
 	Context(".CleanupDevices", func() {
-		BeforeEach(func() {
-			bdUtils.StoreVolumeToCache(volumeMountProperties)
-		})
 
 		It("Cleanup ISCSI calls 'sudo iscsiadm -m session --rescan'", func() {
 			err = bdUtils.CleanupDevices(block_device_utils.ISCSI, volumeMountProperties)

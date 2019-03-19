@@ -73,17 +73,6 @@ type FakeBlockDeviceUtils struct {
 		result1 string
 		result2 error
 	}
-	GetVolumeFromCacheStub        func(*resources.VolumeMountProperties) *resources.VolumeMountProperties
-	getVolumeFromCacheMutex       sync.RWMutex
-	getVolumeFromCacheArgsForCall []struct {
-		arg1 *resources.VolumeMountProperties
-	}
-	getVolumeFromCacheReturns struct {
-		result1 *resources.VolumeMountProperties
-	}
-	getVolumeFromCacheReturnsOnCall map[int]struct {
-		result1 *resources.VolumeMountProperties
-	}
 	GetWwnByScsiInqStub        func(string, string) (string, error)
 	getWwnByScsiInqMutex       sync.RWMutex
 	getWwnByScsiInqArgsForCall []struct {
@@ -162,11 +151,6 @@ type FakeBlockDeviceUtils struct {
 	reloadMultipathReturnsOnCall map[int]struct {
 		result1 error
 	}
-	RemoveVolumeFromCacheStub        func(*resources.VolumeMountProperties)
-	removeVolumeFromCacheMutex       sync.RWMutex
-	removeVolumeFromCacheArgsForCall []struct {
-		arg1 *resources.VolumeMountProperties
-	}
 	RescanStub        func(block_device_utils.Protocol, *resources.VolumeMountProperties) error
 	rescanMutex       sync.RWMutex
 	rescanArgsForCall []struct {
@@ -189,11 +173,6 @@ type FakeBlockDeviceUtils struct {
 	}
 	setDmsetupReturnsOnCall map[int]struct {
 		result1 error
-	}
-	StoreVolumeToCacheStub        func(*resources.VolumeMountProperties)
-	storeVolumeToCacheMutex       sync.RWMutex
-	storeVolumeToCacheArgsForCall []struct {
-		arg1 *resources.VolumeMountProperties
 	}
 	UmountFsStub        func(string, string) error
 	umountFsMutex       sync.RWMutex
@@ -521,66 +500,6 @@ func (fake *FakeBlockDeviceUtils) DiscoverBySgInqReturnsOnCall(i int, result1 st
 		result1 string
 		result2 error
 	}{result1, result2}
-}
-
-func (fake *FakeBlockDeviceUtils) GetVolumeFromCache(arg1 *resources.VolumeMountProperties) *resources.VolumeMountProperties {
-	fake.getVolumeFromCacheMutex.Lock()
-	ret, specificReturn := fake.getVolumeFromCacheReturnsOnCall[len(fake.getVolumeFromCacheArgsForCall)]
-	fake.getVolumeFromCacheArgsForCall = append(fake.getVolumeFromCacheArgsForCall, struct {
-		arg1 *resources.VolumeMountProperties
-	}{arg1})
-	fake.recordInvocation("GetVolumeFromCache", []interface{}{arg1})
-	fake.getVolumeFromCacheMutex.Unlock()
-	if fake.GetVolumeFromCacheStub != nil {
-		return fake.GetVolumeFromCacheStub(arg1)
-	}
-	if specificReturn {
-		return ret.result1
-	}
-	fakeReturns := fake.getVolumeFromCacheReturns
-	return fakeReturns.result1
-}
-
-func (fake *FakeBlockDeviceUtils) GetVolumeFromCacheCallCount() int {
-	fake.getVolumeFromCacheMutex.RLock()
-	defer fake.getVolumeFromCacheMutex.RUnlock()
-	return len(fake.getVolumeFromCacheArgsForCall)
-}
-
-func (fake *FakeBlockDeviceUtils) GetVolumeFromCacheCalls(stub func(*resources.VolumeMountProperties) *resources.VolumeMountProperties) {
-	fake.getVolumeFromCacheMutex.Lock()
-	defer fake.getVolumeFromCacheMutex.Unlock()
-	fake.GetVolumeFromCacheStub = stub
-}
-
-func (fake *FakeBlockDeviceUtils) GetVolumeFromCacheArgsForCall(i int) *resources.VolumeMountProperties {
-	fake.getVolumeFromCacheMutex.RLock()
-	defer fake.getVolumeFromCacheMutex.RUnlock()
-	argsForCall := fake.getVolumeFromCacheArgsForCall[i]
-	return argsForCall.arg1
-}
-
-func (fake *FakeBlockDeviceUtils) GetVolumeFromCacheReturns(result1 *resources.VolumeMountProperties) {
-	fake.getVolumeFromCacheMutex.Lock()
-	defer fake.getVolumeFromCacheMutex.Unlock()
-	fake.GetVolumeFromCacheStub = nil
-	fake.getVolumeFromCacheReturns = struct {
-		result1 *resources.VolumeMountProperties
-	}{result1}
-}
-
-func (fake *FakeBlockDeviceUtils) GetVolumeFromCacheReturnsOnCall(i int, result1 *resources.VolumeMountProperties) {
-	fake.getVolumeFromCacheMutex.Lock()
-	defer fake.getVolumeFromCacheMutex.Unlock()
-	fake.GetVolumeFromCacheStub = nil
-	if fake.getVolumeFromCacheReturnsOnCall == nil {
-		fake.getVolumeFromCacheReturnsOnCall = make(map[int]struct {
-			result1 *resources.VolumeMountProperties
-		})
-	}
-	fake.getVolumeFromCacheReturnsOnCall[i] = struct {
-		result1 *resources.VolumeMountProperties
-	}{result1}
 }
 
 func (fake *FakeBlockDeviceUtils) GetWwnByScsiInq(arg1 string, arg2 string) (string, error) {
@@ -953,37 +872,6 @@ func (fake *FakeBlockDeviceUtils) ReloadMultipathReturnsOnCall(i int, result1 er
 	}{result1}
 }
 
-func (fake *FakeBlockDeviceUtils) RemoveVolumeFromCache(arg1 *resources.VolumeMountProperties) {
-	fake.removeVolumeFromCacheMutex.Lock()
-	fake.removeVolumeFromCacheArgsForCall = append(fake.removeVolumeFromCacheArgsForCall, struct {
-		arg1 *resources.VolumeMountProperties
-	}{arg1})
-	fake.recordInvocation("RemoveVolumeFromCache", []interface{}{arg1})
-	fake.removeVolumeFromCacheMutex.Unlock()
-	if fake.RemoveVolumeFromCacheStub != nil {
-		fake.RemoveVolumeFromCacheStub(arg1)
-	}
-}
-
-func (fake *FakeBlockDeviceUtils) RemoveVolumeFromCacheCallCount() int {
-	fake.removeVolumeFromCacheMutex.RLock()
-	defer fake.removeVolumeFromCacheMutex.RUnlock()
-	return len(fake.removeVolumeFromCacheArgsForCall)
-}
-
-func (fake *FakeBlockDeviceUtils) RemoveVolumeFromCacheCalls(stub func(*resources.VolumeMountProperties)) {
-	fake.removeVolumeFromCacheMutex.Lock()
-	defer fake.removeVolumeFromCacheMutex.Unlock()
-	fake.RemoveVolumeFromCacheStub = stub
-}
-
-func (fake *FakeBlockDeviceUtils) RemoveVolumeFromCacheArgsForCall(i int) *resources.VolumeMountProperties {
-	fake.removeVolumeFromCacheMutex.RLock()
-	defer fake.removeVolumeFromCacheMutex.RUnlock()
-	argsForCall := fake.removeVolumeFromCacheArgsForCall[i]
-	return argsForCall.arg1
-}
-
 func (fake *FakeBlockDeviceUtils) Rescan(arg1 block_device_utils.Protocol, arg2 *resources.VolumeMountProperties) error {
 	fake.rescanMutex.Lock()
 	ret, specificReturn := fake.rescanReturnsOnCall[len(fake.rescanArgsForCall)]
@@ -1105,37 +993,6 @@ func (fake *FakeBlockDeviceUtils) SetDmsetupReturnsOnCall(i int, result1 error) 
 	}{result1}
 }
 
-func (fake *FakeBlockDeviceUtils) StoreVolumeToCache(arg1 *resources.VolumeMountProperties) {
-	fake.storeVolumeToCacheMutex.Lock()
-	fake.storeVolumeToCacheArgsForCall = append(fake.storeVolumeToCacheArgsForCall, struct {
-		arg1 *resources.VolumeMountProperties
-	}{arg1})
-	fake.recordInvocation("StoreVolumeToCache", []interface{}{arg1})
-	fake.storeVolumeToCacheMutex.Unlock()
-	if fake.StoreVolumeToCacheStub != nil {
-		fake.StoreVolumeToCacheStub(arg1)
-	}
-}
-
-func (fake *FakeBlockDeviceUtils) StoreVolumeToCacheCallCount() int {
-	fake.storeVolumeToCacheMutex.RLock()
-	defer fake.storeVolumeToCacheMutex.RUnlock()
-	return len(fake.storeVolumeToCacheArgsForCall)
-}
-
-func (fake *FakeBlockDeviceUtils) StoreVolumeToCacheCalls(stub func(*resources.VolumeMountProperties)) {
-	fake.storeVolumeToCacheMutex.Lock()
-	defer fake.storeVolumeToCacheMutex.Unlock()
-	fake.StoreVolumeToCacheStub = stub
-}
-
-func (fake *FakeBlockDeviceUtils) StoreVolumeToCacheArgsForCall(i int) *resources.VolumeMountProperties {
-	fake.storeVolumeToCacheMutex.RLock()
-	defer fake.storeVolumeToCacheMutex.RUnlock()
-	argsForCall := fake.storeVolumeToCacheArgsForCall[i]
-	return argsForCall.arg1
-}
-
 func (fake *FakeBlockDeviceUtils) UmountFs(arg1 string, arg2 string) error {
 	fake.umountFsMutex.Lock()
 	ret, specificReturn := fake.umountFsReturnsOnCall[len(fake.umountFsArgsForCall)]
@@ -1210,8 +1067,6 @@ func (fake *FakeBlockDeviceUtils) Invocations() map[string][][]interface{} {
 	defer fake.discoverMutex.RUnlock()
 	fake.discoverBySgInqMutex.RLock()
 	defer fake.discoverBySgInqMutex.RUnlock()
-	fake.getVolumeFromCacheMutex.RLock()
-	defer fake.getVolumeFromCacheMutex.RUnlock()
 	fake.getWwnByScsiInqMutex.RLock()
 	defer fake.getWwnByScsiInqMutex.RUnlock()
 	fake.isDeviceMountedMutex.RLock()
@@ -1224,14 +1079,10 @@ func (fake *FakeBlockDeviceUtils) Invocations() map[string][][]interface{} {
 	defer fake.mountFsMutex.RUnlock()
 	fake.reloadMultipathMutex.RLock()
 	defer fake.reloadMultipathMutex.RUnlock()
-	fake.removeVolumeFromCacheMutex.RLock()
-	defer fake.removeVolumeFromCacheMutex.RUnlock()
 	fake.rescanMutex.RLock()
 	defer fake.rescanMutex.RUnlock()
 	fake.setDmsetupMutex.RLock()
 	defer fake.setDmsetupMutex.RUnlock()
-	fake.storeVolumeToCacheMutex.RLock()
-	defer fake.storeVolumeToCacheMutex.RUnlock()
 	fake.umountFsMutex.RLock()
 	defer fake.umountFsMutex.RUnlock()
 	copiedInvocations := map[string][][]interface{}{}
