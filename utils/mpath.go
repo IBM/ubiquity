@@ -66,12 +66,18 @@ func GetMultipathOutputAndDeviceMapperAndDevice(volumeWwn string, exec Executor)
 		// skip next two lines
 		scanner.Scan()
 		scanner.Scan()
+
+		skipped := false
 		for scanner.Scan() {
 			text := scanner.Text()
 			text = strings.TrimSpace(text)
 			if bodyRegex.MatchString(text) {
-				deviceName := strings.Split(text, " ")[2]
+				index := bodyRegex.FindStringIndex(text)
+				trimedText := text[index[0]:]
+				deviceName := strings.Split(trimedText, " ")[1]
 				deviceNames = append(deviceNames, deviceName)
+			} else if !skipped {
+				skipped = true
 			} else {
 				break
 			}

@@ -23,7 +23,7 @@ func (c *scsiConnector) DisconnectVolume(volumeMountProperties *resources.Volume
 
 	devices := []string{}
 	_, devMapper, devNames, err := utils.GetMultipathOutputAndDeviceMapperAndDevice(volumeMountProperties.WWN, c.exec)
-	if err != nil || devMapper == "" {
+	if err != nil {
 		return c.logger.ErrorRet(err, "Failed to get multipath output before disconnecting volume")
 	}
 	if devMapper == "" {
