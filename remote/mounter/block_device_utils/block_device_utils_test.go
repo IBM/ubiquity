@@ -36,6 +36,21 @@ import (
 	. "github.com/onsi/gomega"
 )
 
+var fakeMultipathOutputWithMultiplePathGroups = `
+mpathc (6005076306ffd69d0000000000001004) dm-4 IBM     ,2145
+size=1.0G features='0' hwhandler='0' wp=rw
+|-+- policy='service-time 0' prio=50 status=active
+| '- 43:0:0:3 sda 8:112 active ready running
+-+- policy='service-time 0' prio=10 status=enabled
+  '- 44:0:0:3 sdb 8:144 active ready running
+mpathb (3600507680c87011598000000000013a7) dm-3 IBM     ,2145
+size=1.0G features='1 queue_if_no_path' hwhandler='0' wp=rw
+|-+- policy='service-time 0' prio=50 status=active
+| '- 44:0:0:0 sdc 8:32  active ready running
+'-+- policy='service-time 0' prio=10 status=enabled
+  '- 43:0:0:0 sdb 8:16  active ready running
+`
+
 var _ = Describe("block_device_utils_test", func() {
 	var (
 		fakeExec           *fakes.FakeExecutor
@@ -45,7 +60,7 @@ var _ = Describe("block_device_utils_test", func() {
 		err                error
 		cmdErr             error = errors.New("command error")
 	)
-	volumeMountProperties := &resources.VolumeMountProperties{WWN: "wwn", LunNumber: 1}
+	volumeMountProperties := &resources.VolumeMountProperties{WWN: "6005076306ffd69d0000000000001004", LunNumber: 1}
 
 	BeforeEach(func() {
 		fakeExec = new(fakes.FakeExecutor)
@@ -64,7 +79,7 @@ var _ = Describe("block_device_utils_test", func() {
 			Expect(args).To(Equal([]string{"-m", "session", "--rescan"}))
 		})
 		It(`Rescan SCSI calls fcConnector.ConnectVolume`, func() {
-			fakeExec.ExecuteWithTimeoutReturns([]byte(volumeMountProperties.WWN), nil)
+			fakeExec.ExecuteWithTimeoutReturns([]byte(fakeMultipathOutputWithMultiplePathGroups), nil)
 			err = bdUtils.Rescan(block_device_utils.SCSI, volumeMountProperties)
 			Expect(err).ToNot(HaveOccurred())
 			Expect(fakeExec.ExecuteWithTimeoutCallCount()).To(Equal(1))

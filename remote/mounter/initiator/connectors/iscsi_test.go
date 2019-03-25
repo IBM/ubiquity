@@ -31,7 +31,7 @@ var _ = Describe("Test ISCSI Connector", func() {
 			fakeExec.ExecuteWithTimeoutReturns([]byte(fakeMultipathOutput), nil)
 		})
 
-		It("should call multipath and remove all the scsi devices", func() {
+		It("should call multipath and remove all the iscsi devices", func() {
 			err := iscsiConnector.DisconnectVolume(volumeMountProperties)
 			Ω(err).ShouldNot(HaveOccurred())
 			Expect(fakeExec.ExecuteWithTimeoutCallCount()).To(Equal(1))
