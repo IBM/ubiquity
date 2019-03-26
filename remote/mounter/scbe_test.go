@@ -188,14 +188,6 @@ var _ = Describe("scbe_mounter_test", func() {
 			Expect(err).To(HaveOccurred())
 		})
 	})
-	Context("ActionAfterDetach", func() {
-		It("should call CleanupAll ", func() {
-			req := resources.AfterDetachRequest{VolumeConfig: map[string]interface{}{"Wwn": "wwn", "LunNumber": float64(1)}}
-			err := scbeMounter.ActionAfterDetach(req)
-			Expect(err).NotTo(HaveOccurred())
-			Expect(fakeBdUtils.CleanupAllCallCount()).To(Equal(1))
-		})
-	})
 })
 
 func TestSCBEMounter(t *testing.T) {

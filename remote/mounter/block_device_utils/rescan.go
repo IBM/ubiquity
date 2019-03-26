@@ -27,6 +27,7 @@ import (
 
 const rescanIscsiTimeout = 1 * 60 * 1000
 const rescanScsiTimeout = 2 * 60 * 1000
+const iscsiAdm = "iscsiadm"
 
 var FcHostDir = "/sys/class/fc_host/"
 var ScsiHostDir = "/sys/class/scsi_host/"
@@ -51,7 +52,7 @@ func (b *blockDeviceUtils) CleanupDevices(protocol Protocol, volumeMountProperti
 	case SCSI:
 		return b.CleanupSCSIDevices(volumeMountProperties)
 	case ISCSI:
-		return b.CleanupISCSIDevices()
+		return b.CleanupISCSIDevices(volumeMountProperties)
 	default:
 		return b.logger.ErrorRet(&unsupportedProtocolError{protocol}, "failed")
 	}
@@ -59,22 +60,22 @@ func (b *blockDeviceUtils) CleanupDevices(protocol Protocol, volumeMountProperti
 
 func (b *blockDeviceUtils) RescanISCSI() error {
 	defer b.logger.Trace(logs.DEBUG)()
-	rescanCmd := "iscsiadm"
-	if err := b.exec.IsExecutable(rescanCmd); err != nil {
+
+	if err := b.exec.IsExecutable(iscsiAdm); err != nil {
 		b.logger.Debug("No iscisadm installed skipping ISCSI rescan")
 		return nil
 	}
 
 	args := []string{"-m", "session", "--rescan"}
 
-	if _, err := b.exec.ExecuteWithTimeout(rescanIscsiTimeout, rescanCmd, args); err != nil {
+	if _, err := b.exec.ExecuteWithTimeout(rescanIscsiTimeout, iscsiAdm, args); err != nil {
 		if b.IsExitStatusCode(err, 21) {
 			// error code 21 : ISCSI_ERR_NO_OBJS_FOUND - no records/targets/sessions/portals found to execute operation on.
-			b.logger.Warning(NoIscsiadmCommnadWarningMessage, logs.Args{{"command", fmt.Sprintf("[%s %s]", rescanCmd, args)}})
+			b.logger.Warning(NoIscsiadmCommnadWarningMessage, logs.Args{{"command", fmt.Sprintf("[%s %s]", iscsiAdm, args)}})
 			return nil
 
 		} else {
-			return b.logger.ErrorRet(&CommandExecuteError{rescanCmd, err}, "failed")
+			return b.logger.ErrorRet(&CommandExecuteError{iscsiAdm, err}, "failed")
 		}
 	}
 	return nil
@@ -84,11 +85,13 @@ func (b *blockDeviceUtils) RescanSCSI(volumeMountProperties *resources.VolumeMou
 	defer b.logger.Trace(logs.DEBUG)()
 
 	var err error
+	var devMapper string
+	var deviceNames []string
 	for i := 0; i < 6; i++ {
 		if err = b.fcConnector.ConnectVolume(volumeMountProperties); err != nil {
 			return b.logger.ErrorRet(err, "RescanSCSI failed", logs.Args{{"volumeWWN", volumeMountProperties.WWN}})
 		}
-		if _, _, _, err = utils.GetMultipathOutputAndDeviceMapperAndDevice(volumeMountProperties.WWN, b.exec); err == nil {
+		if _, devMapper, deviceNames, err = utils.GetMultipathOutputAndDeviceMapperAndDevice(volumeMountProperties.WWN, b.exec); err == nil && devMapper != "" && len(deviceNames) > 0 {
 			return nil
 		}
 		b.logger.Warning("Can't find the new volume in multipath output after rescan, sleep one second and try again.")
@@ -98,10 +101,20 @@ func (b *blockDeviceUtils) RescanSCSI(volumeMountProperties *resources.VolumeMou
 }
 
 // TODO: improve it to make it faster, for more details, see os_brick project.
-func (b *blockDeviceUtils) CleanupISCSIDevices() error {
-	return b.RescanISCSI()
+func (b *blockDeviceUtils) CleanupISCSIDevices(volumeMountProperties *resources.VolumeMountProperties) error {
+	defer b.logger.Trace(logs.DEBUG)()
+
+	if err := b.exec.IsExecutable(iscsiAdm); err != nil {
+		b.logger.Debug("No iscisadm installed skipping ISCSI rescan")
+		return nil
+	}
+
+	b.RescanISCSI()
+	return b.iscsiConnector.DisconnectVolume(volumeMountProperties)
 }
 
 func (b *blockDeviceUtils) CleanupSCSIDevices(volumeMountProperties *resources.VolumeMountProperties) error {
+	defer b.logger.Trace(logs.DEBUG)()
+
 	return b.fcConnector.DisconnectVolume(volumeMountProperties)
 }

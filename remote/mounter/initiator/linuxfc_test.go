@@ -242,10 +242,10 @@ var _ = Describe("Test FC Initiator", func() {
 			Expect(fakeExec.ExecuteWithTimeoutCallCount()).To(Equal(1))
 		})
 
-		It("should flush twice if fails", func() {
+		It("should flush 3 times if fails", func() {
 			fakeExec.ExecuteWithTimeoutReturns([]byte{}, cmdErr)
 			fcInitiator.FlushMultipath("fake")
-			Expect(fakeExec.ExecuteWithTimeoutCallCount()).To(Equal(2))
+			Expect(fakeExec.ExecuteWithTimeoutCallCount()).To(Equal(3))
 		})
 	})
 })

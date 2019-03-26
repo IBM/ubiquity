@@ -142,7 +142,7 @@ func (b *blockDeviceMounterUtils) UnmountDeviceFlow(devicePath string, volumeWwn
 	defer b.mpathFlock.Unlock()
 	defer b.logger.Debug("Released mpathLock for device", logs.Args{{"device", devicePath}})
 
-	if err := b.blockDeviceUtils.Cleanup(devicePath); err != nil {
+	if err := b.CleanupAll(&resources.VolumeMountProperties{WWN: volumeWwn}); err != nil {
 		return b.logger.ErrorRet(err, "Cleanup failed")
 	}
 

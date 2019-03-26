@@ -157,12 +157,6 @@ func (s *scbeMounter) Unmount(unmountRequest resources.UnmountRequest) error {
 }
 
 func (s *scbeMounter) ActionAfterDetach(request resources.AfterDetachRequest) error {
-	defer s.logger.Trace(logs.DEBUG)()
-	volumeMountProperties := s.prepareVolumeMountProperties(&request)
-
-	// Cleanup volume
-	if err := s.blockDeviceMounterUtils.CleanupAll(volumeMountProperties); err != nil {
-		return s.logger.ErrorRet(err, "CleanupAll failed")
-	}
+	// no action after detach
 	return nil
 }

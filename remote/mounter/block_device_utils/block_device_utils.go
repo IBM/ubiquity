@@ -14,21 +14,22 @@ type blockDeviceUtils struct {
 	exec                utils.Executor
 	regExAlreadyMounted *regexp.Regexp
 	fcConnector         initiator.Connector
+	iscsiConnector      initiator.Connector
 }
 
 func NewBlockDeviceUtils() BlockDeviceUtils {
-	return newBlockDeviceUtils(utils.NewExecutor(), nil)
+	return newBlockDeviceUtils(utils.NewExecutor())
 }
 
 func NewBlockDeviceUtilsWithExecutor(executor utils.Executor) BlockDeviceUtils {
-	return newBlockDeviceUtils(executor, nil)
+	return newBlockDeviceUtils(executor)
 }
 
-func NewBlockDeviceUtilsWithExecutorAndConnector(executor utils.Executor, fcConnector initiator.Connector) BlockDeviceUtils {
-	return newBlockDeviceUtils(executor, fcConnector)
+func NewBlockDeviceUtilsWithExecutorAndConnector(executor utils.Executor, conns ...initiator.Connector) BlockDeviceUtils {
+	return newBlockDeviceUtils(executor, conns...)
 }
 
-func newBlockDeviceUtils(executor utils.Executor, fcConnector initiator.Connector) BlockDeviceUtils {
+func newBlockDeviceUtils(executor utils.Executor, conns ...initiator.Connector) BlockDeviceUtils {
 	logger := logs.GetLogger()
 
 	// Prepare regex that going to be used in unmount interface
@@ -38,8 +39,15 @@ func newBlockDeviceUtils(executor utils.Executor, fcConnector initiator.Connecto
 		panic("failed prepare Already unmount regex")
 	}
 
-	if fcConnector == nil {
+	var fcConnector, iscsiConnector initiator.Connector
+
+	if len(conns) == 0 {
 		fcConnector = connectors.NewFibreChannelConnectorWithExecutor(executor)
+		iscsiConnector = connectors.NewISCSIConnectorWithExecutor(executor)
+	} else {
+		fcConnector = conns[0]
+		iscsiConnector = conns[1]
 	}
-	return &blockDeviceUtils{logger: logger, exec: executor, regExAlreadyMounted: regex, fcConnector: fcConnector}
+
+	return &blockDeviceUtils{logger: logger, exec: executor, regExAlreadyMounted: regex, fcConnector: fcConnector, iscsiConnector: iscsiConnector}
 }
