@@ -22,7 +22,7 @@ func NewISCSIConnectorWithExecutor(executor utils.Executor) initiator.Connector 
 
 func NewISCSIConnectorWithAllFields(executor utils.Executor, initi initiator.Initiator) initiator.Connector {
 	logger := logs.GetLogger()
-	return &iscsiConnector{&scsiConnector{logger: logger, exec: executor, initi: initi}}
+	return &iscsiConnector{&scsiConnector{logger: logger, exec: executor, initiator: initi}}
 }
 
 func newISCSIConnector() *iscsiConnector {
@@ -33,7 +33,7 @@ func newISCSIConnector() *iscsiConnector {
 
 func newISCSIConnectorWithExecutorAndLogger(executor utils.Executor, logger logs.Logger) *iscsiConnector {
 	initi := initiator.NewLinuxISCSIWithExecutor(executor)
-	return &iscsiConnector{&scsiConnector{logger: logger, exec: executor, initi: initi}}
+	return &iscsiConnector{&scsiConnector{logger: logger, exec: executor, initiator: initi}}
 }
 
 func (c *iscsiConnector) ConnectVolume(volumeMountProperties *resources.VolumeMountProperties) error {

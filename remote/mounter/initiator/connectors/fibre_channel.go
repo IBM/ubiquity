@@ -22,7 +22,7 @@ func NewFibreChannelConnectorWithExecutor(executor utils.Executor) initiator.Con
 
 func NewFibreChannelConnectorWithAllFields(executor utils.Executor, initi initiator.Initiator) initiator.Connector {
 	logger := logs.GetLogger()
-	return &fibreChannelConnector{&scsiConnector{logger: logger, exec: executor, initi: initi}}
+	return &fibreChannelConnector{&scsiConnector{logger: logger, exec: executor, initiator: initi}}
 }
 
 func newFibreChannelConnector() *fibreChannelConnector {
@@ -33,17 +33,17 @@ func newFibreChannelConnector() *fibreChannelConnector {
 
 func newFibreChannelConnectorWithExecutorAndLogger(executor utils.Executor, logger logs.Logger) *fibreChannelConnector {
 	initi := initiator.NewLinuxFibreChannelWithExecutor(executor)
-	return &fibreChannelConnector{&scsiConnector{logger: logger, exec: executor, initi: initi}}
+	return &fibreChannelConnector{&scsiConnector{logger: logger, exec: executor, initiator: initi}}
 }
 
 // ConnectVolume attach the volume to host by rescaning all the active FC HBAs.
 func (c *fibreChannelConnector) ConnectVolume(volumeMountProperties *resources.VolumeMountProperties) error {
-	hbas := c.initi.GetHBAs()
+	hbas := c.initiator.GetHBAs()
 
 	if len(hbas) == 0 {
 		c.logger.Warning("No FC HBA is found.")
 		return nil
 	}
 
-	return c.initi.RescanHosts(hbas, volumeMountProperties)
+	return c.initiator.RescanHosts(hbas, volumeMountProperties)
 }

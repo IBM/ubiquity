@@ -10,9 +10,9 @@ import (
 )
 
 type scsiConnector struct {
-	exec   utils.Executor
-	logger logs.Logger
-	initi  initiator.Initiator
+	exec      utils.Executor
+	logger    logs.Logger
+	initiator initiator.Initiator
 }
 
 // DisconnectVolume will do following things:
@@ -33,7 +33,7 @@ func (c *scsiConnector) DisconnectVolume(volumeMountProperties *resources.Volume
 
 	// flush multipath device
 	c.logger.Info("Flush multipath device", logs.Args{{"name", devMapper}})
-	c.initi.FlushMultipath(devMapper)
+	c.initiator.FlushMultipath(devMapper)
 
 	for _, devName := range devNames {
 		device := fmt.Sprintf("/dev/%s", devName)
@@ -48,14 +48,14 @@ func (c *scsiConnector) DisconnectVolume(volumeMountProperties *resources.Volume
 
 	// If flushing the multipath failed before, try now after we have removed the devices.
 	c.logger.Info("Flush multipath device again after removing the devices", logs.Args{{"name", devMapper}})
-	c.initi.FlushMultipath(devMapper)
+	c.initiator.FlushMultipath(devMapper)
 	return nil
 }
 
 func (c *scsiConnector) removeDevices(devices []string) error {
 	var err error
 	for _, device := range devices {
-		err = c.initi.RemoveSCSIDevice(device)
+		err = c.initiator.RemoveSCSIDevice(device)
 	}
 	return err
 }
