@@ -22,6 +22,7 @@ import (
 	"github.com/IBM/ubiquity/utils/logs"
 )
 
+//go:generate counterfeiter -o ../../fakes/fake_scbe_data_model_wrapper.go . ScbeDataModelWrapper
 type ScbeDataModelWrapper interface {
 	GetVolume(name string, mustExist bool) (ScbeVolume, error)
 	DeleteVolume(name string) error
