@@ -49,6 +49,18 @@ size=1.0G features='1 queue_if_no_path' hwhandler='0' wp=rw
   '- 43:0:0:0 sdb 8:16  active ready running
 `
 
+var fakeMultipathOutputWithDifferentSpaces = `
+mpathj (6005076306ffd69d0000000000001004) dm-27 IBM     ,2107900
+size=1.0G features='0' hwhandler='0' wp=rw
+'-+- policy='service-time 0' prio=1 status=active
+  |- 33:0:12:1 sdcp 69:208 active ready running
+  |- 33:0:8:1  sdcn 69:176 active ready running
+  |- 33:0:9:1  sdco 69:192 active ready running
+  |- 34:0:10:1 sdcr 69:240 active ready running
+  |- 34:0:12:1 sdcs 70:0   active ready running
+  '- 34:0:9:1  sdcq 69:224 active ready running
+`
+
 var _ = Describe("scbe_mounter_test", func() {
 	var (
 		fakeExec *fakes.FakeExecutor
@@ -74,6 +86,14 @@ var _ = Describe("scbe_mounter_test", func() {
 			Ω(err).ShouldNot(HaveOccurred())
 			Expect(devMapper).To(Equal("mpathc"))
 			Expect(devNames).To(Equal([]string{"sda", "sdb"}))
+		})
+
+		It("should get device names from multipath output with different spaces", func() {
+			fakeExec.ExecuteWithTimeoutReturns([]byte(fakeMultipathOutputWithDifferentSpaces), nil)
+			_, devMapper, devNames, err := utils.GetMultipathOutputAndDeviceMapperAndDevice(fakeWwn, fakeExec)
+			Ω(err).ShouldNot(HaveOccurred())
+			Expect(devMapper).To(Equal("mpathj"))
+			Expect(devNames).To(Equal([]string{"sdcp", "sdcn", "sdco", "sdcr", "sdcs", "sdcq"}))
 		})
 	})
 })
