@@ -52,6 +52,8 @@ ubiquity_envs="in_UBIQUITY_IMAGE_AMD64 out_UBIQUITY_IMAGE_AMD64 in_UBIQUITY_IMAG
 ubiquity_db_envs="in_UBIQUITY_DB_IMAGE_AMD64 out_UBIQUITY_DB_IMAGE_AMD64 in_UBIQUITY_DB_IMAGE_PPC64LE out_UBIQUITY_DB_IMAGE_PPC64LE in_UBIQUITY_DB_IMAGE_S390X out_UBIQUITY_DB_IMAGE_S390X out_UBIQUITY_DB_IMAGE_MULTIARCH"
 ubiquity_provisioner_envs="in_UBIQUITY_K8S_PROVISIONER_IMAGE_AMD64 out_UBIQUITY_K8S_PROVISIONER_IMAGE_AMD64 in_UBIQUITY_K8S_PROVISIONER_IMAGE_PPC64LE out_UBIQUITY_K8S_PROVISIONER_IMAGE_PPC64LE in_UBIQUITY_K8S_PROVISIONER_IMAGE_S390X out_UBIQUITY_K8S_PROVISIONER_IMAGE_S390X out_UBIQUITY_K8S_PROVISIONER_IMAGE_MULTIARCH"
 ubiquity_flex_envs="in_UBIQUITY_K8S_FLEX_IMAGE_AMD64 out_UBIQUITY_K8S_FLEX_IMAGE_AMD64 in_UBIQUITY_K8S_FLEX_IMAGE_PPC64LE out_UBIQUITY_K8S_FLEX_IMAGE_PPC64LE in_UBIQUITY_K8S_FLEX_IMAGE_S390X out_UBIQUITY_K8S_FLEX_IMAGE_S390X out_UBIQUITY_K8S_FLEX_IMAGE_MULTIARCH"
+ubiquity_flex_sidecar_envs="in_UBIQUITY_K8S_FLEX_SIDECAR_IMAGE_AMD64 out_UBIQUITY_K8S_FLEX_SIDECAR_IMAGE_AMD64 in_UBIQUITY_K8S_FLEX_SIDECAR_IMAGE_PPC64LE out_UBIQUITY_K8S_FLEX_SIDECAR_IMAGE_PPC64LE in_UBIQUITY_K8S_FLEX_SIDECAR_IMAGE_S390X out_UBIQUITY_K8S_FLEX_SIDECAR_IMAGE_S390X out_UBIQUITY_K8S_FLEX_SIDECAR_IMAGE_MULTIARCH"
+ubiquity_helm_utils_envs="in_UBIQUITY_K8S_HELM_UTILS_IMAGE_AMD64 out_UBIQUITY_K8S_HELM_UTILS_IMAGE_AMD64 in_UBIQUITY_K8S_HELM_UTILS_IMAGE_PPC64LE out_UBIQUITY_K8S_HELM_UTILS_IMAGE_PPC64LE in_UBIQUITY_K8S_HELM_UTILS_IMAGE_S390X out_UBIQUITY_K8S_HELM_UTILS_IMAGE_S390X out_UBIQUITY_K8S_HELM_UTILS_IMAGE_MULTIARCH"
 
 HELPER_PUSH_IMAGE=./helper_to_push_docker_image.sh
 HELPER_PUSH_MANIFEST=./helper_to_push_docker_manifest.sh
@@ -59,7 +61,7 @@ HELPER_PUSH_MANIFEST=./helper_to_push_docker_manifest.sh
 date
 # Validations
 [ -f $HELPER_PUSH_IMAGE -a -f $HELPER_PUSH_MANIFEST ]  && : || exit 1
-for expected_env in $ubiquity_envs $ubiquity_db_envs $ubiquity_provisioner_envs $ubiquity_flex_envs; do
+for expected_env in $ubiquity_envs $ubiquity_db_envs $ubiquity_provisioner_envs $ubiquity_flex_envs $ubiquity_flex_sidecar_envs $ubiquity_helm_utils_envs; do
    [ -z "`printenv $expected_env`" ] && { echo "Error: expected env [$expected_env] does not exist. Please set it first."; exit 1; } || :
    echo "$expected_env=`printenv $expected_env`"
 done
@@ -67,10 +69,12 @@ done
 echo "TAG_LATEST=$TAG_LATEST"
 
 
-push_arch_images_and_create_manifest_for_app "Ubiquity"              $in_UBIQUITY_IMAGE_AMD64                 $out_UBIQUITY_IMAGE_AMD64                          $in_UBIQUITY_IMAGE_PPC64LE                 $out_UBIQUITY_IMAGE_PPC64LE                          $in_UBIQUITY_IMAGE_S390X                 $out_UBIQUITY_IMAGE_S390X                          $out_UBIQUITY_IMAGE_MULTIARCH                  $TAG_LATEST
-push_arch_images_and_create_manifest_for_app "Ubiquity DB"           $in_UBIQUITY_DB_IMAGE_AMD64              $out_UBIQUITY_DB_IMAGE_AMD64                       $in_UBIQUITY_DB_IMAGE_PPC64LE              $out_UBIQUITY_DB_IMAGE_PPC64LE                       $in_UBIQUITY_DB_IMAGE_S390X              $out_UBIQUITY_DB_IMAGE_S390X                       $out_UBIQUITY_DB_IMAGE_MULTIARCH               $TAG_LATEST
-push_arch_images_and_create_manifest_for_app "Ubiquity provisioner"  $in_UBIQUITY_K8S_PROVISIONER_IMAGE_AMD64 $out_UBIQUITY_K8S_PROVISIONER_IMAGE_AMD64          $in_UBIQUITY_K8S_PROVISIONER_IMAGE_PPC64LE $out_UBIQUITY_K8S_PROVISIONER_IMAGE_PPC64LE          $in_UBIQUITY_K8S_PROVISIONER_IMAGE_S390X $out_UBIQUITY_K8S_PROVISIONER_IMAGE_S390X          $out_UBIQUITY_K8S_PROVISIONER_IMAGE_MULTIARCH  $TAG_LATEST
-push_arch_images_and_create_manifest_for_app "Ubiquity flex"         $in_UBIQUITY_K8S_FLEX_IMAGE_AMD64        $out_UBIQUITY_K8S_FLEX_IMAGE_AMD64                 $in_UBIQUITY_K8S_FLEX_IMAGE_PPC64LE        $out_UBIQUITY_K8S_FLEX_IMAGE_PPC64LE                 $in_UBIQUITY_K8S_FLEX_IMAGE_S390X        $out_UBIQUITY_K8S_FLEX_IMAGE_S390X                 $out_UBIQUITY_K8S_FLEX_IMAGE_MULTIARCH         $TAG_LATEST
+push_arch_images_and_create_manifest_for_app "Ubiquity"               $in_UBIQUITY_IMAGE_AMD64                   $out_UBIQUITY_IMAGE_AMD64                          $in_UBIQUITY_IMAGE_PPC64LE                   $out_UBIQUITY_IMAGE_PPC64LE                          $in_UBIQUITY_IMAGE_S390X                   $out_UBIQUITY_IMAGE_S390X                          $out_UBIQUITY_IMAGE_MULTIARCH                    $TAG_LATEST
+push_arch_images_and_create_manifest_for_app "Ubiquity DB"            $in_UBIQUITY_DB_IMAGE_AMD64                $out_UBIQUITY_DB_IMAGE_AMD64                       $in_UBIQUITY_DB_IMAGE_PPC64LE                $out_UBIQUITY_DB_IMAGE_PPC64LE                       $in_UBIQUITY_DB_IMAGE_S390X                $out_UBIQUITY_DB_IMAGE_S390X                       $out_UBIQUITY_DB_IMAGE_MULTIARCH                 $TAG_LATEST
+push_arch_images_and_create_manifest_for_app "Ubiquity provisioner"   $in_UBIQUITY_K8S_PROVISIONER_IMAGE_AMD64   $out_UBIQUITY_K8S_PROVISIONER_IMAGE_AMD64          $in_UBIQUITY_K8S_PROVISIONER_IMAGE_PPC64LE   $out_UBIQUITY_K8S_PROVISIONER_IMAGE_PPC64LE          $in_UBIQUITY_K8S_PROVISIONER_IMAGE_S390X   $out_UBIQUITY_K8S_PROVISIONER_IMAGE_S390X          $out_UBIQUITY_K8S_PROVISIONER_IMAGE_MULTIARCH    $TAG_LATEST
+push_arch_images_and_create_manifest_for_app "Ubiquity flex"          $in_UBIQUITY_K8S_FLEX_IMAGE_AMD64          $out_UBIQUITY_K8S_FLEX_IMAGE_AMD64                 $in_UBIQUITY_K8S_FLEX_IMAGE_PPC64LE          $out_UBIQUITY_K8S_FLEX_IMAGE_PPC64LE                 $in_UBIQUITY_K8S_FLEX_IMAGE_S390X          $out_UBIQUITY_K8S_FLEX_IMAGE_S390X                 $out_UBIQUITY_K8S_FLEX_IMAGE_MULTIARCH           $TAG_LATEST
+push_arch_images_and_create_manifest_for_app "Ubiquity flex sidecar"  $in_UBIQUITY_K8S_FLEX_SIDECAR_IMAGE_AMD64  $out_UBIQUITY_K8S_FLEX_SIDECAR_IMAGE_AMD64         $in_UBIQUITY_K8S_FLEX_SIDECAR_IMAGE_PPC64LE  $out_UBIQUITY_K8S_FLEX_SIDECAR_IMAGE_PPC64LE         $in_UBIQUITY_K8S_FLEX_SIDECAR_IMAGE_S390X  $out_UBIQUITY_K8S_FLEX_SIDECAR_IMAGE_S390X         $out_UBIQUITY_K8S_FLEX_SIDECAR_IMAGE_MULTIARCH   $TAG_LATEST
+push_arch_images_and_create_manifest_for_app "Ubiquity helm utils"    $in_UBIQUITY_K8S_HELM_UTILS_IMAGE_AMD64    $out_UBIQUITY_K8S_HELM_UTILS_IMAGE_AMD64           $in_UBIQUITY_K8S_HELM_UTILS_IMAGE_PPC64LE    $out_UBIQUITY_K8S_HELM_UTILS_IMAGE_PPC64LE           $in_UBIQUITY_K8S_HELM_UTILS_IMAGE_S390X    $out_UBIQUITY_K8S_HELM_UTILS_IMAGE_S390X           $out_UBIQUITY_K8S_HELM_UTILS_IMAGE_MULTIARCH     $TAG_LATEST
 
 date
 echo "######################################"
@@ -82,5 +86,7 @@ echo $out_UBIQUITY_IMAGE_MULTIARCH
 echo $out_UBIQUITY_DB_IMAGE_MULTIARCH
 echo $out_UBIQUITY_K8S_PROVISIONER_IMAGE_MULTIARCH
 echo $out_UBIQUITY_K8S_FLEX_IMAGE_MULTIARCH
+echo $out_UBIQUITY_K8S_FLEX_SIDECAR_IMAGE_MULTIARCH
+echo $out_UBIQUITY_K8S_HELM_UTILS_IMAGE_MULTIARCH
 
 
