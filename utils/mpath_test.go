@@ -79,7 +79,7 @@ size=20G features='1 queue_if_no_path' hwhandler='0' wp=rw
   '- 39:0:0:0 sdc 8:32 active ready running
 `
 
-var fakeMultipathOutputWithWarningsRemoved = `mpathj (36005076306ffd69d0000000000001004) dm-17 IBM     ,2145
+var fakeMultipathOutputWithWarningsExcluded = `mpathj (36005076306ffd69d0000000000001004) dm-17 IBM     ,2145
 size=1.0G features='1 queue_if_no_path' hwhandler='0' wp=rw
 |-+- policy='service-time 0' prio=0 status=enabled
 | '- 39:0:0:1 sde 8:64 failed faulty running
@@ -92,7 +92,7 @@ size=20G features='1 queue_if_no_path' hwhandler='0' wp=rw
 '-+- policy='service-time 0' prio=10 status=enabled
   '- 39:0:0:0 sdc 8:32 active ready running`
 
-var _ = FDescribe("scbe_mounter_test", func() {
+var _ = Describe("multipath_utils_test", func() {
 	var (
 		fakeExec *fakes.FakeExecutor
 	)
@@ -138,10 +138,10 @@ var _ = FDescribe("scbe_mounter_test", func() {
 
 	Context("ExcludeNoTargetPortGroupMessagesFromMultipathOutput", func() {
 
-		It("should get device names from multipath output", func() {
+		It("should exclude the warning messages from multipath output", func() {
 			logger := logs.GetLogger()
 			out := utils.ExcludeNoTargetPortGroupMessagesFromMultipathOutput(fakeMultipathOutputWithWarnings, logger)
-			Expect(out).To(Equal(fakeMultipathOutputWithWarningsRemoved))
+			Expect(out).To(Equal(fakeMultipathOutputWithWarningsExcluded))
 		})
 	})
 })
