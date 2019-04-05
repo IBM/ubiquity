@@ -2,12 +2,16 @@ package utils
 
 import (
 	"bufio"
+	"fmt"
 	"regexp"
 	"strings"
+
+	"github.com/IBM/ubiquity/utils/logs"
 )
 
 const multipathCmd = "multipath"
 const MultipathTimeout = 10 * 1000
+const WarningNoTargetPortGroup = "couldn't get target port group"
 
 /*
 GetMultipathOutputAndDeviceMapperAndDevice analysises the output of command "multipath -ll",
@@ -84,4 +88,27 @@ func GetMultipathOutputAndDeviceMapperAndDevice(volumeWwn string, exec Executor)
 		}
 	}
 	return outputBytes, devMapper, deviceNames, nil
+}
+
+func excludeWarningMessageLines(inputData string, warningPattern *regexp.Regexp, logger logs.Logger) string {
+	scanner := bufio.NewScanner(strings.NewReader(inputData))
+	res := ""
+	for scanner.Scan() {
+		line := scanner.Text()
+		if warningPattern.MatchString(line) {
+			logger.Debug(fmt.Sprintf(`Found warning message line "%s", exclude it.`, line))
+			continue
+		}
+		if res == "" {
+			res = line
+		} else {
+			res = res + "\n" + line
+		}
+	}
+	return res
+}
+
+func ExcludeNoTargetPortGroupMessagesFromMultipathOutput(mpathOutput string, logger logs.Logger) string {
+	regex, _ := regexp.Compile(WarningNoTargetPortGroup)
+	return excludeWarningMessageLines(mpathOutput, regex, logger)
 }
