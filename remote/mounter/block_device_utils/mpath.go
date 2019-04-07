@@ -111,6 +111,8 @@ func (b *blockDeviceUtils) mpathDevFullPath(dev string) string {
 func (b *blockDeviceUtils) DiscoverBySgInq(mpathOutput string, volumeWwn string) (string, error) {
 	defer b.logger.Trace(logs.DEBUG)()
 
+	mpathOutput = utils.ExcludeNoTargetPortGroupMessagesFromMultipathOutput(mpathOutput, b.logger)
+
 	scanner := bufio.NewScanner(strings.NewReader(mpathOutput))
 	// regex to find all dm-X line from IBM vendor.
 	// Note: searching "IBM" in the line also focus the search on IBM devices only and also eliminate the need to run sg_inq on faulty devices.
