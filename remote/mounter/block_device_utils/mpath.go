@@ -81,8 +81,10 @@ func (b *blockDeviceUtils) Discover(volumeWwn string, deepDiscovery bool) (strin
 	} else {
 		mpath = b.mpathDevFullPath(dev)
 
+		mpathOutput := utils.ExcludeNoTargetPortGroupMessagesFromMultipathOutput(string(outputBytes[:]), b.logger)
+
 		// Validate that we have the correct wwn.
-		SqInqWwn, err := b.GetWwnByScsiInq(string(outputBytes[:]), mpath)
+		SqInqWwn, err := b.GetWwnByScsiInq(mpathOutput, mpath)
 		if err != nil {
 			switch err.(type) {
 			case *FaultyDeviceError:
