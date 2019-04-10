@@ -2,6 +2,7 @@ package utils
 
 import (
 	"bufio"
+	"encoding/json"
 	"fmt"
 	"regexp"
 	"strings"
@@ -53,7 +54,7 @@ func GetMultipathOutputAndDeviceMapperAndDevice(volumeWwn string, exec Executor)
 	if err != nil {
 		return []byte{}, "", []string{}, err
 	}
-	bodyPattern := "[0-9]+:[0-9]+:[0-9]+:[0-9]+ "
+	bodyPattern := "(?:[0-9]+:[0-9]+:[0-9]+:[0-9]+ )[\\s\\S]+"
 	bodyRegex, err := regexp.Compile(bodyPattern)
 	if err != nil {
 		return []byte{}, "", []string{}, err
@@ -74,11 +75,9 @@ func GetMultipathOutputAndDeviceMapperAndDevice(volumeWwn string, exec Executor)
 		skipped := false
 		for scanner.Scan() {
 			text := scanner.Text()
-			text = strings.TrimSpace(text)
 			if bodyRegex.MatchString(text) {
-				index := bodyRegex.FindStringIndex(text)
-				trimedText := text[index[0]:]
-				deviceName := strings.Fields(trimedText)[1]
+				res := bodyRegex.FindString(text)
+				deviceName := strings.Fields(res)[1]
 				deviceNames = append(deviceNames, deviceName)
 			} else if !skipped {
 				skipped = true
@@ -111,4 +110,61 @@ func excludeWarningMessageLines(inputData string, warningPattern *regexp.Regexp,
 func ExcludeNoTargetPortGroupMessagesFromMultipathOutput(mpathOutput string, logger logs.Logger) string {
 	regex, _ := regexp.Compile(WarningNoTargetPortGroup)
 	return excludeWarningMessageLines(mpathOutput, regex, logger)
+}
+
+// GetMultipathNameUuidpair will return all the multipath devices in the following format:
+// ["mpatha,360050768029b8168e000000000006247", "mpathb,360050768029b8168e000000000006247", ...]
+func GetMultipathNameUuidpair(exec Executor) ([]string, error) {
+	cmd := `show maps raw format "%n,%w"`
+	output, err := Multipathd(cmd, exec)
+	if err != nil {
+		return []string{}, err
+	} else {
+		pairs := strings.Split(output, "\n")
+		return pairs, nil
+	}
+}
+
+func GetMultipathOutputAll(exec Executor) (*MultipathOutputAll, error) {
+	cmd := "list maps json"
+	output, err := Multipathd(cmd, exec)
+	if err != nil {
+		return nil, err
+	} else {
+		var mpathAll MultipathOutputAll
+		err := json.Unmarshal([]byte(output), &mpathAll)
+		if err != nil {
+			return nil, err
+		}
+		return &mpathAll, nil
+	}
+}
+
+func GetMultipathOutput(name string, exec Executor) (*MultipathOutput, error) {
+	cmd := fmt.Sprintf("list map %s json", name)
+	output, err := Multipathd(cmd, exec)
+	if err != nil {
+		return nil, err
+	} else {
+		var mpath MultipathOutput
+		err := json.Unmarshal([]byte(output), &mpath)
+		if err != nil {
+			return nil, err
+		}
+		return &mpath, nil
+	}
+}
+
+// Multipathd is a non-interactive mode of "multipathd -k"
+// It will enter the interactive mode, run given command and exit immediately.
+func Multipathd(cmd string, exec Executor) (string, error) {
+
+	output, err := exec.ExecuteInteractive("multipathd", []string{"-k"}, []string{cmd, "exit"})
+	if err != nil {
+		return "", err
+	}
+	outputString := strings.TrimSpace(string(output))
+	outputString = strings.SplitN(outputString, "\n", 2)[1]
+	outputString = strings.TrimSpace(outputString)
+	return strings.Split(outputString, "\nmultipathd>")[0], nil
 }
