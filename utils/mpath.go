@@ -112,7 +112,7 @@ func ExcludeNoTargetPortGroupMessagesFromMultipathOutput(mpathOutput string, log
 	return excludeWarningMessageLines(mpathOutput, regex, logger)
 }
 
-// GetMultipathNameUuidpair will return all the multipath devices in the following format:
+// GetMultipathNameUuidpair returns all the multipath devices in the following format:
 // ["mpatha,360050768029b8168e000000000006247", "mpathb,360050768029b8168e000000000006247", ...]
 func GetMultipathNameUuidpair(exec Executor) ([]string, error) {
 	cmd := `show maps raw format "%n,%w"`

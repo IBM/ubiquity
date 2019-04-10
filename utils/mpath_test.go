@@ -143,7 +143,7 @@ multipathd> exit
 `
 
 var fakeMultipathOutputJson = `
-multipathd> list maps json
+multipathd> list map mpathp json
 {
    "major_version": 0,
    "minor_version": 1,
