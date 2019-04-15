@@ -92,6 +92,112 @@ size=20G features='1 queue_if_no_path' hwhandler='0' wp=rw
 '-+- policy='service-time 0' prio=10 status=enabled
   '- 39:0:0:0 sdc 8:32 active ready running`
 
+var fakeMultipathOutputAllJson = `
+multipathd> list maps json
+{
+   "major_version": 0,
+   "minor_version": 1,
+   "maps": [{
+      "name" : "mpathp",
+      "uuid" : "360050768029b8168e000000000006247",
+      "sysfs" : "dm-3",
+      "failback" : "immediate",
+      "queueing" : "5 chk",
+      "paths" : 0,
+      "write_prot" : "rw",
+      "dm_st" : "active",
+      "features" : "0",
+      "hwhandler" : "0",
+      "action" : "create",
+      "path_faults" : 1,
+      "vend" : "IBM     ",
+      "prod" : "2145            ",
+      "rev" : "0000",
+      "switch_grp" : 0,
+      "map_loads" : 1,
+      "total_q_time" : 26,
+      "q_timeouts" : 1,
+      "path_groups": [{
+         "selector" : "round-robin 0",
+         "pri" : 0,
+         "dm_st" : "active",
+         "group" : 1,
+         "paths": [{
+            "dev" : "sdb",
+            "dev_t" : "8:16",
+            "dm_st" : "failed",
+            "dev_st" : "running",
+            "chk_st" : "faulty",
+            "checker" : "tur",
+            "pri" : 50,
+            "host_wwnn" : "[undef]",
+            "target_wwnn" : "iqn.1986-03.com.ibm:2145.v7k60.node1",
+            "host_wwpn" : "[undef]",
+            "target_wwpn" : "[undef]",
+            "host_adapter" : "9.115.240.253"
+         }]
+      }]
+   }]
+}
+multipathd> exit
+`
+
+var fakeMultipathOutputJson = `
+multipathd> list map mpathp json
+{
+   "major_version": 0,
+   "minor_version": 1,
+   "map": {
+      "name" : "mpathp",
+      "uuid" : "360050768029b8168e000000000006247",
+      "sysfs" : "dm-3",
+      "failback" : "immediate",
+      "queueing" : "5 chk",
+      "paths" : 0,
+      "write_prot" : "rw",
+      "dm_st" : "active",
+      "features" : "0",
+      "hwhandler" : "0",
+      "action" : "create",
+      "path_faults" : 1,
+      "vend" : "IBM     ",
+      "prod" : "2145            ",
+      "rev" : "0000",
+      "switch_grp" : 0,
+      "map_loads" : 1,
+      "total_q_time" : 26,
+      "q_timeouts" : 1,
+      "path_groups": [{
+         "selector" : "round-robin 0",
+         "pri" : 0,
+         "dm_st" : "active",
+         "group" : 1,
+         "paths": [{
+            "dev" : "sdb",
+            "dev_t" : "8:16",
+            "dm_st" : "failed",
+            "dev_st" : "running",
+            "chk_st" : "faulty",
+            "checker" : "tur",
+            "pri" : 50,
+            "host_wwnn" : "[undef]",
+            "target_wwnn" : "iqn.1986-03.com.ibm:2145.v7k60.node1",
+            "host_wwpn" : "[undef]",
+            "target_wwpn" : "[undef]",
+            "host_adapter" : "9.115.240.253"
+         }]
+      }]
+   }
+}
+multipathd> exit
+`
+
+var fakeMultipathNameUuidpair = `
+multipathd> list maps json
+mpathp,360050768029b8168e000000000006247
+multipathd> exit
+`
+
 var _ = Describe("multipath_utils_test", func() {
 	var (
 		fakeExec *fakes.FakeExecutor
@@ -142,6 +248,49 @@ var _ = Describe("multipath_utils_test", func() {
 			logger := logs.GetLogger()
 			out := utils.ExcludeNoTargetPortGroupMessagesFromMultipathOutput(fakeMultipathOutputWithWarnings, logger)
 			Expect(out).To(Equal(fakeMultipathOutputWithWarningsExcluded))
+		})
+	})
+
+	Context("GetMultipathOutputAll", func() {
+
+		It("should get correct json response and unmarshal to MultipathOutputAll", func() {
+			fakeExec.ExecuteInteractiveReturns([]byte(fakeMultipathOutputAllJson), nil)
+			out, err := utils.GetMultipathOutputAll(fakeExec)
+			Ω(err).ShouldNot(HaveOccurred())
+			Expect(out.Maps).To(HaveLen(1))
+			mpath := out.Maps[0]
+			Expect(mpath.PathGroups).To(HaveLen(1))
+			pg := mpath.PathGroups[0]
+			Expect(pg.Paths).To(HaveLen(1))
+			path := pg.Paths[0]
+			Expect(path.Dev).To(Equal("sdb"))
+		})
+	})
+
+	Context("GetMultipathOutput", func() {
+
+		It("should get correct json response and unmarshal to MultipathOutput", func() {
+			fakeExec.ExecuteInteractiveReturns([]byte(fakeMultipathOutputJson), nil)
+			out, err := utils.GetMultipathOutput("mpathp", fakeExec)
+			Ω(err).ShouldNot(HaveOccurred())
+			Expect(out.Map).NotTo(BeNil())
+			mpath := out.Map
+			Expect(mpath.PathGroups).To(HaveLen(1))
+			pg := mpath.PathGroups[0]
+			Expect(pg.Paths).To(HaveLen(1))
+			path := pg.Paths[0]
+			Expect(path.Dev).To(Equal("sdb"))
+		})
+	})
+
+	Context("GetMultipathNameUuidpair", func() {
+
+		It("should return correct name uuid pair", func() {
+			fakeExec.ExecuteInteractiveReturns([]byte(fakeMultipathNameUuidpair), nil)
+			pairs, err := utils.GetMultipathNameUuidpair(fakeExec)
+			Ω(err).ShouldNot(HaveOccurred())
+			Expect(pairs).To(HaveLen(1))
+			Expect(pairs[0]).To(Equal("mpathp,360050768029b8168e000000000006247"))
 		})
 	})
 })

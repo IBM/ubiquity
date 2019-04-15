@@ -36,6 +36,21 @@ type FakeExecutor struct {
 		result1 []byte
 		result2 error
 	}
+	ExecuteInteractiveStub        func(string, []string, []string) ([]byte, error)
+	executeInteractiveMutex       sync.RWMutex
+	executeInteractiveArgsForCall []struct {
+		arg1 string
+		arg2 []string
+		arg3 []string
+	}
+	executeInteractiveReturns struct {
+		result1 []byte
+		result2 error
+	}
+	executeInteractiveReturnsOnCall map[int]struct {
+		result1 []byte
+		result2 error
+	}
 	ExecuteWithTimeoutStub        func(int, string, []string) ([]byte, error)
 	executeWithTimeoutMutex       sync.RWMutex
 	executeWithTimeoutArgsForCall []struct {
@@ -371,6 +386,81 @@ func (fake *FakeExecutor) ExecuteReturnsOnCall(i int, result1 []byte, result2 er
 		})
 	}
 	fake.executeReturnsOnCall[i] = struct {
+		result1 []byte
+		result2 error
+	}{result1, result2}
+}
+
+func (fake *FakeExecutor) ExecuteInteractive(arg1 string, arg2 []string, arg3 []string) ([]byte, error) {
+	var arg2Copy []string
+	if arg2 != nil {
+		arg2Copy = make([]string, len(arg2))
+		copy(arg2Copy, arg2)
+	}
+	var arg3Copy []string
+	if arg3 != nil {
+		arg3Copy = make([]string, len(arg3))
+		copy(arg3Copy, arg3)
+	}
+	fake.executeInteractiveMutex.Lock()
+	ret, specificReturn := fake.executeInteractiveReturnsOnCall[len(fake.executeInteractiveArgsForCall)]
+	fake.executeInteractiveArgsForCall = append(fake.executeInteractiveArgsForCall, struct {
+		arg1 string
+		arg2 []string
+		arg3 []string
+	}{arg1, arg2Copy, arg3Copy})
+	fake.recordInvocation("ExecuteInteractive", []interface{}{arg1, arg2Copy, arg3Copy})
+	fake.executeInteractiveMutex.Unlock()
+	if fake.ExecuteInteractiveStub != nil {
+		return fake.ExecuteInteractiveStub(arg1, arg2, arg3)
+	}
+	if specificReturn {
+		return ret.result1, ret.result2
+	}
+	fakeReturns := fake.executeInteractiveReturns
+	return fakeReturns.result1, fakeReturns.result2
+}
+
+func (fake *FakeExecutor) ExecuteInteractiveCallCount() int {
+	fake.executeInteractiveMutex.RLock()
+	defer fake.executeInteractiveMutex.RUnlock()
+	return len(fake.executeInteractiveArgsForCall)
+}
+
+func (fake *FakeExecutor) ExecuteInteractiveCalls(stub func(string, []string, []string) ([]byte, error)) {
+	fake.executeInteractiveMutex.Lock()
+	defer fake.executeInteractiveMutex.Unlock()
+	fake.ExecuteInteractiveStub = stub
+}
+
+func (fake *FakeExecutor) ExecuteInteractiveArgsForCall(i int) (string, []string, []string) {
+	fake.executeInteractiveMutex.RLock()
+	defer fake.executeInteractiveMutex.RUnlock()
+	argsForCall := fake.executeInteractiveArgsForCall[i]
+	return argsForCall.arg1, argsForCall.arg2, argsForCall.arg3
+}
+
+func (fake *FakeExecutor) ExecuteInteractiveReturns(result1 []byte, result2 error) {
+	fake.executeInteractiveMutex.Lock()
+	defer fake.executeInteractiveMutex.Unlock()
+	fake.ExecuteInteractiveStub = nil
+	fake.executeInteractiveReturns = struct {
+		result1 []byte
+		result2 error
+	}{result1, result2}
+}
+
+func (fake *FakeExecutor) ExecuteInteractiveReturnsOnCall(i int, result1 []byte, result2 error) {
+	fake.executeInteractiveMutex.Lock()
+	defer fake.executeInteractiveMutex.Unlock()
+	fake.ExecuteInteractiveStub = nil
+	if fake.executeInteractiveReturnsOnCall == nil {
+		fake.executeInteractiveReturnsOnCall = make(map[int]struct {
+			result1 []byte
+			result2 error
+		})
+	}
+	fake.executeInteractiveReturnsOnCall[i] = struct {
 		result1 []byte
 		result2 error
 	}{result1, result2}
@@ -1424,6 +1514,8 @@ func (fake *FakeExecutor) Invocations() map[string][][]interface{} {
 	defer fake.evalSymlinksMutex.RUnlock()
 	fake.executeMutex.RLock()
 	defer fake.executeMutex.RUnlock()
+	fake.executeInteractiveMutex.RLock()
+	defer fake.executeInteractiveMutex.RUnlock()
 	fake.executeWithTimeoutMutex.RLock()
 	defer fake.executeWithTimeoutMutex.RUnlock()
 	fake.getDeviceForFileStatMutex.RLock()

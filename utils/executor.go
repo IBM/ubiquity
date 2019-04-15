@@ -17,6 +17,7 @@
 package utils
 
 import (
+	"bufio"
 	"bytes"
 	"context"
 	"fmt"
@@ -24,8 +25,9 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
-	"time"
+	"strings"
 	"syscall"
+	"time"
 
 	"github.com/IBM/ubiquity/utils/logs"
 )
@@ -33,6 +35,7 @@ import (
 //go:generate counterfeiter -o ../fakes/fake_executor.go . Executor
 type Executor interface { // basic host dependent functions
 	Execute(command string, args []string) ([]byte, error)
+	ExecuteInteractive(command string, args []string, interactiveCmds []string) ([]byte, error)
 	Stat(string) (os.FileInfo, error)
 	Mkdir(string, os.FileMode) error
 	MkdirAll(string, os.FileMode) error
@@ -51,7 +54,6 @@ type Executor interface { // basic host dependent functions
 	IsSameFile(file1 os.FileInfo, file2 os.FileInfo) bool
 	IsDirEmpty(dir string) (bool, error)
 	GetDeviceForFileStat(os.FileInfo) uint64
-
 }
 
 type executor struct {
@@ -82,6 +84,35 @@ func (e *executor) Execute(command string, args []string) ([]byte, error) {
 		})
 
 	return stdOut, err
+}
+
+// non-interactive mode of interactive command(s) executor
+// It will enter the interactive mode, run given command(s) and exit immediately.
+// interactiveCmds is a set of commands run in interactive mode, an exit command is mandatory.
+// For example: [command1, exit], [command1, command2, q]
+func (e *executor) ExecuteInteractive(command string, args []string, interactiveCmds []string) ([]byte, error) {
+	var stdout, stderr bytes.Buffer
+	interactiveCmd := strings.Join(interactiveCmds, "\n") + "\n"
+	outWriter := bufio.NewWriter(&stdout)
+	errWriter := bufio.NewWriter(&stderr)
+	cmdStdin := strings.NewReader(interactiveCmd)
+
+	execInteractive := exec.Command(command, args...)
+	execInteractive.Stdout = outWriter
+	execInteractive.Stdin = cmdStdin
+	execInteractive.Stderr = errWriter
+
+	err := execInteractive.Run()
+	if err != nil {
+		return nil, err
+	}
+
+	errOutput := strings.TrimSpace(stderr.String())
+	if errOutput != "" {
+		return nil, fmt.Errorf(errOutput)
+	}
+
+	return stdout.Bytes(), nil
 }
 
 func (e *executor) ExecuteWithTimeout(mSeconds int, command string, args []string) ([]byte, error) {
@@ -184,6 +215,6 @@ func (e *executor) IsDirEmpty(dir string) (bool, error) {
 	return len(files) == 0, nil
 }
 
-func (e *executor) GetDeviceForFileStat(fileStat os.FileInfo) uint64{
+func (e *executor) GetDeviceForFileStat(fileStat os.FileInfo) uint64 {
 	return fileStat.Sys().(*syscall.Stat_t).Dev
 }
