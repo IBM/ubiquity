@@ -22,7 +22,7 @@ import (
 	"github.com/IBM/ubiquity/utils/logs"
 )
 
-//go:generate counterfeiter -o ../../fakes/fake_ScbeDataModelWrapper.go . ScbeDataModelWrapper
+//go:generate counterfeiter -o ../../fakes/fake_scbe_data_model_wrapper.go . ScbeDataModelWrapper
 type ScbeDataModelWrapper interface {
 	GetVolume(name string, mustExist bool) (ScbeVolume, error)
 	DeleteVolume(name string) error
@@ -96,7 +96,6 @@ func (d *scbeDataModelWrapper) DeleteVolume(name string) error {
 	defer d.logger.Trace(logs.DEBUG)()
 	var err error
 
-	
 	if database.IsDatabaseVolume(name) {
 		if d.dbVolume == nil {
 			d.logger.Warning("Idempotent issue encountered - db volume is nil. continuing with deletion flow")

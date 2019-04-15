@@ -20,6 +20,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+
 	//"path"
 
 	"time"
@@ -42,6 +43,7 @@ func main() {
 	}
 	configCopyWithPasswordStarred := config
 	configCopyWithPasswordStarred.ScbeConfig.ConnectionInfo.CredentialInfo.Password = "****"
+	configCopyWithPasswordStarred.SpectrumScaleConfig.RestConfig.Password = "****"
 	fmt.Printf("Starting Ubiquity Storage API server with config %#v\n", configCopyWithPasswordStarred)
 	_, err = os.Stat(config.LogPath)
 	if err != os.ErrNotExist {
@@ -50,9 +52,9 @@ func main() {
 			panic(fmt.Errorf("Failed to setup log dir"))
 		}
 	}
-	
+
 	defer utils.InitUbiquityServerLogger()()
-	
+
 	logger := logs.GetLogger()
 
 	executor := utils.NewExecutor()

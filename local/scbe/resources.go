@@ -226,7 +226,7 @@ type ScbeResponseHost struct {
 	Array          string `json:"array"`
 	HostId         string `json:"host_id"`
 	Name           string `json:"name"`
-	StorageCluster string `json:"storage_cluster"`
+	StorageCluster int `json:"storage_cluster"`
 	PhysicalHost   int    `json:"physical_host"`
 }
 

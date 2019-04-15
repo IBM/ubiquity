@@ -24,6 +24,7 @@ import (
 	"regexp"
 	"strings"
 
+	"github.com/IBM/ubiquity/utils"
 	"github.com/IBM/ubiquity/utils/logs"
 )
 
@@ -56,27 +57,12 @@ func (b *blockDeviceUtils) ReloadMultipath() error {
 
 func (b *blockDeviceUtils) Discover(volumeWwn string, deepDiscovery bool) (string, error) {
 	defer b.logger.Trace(logs.DEBUG, logs.Args{{"volumeWwn", volumeWwn}, {"deepDiscovery", deepDiscovery}})()
-	if err := b.exec.IsExecutable(multipathCmd); err != nil {
-		return "", b.logger.ErrorRet(&commandNotFoundError{multipathCmd, err}, "failed")
-	}
-	args := []string{"-ll"}
-	outputBytes, err := b.exec.ExecuteWithTimeout(DiscoverTimeout, multipathCmd, args)
+
+	outputBytes, dev, _, err := utils.GetMultipathOutputAndDeviceMapperAndDevice(volumeWwn, b.exec)
 	if err != nil {
-		return "", b.logger.ErrorRet(&CommandExecuteError{multipathCmd, err}, "failed")
+		return "", err
 	}
-	scanner := bufio.NewScanner(strings.NewReader(string(outputBytes[:])))
-	pattern := "(?i)" + volumeWwn
-	regex, err := regexp.Compile(pattern)
-	if err != nil {
-		return "", b.logger.ErrorRet(err, "failed")
-	}
-	dev := ""
-	for scanner.Scan() {
-		if regex.MatchString(scanner.Text()) {
-			dev = strings.Split(scanner.Text(), " ")[0]
-			break
-		}
-	}
+
 	mpath := ""
 	if dev == "" {
 		if !deepDiscovery {
@@ -95,8 +81,10 @@ func (b *blockDeviceUtils) Discover(volumeWwn string, deepDiscovery bool) (strin
 	} else {
 		mpath = b.mpathDevFullPath(dev)
 
+		mpathOutput := utils.ExcludeNoTargetPortGroupMessagesFromMultipathOutput(string(outputBytes[:]), b.logger)
+
 		// Validate that we have the correct wwn.
-		SqInqWwn, err := b.GetWwnByScsiInq(string(outputBytes[:]), mpath)
+		SqInqWwn, err := b.GetWwnByScsiInq(mpathOutput, mpath)
 		if err != nil {
 			switch err.(type) {
 			case *FaultyDeviceError:
@@ -124,6 +112,8 @@ func (b *blockDeviceUtils) mpathDevFullPath(dev string) string {
 
 func (b *blockDeviceUtils) DiscoverBySgInq(mpathOutput string, volumeWwn string) (string, error) {
 	defer b.logger.Trace(logs.DEBUG)()
+
+	mpathOutput = utils.ExcludeNoTargetPortGroupMessagesFromMultipathOutput(mpathOutput, b.logger)
 
 	scanner := bufio.NewScanner(strings.NewReader(mpathOutput))
 	// regex to find all dm-X line from IBM vendor.
