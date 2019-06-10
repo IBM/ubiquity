@@ -78,7 +78,7 @@ func (d *spectrumDataModelWrapper) GetVolume(name string) (SpectrumScaleVolume, 
 		if exists {
 			volume = *d.dbVolume
 			isExists = true
-			d.logger.Debug("DEEBUG Wrapper GetVolume exists", logs.Args{{"isExists", isExists})
+			d.logger.Debug("DEEBUG Wrapper GetVolume exists", logs.Args{{"isExists", isExists}})
 		}
 	} else {
 		// open db connection
@@ -94,7 +94,7 @@ func (d *spectrumDataModelWrapper) GetVolume(name string) (SpectrumScaleVolume, 
 		}
     }
 	d.logger.Debug("Got volume", logs.Args{{"VolumeName", name}, {"Volume Details",volume}})
-	d.logger.Debug("DEEBUG Wrapper GetVolume", logs.Args{{"isExists", isExists})
+	d.logger.Debug("DEEBUG Wrapper GetVolume", logs.Args{{"isExists", isExists}})
 	return volume, isExists, nil
 }
 

@@ -267,7 +267,7 @@ func (s *spectrumLocalClient) GetVolume(getVolumeRequest resources.GetVolumeRequ
 	if err != nil {
 		return resources.Volume{}, err
 	}
-	d.logger.Debug(" DEEBUG SpectrumScale GetVolume", logs.Args{{"volExists", volExists})
+	s.logger.Debug(" DEEBUG SpectrumScale GetVolume", logs.Args{{"volExists", volExists}})
 	if volExists == false {
 		return resources.Volume{},&resources.VolumeNotFoundError{VolName: getVolumeRequest.Name}
 	}
