@@ -126,6 +126,7 @@ func (s *remoteClient) GetVolume(getVolumeRequest resources.GetVolumeRequest) (r
 	getVolumeRequest.CredentialInfo = s.config.CredentialInfo
 	response, err := utils.HttpExecute(s.httpClient, "GET", getRemoteURL, getVolumeRequest, getVolumeRequest.Context)
 	if err != nil {
+		s.logger.Debug(" DEEBUG Client GetVolume ERROR")
 		return resources.Volume{}, s.logger.ErrorRet(err, "failed")
 	}
 
